@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_OPTIONS } from '../lib/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -89,7 +89,10 @@ function PartyContactPickers({ partyLabel, partner, tradeContact, execContact, o
 
 export default function NewTradePage() {
   const navigate = useNavigate();
+  const { tradeId } = useParams();
+  const isEdit = Boolean(tradeId);
   const [saving, setSaving] = useState(false);
+  const [loadingTrade, setLoadingTrade] = useState(false);
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
@@ -115,7 +118,7 @@ export default function NewTradePage() {
   });
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       try {
         const [pa, co, or, po, su, ve] = await Promise.all([
           api.get('/api/partners'), api.get('/api/commodities'), api.get('/api/origins'),
@@ -124,24 +127,80 @@ export default function NewTradePage() {
         setPartners(pa.data); setCommodities(co.data); setOrigins(or.data);
         setPorts(po.data); setSurveyors(su.data); setVessels(ve.data);
 
-        // Auto-select Pir Grain as default Broker
-        const pirGrain = pa.data.find(p => {
-          const t = Array.isArray(p.type) ? p.type : [p.type];
-          return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
-        });
-        if (pirGrain) {
-          setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
-        }
-
-        // Auto-select CIF Marmara Ports as default Base Port
-        const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');
-        if (marmaraPorts) {
-          setForm(prev => ({ ...prev, basePortId: marmaraPorts.id }));
+        if (isEdit) {
+          setLoadingTrade(true);
+          const res = await api.get(`/api/trades/${tradeId}`);
+          const t = res.data;
+          // Convert dd/MM/yyyy date to yyyy-MM-dd for DatePicker
+          const convertDate = (d) => {
+            if (!d) return '';
+            if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
+            const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+            return d;
+          };
+          setForm({
+            sellerId: t.sellerId || '',
+            buyerId: t.buyerId || '',
+            brokerId: t.brokerId || 'na',
+            coBrokerId: t.coBrokerId || 'na',
+            commodityId: t.commodityId || '',
+            originId: t.originId || '',
+            quantity: t.quantity != null ? String(t.quantity) : '',
+            tolerance: t.tolerance || '',
+            deliveryTerm: t.deliveryTerm || '',
+            pricePerMT: t.pricePerMT != null ? String(t.pricePerMT) : '',
+            currency: t.currency || 'USD',
+            paymentTerms: t.paymentTerms || '',
+            incoterms: t.incoterms || '',
+            basePortId: t.basePortId || t.loadingPortId || '',
+            dischargePortId: t.dischargePortId || '',
+            shipmentWindowStart: convertDate(t.shipmentWindowStart),
+            shipmentWindowEnd: convertDate(t.shipmentWindowEnd),
+            vesselName: t.vesselName || '',
+            surveyorId: t.surveyorId || '',
+            brokeragePerMT: t.brokeragePerMT != null ? String(t.brokeragePerMT) : '',
+            brokerageAccount: t.brokerageAccount || 'seller',
+            contractDate: convertDate(t.contractDate),
+            contractNumber: t.contractNumber || '',
+            specialConditions: t.specialConditions || '',
+            notes: t.notes || '',
+            status: t.status || 'confirmation',
+            commoditySpecs: t.commoditySpecs || '',
+            pirContractNumber: t.pirContractNumber || '',
+            sellerContractNumber: t.sellerContractNumber || 'N/A',
+            excludedDisports: t.excludedDisports || [],
+            excludedSurveyors: t.excludedSurveyors || [],
+            portVariations: t.portVariations || [],
+            sellerTradeContact: t.sellerTradeContact || null,
+            sellerExecutionContact: t.sellerExecutionContact || null,
+            buyerTradeContact: t.buyerTradeContact || null,
+            buyerExecutionContact: t.buyerExecutionContact || null,
+            brokerTradeContact: t.brokerTradeContact || null,
+            brokerExecutionContact: t.brokerExecutionContact || null,
+            coBrokerTradeContact: t.coBrokerTradeContact || null,
+            coBrokerExecutionContact: t.coBrokerExecutionContact || null,
+          });
+          setLoadingTrade(false);
+        } else {
+          // Auto-select Pir Grain as default Broker
+          const pirGrain = pa.data.find(p => {
+            const t = Array.isArray(p.type) ? p.type : [p.type];
+            return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
+          });
+          if (pirGrain) {
+            setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
+          }
+          // Auto-select CIF Marmara Ports as default Base Port
+          const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');
+          if (marmaraPorts) {
+            setForm(prev => ({ ...prev, basePortId: marmaraPorts.id }));
+          }
         }
       } catch (err) { console.error(err); }
     };
-    fetch();
-  }, []);
+    fetchData();
+  }, [isEdit, tradeId]);
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -192,23 +251,30 @@ export default function NewTradePage() {
           difference: pv.difference ? parseFloat(pv.difference) : 0,
         })),
       };
-      await api.post('/api/trades', data);
-      toast.success('Trade created');
+      if (isEdit) {
+        await api.put(`/api/trades/${tradeId}`, data);
+        toast.success('Trade updated');
+      } else {
+        await api.post('/api/trades', data);
+        toast.success('Trade created');
+      }
       navigate('/trades');
     } catch (err) {
-      toast.error('Failed to create trade');
+      toast.error(isEdit ? 'Failed to update trade' : 'Failed to create trade');
     } finally {
       setSaving(false);
     }
   };
+
+  if (loadingTrade) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate('/trades')}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Trade</h1>
-          <p className="text-muted-foreground">Create a new commodity trade</p>
+          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Trade' : 'New Trade'}</h1>
+          <p className="text-muted-foreground">{isEdit ? 'Update trade details' : 'Create a new commodity trade'}</p>
         </div>
       </div>
 
@@ -498,7 +564,7 @@ export default function NewTradePage() {
         <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
         <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          Create Trade
+          {isEdit ? 'Update Trade' : 'Create Trade'}
         </Button>
       </div>
     </div>

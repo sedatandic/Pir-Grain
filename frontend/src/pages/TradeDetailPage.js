@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -103,11 +103,14 @@ export default function TradeDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate('/trades')}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{trade.referenceNumber || trade.contractNumber || 'Trade Detail'}</h1>
+            <h1 className="text-2xl font-bold">{trade.pirContractNumber || trade.referenceNumber || trade.contractNumber || 'Trade Detail'}</h1>
             <Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge>
           </div>
-          <p className="text-muted-foreground text-sm">Contract #{trade.contractNumber || '-'}</p>
+          <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
+        <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => navigate(`/trades/${tradeId}/edit`)}>
+          <Pencil className="h-4 w-4 mr-2" />Edit Trade
+        </Button>
       </div>
 
       <Tabs defaultValue="confirmation">

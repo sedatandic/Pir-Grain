@@ -26,6 +26,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/trades" element={<TradesPage />} />
             <Route path="/trades/new" element={<NewTradePage />} />
+            <Route path="/trades/:tradeId/edit" element={<NewTradePage />} />
             <Route path="/trades/:tradeId" element={<TradeDetailPage />} />
             <Route path="/partners" element={<PartnersPage />} />
             <Route path="/partners/sellers" element={<PartnersPage filterType="seller" />} />

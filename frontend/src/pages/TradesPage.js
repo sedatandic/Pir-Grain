@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2 } from 'lucide-react';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 
@@ -123,7 +123,7 @@ export default function TradesPage() {
               <TableHead className="text-center">Broker</TableHead>
               <TableHead className="text-center">Commodity</TableHead>
               <TableHead className="text-center">Origin</TableHead>
-              <TableHead className="text-center">Quantity</TableHead>
+              <TableHead className="text-center">Quantity (+/- %)</TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
               <TableHead className="text-center">Unit Price</TableHead>
               <TableHead className="text-center">Currency</TableHead>
@@ -160,7 +160,7 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm">{trade.brokerName ? (trade.coBrokerName ? `${trade.brokerName} / ${trade.coBrokerName}` : trade.brokerName) : '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
-                <TableCell className="text-center font-mono text-sm">{formatQty(trade.quantity)}{trade.tolerance ? <div className="text-xs text-muted-foreground">(+/- {trade.tolerance}%)</div> : ''}</TableCell>
+                <TableCell className="text-center font-mono text-sm">{formatQty(trade.quantity)}{trade.tolerance ? ` / ${trade.tolerance}` : ''}</TableCell>
                 <TableCell className="text-center text-sm">{trade.deliveryTerm || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
@@ -290,7 +290,14 @@ export default function TradesPage() {
       {/* Trade Detail Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
+              <Button size="sm" variant="outline" data-testid="edit-trade-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}/edit`); }}>
+                <Pencil className="h-3.5 w-3.5 mr-1" />Edit Trade
+              </Button>
+            </div>
+          </DialogHeader>
           {selectedTrade && (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><span className="text-muted-foreground">Status:</span> <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge></div>

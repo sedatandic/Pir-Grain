@@ -71,6 +71,9 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Seeded 9 trades from user's spreadsheet (MC010525, S-48-SFMP, RC0107, BEK446, RB050925, MW101025, MW2611, BAH55, RC1712)
 - Updated Contract No column to show pirContractNumber as primary display
 - Fixed date formatting to handle dd/MM/yyyy format in addition to ISO format
+- Moved tolerance display (+/- %) from per-row to Quantity column header
+- Implemented Edit Trade feature: route /trades/:tradeId/edit reuses NewTradePage in edit mode, pre-fills all fields, uses PUT to update
+- Added Edit Trade button on TradeDetailPage and in trade detail modal
 
 ## Backlog (Prioritized)
 ### P1

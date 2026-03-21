@@ -26,22 +26,40 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 
 ## Data Seeded
 - Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
-- Partners: 177 total (95 buyers, 79 sellers, 2 co-brokers, 1 broker)
-- Sample trades (8+), Events (3)
+- Partners: 175 total (95 buyers, 78 sellers, 2 co-brokers)
+- Sample trades (10), Events (3)
 
 ## Credentials
 - Admin: salih.karagoz / salih123
-- Non-admin: pir.accounts / pir123
+- Accountant: pir.accounts / pir123
 
-## Architecture
+## Architecture (Refactored Feb 2026)
 ```
-/app/backend/server.py        - Monolithic FastAPI backend
-/app/backend/vessel_data.py   - Vessel seed data
-/app/backend/seed_buyers.py   - Buyer counterparty seed data
-/app/backend/seed_sellers.py  - Seller counterparty seed data
-/app/frontend/src/pages/      - Page components
-/app/frontend/src/components/  - Layout + UI components
-/app/frontend/src/lib/        - Auth, API client, constants
+/app/backend/
+├── server.py          - FastAPI app orchestrator (imports routers)
+├── config.py          - Config constants (DB, JWT, paths)
+├── database.py        - MongoDB connection, collections, helpers
+├── auth.py            - JWT auth, password hashing, get_current_user
+├── models.py          - All Pydantic models
+├── seed.py            - Database seeding logic
+├── vessel_data.py     - Vessel seed data
+├── routes/
+│   ├── auth_routes.py    - Login, /me
+│   ├── trades.py         - Trades CRUD + stats
+│   ├── partners.py       - Partners/Counterparties CRUD
+│   ├── vessels.py        - Vessels CRUD
+│   ├── documents.py      - Document upload/delete
+│   ├── reference_data.py - Commodities, Origins, Ports, Surveyors
+│   ├── events.py         - Calendar events
+│   ├── accounting.py     - Invoices, Bank Statements
+│   ├── notifications.py  - Notifications read/delete
+│   └── users.py          - User management + trade-statuses
+└── tests/
+
+/app/frontend/src/
+├── pages/             - Page components
+├── components/        - Layout + UI components
+└── lib/               - Auth, API client, constants
 ```
 
 ## Backlog (Prioritized)
@@ -56,5 +74,4 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - File Uploads for Bank Statements & DI Documents
 
 ### Refactoring
-- Break down monolithic server.py into separate route/model/service modules
-- Extract Settings page tab logic into individual components
+- Extract PartnersPage.js into smaller components (400+ lines)

@@ -232,7 +232,7 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.deliveryTerm || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
                 <TableCell className="text-center text-sm">{formatShipment(trade.shipmentWindowStart)}</TableCell>
@@ -379,7 +379,7 @@ export default function TradesPage() {
               <div><span className="text-muted-foreground">Origin:</span> {selectedTrade.originName || '-'}</div>
               <div><span className="text-muted-foreground">Quantity:</span> {formatQty(selectedTrade.quantity)}</div>
               <div><span className="text-muted-foreground">Unit Price:</span> ${selectedTrade.pricePerMT?.toLocaleString() || 0}/{selectedTrade.currency || 'USD'}</div>
-              <div><span className="text-muted-foreground">Delivery Term:</span> {selectedTrade.deliveryTerm || '-'}</div>
+              <div><span className="text-muted-foreground">Delivery Term:</span> {(() => { const port = selectedTrade.basePortName || selectedTrade.loadingPortName || ''; const term = selectedTrade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</div>
               <div><span className="text-muted-foreground">Payment Terms:</span> {selectedTrade.paymentTerms || '-'}</div>
               <div><span className="text-muted-foreground">Loading Port:</span> {selectedTrade.loadingPortName || '-'}</div>
               <div><span className="text-muted-foreground">Discharge Port:</span> {selectedTrade.dischargePortName || '-'}</div>

@@ -87,23 +87,27 @@ export default function Sidebar() {
       {/* Logo + Collapse Toggle */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-border">
         {collapsed ? (
-          <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity" data-testid="sidebar-expand-button">
+          <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity max-md:hidden" data-testid="sidebar-expand-button">
             <PanelLeft className="w-5 h-5 text-muted-foreground" />
           </button>
-        ) : (
-          <>
-            <div className="flex items-end gap-2.5">
-              <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
-              <div>
-                <h1 className="text-[11px] font-bold tracking-wide leading-tight whitespace-nowrap" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
-                <p className="text-[9px] text-muted-foreground tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
-              </div>
-            </div>
-            <button onClick={toggleCollapse} className="hover:bg-muted rounded-md p-1 transition-colors" data-testid="sidebar-collapse-button">
-              <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
-            </button>
-          </>
+        ) : null}
+        <div className={cn('flex items-end gap-2.5', collapsed && 'max-md:flex md:hidden')}>
+          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
+          <div>
+            <h1 className="text-[11px] font-bold tracking-wide leading-tight whitespace-nowrap" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+            <p className="text-[9px] text-muted-foreground tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
+          </div>
+        </div>
+        {/* Desktop: collapse toggle */}
+        {!collapsed && (
+          <button onClick={toggleCollapse} className="hover:bg-muted rounded-md p-1 transition-colors hidden md:block" data-testid="sidebar-collapse-button">
+            <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
+          </button>
         )}
+        {/* Mobile: close button */}
+        <button onClick={() => setMobileOpen(false)} className="hover:bg-muted rounded-md p-1.5 transition-colors md:hidden" data-testid="sidebar-close-button">
+          <X className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -112,6 +116,7 @@ export default function Sidebar() {
           <NavLink
             key={item.href}
             to={item.href}
+            onClick={() => setMobileOpen(false)}
             data-testid={`sidebar-nav-${item.title.toLowerCase().replace(/[\s.]+/g, '-')}-link`}
             className={({ isActive }) => cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -120,6 +125,8 @@ export default function Sidebar() {
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
             {!collapsed && <span>{item.title}</span>}
+            {/* Always show labels on mobile */}
+            {collapsed && <span className="md:hidden">{item.title}</span>}
           </NavLink>
         ))}
 
@@ -127,6 +134,7 @@ export default function Sidebar() {
         {userRole !== 'accountant' && (
           <NavLink
             to="/partners"
+            onClick={() => setMobileOpen(false)}
             data-testid="sidebar-nav-counterparties-link"
             className={({ isActive }) => cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -135,6 +143,7 @@ export default function Sidebar() {
           >
             <Users className="w-4 h-4 flex-shrink-0" />
             {!collapsed && <span>Counterparties</span>}
+            {collapsed && <span className="md:hidden">Counterparties</span>}
           </NavLink>
         )}
       </nav>
@@ -144,6 +153,7 @@ export default function Sidebar() {
         {userRole !== 'accountant' && (
           <NavLink
             to="/settings"
+            onClick={() => setMobileOpen(false)}
             className={({ isActive }) => cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
               isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
@@ -151,15 +161,17 @@ export default function Sidebar() {
           >
             <Settings className="w-4 h-4" />
             {!collapsed && <span>Settings</span>}
+            {collapsed && <span className="md:hidden">Settings</span>}
           </NavLink>
         )}
         <button
-          onClick={toggleDarkMode}
+          onClick={() => { toggleDarkMode(); setMobileOpen(false); }}
           data-testid="sidebar-theme-toggle"
           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full transition-colors"
         >
           {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+          {collapsed && <span className="md:hidden">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
       </div>
     </aside>

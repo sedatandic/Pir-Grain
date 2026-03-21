@@ -65,11 +65,12 @@ def serialize_doc(doc):
             doc[key] = str(value)
     return doc
 
-def create_notification(ntype, message, entity_ref=None):
+def create_notification(ntype, message, entity_ref=None, username=None):
     notifications_col.insert_one({
         "type": ntype,
         "message": message,
         "entityRef": entity_ref,
+        "username": username or "system",
         "readBy": [],
         "createdAt": datetime.utcnow()
     })
@@ -542,7 +543,7 @@ def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
     data["totalCommission"] = round(qty * brok, 2)
     result = trades_col.insert_one(data)
     data["_id"] = result.inserted_id
-    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id))
+    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.get("/api/trades/{trade_id}")
@@ -579,18 +580,24 @@ def update_trade(trade_id: str, body: dict, user=Depends(get_current_user)):
         brok = data.get("brokeragePerMT", existing.get("brokeragePerMT", 0) if existing else 0) or 0
         data["totalCommission"] = round(qty * brok, 2)
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": data})
-    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+    updated = trades_col.find_one({"_id": ObjectId(trade_id)})
+    create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"))
+    return serialize_doc(updated)
 
 @app.patch("/api/trades/{trade_id}/status")
 def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(get_current_user)):
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
-    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+    t = trades_col.find_one({"_id": ObjectId(trade_id)})
+    create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"))
+    return serialize_doc(t)
 
 @app.delete("/api/trades/{trade_id}")
 def delete_trade(trade_id: str, user=Depends(get_current_user)):
+    t = trades_col.find_one({"_id": ObjectId(trade_id)})
     result = trades_col.delete_one({"_id": ObjectId(trade_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Trade not found")
+    create_notification("trade", f"Trade deleted: {t.get('referenceNumber', trade_id) if t else trade_id}", trade_id, user.get("username"))
     return {"message": "Trade deleted"}
 
 @app.get("/api/trades/stats/overview")
@@ -634,6 +641,7 @@ def create_partner(partner: PartnerCreate, user=Depends(get_current_user)):
     data["updatedAt"] = datetime.utcnow()
     result = partners_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("partner", f"New counterparty added: {data.get('companyName', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.get("/api/partners/{partner_id}")
@@ -648,11 +656,15 @@ def update_partner(partner_id: str, partner: PartnerCreate, user=Depends(get_cur
     data = partner.dict()
     data["updatedAt"] = datetime.utcnow()
     partners_col.update_one({"_id": ObjectId(partner_id)}, {"$set": data})
-    return serialize_doc(partners_col.find_one({"_id": ObjectId(partner_id)}))
+    updated = partners_col.find_one({"_id": ObjectId(partner_id)})
+    create_notification("partner", f"Counterparty updated: {updated.get('companyName', '')}", partner_id, user.get("username"))
+    return serialize_doc(updated)
 
 @app.delete("/api/partners/{partner_id}")
 def delete_partner(partner_id: str, user=Depends(get_current_user)):
+    p = partners_col.find_one({"_id": ObjectId(partner_id)})
     partners_col.delete_one({"_id": ObjectId(partner_id)})
+    create_notification("partner", f"Counterparty deleted: {p.get('companyName', '') if p else partner_id}", partner_id, user.get("username"))
     return {"message": "Partner deleted"}
 
 # ─── Vessels ────────────────────────────────────────────────
@@ -669,17 +681,22 @@ def create_vessel(vessel: VesselCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = vessels_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("vessel", f"New vessel added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/vessels/{vessel_id}")
 def update_vessel(vessel_id: str, vessel: VesselCreate, user=Depends(get_current_user)):
     data = vessel.dict()
     vessels_col.update_one({"_id": ObjectId(vessel_id)}, {"$set": data})
-    return serialize_doc(vessels_col.find_one({"_id": ObjectId(vessel_id)}))
+    updated = vessels_col.find_one({"_id": ObjectId(vessel_id)})
+    create_notification("vessel", f"Vessel updated: {updated.get('name', '')}", vessel_id, user.get("username"))
+    return serialize_doc(updated)
 
 @app.delete("/api/vessels/{vessel_id}")
 def delete_vessel(vessel_id: str, user=Depends(get_current_user)):
+    v = vessels_col.find_one({"_id": ObjectId(vessel_id)})
     vessels_col.delete_one({"_id": ObjectId(vessel_id)})
+    create_notification("vessel", f"Vessel deleted: {v.get('name', '') if v else vessel_id}", vessel_id, user.get("username"))
     return {"message": "Vessel deleted"}
 
 # ─── Documents ──────────────────────────────────────────────
@@ -729,16 +746,20 @@ def create_commodity(item: CommodityCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = commodities_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("settings", f"Commodity added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/commodities/{item_id}")
 def update_commodity(item_id: str, item: CommodityCreate, user=Depends(get_current_user)):
     commodities_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    create_notification("settings", f"Commodity updated: {item.name}", item_id, user.get("username"))
     return serialize_doc(commodities_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/commodities/{item_id}")
 def delete_commodity(item_id: str, user=Depends(get_current_user)):
+    c = commodities_col.find_one({"_id": ObjectId(item_id)})
     commodities_col.delete_one({"_id": ObjectId(item_id)})
+    create_notification("settings", f"Commodity deleted: {c.get('name', '') if c else item_id}", item_id, user.get("username"))
     return {"message": "Deleted"}
 
 @app.get("/api/origins")
@@ -751,16 +772,20 @@ def create_origin(item: OriginCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = origins_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("settings", f"Origin added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/origins/{item_id}")
 def update_origin(item_id: str, item: OriginCreate, user=Depends(get_current_user)):
     origins_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    create_notification("settings", f"Origin updated: {item.name}", item_id, user.get("username"))
     return serialize_doc(origins_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/origins/{item_id}")
 def delete_origin(item_id: str, user=Depends(get_current_user)):
+    o = origins_col.find_one({"_id": ObjectId(item_id)})
     origins_col.delete_one({"_id": ObjectId(item_id)})
+    create_notification("settings", f"Origin deleted: {o.get('name', '') if o else item_id}", item_id, user.get("username"))
     return {"message": "Deleted"}
 
 @app.get("/api/ports")
@@ -773,16 +798,20 @@ def create_port(item: PortCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = ports_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("settings", f"Port added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/ports/{item_id}")
 def update_port(item_id: str, item: PortCreate, user=Depends(get_current_user)):
     ports_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    create_notification("settings", f"Port updated: {item.name}", item_id, user.get("username"))
     return serialize_doc(ports_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/ports/{item_id}")
 def delete_port(item_id: str, user=Depends(get_current_user)):
+    p = ports_col.find_one({"_id": ObjectId(item_id)})
     ports_col.delete_one({"_id": ObjectId(item_id)})
+    create_notification("settings", f"Port deleted: {p.get('name', '') if p else item_id}", item_id, user.get("username"))
     return {"message": "Deleted"}
 
 @app.get("/api/surveyors")
@@ -795,16 +824,20 @@ def create_surveyor(item: SurveyorCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = surveyors_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("settings", f"Surveyor added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/surveyors/{item_id}")
 def update_surveyor(item_id: str, item: SurveyorCreate, user=Depends(get_current_user)):
     surveyors_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    create_notification("settings", f"Surveyor updated: {item.name}", item_id, user.get("username"))
     return serialize_doc(surveyors_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/surveyors/{item_id}")
 def delete_surveyor(item_id: str, user=Depends(get_current_user)):
+    s = surveyors_col.find_one({"_id": ObjectId(item_id)})
     surveyors_col.delete_one({"_id": ObjectId(item_id)})
+    create_notification("settings", f"Surveyor deleted: {s.get('name', '') if s else item_id}", item_id, user.get("username"))
     return {"message": "Deleted"}
 
 # ─── Events ─────────────────────────────────────────────────
@@ -818,11 +851,14 @@ def create_event(event: EventCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = events_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("event", f"New event: {data.get('title', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.delete("/api/events/{event_id}")
 def delete_event(event_id: str, user=Depends(get_current_user)):
+    e = events_col.find_one({"_id": ObjectId(event_id)})
     events_col.delete_one({"_id": ObjectId(event_id)})
+    create_notification("event", f"Event deleted: {e.get('title', '') if e else event_id}", event_id, user.get("username"))
     return {"message": "Deleted"}
 
 # ─── Invoices (Accounting) ──────────────────────────────────
@@ -836,17 +872,21 @@ def create_invoice(invoice: InvoiceCreate, user=Depends(get_current_user)):
     data["createdAt"] = datetime.utcnow()
     result = invoices_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("accounting", f"New invoice: {data.get('invoiceNumber', '')}", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.put("/api/invoices/{invoice_id}")
 def update_invoice(invoice_id: str, invoice: InvoiceCreate, user=Depends(get_current_user)):
     data = invoice.dict()
     invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": data})
+    create_notification("accounting", f"Invoice updated: {data.get('invoiceNumber', '')}", invoice_id, user.get("username"))
     return serialize_doc(invoices_col.find_one({"_id": ObjectId(invoice_id)}))
 
 @app.delete("/api/invoices/{invoice_id}")
 def delete_invoice(invoice_id: str, user=Depends(get_current_user)):
+    inv = invoices_col.find_one({"_id": ObjectId(invoice_id)})
     invoices_col.delete_one({"_id": ObjectId(invoice_id)})
+    create_notification("accounting", f"Invoice deleted: {inv.get('invoiceNumber', '') if inv else invoice_id}", invoice_id, user.get("username"))
     return {"message": "Deleted"}
 
 # ─── Bank Statements ────────────────────────────────────────
@@ -860,11 +900,13 @@ def create_bank_statement(stmt: BankStatementCreate, user=Depends(get_current_us
     data["createdAt"] = datetime.utcnow()
     result = bank_statements_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("accounting", f"New bank statement added", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
 
 @app.delete("/api/bank-statements/{stmt_id}")
 def delete_bank_statement(stmt_id: str, user=Depends(get_current_user)):
     bank_statements_col.delete_one({"_id": ObjectId(stmt_id)})
+    create_notification("accounting", f"Bank statement deleted", stmt_id, user.get("username"))
     return {"message": "Deleted"}
 
 # ─── Notifications ───────────────────────────────────────────

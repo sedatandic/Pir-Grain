@@ -9,8 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ScrollArea } from '../components/ui/scroll-area';
+import { Separator } from '../components/ui/separator';
 
 const TYPE_CONFIG = {
   seller: { label: 'Seller', color: 'bg-blue-100 text-blue-800' },
@@ -30,6 +32,7 @@ export default function PartnersPage({ filterType }) {
   const [editingPartner, setEditingPartner] = useState(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [detailPartner, setDetailPartner] = useState(null);
 
   const fetchPartners = useCallback(async () => {
     try {
@@ -147,6 +150,7 @@ export default function PartnersPage({ filterType }) {
                       <TableCell><Badge className={TYPE_CONFIG[p.type]?.color || 'bg-muted'}>{TYPE_CONFIG[p.type]?.label || p.type}</Badge></TableCell>
                       <TableCell>
                         <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailPartner(p)} data-testid={`partner-view-${p.id}`}><Eye className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(p)}><Pencil className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(p.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
@@ -190,6 +194,85 @@ export default function PartnersPage({ filterType }) {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Partner'}</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Business Card / Detail Dialog */}
+      <Dialog open={!!detailPartner} onOpenChange={() => setDetailPartner(null)}>
+        <DialogContent className="max-w-lg">
+          {detailPartner && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
+                    {detailPartner.companyName?.charAt(0)}
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg">{detailPartner.companyName}</DialogTitle>
+                    <DialogDescription className="flex items-center gap-2">
+                      {detailPartner.companyCode && <Badge variant="outline" className="text-xs">{detailPartner.companyCode}</Badge>}
+                      <Badge className={TYPE_CONFIG[detailPartner.type]?.color || 'bg-muted'}>{TYPE_CONFIG[detailPartner.type]?.label || detailPartner.type}</Badge>
+                    </DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                {/* Main Contact */}
+                {detailPartner.contactPerson && (
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium"><User className="h-4 w-4 text-primary" />Primary Contact</div>
+                    <div className="text-sm font-semibold">{detailPartner.contactPerson}</div>
+                    <div className="grid grid-cols-1 gap-1 text-sm text-muted-foreground">
+                      {detailPartner.email && <a href={`mailto:${detailPartner.email}`} className="flex items-center gap-2 hover:text-primary"><Mail className="h-3.5 w-3.5" />{detailPartner.email}</a>}
+                      {detailPartner.phone && <span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{detailPartner.phone}</span>}
+                      {detailPartner.whatsapp && <span className="flex items-center gap-2"><MessageCircle className="h-3.5 w-3.5" />{detailPartner.whatsapp}</span>}
+                    </div>
+                  </div>
+                )}
+
+                {/* Location */}
+                {(detailPartner.address || detailPartner.city || detailPartner.country) && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-2 text-sm font-medium"><Building2 className="h-4 w-4 text-primary" />Location</div>
+                    <div className="text-sm text-muted-foreground">
+                      {detailPartner.address && <div>{detailPartner.address}</div>}
+                      <div>{[detailPartner.city, detailPartner.country].filter(Boolean).join(', ')}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Departments */}
+                {detailPartner.departments && detailPartner.departments.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Departments</div>
+                    {detailPartner.departments.map((dept, di) => (
+                      <div key={di} className="rounded-lg border p-3 space-y-2">
+                        <div className="text-sm font-semibold">{dept.name}</div>
+                        {dept.contacts && dept.contacts.map((c, ci) => (
+                          <div key={ci} className="ml-2 text-sm border-l-2 border-primary/20 pl-3 py-1">
+                            <div className="font-medium">{c.name} {c.role && <Badge variant="outline" className="text-[10px] ml-1">{c.role}</Badge>}</div>
+                            <div className="text-muted-foreground space-y-0.5">
+                              {c.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</div>}
+                              {c.phone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.phone}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Notes */}
+                {detailPartner.notes && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="text-sm font-medium">Notes</div>
+                    <div className="text-sm text-muted-foreground">{detailPartner.notes}</div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

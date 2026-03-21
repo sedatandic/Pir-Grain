@@ -13,6 +13,7 @@ import CommissionsPage from './pages/CommissionsPage';
 import AccountingPage from './pages/AccountingPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
+import TradeDetailPage from './pages/TradeDetailPage';
 import './App.css';
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/trades" element={<TradesPage />} />
             <Route path="/trades/new" element={<NewTradePage />} />
+            <Route path="/trades/:tradeId" element={<TradeDetailPage />} />
             <Route path="/partners" element={<PartnersPage />} />
             <Route path="/partners/sellers" element={<PartnersPage filterType="seller" />} />
             <Route path="/partners/buyers" element={<PartnersPage filterType="buyer" />} />

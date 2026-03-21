@@ -9,9 +9,10 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, AlertCircle, CheckCircle, Clock, Receipt } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, AlertCircle, CheckCircle, Clock, Receipt, FileText, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 const CATEGORIES = ['freight', 'port_charges', 'surveyor', 'broker_commission', 'insurance', 'fumigation', 'other'];
 const STATUS_CONFIG = {
@@ -22,15 +23,25 @@ const STATUS_CONFIG = {
 
 export default function AccountingPage() {
   const [invoices, setInvoices] = useState([]);
+  const [bankStatements, setBankStatements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending' });
   const [saving, setSaving] = useState(false);
+  const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
+  const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '' });
 
   const fetch = async () => {
-    try { const res = await api.get('/api/invoices'); setInvoices(res.data); } catch (err) { console.error(err); } finally { setLoading(false); }
+    try {
+      const [invRes, stmtRes] = await Promise.all([
+        api.get('/api/invoices'),
+        api.get('/api/bank-statements'),
+      ]);
+      setInvoices(invRes.data);
+      setBankStatements(stmtRes.data);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   useEffect(() => { fetch(); }, []);
@@ -63,13 +74,29 @@ export default function AccountingPage() {
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
+  const handleSaveStmt = async () => {
+    setSaving(true);
+    try {
+      await api.post('/api/bank-statements', stmtForm);
+      toast.success('Bank statement added');
+      setStmtDialogOpen(false);
+      fetch();
+    } catch (err) { toast.error('Failed'); } finally { setSaving(false); }
+  };
+
+  const handleDeleteStmt = async (id) => {
+    try { await api.delete(`/api/bank-statements/${id}`); toast.success('Deleted'); fetch(); } catch { toast.error('Failed'); }
+  };
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h1 className="text-3xl font-bold tracking-tight">Accounting</h1><p className="text-muted-foreground">Manage invoices and expenses</p></div>
-        <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Add Invoice</Button>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Omega — Accounting</h1>
+        <p className="text-muted-foreground">Manage invoices, expenses, and bank statements</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -78,9 +105,19 @@ export default function AccountingPage() {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.paid)}</div></CardContent></Card>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="relative max-w-xs mb-4"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+      <Tabs defaultValue="invoices">
+        <TabsList>
+          <TabsTrigger value="invoices"><Receipt className="h-3.5 w-3.5 mr-1" />Invoices ({invoices.length})</TabsTrigger>
+          <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({bankStatements.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invoices">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+                <div className="ml-auto"><Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Add Invoice</Button></div>
+              </div>
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader><TableRow className="bg-muted/50">
@@ -104,6 +141,53 @@ export default function AccountingPage() {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
+
+      <TabsContent value="bank-statements">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Monthly Bank Statements</h3>
+              <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '' }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
+            </div>
+            <div className="overflow-x-auto border rounded-lg">
+              <Table>
+                <TableHeader><TableRow className="bg-muted/50">
+                  <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {bankStatements.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No bank statements uploaded yet</TableCell></TableRow> :
+                  bankStatements.map(s => (
+                    <TableRow key={s.id}>
+                      <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
+                      <TableCell>{s.description || '-'}</TableCell>
+                      <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
+                      <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      </Tabs>
+
+      {/* Bank Statement Dialog */}
+      <Dialog open={stmtDialogOpen} onOpenChange={setStmtDialogOpen}>
+        <DialogContent><DialogHeader><DialogTitle>Add Bank Statement</DialogTitle><DialogDescription>Upload monthly bank statement.</DialogDescription></DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2"><Label>Month</Label>
+              <Select value={String(stmtForm.month)} onValueChange={(v) => setStmtForm({...stmtForm, month: parseInt(v)})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map((m,i) => <SelectItem key={i} value={String(i+1)}>{m}</SelectItem>)}</SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Year</Label><Input type="number" value={stmtForm.year} onChange={(e) => setStmtForm({...stmtForm, year: parseInt(e.target.value)})} /></div>
+            <div className="col-span-2 space-y-2"><Label>Description</Label><Input value={stmtForm.description} onChange={(e) => setStmtForm({...stmtForm, description: e.target.value})} placeholder="e.g. March 2026 statement" /></div>
+            <div className="col-span-2 space-y-2"><Label>File Name</Label><Input value={stmtForm.fileName} onChange={(e) => setStmtForm({...stmtForm, fileName: e.target.value})} placeholder="statement_march_2026.pdf" /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setStmtDialogOpen(false)}>Cancel</Button><Button onClick={handleSaveStmt} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Add</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent><DialogHeader><DialogTitle>{editingInvoice ? 'Edit Invoice' : 'New Invoice'}</DialogTitle><DialogDescription>Fill in the invoice details.</DialogDescription></DialogHeader>

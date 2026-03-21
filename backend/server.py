@@ -42,6 +42,16 @@ ports_col = db["ports"]
 surveyors_col = db["surveyors"]
 events_col = db["events"]
 invoices_col = db["invoices"]
+bank_statements_col = db["bank_statements"]
+notifications_col = db["notifications"]
+
+# ─── Constants ───────────────────────────────────────────────
+TRADE_STATUSES = [
+    "confirmation", "draft-contract", "nomination-sent", "di-sent",
+    "drafts-confirmation", "appropriation", "dox", "pmt", "disch",
+    "shortage", "demurrage", "dispatch", "brokerage",
+    "completed", "cancelled", "washout"
+]
 
 # ─── Helpers ────────────────────────────────────────────────
 def serialize_doc(doc):
@@ -54,6 +64,16 @@ def serialize_doc(doc):
         elif isinstance(value, ObjectId):
             doc[key] = str(value)
     return doc
+
+def create_notification(ntype, message, entity_ref=None):
+    notifications_col.insert_one({
+        "type": ntype,
+        "message": message,
+        "entityRef": entity_ref,
+        "readBy": [],
+        "createdAt": datetime.utcnow()
+    })
+
 
 def generate_ref():
     year = datetime.now().strftime("%y")
@@ -133,6 +153,7 @@ class PartnerCreate(BaseModel):
     type: str = "buyer"
     tradeContacts: Optional[list] = []
     executionContacts: Optional[list] = []
+    departments: Optional[list] = []  # [{name, contacts: [{name, email, phone, role}]}]
     notes: Optional[str] = None
 
 class VesselCreate(BaseModel):
@@ -183,6 +204,13 @@ class InvoiceCreate(BaseModel):
     category: Optional[str] = "other"
     description: Optional[str] = None
     status: Optional[str] = "pending"
+
+class BankStatementCreate(BaseModel):
+    month: int
+    year: int
+    description: Optional[str] = None
+    fileName: Optional[str] = None
+    fileData: Optional[str] = None  # base64 encoded
 
 class UserCreate(BaseModel):
     name: str
@@ -361,7 +389,7 @@ def seed_data():
         load_ports = list(ports_col.find({"type": "loading"}))
         disch_ports = list(ports_col.find({"type": "discharge"}))
 
-        statuses = ["confirmation", "draft-contract", "nomination-sent", "di-sent", "appropriation", "dox", "pmt", "disch", "completed", "brokerage"]
+        statuses = ["confirmation", "draft-contract", "nomination-sent", "di-sent", "drafts-confirmation", "appropriation", "dox", "pmt", "disch", "shortage", "demurrage", "dispatch", "brokerage", "completed", "cancelled", "washout"]
         inco_terms = ["FOB", "CFR", "CIF", "FAS"]
         payment_terms = ["CAD", "LC at sight", "LC 30 days", "TT in advance"]
         delivery_terms = ["FOB", "CFR", "CIF"]
@@ -505,6 +533,7 @@ def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
     data["totalCommission"] = round(qty * brok, 2)
     result = trades_col.insert_one(data)
     data["_id"] = result.inserted_id
+    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id))
     return serialize_doc(data)
 
 @app.get("/api/trades/{trade_id}")
@@ -515,8 +544,8 @@ def get_trade(trade_id: str, user=Depends(get_current_user)):
     return serialize_doc(trade)
 
 @app.put("/api/trades/{trade_id}")
-def update_trade(trade_id: str, trade: TradeUpdate, user=Depends(get_current_user)):
-    data = {k: v for k, v in trade.dict().items() if v is not None}
+def update_trade(trade_id: str, body: dict, user=Depends(get_current_user)):
+    data = {k: v for k, v in body.items() if v is not None}
     data["updatedAt"] = datetime.utcnow()
     for field, col, name_field, code_field in [
         ("buyerId", partners_col, "buyerName", "buyerCode"),
@@ -810,6 +839,44 @@ def update_invoice(invoice_id: str, invoice: InvoiceCreate, user=Depends(get_cur
 def delete_invoice(invoice_id: str, user=Depends(get_current_user)):
     invoices_col.delete_one({"_id": ObjectId(invoice_id)})
     return {"message": "Deleted"}
+
+# ─── Bank Statements ────────────────────────────────────────
+@app.get("/api/bank-statements")
+def list_bank_statements(user=Depends(get_current_user)):
+    return [serialize_doc(s) for s in bank_statements_col.find().sort("createdAt", -1)]
+
+@app.post("/api/bank-statements")
+def create_bank_statement(stmt: BankStatementCreate, user=Depends(get_current_user)):
+    data = stmt.dict()
+    data["createdAt"] = datetime.utcnow()
+    result = bank_statements_col.insert_one(data)
+    data["_id"] = result.inserted_id
+    return serialize_doc(data)
+
+@app.delete("/api/bank-statements/{stmt_id}")
+def delete_bank_statement(stmt_id: str, user=Depends(get_current_user)):
+    bank_statements_col.delete_one({"_id": ObjectId(stmt_id)})
+    return {"message": "Deleted"}
+
+# ─── Notifications ───────────────────────────────────────────
+@app.get("/api/notifications")
+def list_notifications(user=Depends(get_current_user)):
+    return [serialize_doc(n) for n in notifications_col.find().sort("createdAt", -1).limit(50)]
+
+@app.patch("/api/notifications/{notif_id}/read")
+def mark_notification_read(notif_id: str, user=Depends(get_current_user)):
+    notifications_col.update_one({"_id": ObjectId(notif_id)}, {"$addToSet": {"readBy": user["username"]}})
+    return {"message": "Marked read"}
+
+@app.patch("/api/notifications/read-all")
+def mark_all_read(user=Depends(get_current_user)):
+    notifications_col.update_many({}, {"$addToSet": {"readBy": user["username"]}})
+    return {"message": "All marked read"}
+
+# ─── Trade Statuses ──────────────────────────────────────────
+@app.get("/api/trade-statuses")
+def get_trade_statuses(user=Depends(get_current_user)):
+    return TRADE_STATUSES
 
 # ─── Users Management ───────────────────────────────────────
 @app.get("/api/users")

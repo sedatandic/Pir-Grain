@@ -55,7 +55,7 @@ export default function LoginPage() {
           <div className="mt-6 rounded-lg bg-muted p-4" data-testid="login-demo-credentials">
             <p className="text-xs text-muted-foreground">
               <strong>Login credentials:</strong><br />
-              Username: <code className="rounded bg-background px-1">salihkaragoz</code><br />
+              Username: <code className="rounded bg-background px-1">salih.karagoz</code><br />
               Password: <code className="rounded bg-background px-1">salih123</code>
             </p>
           </div>

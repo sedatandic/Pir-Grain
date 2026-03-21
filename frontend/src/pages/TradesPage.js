@@ -26,6 +26,7 @@ export default function TradesPage() {
   const [filterBuyer, setFilterBuyer] = useState('all');
   const [filterVessel, setFilterVessel] = useState('all');
   const [filterOrigin, setFilterOrigin] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -50,8 +51,8 @@ export default function TradesPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const hasActiveFilters = filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all';
-  const clearFilters = () => { setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); };
+  const hasActiveFilters = filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all';
+  const clearFilters = () => { setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); };
 
   const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
   const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
@@ -64,6 +65,7 @@ export default function TradesPage() {
     if (filterBuyer !== 'all') result = result.filter(t => t.buyerId === filterBuyer);
     if (filterVessel !== 'all') result = result.filter(t => t.vesselName === filterVessel);
     if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
+    if (filterStatus !== 'all') result = result.filter(t => t.status === filterStatus);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -75,7 +77,7 @@ export default function TradesPage() {
       );
     }
     return result;
-  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, search]);
+  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, search]);
 
   const categorized = useMemo(() => ({
     ongoing: trades.filter(t => ONGOING_STATUSES.includes(t.status)),
@@ -131,7 +133,7 @@ export default function TradesPage() {
           </TableHeader>
           <TableBody>
             {list.map((trade) => (
-              <TableRow key={trade.id}>
+              <TableRow key={trade.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/trades/${trade.id}`)}>
                 <TableCell className="text-center">
                   <Select value={trade.status} onValueChange={(v) => handleStatusChange(trade.id, v)}>
                     <SelectTrigger className="w-full h-8">
@@ -220,6 +222,13 @@ export default function TradesPage() {
               <SelectContent>
                 <SelectItem value="all">All Vessels</SelectItem>
                 {uniqueVessels.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[150px] shrink-0"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
             {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0"><X className="h-4 w-4 mr-1" />Clear</Button>}

@@ -17,7 +17,7 @@ const mainNavItems = [
   { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign },
   { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen },
   { title: 'Calendar', href: '/calendar', icon: CalendarDays },
-  { title: 'Accounting', href: '/omega', icon: Calculator },
+  { title: 'Omega', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
   { title: 'Reports', href: '/reports', icon: BarChart3 },
   { title: 'Vessels', href: '/vessels', icon: Ship },
 ];
@@ -52,6 +52,8 @@ export default function Sidebar() {
     window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { collapsed: next } }));
   };
 
+  const userRole = user?.role || 'user';
+
   return (
     <aside
       data-testid="app-sidebar"
@@ -71,7 +73,7 @@ export default function Sidebar() {
             <div className="flex items-end gap-2.5">
               <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
               <div>
-                <h1 className="text-[13px] font-bold tracking-wide leading-tight" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+                <h1 className="text-[11px] font-bold tracking-wide leading-tight whitespace-nowrap" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
                 <p className="text-[9px] text-muted-foreground tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
               </div>
             </div>
@@ -84,7 +86,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        {mainNavItems.map((item) => (
+        {mainNavItems.filter(item => !item.roles || item.roles.includes(userRole)).map((item) => (
           <NavLink
             key={item.href}
             to={item.href}

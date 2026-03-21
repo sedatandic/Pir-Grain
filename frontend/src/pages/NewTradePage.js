@@ -76,7 +76,7 @@ export default function NewTradePage() {
   const [vessels, setVessels] = useState([]);
 
   const [form, setForm] = useState({
-    sellerId: '', buyerId: '', brokerId: '', coBrokerId: '',
+    sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '', tolerance: '',
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '', incoterms: '', loadingPortId: '', dischargePortId: '',
@@ -98,6 +98,15 @@ export default function NewTradePage() {
         ]);
         setPartners(pa.data); setCommodities(co.data); setOrigins(or.data);
         setPorts(po.data); setSurveyors(su.data); setVessels(ve.data);
+
+        // Auto-select Pir Grain as default Broker
+        const pirGrain = pa.data.find(p => {
+          const t = Array.isArray(p.type) ? p.type : [p.type];
+          return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
+        });
+        if (pirGrain) {
+          setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
+        }
       } catch (err) { console.error(err); }
     };
     fetch();
@@ -113,8 +122,8 @@ export default function NewTradePage() {
 
   const sellerPartner = useMemo(() => partners.find(p => p.id === form.sellerId), [partners, form.sellerId]);
   const buyerPartner = useMemo(() => partners.find(p => p.id === form.buyerId), [partners, form.buyerId]);
-  const brokerPartner = useMemo(() => partners.find(p => p.id === form.brokerId), [partners, form.brokerId]);
-  const coBrokerPartner = useMemo(() => partners.find(p => p.id === form.coBrokerId), [partners, form.coBrokerId]);
+  const brokerPartner = useMemo(() => form.brokerId && form.brokerId !== 'na' ? partners.find(p => p.id === form.brokerId) : null, [partners, form.brokerId]);
+  const coBrokerPartner = useMemo(() => form.coBrokerId && form.coBrokerId !== 'na' ? partners.find(p => p.id === form.coBrokerId) : null, [partners, form.coBrokerId]);
 
   const handleSellerChange = (v) => {
     setForm(prev => ({ ...prev, sellerId: v, sellerTradeContact: null, sellerExecutionContact: null }));
@@ -138,6 +147,8 @@ export default function NewTradePage() {
     try {
       const data = {
         ...form,
+        brokerId: form.brokerId === 'na' ? '' : form.brokerId,
+        coBrokerId: form.coBrokerId === 'na' ? '' : form.coBrokerId,
         quantity: form.quantity ? parseFloat(form.quantity) : 0,
         pricePerMT: form.pricePerMT ? parseFloat(form.pricePerMT) : 0,
         brokeragePerMT: form.brokeragePerMT ? parseFloat(form.brokeragePerMT) : 0,
@@ -201,7 +212,7 @@ export default function NewTradePage() {
             <Select value={form.brokerId} onValueChange={handleBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select broker" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">-- None --</SelectItem>
+                <SelectItem value="na">N/A</SelectItem>
                 {partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('broker'); }).map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -211,7 +222,7 @@ export default function NewTradePage() {
             <Select value={form.coBrokerId} onValueChange={handleCoBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select co-broker" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">-- None --</SelectItem>
+                <SelectItem value="na">N/A</SelectItem>
                 {coBrokers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>

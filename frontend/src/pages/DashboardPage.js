@@ -59,15 +59,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <h1 className="text-2xl font-semibold tracking-tight" data-testid="dashboard-welcome">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome back! Here is your trading overview.</p>
-        </div>
-        <Button onClick={() => navigate('/trades/new')} data-testid="dashboard-new-trade-button">
-          <Plus className="mr-2 h-4 w-4" /> New Trade
-        </Button>
-      </div>
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -175,12 +175,9 @@ export default function DashboardPage() {
         <div className="w-96">
           <Card data-testid="upcoming-payments-events" className="h-full">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-base whitespace-nowrap">Upcoming Payments & Events</CardTitle>
-                  <CardDescription className="whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+              <div>
+                <CardTitle className="text-base whitespace-nowrap">Upcoming Payments & Events</CardTitle>
+                <CardDescription className="whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
               </div>
             </CardHeader>
             <CardContent>

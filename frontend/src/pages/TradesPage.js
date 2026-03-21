@@ -425,6 +425,21 @@ export default function TradesPage() {
                   <p className="text-muted-foreground">{selectedTrade.notes}</p>
                 </div>
               )}
+              {(selectedTrade.blNumber || selectedTrade.blDate || selectedTrade.blQuantity || selectedTrade.sellerSurveyor || selectedTrade.buyerSurveyor || selectedTrade.dischargeQuantity) && (
+                <div className="border rounded-lg p-6 space-y-4">
+                  <h4 className="font-semibold text-base">B/L Details</h4>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-5 text-base">
+                    <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{selectedTrade.blNumber || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{selectedTrade.blDate || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{selectedTrade.blQuantity ? `${Number(selectedTrade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{selectedTrade.dischargeQuantity ? `${Number(selectedTrade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{selectedTrade.loadingPortName || selectedTrade.basePortName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{selectedTrade.dischargePortName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{selectedTrade.sellerSurveyor || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor</span><span className="font-medium">{selectedTrade.buyerSurveyor || '-'}</span></div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

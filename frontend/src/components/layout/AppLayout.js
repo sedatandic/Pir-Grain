@@ -79,14 +79,7 @@ export default function AppLayout() {
       <div className={cn('transition-all duration-200', sidebarCollapsed ? 'ml-[60px]' : 'ml-[250px]')}>
         {/* Header Bar */}
         <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
-          <div className="flex-1 min-w-0">
-            {currentPage.title && (
-              <div>
-                <h1 className="text-sm font-semibold text-foreground leading-tight">{currentPage.title}</h1>
-                <p className="text-xs text-muted-foreground leading-tight truncate">{currentPage.subtitle}</p>
-              </div>
-            )}
-          </div>
+          <div className="flex-1" />
 
           {/* Notifications Bell */}
           <DropdownMenu>

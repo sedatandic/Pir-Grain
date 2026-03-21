@@ -1,68 +1,32 @@
 /* PIR Grain & Pulses - Global Styles */
 
-/* Sidebar */
-.sidebar {
-  background: #0b2f3a;
-  color: #e6f6fb;
-  transition: width 200ms ease;
-}
-
-.sidebar-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: rgba(230, 246, 251, 0.72);
-  transition: background 150ms ease, color 150ms ease;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.sidebar-nav-item:hover {
-  background: rgba(148, 163, 184, 0.10);
-  color: #e6f6fb;
-}
-
-.sidebar-nav-item.active {
-  background: rgba(34, 211, 238, 0.16);
-  color: #ffffff;
-}
-
-/* Table styles */
-.data-table {
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
-  background: white;
-  overflow: hidden;
-}
-
 /* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .animate-fade-in {
-  animation: fadeIn 300ms ease-out;
+  animation: fadeIn 200ms ease-out;
+}
+
+/* Status badge text */
+.status-badge {
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Table borders */
+.trade-table th, .trade-table td {
+  border-right: 1px solid hsl(var(--border));
+  text-align: center;
+}
+.trade-table th:last-child, .trade-table td:last-child {
+  border-right: none;
 }

@@ -1,38 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../lib/auth';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
-import { StatusBadge } from '../components/shared/StatusBadge';
+import { TRADE_STATUS_CONFIG } from '../lib/constants';
 import {
-  ShoppingCart, Clock, CheckCircle2, BarChart3,
-  CalendarDays, ArrowRight, TrendingUp, AlertCircle, Plus
+  ArrowUpRight, TrendingUp, Plus, CheckCircle2, Clock, AlertCircle,
+  Ship, CalendarDays, DollarSign, Users, Building, Box
 } from 'lucide-react';
-import { format, isAfter, parseISO } from 'date-fns';
+import { format, isAfter, startOfDay, parseISO } from 'date-fns';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
-  const [recentTrades, setRecentTrades] = useState([]);
+  const [trades, setTrades] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, eventsRes, tradesRes] = await Promise.all([
+        const [statsRes, eventsRes, tradesRes, partnersRes] = await Promise.all([
           api.get('/api/trades/stats/overview'),
           api.get('/api/events'),
           api.get('/api/trades'),
+          api.get('/api/partners'),
         ]);
         setStats(statsRes.data);
         setEvents(eventsRes.data);
-        setRecentTrades(tradesRes.data.slice(0, 5));
+        setTrades(tradesRes.data);
+        setPartners(partnersRes.data);
       } catch (err) {
-        console.error('Dashboard fetch error:', err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -40,200 +42,181 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const upcomingEvents = events.filter(e => {
-    try {
-      return isAfter(parseISO(e.date), new Date());
-    } catch {
-      return false;
-    }
-  }).slice(0, 4);
+  const upcomingEvents = useMemo(() => {
+    const today = startOfDay(new Date());
+    return events.filter(e => {
+      try {
+        const d = parseISO(e.date);
+        return isAfter(d, today) || format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+      } catch { return false; }
+    }).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+  }, [events]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-      </div>
-    );
-  }
+  const completionRate = stats ? stats.completionRate : 0;
+  const recentTrades = trades.slice(0, 5);
+
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight" data-testid="dashboard-welcome">
-            Welcome back{user?.fullName ? `, ${user.fullName}` : ''}!
-          </h1>
-          <p className="text-slate-500 mt-1">Here is your trading overview.</p>
+          <h1 className="text-2xl font-semibold tracking-tight" data-testid="dashboard-welcome">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Welcome back! Here is your trading overview.</p>
         </div>
-        <Button
-          onClick={() => navigate('/trades')}
-          className="bg-[#0e7490] hover:bg-[#155e75]"
-          data-testid="dashboard-new-trade-button"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Trade
+        <Button onClick={() => navigate('/trades/new')} data-testid="dashboard-new-trade-button">
+          <Plus className="mr-2 h-4 w-4" /> New Trade
         </Button>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <Card className="shadow-sm hover:shadow-md transition-shadow" data-testid="kpi-active-trades-card">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Active Trades</CardTitle>
-            <ShoppingCart className="w-4 h-4 text-teal-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
+              <CalendarDays className="h-5 w-5 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{stats?.activeTrades || 0}</div>
-            <p className="text-xs text-slate-500 mt-1">
-              <TrendingUp className="w-3 h-3 inline mr-1 text-emerald-500" />
-              In progress
-            </p>
+            <div className="text-3xl font-bold">{upcomingEvents.length}</div>
+            {upcomingEvents.length > 0 ? (
+              <div className="mt-1 text-xs text-muted-foreground truncate">Next: {upcomingEvents[0].title}</div>
+            ) : (
+              <div className="mt-1 text-xs text-muted-foreground">No upcoming events</div>
+            )}
           </CardContent>
         </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow" data-testid="kpi-pending-trades-card">
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Pending Trades</CardTitle>
-            <Clock className="w-4 h-4 text-amber-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Trades</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">
+              <CheckCircle2 className="h-5 w-5 text-secondary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{stats?.pendingTrades || 0}</div>
-            <p className="text-xs text-slate-500 mt-1">
-              <AlertCircle className="w-3 h-3 inline mr-1 text-amber-500" />
-              Awaiting confirmation
-            </p>
+            <div className="text-3xl font-bold">{stats?.completedTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
           </CardContent>
         </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow" data-testid="kpi-completed-trades-card">
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Completed Trades</CardTitle>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Trades</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
+              <Ship className="h-5 w-5 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{stats?.completedTrades || 0}</div>
-            <p className="text-xs text-slate-500 mt-1">Overall completion</p>
+            <div className="text-3xl font-bold">{stats?.activeTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
-
-        <Card className="shadow-sm hover:shadow-md transition-shadow" data-testid="trade-progress-card">
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">Trade Progress</CardTitle>
-            <BarChart3 className="w-4 h-4 text-teal-600" />
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending Trades</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
+              <Clock className="h-5 w-5 text-amber-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold tabular-nums">{stats?.completionRate || 0}%</div>
-            <Progress value={stats?.completionRate || 0} className="mt-2 h-2" />
-            <p className="text-xs text-slate-500 mt-1">Overall completion rate</p>
+            <div className="text-3xl font-bold">{stats?.pendingTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Trades */}
-        <div className="lg:col-span-8">
-          <Card className="shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Recent Trades</CardTitle>
-                <CardDescription>Latest trading activity</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/trades')}>
-                View All <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {recentTrades.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <ShoppingCart className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                  <p>No trades yet</p>
+      {/* Upcoming Events */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Upcoming Events</CardTitle>
+              <CardDescription>Conferences, Meetings, and Payments</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {upcomingEvents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground">No upcoming events scheduled</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcomingEvents.map((event) => (
+                <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                    event.type === 'payment' ? 'bg-green-100' : event.type === 'meeting' ? 'bg-blue-100' : event.type === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
+                  }`}>
+                    {event.type === 'payment' ? <DollarSign className="h-5 w-5 text-green-600" /> :
+                     event.type === 'meeting' ? <Users className="h-5 w-5 text-blue-600" /> :
+                     event.type === 'conference' ? <Building className="h-5 w-5 text-purple-600" /> :
+                     <CalendarDays className="h-5 w-5 text-gray-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{event.title}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{event.type}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">{(() => { try { return format(parseISO(event.date), 'MMM d'); } catch { return ''; }})()}</p>
+                    <p className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(event.date), 'yyyy'); } catch { return ''; }})()}</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentTrades.map((trade) => (
-                    <div
-                      key={trade.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-medium text-teal-700">{trade.tradeRef}</span>
-                          <StatusBadge status={trade.status} />
-                        </div>
-                        <p className="text-sm text-slate-600 mt-0.5 truncate">
-                          {trade.buyerName || 'N/A'} ← {trade.sellerName || 'N/A'} | {trade.commodityName || 'N/A'}
-                        </p>
-                      </div>
-                      <div className="text-right ml-4 flex-shrink-0">
-                        <p className="text-sm font-medium">{trade.quantity?.toLocaleString()} {trade.unit}</p>
-                        <p className="text-xs text-slate-500">${trade.price}/{trade.priceUnit?.replace('USD/', '') || 'MT'}</p>
-                      </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Trade Progress */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Trade Progress</CardTitle>
+              <CardDescription>Overall completion rate</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate('/trades')}>View All <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{completionRate}% Trades Completed</span>
+            </div>
+            <Progress value={completionRate} className="h-3" />
+            <div className="mt-4 flex gap-6">
+              <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-secondary" /><span className="text-sm text-muted-foreground">Completed</span></div>
+              <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-primary" /><span className="text-sm text-muted-foreground">In Progress</span></div>
+              <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-amber-400" /><span className="text-sm text-muted-foreground">Pending</span></div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {recentTrades.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Box className="mb-3 h-10 w-10 text-muted-foreground/50" />
+                <p className="text-sm text-muted-foreground">No trades yet</p>
+              </div>
+            ) : (
+              recentTrades.map((trade) => (
+                <div key={trade.id} className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50 cursor-pointer" onClick={() => navigate('/trades')}>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Box className="h-5 w-5 text-primary" /></div>
+                    <div>
+                      <p className="font-medium">{trade.commodityName || 'Unknown'}</p>
+                      <p className="text-xs text-muted-foreground">Due: {(() => { try { return format(parseISO(trade.shipmentWindowEnd), 'MMM d, yyyy'); } catch { return '-'; } })()}</p>
                     </div>
-                  ))}
+                  </div>
+                  <Badge className={TRADE_STATUS_CONFIG[trade.status]?.color || 'bg-slate-100 text-slate-600'}>
+                    {TRADE_STATUS_CONFIG[trade.status]?.label || trade.status}
+                  </Badge>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="lg:col-span-4">
-          <Card className="shadow-sm" data-testid="upcoming-events-card">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">Upcoming Events</CardTitle>
-                <CardDescription>Deadlines and meetings</CardDescription>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')}>
-                View Calendar
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {upcomingEvents.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <CalendarDays className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                  <p>No upcoming events</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {upcomingEvents.map((event) => {
-                    const typeColors = {
-                      meeting: 'bg-blue-100 text-blue-700',
-                      deadline: 'bg-amber-100 text-amber-700',
-                      payment: 'bg-emerald-100 text-emerald-700',
-                      vessel: 'bg-cyan-100 text-cyan-700',
-                      general: 'bg-slate-100 text-slate-700',
-                    };
-                    return (
-                      <div key={event.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50">
-                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${event.type === 'meeting' ? 'bg-blue-500' : event.type === 'deadline' ? 'bg-amber-500' : event.type === 'payment' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{event.title}</p>
-                          <p className="text-xs text-slate-500">
-                            {(() => {
-                              try {
-                                return format(parseISO(event.date), 'MMM d, yyyy');
-                              } catch {
-                                return event.date;
-                              }
-                            })()}
-                            {event.time ? ` at ${event.time}` : ''}
-                          </p>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${typeColors[event.type] || typeColors.general}`}>
-                          {event.type}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

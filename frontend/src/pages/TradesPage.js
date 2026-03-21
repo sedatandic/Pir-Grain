@@ -1,431 +1,307 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
-import { TRADE_STATUS_CONFIG, TRADE_STATUSES } from '../lib/constants';
-import { StatusBadge } from '../components/shared/StatusBadge';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { TRADE_STATUS_CONFIG, STATUS_OPTIONS, PENDING_STATUSES, ONGOING_STATUSES, COMPLETED_STATUSES, WASHOUT_STATUSES, CANCELLED_STATUSES } from '../lib/constants';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Textarea } from '../components/ui/textarea';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, X, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 
-const emptyTrade = {
-  buyerId: '', sellerId: '', brokerId: '', commodityId: '',
-  origin: '', quantity: '', unit: 'MT', price: '', priceUnit: 'USD/MT',
-  currency: 'USD', contractNumber: '', contractDate: '',
-  shipmentWindowStart: '', shipmentWindowEnd: '',
-  loadingPort: '', dischargePort: '', vesselId: '',
-  surveyorId: '', brokerage: '', brokerageUnit: 'USD/MT',
-  paymentTerms: '', notes: '', status: 'pending',
-};
-
 export default function TradesPage() {
+  const navigate = useNavigate();
   const [trades, setTrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingTrade, setEditingTrade] = useState(null);
-  const [deletingTrade, setDeletingTrade] = useState(null);
-  const [form, setForm] = useState(emptyTrade);
-  const [saving, setSaving] = useState(false);
-
-  // Reference data
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
-  const [ports, setPorts] = useState([]);
-  const [vessels, setVessels] = useState([]);
-  const [surveyors, setSurveyors] = useState([]);
+  const [origins, setOrigins] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [filterCommodity, setFilterCommodity] = useState('all');
+  const [filterSeller, setFilterSeller] = useState('all');
+  const [filterBuyer, setFilterBuyer] = useState('all');
+  const [filterVessel, setFilterVessel] = useState('all');
+  const [filterOrigin, setFilterOrigin] = useState('all');
+  const [selectedTrade, setSelectedTrade] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const fetchTrades = useCallback(async () => {
+  const fetchAll = useCallback(async () => {
     try {
-      const params = {};
-      if (statusFilter !== 'all') params.status = statusFilter;
-      if (search) params.search = search;
-      const res = await api.get('/api/trades', { params });
-      setTrades(res.data);
+      const [tr, pa, co, or] = await Promise.all([
+        api.get('/api/trades'),
+        api.get('/api/partners'),
+        api.get('/api/commodities'),
+        api.get('/api/origins'),
+      ]);
+      setTrades(tr.data);
+      setPartners(pa.data);
+      setCommodities(co.data);
+      setOrigins(or.data);
     } catch (err) {
-      toast.error('Failed to load trades');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter]);
-
-  const fetchReferenceData = useCallback(async () => {
-    try {
-      const [partnersRes, commRes, portsRes, vesselsRes, surveyorsRes] = await Promise.all([
-        api.get('/api/partners'),
-        api.get('/api/commodities'),
-        api.get('/api/ports'),
-        api.get('/api/vessels'),
-        api.get('/api/surveyors'),
-      ]);
-      setPartners(partnersRes.data);
-      setCommodities(commRes.data);
-      setPorts(portsRes.data);
-      setVessels(vesselsRes.data);
-      setSurveyors(surveyorsRes.data);
-    } catch (err) {
-      console.error('Failed to load reference data', err);
-    }
   }, []);
 
-  useEffect(() => { fetchTrades(); }, [fetchTrades]);
-  useEffect(() => { fetchReferenceData(); }, [fetchReferenceData]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const openCreate = () => {
-    setEditingTrade(null);
-    setForm(emptyTrade);
-    setDialogOpen(true);
-  };
+  const hasActiveFilters = filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all';
+  const clearFilters = () => { setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); };
 
-  const openEdit = (trade) => {
-    setEditingTrade(trade);
-    setForm({
-      buyerId: trade.buyerId || '',
-      sellerId: trade.sellerId || '',
-      brokerId: trade.brokerId || '',
-      commodityId: trade.commodityId || '',
-      origin: trade.origin || '',
-      quantity: trade.quantity || '',
-      unit: trade.unit || 'MT',
-      price: trade.price || '',
-      priceUnit: trade.priceUnit || 'USD/MT',
-      currency: trade.currency || 'USD',
-      contractNumber: trade.contractNumber || '',
-      contractDate: trade.contractDate ? trade.contractDate.split('T')[0] : '',
-      shipmentWindowStart: trade.shipmentWindowStart ? trade.shipmentWindowStart.split('T')[0] : '',
-      shipmentWindowEnd: trade.shipmentWindowEnd ? trade.shipmentWindowEnd.split('T')[0] : '',
-      loadingPort: trade.loadingPort || '',
-      dischargePort: trade.dischargePort || '',
-      vesselId: trade.vesselId || '',
-      surveyorId: trade.surveyorId || '',
-      brokerage: trade.brokerage || '',
-      brokerageUnit: trade.brokerageUnit || 'USD/MT',
-      paymentTerms: trade.paymentTerms || '',
-      notes: trade.notes || '',
-      status: trade.status || 'pending',
-    });
-    setDialogOpen(true);
-  };
+  const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
+  const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
+  const uniqueVessels = useMemo(() => [...new Set(trades.filter(t => t.vesselName).map(t => t.vesselName))].sort(), [trades]);
 
-  const handleSave = async () => {
-    setSaving(true);
+  const applyFilters = useCallback((list) => {
+    let result = list;
+    if (filterCommodity !== 'all') result = result.filter(t => t.commodityId === filterCommodity);
+    if (filterSeller !== 'all') result = result.filter(t => t.sellerId === filterSeller);
+    if (filterBuyer !== 'all') result = result.filter(t => t.buyerId === filterBuyer);
+    if (filterVessel !== 'all') result = result.filter(t => t.vesselName === filterVessel);
+    if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(t =>
+        (t.referenceNumber || '').toLowerCase().includes(q) ||
+        (t.sellerName || '').toLowerCase().includes(q) ||
+        (t.buyerName || '').toLowerCase().includes(q) ||
+        (t.commodityName || '').toLowerCase().includes(q) ||
+        (t.vesselName || '').toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, search]);
+
+  const categorized = useMemo(() => ({
+    ongoing: trades.filter(t => ONGOING_STATUSES.includes(t.status)),
+    pending: trades.filter(t => PENDING_STATUSES.includes(t.status)),
+    completed: trades.filter(t => COMPLETED_STATUSES.includes(t.status)),
+    washout: trades.filter(t => WASHOUT_STATUSES.includes(t.status)),
+    cancelled: trades.filter(t => CANCELLED_STATUSES.includes(t.status)),
+  }), [trades]);
+
+  const filtered = useMemo(() => ({
+    ongoing: applyFilters(categorized.ongoing),
+    pending: applyFilters(categorized.pending),
+    completed: applyFilters(categorized.completed),
+    washout: applyFilters(categorized.washout),
+    cancelled: applyFilters(categorized.cancelled),
+  }), [categorized, applyFilters]);
+
+  const handleStatusChange = async (tradeId, newStatus) => {
     try {
-      const data = {
-        ...form,
-        quantity: form.quantity ? parseFloat(form.quantity) : null,
-        price: form.price ? parseFloat(form.price) : null,
-        brokerage: form.brokerage ? parseFloat(form.brokerage) : null,
-      };
-      if (editingTrade) {
-        await api.put(`/api/trades/${editingTrade.id}`, data);
-        toast.success('Trade updated successfully');
-      } else {
-        await api.post('/api/trades', data);
-        toast.success('Trade created successfully');
-      }
-      setDialogOpen(false);
-      fetchTrades();
+      await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus } : t));
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to save trade');
-    } finally {
-      setSaving(false);
+      toast.error('Failed to update status');
     }
   };
 
-  const handleDelete = async () => {
-    if (!deletingTrade) return;
-    try {
-      await api.delete(`/api/trades/${deletingTrade.id}`);
-      toast.success('Trade deleted');
-      setDeleteDialogOpen(false);
-      setDeletingTrade(null);
-      fetchTrades();
-    } catch (err) {
-      toast.error('Failed to delete trade');
-    }
+  const formatDate = (d) => { try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return '-'; } };
+  const formatShipment = (d) => { try { return format(parseISO(d), 'MMM yyyy'); } catch { return '-'; } };
+  const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
+
+  const renderTable = (list, empty) => {
+    if (list.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">{search || hasActiveFilters ? 'No trades match your search or filters' : empty}</div>;
+    return (
+      <div className="overflow-x-auto border rounded-lg">
+        <Table className="trade-table">
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="text-center min-w-[150px]">Status</TableHead>
+              <TableHead className="text-center">Contract Date</TableHead>
+              <TableHead className="text-center">Contract No</TableHead>
+              <TableHead className="text-center">Seller</TableHead>
+              <TableHead className="text-center">Buyer</TableHead>
+              <TableHead className="text-center">Commodity</TableHead>
+              <TableHead className="text-center">Origin</TableHead>
+              <TableHead className="text-center">Quantity</TableHead>
+              <TableHead className="text-center">Tolerance</TableHead>
+              <TableHead className="text-center">Delivery Term</TableHead>
+              <TableHead className="text-center">Unit Price</TableHead>
+              <TableHead className="text-center">Currency</TableHead>
+              <TableHead className="text-center">Shipment Period</TableHead>
+              <TableHead className="text-center">Vessel</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {list.map((trade) => (
+              <TableRow key={trade.id}>
+                <TableCell className="text-center">
+                  <Select value={trade.status} onValueChange={(v) => handleStatusChange(trade.id, v)}>
+                    <SelectTrigger className="w-full h-8">
+                      <Badge className={`${TRADE_STATUS_CONFIG[trade.status]?.color || 'bg-muted text-muted-foreground'} status-badge truncate`}>
+                        {(TRADE_STATUS_CONFIG[trade.status]?.label || trade.status).toUpperCase()}
+                      </Badge>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell className="text-center text-sm">{formatDate(trade.contractDate || trade.createdAt)}</TableCell>
+                <TableCell className="text-center">
+                  <button onClick={() => { setSelectedTrade(trade); setModalOpen(true); }} className="font-medium text-primary hover:underline cursor-pointer text-sm">
+                    {trade.referenceNumber}
+                  </button>
+                </TableCell>
+                <TableCell className="text-center text-sm">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
+                <TableCell className="text-center font-mono text-sm">{formatQty(trade.quantity)}</TableCell>
+                <TableCell className="text-center text-sm">{trade.tolerance ? `${trade.tolerance}%` : '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.deliveryTerm || '-'}</TableCell>
+                <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
+                <TableCell className="text-center text-sm">{formatShipment(trade.shipmentWindowStart)}</TableCell>
+                <TableCell className="text-center text-sm uppercase">{trade.vesselName || '-'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
   };
 
-  const buyers = partners.filter(p => p.type === 'buyer');
-  const sellers = partners.filter(p => p.type === 'seller');
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Trades</h1>
-          <p className="text-slate-500 text-sm">Manage your commodity trades</p>
-        </div>
-        <Button onClick={openCreate} className="bg-[#0e7490] hover:bg-[#155e75]" data-testid="trades-new-trade-button">
-          <Plus className="w-4 h-4 mr-2" /> New Trade
-        </Button>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Trades</h1>
+        <p className="text-muted-foreground">Manage all your commodity trades</p>
       </div>
 
-      {/* Toolbar */}
-      <Card className="shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <Input
-                data-testid="trades-search-input"
-                placeholder="Search trades..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+      {/* Search + Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-3 overflow-x-auto">
+            <div className="relative shrink-0">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input data-testid="trades-search-input" placeholder="Search trades..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 w-[200px]" />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter} data-testid="trades-status-filter-select">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
+            <Select value={filterCommodity} onValueChange={setFilterCommodity}>
+              <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Commodity" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {TRADE_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>{TRADE_STATUS_CONFIG[s].label}</SelectItem>
-                ))}
+                <SelectItem value="all">All Commodities</SelectItem>
+                {commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            {(search || statusFilter !== 'all') && (
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
-                <X className="w-4 h-4 mr-1" /> Clear
-              </Button>
-            )}
+            <Select value={filterOrigin} onValueChange={setFilterOrigin}>
+              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Origin" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Origins</SelectItem>
+                {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterSeller} onValueChange={setFilterSeller}>
+              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Seller" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sellers</SelectItem>
+                {sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterBuyer} onValueChange={setFilterBuyer}>
+              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Buyer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Buyers</SelectItem>
+                {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterVessel} onValueChange={setFilterVessel}>
+              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Vessel" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Vessels</SelectItem>
+                {uniqueVessels.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0"><X className="h-4 w-4 mr-1" />Clear</Button>}
+            <div className="ml-auto shrink-0">
+              <Button onClick={() => navigate('/trades/new')} data-testid="trades-new-trade-button"><Plus className="mr-2 h-4 w-4" />New Trade</Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <div className="data-table" data-testid="trades-table">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50">
-              <TableHead className="font-semibold">Trade Ref</TableHead>
-              <TableHead className="font-semibold">Buyer</TableHead>
-              <TableHead className="font-semibold">Seller</TableHead>
-              <TableHead className="font-semibold">Commodity</TableHead>
-              <TableHead className="font-semibold text-right">Quantity</TableHead>
-              <TableHead className="font-semibold text-right">Price</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold">Date</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" />
-                </TableCell>
-              </TableRow>
-            ) : trades.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center py-8 text-slate-500">
-                  No trades found
-                </TableCell>
-              </TableRow>
-            ) : (
-              trades.map((trade) => (
-                <TableRow key={trade.id} className="hover:bg-slate-50/70">
-                  <TableCell className="font-mono text-sm font-medium text-teal-700">{trade.tradeRef}</TableCell>
-                  <TableCell className="text-sm">{trade.buyerName || '-'}</TableCell>
-                  <TableCell className="text-sm">{trade.sellerName || '-'}</TableCell>
-                  <TableCell className="text-sm">{trade.commodityName || '-'}</TableCell>
-                  <TableCell className="text-sm text-right tabular-nums">
-                    {trade.quantity ? `${trade.quantity.toLocaleString()} ${trade.unit || 'MT'}` : '-'}
-                  </TableCell>
-                  <TableCell className="text-sm text-right tabular-nums">
-                    {trade.price ? `$${trade.price}` : '-'}
-                  </TableCell>
-                  <TableCell><StatusBadge status={trade.status} /></TableCell>
-                  <TableCell className="text-xs text-slate-500">
-                    {trade.createdAt ? (() => { try { return format(parseISO(trade.createdAt), 'MMM d, yyyy'); } catch { return '-'; } })() : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" data-testid="trade-row-actions-menu-button">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem data-testid="trade-row-edit-menu-item" onClick={() => openEdit(trade)}>
-                          <Pencil className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          data-testid="trade-row-delete-menu-item"
-                          className="text-red-600"
-                          onClick={() => { setDeletingTrade(trade); setDeleteDialogOpen(true); }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {/* Ongoing */}
+      <Card className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Contracts</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
+          <CardDescription className="text-emerald-700">DI Sent through Brokerage</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.ongoing, 'No ongoing contracts')}</CardContent>
+      </Card>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingTrade ? 'Edit Trade' : 'New Trade'}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label>Buyer</Label>
-              <Select value={form.buyerId} onValueChange={(v) => setForm({ ...form, buyerId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select buyer" /></SelectTrigger>
-                <SelectContent>
-                  {buyers.map((b) => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
-                </SelectContent>
-              </Select>
+      {/* Pending */}
+      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-blue-600" /><CardTitle className="text-blue-800">Pending Contracts</CardTitle><Badge variant="secondary" className="bg-blue-100 text-blue-800">{filtered.pending.length}</Badge></div>
+          <CardDescription className="text-blue-700">Waiting for Vessel Nomination</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.pending, 'No pending contracts')}</CardContent>
+      </Card>
+
+      {/* Completed */}
+      <Card className="border-l-4 border-l-slate-400 bg-slate-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Contracts</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
+          <CardDescription className="text-slate-600">Successfully completed trades</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
+      </Card>
+
+      {/* Washout */}
+      <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Washout Contracts</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.washout.length}</Badge></div>
+          <CardDescription className="text-amber-700">Trades settled by washout</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.washout, 'No washout contracts')}</CardContent>
+      </Card>
+
+      {/* Cancelled */}
+      <Card className="border-l-4 border-l-red-400 bg-red-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><Ban className="h-5 w-5 text-red-500" /><CardTitle className="text-red-700">Cancelled Contracts</CardTitle><Badge variant="secondary" className="bg-red-100 text-red-700">{filtered.cancelled.length}</Badge></div>
+          <CardDescription className="text-red-600">Cancelled or terminated trades</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.cancelled, 'No cancelled contracts')}</CardContent>
+      </Card>
+
+      {/* Trade Detail Modal */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle></DialogHeader>
+          {selectedTrade && (
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div><span className="text-muted-foreground">Status:</span> <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge></div>
+              <div><span className="text-muted-foreground">Contract Date:</span> {formatDate(selectedTrade.contractDate)}</div>
+              <div><span className="text-muted-foreground">Seller:</span> {selectedTrade.sellerName || '-'}</div>
+              <div><span className="text-muted-foreground">Buyer:</span> {selectedTrade.buyerName || '-'}</div>
+              <div><span className="text-muted-foreground">Commodity:</span> {selectedTrade.commodityName || '-'}</div>
+              <div><span className="text-muted-foreground">Origin:</span> {selectedTrade.originName || '-'}</div>
+              <div><span className="text-muted-foreground">Quantity:</span> {formatQty(selectedTrade.quantity)}</div>
+              <div><span className="text-muted-foreground">Unit Price:</span> ${selectedTrade.pricePerMT?.toLocaleString() || 0}/{selectedTrade.currency || 'USD'}</div>
+              <div><span className="text-muted-foreground">Delivery Term:</span> {selectedTrade.deliveryTerm || '-'}</div>
+              <div><span className="text-muted-foreground">Payment Terms:</span> {selectedTrade.paymentTerms || '-'}</div>
+              <div><span className="text-muted-foreground">Loading Port:</span> {selectedTrade.loadingPortName || '-'}</div>
+              <div><span className="text-muted-foreground">Discharge Port:</span> {selectedTrade.dischargePortName || '-'}</div>
+              <div><span className="text-muted-foreground">Shipment:</span> {formatShipment(selectedTrade.shipmentWindowStart)} - {formatShipment(selectedTrade.shipmentWindowEnd)}</div>
+              <div><span className="text-muted-foreground">Vessel:</span> {selectedTrade.vesselName || '-'}</div>
+              <div><span className="text-muted-foreground">Brokerage:</span> ${selectedTrade.brokeragePerMT || 0}/MT</div>
+              <div><span className="text-muted-foreground">Total Commission:</span> ${selectedTrade.totalCommission?.toLocaleString() || 0}</div>
+              {selectedTrade.notes && <div className="col-span-2"><span className="text-muted-foreground">Notes:</span> {selectedTrade.notes}</div>}
             </div>
-            <div className="space-y-2">
-              <Label>Seller</Label>
-              <Select value={form.sellerId} onValueChange={(v) => setForm({ ...form, sellerId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select seller" /></SelectTrigger>
-                <SelectContent>
-                  {sellers.map((s) => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Commodity</Label>
-              <Select value={form.commodityId} onValueChange={(v) => setForm({ ...form, commodityId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
-                <SelectContent>
-                  {commodities.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Origin</Label>
-              <Input value={form.origin} onChange={(e) => setForm({ ...form, origin: e.target.value })} placeholder="e.g. Turkey" />
-            </div>
-            <div className="space-y-2">
-              <Label>Quantity</Label>
-              <div className="flex gap-2">
-                <Input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="0" className="flex-1" />
-                <Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} className="w-20" placeholder="MT" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Price</Label>
-              <div className="flex gap-2">
-                <Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" className="flex-1" />
-                <Input value={form.priceUnit} onChange={(e) => setForm({ ...form, priceUnit: e.target.value })} className="w-24" placeholder="USD/MT" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Contract Number</Label>
-              <Input value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} placeholder="CNT-0000" />
-            </div>
-            <div className="space-y-2">
-              <Label>Contract Date</Label>
-              <Input type="date" value={form.contractDate} onChange={(e) => setForm({ ...form, contractDate: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Shipment Window Start</Label>
-              <Input type="date" value={form.shipmentWindowStart} onChange={(e) => setForm({ ...form, shipmentWindowStart: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Shipment Window End</Label>
-              <Input type="date" value={form.shipmentWindowEnd} onChange={(e) => setForm({ ...form, shipmentWindowEnd: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Loading Port</Label>
-              <Input value={form.loadingPort} onChange={(e) => setForm({ ...form, loadingPort: e.target.value })} placeholder="e.g. Mersin" />
-            </div>
-            <div className="space-y-2">
-              <Label>Discharge Port</Label>
-              <Input value={form.dischargePort} onChange={(e) => setForm({ ...form, dischargePort: e.target.value })} placeholder="e.g. Mumbai" />
-            </div>
-            <div className="space-y-2">
-              <Label>Vessel</Label>
-              <Select value={form.vesselId} onValueChange={(v) => setForm({ ...form, vesselId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select vessel" /></SelectTrigger>
-                <SelectContent>
-                  {vessels.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Surveyor</Label>
-              <Select value={form.surveyorId} onValueChange={(v) => setForm({ ...form, surveyorId: v })}>
-                <SelectTrigger><SelectValue placeholder="Select surveyor" /></SelectTrigger>
-                <SelectContent>
-                  {surveyors.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Brokerage</Label>
-              <div className="flex gap-2">
-                <Input type="number" value={form.brokerage} onChange={(e) => setForm({ ...form, brokerage: e.target.value })} placeholder="0.00" className="flex-1" />
-                <Input value={form.brokerageUnit} onChange={(e) => setForm({ ...form, brokerageUnit: e.target.value })} className="w-24" placeholder="USD/MT" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Payment Terms</Label>
-              <Input value={form.paymentTerms} onChange={(e) => setForm({ ...form, paymentTerms: e.target.value })} placeholder="e.g. LC at sight" />
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {TRADE_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{TRADE_STATUS_CONFIG[s].label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="col-span-2 space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Additional notes..." rows={3} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} data-testid="modal-cancel-button">Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-[#0e7490] hover:bg-[#155e75]" data-testid="modal-save-button">
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              {editingTrade ? 'Update Trade' : 'Create Trade'}
-            </Button>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Delete Confirmation */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Trade</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete trade {deletingTrade?.tradeRef}? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700" data-testid="trade-delete-confirm-button">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

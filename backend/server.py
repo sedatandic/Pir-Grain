@@ -28,11 +28,9 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer(auto_error=False)
 
-# ─── MongoDB ────────────────────────────────────────────────
 client = MongoClient(MONGO_URL)
 db = client[DB_NAME]
 
-# Collections
 users_col = db["users"]
 trades_col = db["trades"]
 partners_col = db["partners"]
@@ -43,6 +41,7 @@ origins_col = db["origins"]
 ports_col = db["ports"]
 surveyors_col = db["surveyors"]
 events_col = db["events"]
+invoices_col = db["invoices"]
 
 # ─── Helpers ────────────────────────────────────────────────
 def serialize_doc(doc):
@@ -56,7 +55,7 @@ def serialize_doc(doc):
             doc[key] = str(value)
     return doc
 
-def generate_trade_ref():
+def generate_ref():
     year = datetime.now().strftime("%y")
     num = random.randint(1000, 9999)
     letters = ''.join(random.choices(string.ascii_uppercase, k=2))
@@ -89,212 +88,302 @@ class LoginRequest(BaseModel):
     password: str
 
 class TradeCreate(BaseModel):
-    buyerId: Optional[str] = None
     sellerId: Optional[str] = None
+    buyerId: Optional[str] = None
     brokerId: Optional[str] = None
+    coBrokerId: Optional[str] = None
     commodityId: Optional[str] = None
-    origin: Optional[str] = None
-    quantity: Optional[float] = None
-    unit: Optional[str] = "MT"
-    price: Optional[float] = None
-    priceUnit: Optional[str] = "USD/MT"
+    originId: Optional[str] = None
+    quantity: Optional[float] = 0
+    tolerance: Optional[str] = None
+    deliveryTerm: Optional[str] = None
+    pricePerMT: Optional[float] = 0
     currency: Optional[str] = "USD"
-    contractNumber: Optional[str] = None
-    contractDate: Optional[str] = None
+    paymentTerms: Optional[str] = None
+    incoterms: Optional[str] = None
+    loadingPortId: Optional[str] = None
+    dischargePortId: Optional[str] = None
     shipmentWindowStart: Optional[str] = None
     shipmentWindowEnd: Optional[str] = None
-    loadingPort: Optional[str] = None
-    dischargePort: Optional[str] = None
-    vesselId: Optional[str] = None
+    vesselName: Optional[str] = None
     surveyorId: Optional[str] = None
-    brokerage: Optional[float] = None
-    brokerageUnit: Optional[str] = "USD/MT"
-    paymentTerms: Optional[str] = None
+    brokeragePerMT: Optional[float] = 0
+    contractDate: Optional[str] = None
+    contractNumber: Optional[str] = None
+    specialConditions: Optional[str] = None
     notes: Optional[str] = None
-    status: Optional[str] = "pending"
+    status: Optional[str] = "confirmation"
 
 class TradeUpdate(TradeCreate):
     pass
 
+class TradeStatusUpdate(BaseModel):
+    status: str
+
 class PartnerCreate(BaseModel):
     companyName: str
+    companyCode: Optional[str] = None
     contactPerson: Optional[str] = None
     address: Optional[str] = None
     city: Optional[str] = None
     country: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
-    type: str = "buyer"  # buyer, seller, co-broker
+    whatsapp: Optional[str] = None
+    type: str = "buyer"
+    tradeContacts: Optional[list] = []
+    executionContacts: Optional[list] = []
+    notes: Optional[str] = None
 
 class VesselCreate(BaseModel):
     name: str
-    imo: Optional[str] = None
+    imoNumber: Optional[str] = None
     flag: Optional[str] = None
-    dwt: Optional[float] = None
-    built: Optional[str] = None
-    vesselType: Optional[str] = None
+    builtYear: Optional[int] = None
+    vesselType: Optional[str] = "Bulk Carrier"
 
 class SurveyorCreate(BaseModel):
     name: str
-    contactPerson: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    city: Optional[str] = None
-    country: Optional[str] = None
+    contact: Optional[str] = None
+    countriesServed: Optional[list] = []
 
-class ItemCreate(BaseModel):
+class CommodityCreate(BaseModel):
     name: str
+    code: Optional[str] = None
+    group: Optional[str] = None
+    hsCode: Optional[str] = None
+    description: Optional[str] = None
+
+class OriginCreate(BaseModel):
+    name: str
+    adjective: Optional[str] = None
+    code: Optional[str] = None
+
+class PortCreate(BaseModel):
+    name: str
+    type: Optional[str] = "loading"
+    country: Optional[str] = None
 
 class EventCreate(BaseModel):
     title: str
     date: str
-    time: Optional[str] = None
+    type: Optional[str] = "other"
     description: Optional[str] = None
-    type: Optional[str] = "general"
     tradeId: Optional[str] = None
+    partnerId: Optional[str] = None
+    paymentDueDate: Optional[str] = None
+
+class InvoiceCreate(BaseModel):
+    invoiceNumber: str
+    vendorName: str
+    amount: float
+    currency: Optional[str] = "USD"
+    dueDate: str
+    category: Optional[str] = "other"
+    description: Optional[str] = None
+    status: Optional[str] = "pending"
+
+class UserCreate(BaseModel):
+    name: str
+    username: str
+    email: Optional[str] = None
+    mobile: Optional[str] = None
+    password: str
+    role: Optional[str] = "user"
 
 # ─── Seed Data ──────────────────────────────────────────────
 def seed_data():
-    # Seed demo user
     if users_col.count_documents({}) == 0:
-        users_col.insert_one({
-            "username": "salihkaragoz",
-            "password": pwd_context.hash("salih123"),
-            "role": "admin",
-            "fullName": "Salih Karagoz",
-            "email": "salih@pirgrains.com",
-            "createdAt": datetime.utcnow()
-        })
-        print("Seeded demo user: salihkaragoz / salih123")
+        users_col.insert_many([
+            {
+                "username": "salihkaragoz",
+                "password": pwd_context.hash("salih123"),
+                "role": "admin",
+                "name": "Salih Karagoz",
+                "email": "salih@pirgrains.com",
+                "status": "active",
+                "createdAt": datetime.utcnow()
+            },
+            {
+                "username": "piraccount",
+                "password": pwd_context.hash("piraccount123"),
+                "role": "accountant",
+                "name": "PIR Accountant",
+                "email": "accounting@pirgrains.com",
+                "status": "active",
+                "createdAt": datetime.utcnow()
+            }
+        ])
 
-    # Seed commodities
     if commodities_col.count_documents({}) == 0:
-        commodities = ["Wheat", "Barley", "Corn", "Chickpeas", "Red Lentils", "Green Lentils",
-                       "Yellow Peas", "Sunflower Seeds", "Soybeans", "Rice", "Millet", "Oats"]
-        for c in commodities:
-            commodities_col.insert_one({"name": c, "createdAt": datetime.utcnow()})
-        print(f"Seeded {len(commodities)} commodities")
+        comms = [
+            {"name": "Wheat", "code": "WHT", "group": "Grains"},
+            {"name": "Barley", "code": "BRL", "group": "Grains"},
+            {"name": "Corn", "code": "CRN", "group": "Grains"},
+            {"name": "Red Lentils", "code": "RDL", "group": "Pulses"},
+            {"name": "Green Lentils", "code": "GRL", "group": "Pulses"},
+            {"name": "Chickpeas", "code": "CHP", "group": "Pulses"},
+            {"name": "Yellow Peas", "code": "YLP", "group": "Pulses"},
+            {"name": "Sunflower Seeds", "code": "SFS", "group": "Oilseeds"},
+            {"name": "Sunflower Meal Pellets", "code": "SMP", "group": "Oilseeds"},
+            {"name": "Soybeans", "code": "SOY", "group": "Oilseeds"},
+            {"name": "Rice", "code": "RCE", "group": "Grains"},
+            {"name": "Millet", "code": "MLT", "group": "Grains"},
+        ]
+        for c in comms:
+            c["createdAt"] = datetime.utcnow()
+            commodities_col.insert_one(c)
 
-    # Seed origins
     if origins_col.count_documents({}) == 0:
-        origins = ["Turkey", "Russia", "Ukraine", "Kazakhstan", "India", "Canada",
-                   "Australia", "Argentina", "USA", "Bulgaria", "Romania", "France"]
+        origins = [
+            {"name": "Turkey", "adjective": "Turkish", "code": "TR"},
+            {"name": "Russia", "adjective": "Russian", "code": "RU"},
+            {"name": "Ukraine", "adjective": "Ukrainian", "code": "UA"},
+            {"name": "Kazakhstan", "adjective": "Kazakh", "code": "KZ"},
+            {"name": "India", "adjective": "Indian", "code": "IN"},
+            {"name": "Canada", "adjective": "Canadian", "code": "CA"},
+            {"name": "Australia", "adjective": "Australian", "code": "AU"},
+            {"name": "Argentina", "adjective": "Argentine", "code": "AR"},
+            {"name": "Bulgaria", "adjective": "Bulgarian", "code": "BG"},
+            {"name": "Romania", "adjective": "Romanian", "code": "RO"},
+            {"name": "France", "adjective": "French", "code": "FR"},
+        ]
         for o in origins:
-            origins_col.insert_one({"name": o, "createdAt": datetime.utcnow()})
-        print(f"Seeded {len(origins)} origins")
+            o["createdAt"] = datetime.utcnow()
+            origins_col.insert_one(o)
 
-    # Seed ports
     if ports_col.count_documents({}) == 0:
-        ports = ["Mersin", "Istanbul", "Novorossiysk", "Odessa", "Mumbai", "Karachi",
-                 "Jeddah", "Dubai", "Alexandria", "Constanta", "Santos", "Vancouver"]
+        ports = [
+            {"name": "Mersin", "type": "loading", "country": "Turkey"},
+            {"name": "Istanbul", "type": "loading", "country": "Turkey"},
+            {"name": "Novorossiysk", "type": "loading", "country": "Russia"},
+            {"name": "Odessa", "type": "loading", "country": "Ukraine"},
+            {"name": "Constanta", "type": "loading", "country": "Romania"},
+            {"name": "Mumbai (JNPT)", "type": "discharge", "country": "India"},
+            {"name": "Karachi", "type": "discharge", "country": "Pakistan"},
+            {"name": "Jeddah", "type": "discharge", "country": "Saudi Arabia"},
+            {"name": "Dubai (Jebel Ali)", "type": "discharge", "country": "UAE"},
+            {"name": "Alexandria", "type": "discharge", "country": "Egypt"},
+            {"name": "Santos", "type": "discharge", "country": "Brazil"},
+            {"name": "Bandar Abbas", "type": "discharge", "country": "Iran"},
+        ]
         for p in ports:
-            ports_col.insert_one({"name": p, "createdAt": datetime.utcnow()})
-        print(f"Seeded {len(ports)} ports")
+            p["createdAt"] = datetime.utcnow()
+            ports_col.insert_one(p)
 
-    # Seed partners
     if partners_col.count_documents({}) == 0:
         partners = [
-            {"companyName": "AgroTrade International", "contactPerson": "Ahmed Hassan", "email": "ahmed@agrotrade.com", "phone": "+971 4 000 0000", "city": "Dubai", "country": "UAE", "type": "buyer", "address": "Trade Center, Dubai"},
-            {"companyName": "Black Sea Exports Ltd", "contactPerson": "Ivan Petrov", "email": "ivan@bsexports.com", "phone": "+7 863 000 0000", "city": "Rostov", "country": "Russia", "type": "seller", "address": "Port District, Rostov-on-Don"},
-            {"companyName": "Balkan Grains OOD", "contactPerson": "Georgi Dimitrov", "email": "georgi@balkangrains.bg", "phone": "+359 32 000 000", "city": "Plovdiv", "country": "Bulgaria", "type": "seller", "address": "Industrial Zone, Plovdiv"},
-            {"companyName": "Al Manar Trading", "contactPerson": "Khalid Al Rashid", "email": "khalid@almanar.sa", "phone": "+966 1 000 0000", "city": "Jeddah", "country": "Saudi Arabia", "type": "buyer", "address": "King Fahd Rd, Jeddah"},
-            {"companyName": "Mediterranean Brokers", "contactPerson": "Marco Rossi", "email": "marco@medbrokers.it", "phone": "+39 02 000 0000", "city": "Milan", "country": "Italy", "type": "co-broker", "address": "Via Roma 12, Milan"},
-            {"companyName": "Asia Pulses Corp", "contactPerson": "Rajesh Kumar", "email": "rajesh@asiapulses.in", "phone": "+91 22 000 0000", "city": "Mumbai", "country": "India", "type": "buyer", "address": "Nariman Point, Mumbai"},
+            {"companyName": "Pir Grain & Pulses Ltd", "companyCode": "PIR", "contactPerson": "Trade Contact", "email": "trading@pirgrains.com", "phone": "+359 32 000 000", "city": "Plovdiv", "country": "Bulgaria", "type": "broker", "address": "Tsarigradsko Shose Blvd. No:73"},
+            {"companyName": "Atria Brokers FZCO", "companyCode": "ATRIA", "contactPerson": "Trade Desk", "email": "trading@atriabrokers.ae", "phone": "+971 4 000 0000", "city": "Dubai", "country": "UAE", "type": "broker", "address": "Dubai Silicon Oasis, DDP"},
+            {"companyName": "Nord Star LLC", "companyCode": "NORD", "contactPerson": "Trade Manager", "email": "trade@nordstar.ru", "phone": "+7 863 000 0000", "city": "Rostov-on-Don", "country": "Russia", "type": "broker", "address": "Vasnetsova 10A, Azov"},
+            {"companyName": "AgroTrade International", "companyCode": "AGRO", "contactPerson": "Ahmed Hassan", "email": "ahmed@agrotrade.com", "phone": "+971 4 000 0000", "city": "Dubai", "country": "UAE", "type": "buyer", "address": "Trade Center, Dubai"},
+            {"companyName": "Al Manar Trading", "companyCode": "ALM", "contactPerson": "Khalid Al Rashid", "email": "khalid@almanar.sa", "phone": "+966 1 000 0000", "city": "Jeddah", "country": "Saudi Arabia", "type": "buyer", "address": "King Fahd Rd"},
+            {"companyName": "Asia Pulses Corp", "companyCode": "APC", "contactPerson": "Rajesh Kumar", "email": "rajesh@asiapulses.in", "phone": "+91 22 000 0000", "city": "Mumbai", "country": "India", "type": "buyer", "address": "Nariman Point"},
+            {"companyName": "Black Sea Exports Ltd", "companyCode": "BSE", "contactPerson": "Ivan Petrov", "email": "ivan@bsexports.com", "phone": "+7 863 000 0000", "city": "Rostov", "country": "Russia", "type": "seller", "address": "Port District"},
+            {"companyName": "Balkan Grains OOD", "companyCode": "BG", "contactPerson": "Georgi Dimitrov", "email": "georgi@balkangrains.bg", "phone": "+359 32 000 000", "city": "Plovdiv", "country": "Bulgaria", "type": "seller", "address": "Industrial Zone"},
+            {"companyName": "Anatolia Commodities", "companyCode": "ANA", "contactPerson": "Mehmet Yilmaz", "email": "mehmet@anatoliacm.tr", "phone": "+90 312 000 0000", "city": "Ankara", "country": "Turkey", "type": "seller", "address": "Trade Blvd"},
+            {"companyName": "Mediterranean Brokers", "companyCode": "MED", "contactPerson": "Marco Rossi", "email": "marco@medbrokers.it", "phone": "+39 02 000 0000", "city": "Milan", "country": "Italy", "type": "co-broker", "address": "Via Roma 12"},
         ]
         for p in partners:
             p["createdAt"] = datetime.utcnow()
             p["updatedAt"] = datetime.utcnow()
+            p["tradeContacts"] = [{"name": p["contactPerson"], "email": p["email"], "phone": p["phone"]}]
+            p["executionContacts"] = []
             partners_col.insert_one(p)
-        print(f"Seeded {len(partners)} partners")
 
-    # Seed vessels
     if vessels_col.count_documents({}) == 0:
         vessels = [
-            {"name": "MV Grain Star", "imo": "9876543", "flag": "Panama", "dwt": 45000, "built": "2018", "vesselType": "Bulk Carrier"},
-            {"name": "MV Black Sea", "imo": "9765432", "flag": "Liberia", "dwt": 32000, "built": "2015", "vesselType": "Bulk Carrier"},
-            {"name": "MV Mediterranean", "imo": "9654321", "flag": "Marshall Islands", "dwt": 58000, "built": "2020", "vesselType": "Bulk Carrier"},
+            {"name": "MV Grain Star", "imoNumber": "9876543", "flag": "Panama", "builtYear": 2018, "vesselType": "Bulk Carrier"},
+            {"name": "MV Black Sea", "imoNumber": "9765432", "flag": "Liberia", "builtYear": 2015, "vesselType": "Bulk Carrier"},
+            {"name": "MV Mediterranean", "imoNumber": "9654321", "flag": "Marshall Islands", "builtYear": 2020, "vesselType": "Bulk Carrier"},
         ]
         for v in vessels:
             v["createdAt"] = datetime.utcnow()
-            v["updatedAt"] = datetime.utcnow()
             vessels_col.insert_one(v)
-        print(f"Seeded {len(vessels)} vessels")
 
-    # Seed surveyors
     if surveyors_col.count_documents({}) == 0:
         surveyors = [
-            {"name": "SGS Turkey", "contactPerson": "Mehmet Yilmaz", "email": "mehmet@sgs.com.tr", "phone": "+90 212 000 0000", "city": "Istanbul", "country": "Turkey"},
-            {"name": "Bureau Veritas", "contactPerson": "Jean Dupont", "email": "jean@bureauveritas.com", "phone": "+33 1 000 0000", "city": "Paris", "country": "France"},
+            {"name": "SGS Turkey", "contact": "mehmet@sgs.com.tr", "countriesServed": ["Turkey", "Bulgaria"]},
+            {"name": "Bureau Veritas", "contact": "jean@bureauveritas.com", "countriesServed": ["France", "Romania"]},
+            {"name": "Intertek", "contact": "contact@intertek.com", "countriesServed": ["Russia", "Ukraine", "Kazakhstan"]},
         ]
         for s in surveyors:
             s["createdAt"] = datetime.utcnow()
             surveyors_col.insert_one(s)
-        print(f"Seeded {len(surveyors)} surveyors")
 
-    # Seed trades
     if trades_col.count_documents({}) == 0:
         buyers = list(partners_col.find({"type": "buyer"}))
         sellers = list(partners_col.find({"type": "seller"}))
         comms = list(commodities_col.find())
-        
-        statuses = ["pending", "ongoing", "contract", "confirmation", "nomination-sent", "di-sent", "appropriation", "disch", "completed"]
-        
-        trades = []
+        orig = list(origins_col.find())
+        load_ports = list(ports_col.find({"type": "loading"}))
+        disch_ports = list(ports_col.find({"type": "discharge"}))
+
+        statuses = ["confirmation", "draft-contract", "nomination-sent", "di-sent", "appropriation", "dox", "pmt", "disch", "completed", "brokerage"]
+        inco_terms = ["FOB", "CFR", "CIF", "FAS"]
+        payment_terms = ["CAD", "LC at sight", "LC 30 days", "TT in advance"]
+        delivery_terms = ["FOB", "CFR", "CIF"]
+
         for i in range(8):
             buyer = buyers[i % len(buyers)]
             seller = sellers[i % len(sellers)]
             comm = comms[i % len(comms)]
+            origin = orig[i % len(orig)]
+            lport = load_ports[i % len(load_ports)]
+            dport = disch_ports[i % len(disch_ports)]
             status = statuses[i % len(statuses)]
-            
+
             base_date = datetime.utcnow() - timedelta(days=random.randint(1, 60))
             ship_start = base_date + timedelta(days=random.randint(30, 60))
             ship_end = ship_start + timedelta(days=random.randint(15, 30))
-            
+
             trade = {
-                "tradeRef": generate_trade_ref(),
-                "buyerId": str(buyer["_id"]),
-                "buyerName": buyer["companyName"],
+                "referenceNumber": f"CNT-{2025}-{random.randint(1000,9999)}",
                 "sellerId": str(seller["_id"]),
                 "sellerName": seller["companyName"],
+                "sellerCode": seller.get("companyCode", ""),
+                "buyerId": str(buyer["_id"]),
+                "buyerName": buyer["companyName"],
+                "buyerCode": buyer.get("companyCode", ""),
                 "commodityId": str(comm["_id"]),
                 "commodityName": comm["name"],
-                "origin": random.choice(["Turkey", "Russia", "Ukraine", "Kazakhstan", "India"]),
-                "quantity": random.choice([5000, 10000, 15000, 20000, 25000, 30000]),
-                "unit": "MT",
-                "price": round(random.uniform(200, 600), 2),
-                "priceUnit": "USD/MT",
+                "originId": str(origin["_id"]),
+                "originName": origin["name"],
+                "quantity": random.choice([5000, 10000, 15000, 20000, 25000]),
+                "tolerance": random.choice(["5", "10", ""]),
+                "deliveryTerm": random.choice(delivery_terms),
+                "pricePerMT": round(random.uniform(200, 600), 2),
                 "currency": "USD",
-                "contractNumber": f"CNT-{random.randint(1000,9999)}",
-                "contractDate": base_date.isoformat(),
+                "paymentTerms": random.choice(payment_terms),
+                "incoterms": random.choice(inco_terms),
+                "loadingPortId": str(lport["_id"]),
+                "loadingPortName": lport["name"],
+                "dischargePortId": str(dport["_id"]),
+                "dischargePortName": dport["name"],
                 "shipmentWindowStart": ship_start.isoformat(),
                 "shipmentWindowEnd": ship_end.isoformat(),
-                "loadingPort": random.choice(["Mersin", "Novorossiysk", "Odessa", "Constanta"]),
-                "dischargePort": random.choice(["Mumbai", "Jeddah", "Dubai", "Karachi", "Alexandria"]),
-                "brokerage": round(random.uniform(1, 5), 2),
-                "brokerageUnit": "USD/MT",
-                "paymentTerms": random.choice(["CAD", "LC at sight", "LC 30 days", "TT in advance"]),
+                "vesselName": random.choice(["MV GRAIN STAR", "MV BLACK SEA", "MV MEDITERRANEAN", ""]),
+                "brokeragePerMT": round(random.uniform(1, 5), 2),
+                "totalCommission": 0,
+                "contractDate": base_date.isoformat(),
+                "contractNumber": f"CNT-{2025}-{random.randint(1000,9999)}",
                 "status": status,
                 "notes": "",
                 "createdAt": base_date,
                 "updatedAt": datetime.utcnow()
             }
-            trades.append(trade)
-        
-        trades_col.insert_many(trades)
-        print(f"Seeded {len(trades)} trades")
+            trade["totalCommission"] = round(trade["quantity"] * trade["brokeragePerMT"], 2)
+            trades_col.insert_one(trade)
 
-    # Seed events
     if events_col.count_documents({}) == 0:
         events = [
-            {"title": "Contract Review Meeting", "date": (datetime.utcnow() + timedelta(days=2)).isoformat(), "time": "10:00", "type": "meeting", "description": "Review pending contracts"},
-            {"title": "Shipment Deadline - PIR-24-AB1234", "date": (datetime.utcnow() + timedelta(days=5)).isoformat(), "time": "14:00", "type": "deadline", "description": "Shipment window closing"},
-            {"title": "Payment Due - CNT-5678", "date": (datetime.utcnow() + timedelta(days=7)).isoformat(), "time": "09:00", "type": "payment", "description": "Payment due for contract CNT-5678"},
-            {"title": "Vessel Arrival - MV Grain Star", "date": (datetime.utcnow() + timedelta(days=10)).isoformat(), "time": "06:00", "type": "vessel", "description": "Expected arrival at Mersin port"},
+            {"title": "GAFTA Conference 2025", "date": (datetime.utcnow() + timedelta(days=15)).isoformat(), "type": "conference", "description": "Annual GAFTA conference"},
+            {"title": "Payment Due - CNT-2025-5678", "date": (datetime.utcnow() + timedelta(days=7)).isoformat(), "type": "payment", "description": "Payment due for contract"},
+            {"title": "Meeting with AgroTrade", "date": (datetime.utcnow() + timedelta(days=3)).isoformat(), "type": "meeting", "description": "Discuss new trades"},
         ]
         for e in events:
             e["createdAt"] = datetime.utcnow()
             events_col.insert_one(e)
-        print(f"Seeded {len(events)} events")
 
 # ─── App ────────────────────────────────────────────────────
 @asynccontextmanager
@@ -303,18 +392,10 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="PIR Grain & Pulses API", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# ─── Auth Endpoints ─────────────────────────────────────────
+# ─── Auth ───────────────────────────────────────────────────
 @app.post("/api/auth/login")
 def login(req: LoginRequest):
     user = users_col.find_one({"username": req.username})
@@ -327,7 +408,7 @@ def login(req: LoginRequest):
             "id": str(user["_id"]),
             "username": user["username"],
             "role": user.get("role", "user"),
-            "fullName": user.get("fullName", user["username"]),
+            "name": user.get("name", user["username"]),
             "email": user.get("email", "")
         }
     }
@@ -337,44 +418,49 @@ def get_me(user=Depends(get_current_user)):
     user.pop("password", None)
     return user
 
-# ─── Trades Endpoints ───────────────────────────────────────
+# ─── Trades ─────────────────────────────────────────────────
 @app.get("/api/trades")
-def list_trades(
-    status: Optional[str] = None,
-    search: Optional[str] = None,
-    user=Depends(get_current_user)
-):
+def list_trades(status: Optional[str] = None, search: Optional[str] = None, user=Depends(get_current_user)):
     query = {}
     if status and status != "all":
         query["status"] = status
     if search:
         query["$or"] = [
-            {"tradeRef": {"$regex": search, "$options": "i"}},
+            {"referenceNumber": {"$regex": search, "$options": "i"}},
             {"buyerName": {"$regex": search, "$options": "i"}},
             {"sellerName": {"$regex": search, "$options": "i"}},
             {"commodityName": {"$regex": search, "$options": "i"}},
+            {"vesselName": {"$regex": search, "$options": "i"}},
         ]
-    trades = list(trades_col.find(query).sort("createdAt", -1))
-    return [serialize_doc(t) for t in trades]
+    return [serialize_doc(t) for t in trades_col.find(query).sort("createdAt", -1)]
 
 @app.post("/api/trades")
 def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
     data = trade.dict()
-    data["tradeRef"] = generate_trade_ref()
+    data["referenceNumber"] = data.get("contractNumber") or generate_ref()
     data["createdAt"] = datetime.utcnow()
     data["updatedAt"] = datetime.utcnow()
-    
     # Resolve names
-    if data.get("buyerId"):
-        buyer = partners_col.find_one({"_id": ObjectId(data["buyerId"])})
-        data["buyerName"] = buyer["companyName"] if buyer else ""
-    if data.get("sellerId"):
-        seller = partners_col.find_one({"_id": ObjectId(data["sellerId"])})
-        data["sellerName"] = seller["companyName"] if seller else ""
-    if data.get("commodityId"):
-        comm = commodities_col.find_one({"_id": ObjectId(data["commodityId"])})
-        data["commodityName"] = comm["name"] if comm else ""
-    
+    for field, col, name_field, code_field in [
+        ("buyerId", partners_col, "buyerName", "buyerCode"),
+        ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("commodityId", commodities_col, "commodityName", None),
+        ("originId", origins_col, "originName", None),
+        ("loadingPortId", ports_col, "loadingPortName", None),
+        ("dischargePortId", ports_col, "dischargePortName", None),
+    ]:
+        if data.get(field):
+            try:
+                doc = col.find_one({"_id": ObjectId(data[field])})
+                if doc:
+                    data[name_field] = doc.get("companyName", doc.get("name", ""))
+                    if code_field:
+                        data[code_field] = doc.get("companyCode", "")
+            except Exception:
+                pass
+    qty = data.get("quantity") or 0
+    brok = data.get("brokeragePerMT") or 0
+    data["totalCommission"] = round(qty * brok, 2)
     result = trades_col.insert_one(data)
     data["_id"] = result.inserted_id
     return serialize_doc(data)
@@ -390,20 +476,35 @@ def get_trade(trade_id: str, user=Depends(get_current_user)):
 def update_trade(trade_id: str, trade: TradeUpdate, user=Depends(get_current_user)):
     data = {k: v for k, v in trade.dict().items() if v is not None}
     data["updatedAt"] = datetime.utcnow()
-    
-    if data.get("buyerId"):
-        buyer = partners_col.find_one({"_id": ObjectId(data["buyerId"])})
-        data["buyerName"] = buyer["companyName"] if buyer else ""
-    if data.get("sellerId"):
-        seller = partners_col.find_one({"_id": ObjectId(data["sellerId"])})
-        data["sellerName"] = seller["companyName"] if seller else ""
-    if data.get("commodityId"):
-        comm = commodities_col.find_one({"_id": ObjectId(data["commodityId"])})
-        data["commodityName"] = comm["name"] if comm else ""
-    
+    for field, col, name_field, code_field in [
+        ("buyerId", partners_col, "buyerName", "buyerCode"),
+        ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("commodityId", commodities_col, "commodityName", None),
+        ("originId", origins_col, "originName", None),
+        ("loadingPortId", ports_col, "loadingPortName", None),
+        ("dischargePortId", ports_col, "dischargePortName", None),
+    ]:
+        if data.get(field):
+            try:
+                doc = col.find_one({"_id": ObjectId(data[field])})
+                if doc:
+                    data[name_field] = doc.get("companyName", doc.get("name", ""))
+                    if code_field:
+                        data[code_field] = doc.get("companyCode", "")
+            except Exception:
+                pass
+    if "quantity" in data or "brokeragePerMT" in data:
+        existing = trades_col.find_one({"_id": ObjectId(trade_id)})
+        qty = data.get("quantity", existing.get("quantity", 0) if existing else 0) or 0
+        brok = data.get("brokeragePerMT", existing.get("brokeragePerMT", 0) if existing else 0) or 0
+        data["totalCommission"] = round(qty * brok, 2)
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": data})
-    updated = trades_col.find_one({"_id": ObjectId(trade_id)})
-    return serialize_doc(updated)
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+
+@app.patch("/api/trades/{trade_id}/status")
+def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(get_current_user)):
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
 
 @app.delete("/api/trades/{trade_id}")
 def delete_trade(trade_id: str, user=Depends(get_current_user)):
@@ -415,14 +516,13 @@ def delete_trade(trade_id: str, user=Depends(get_current_user)):
 @app.get("/api/trades/stats/overview")
 def trade_stats(user=Depends(get_current_user)):
     total = trades_col.count_documents({})
-    active = trades_col.count_documents({"status": {"$in": ["ongoing", "contract", "confirmation", "nomination-sent", "di-sent", "appropriation", "dox", "pmt", "disch"]}})
-    pending = trades_col.count_documents({"status": "pending"})
+    pending_statuses = ["confirmation", "draft-contract", "nomination-sent", "pending", "draft"]
+    ongoing_statuses = ["di-sent", "drafts-confirmation", "appropriation", "dox", "pmt", "disch", "shortage", "demurrage", "dispatch", "brokerage", "ongoing", "active"]
+    active = trades_col.count_documents({"status": {"$in": ongoing_statuses}})
+    pending = trades_col.count_documents({"status": {"$in": pending_statuses}})
     completed = trades_col.count_documents({"status": "completed"})
-    
-    # Status distribution
     pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
     status_dist = {item["_id"]: item["count"] for item in trades_col.aggregate(pipeline)}
-    
     return {
         "totalTrades": total,
         "activeTrades": active,
@@ -432,13 +532,9 @@ def trade_stats(user=Depends(get_current_user)):
         "statusDistribution": status_dist
     }
 
-# ─── Partners Endpoints ────────────────────────────────────
+# ─── Partners ───────────────────────────────────────────────
 @app.get("/api/partners")
-def list_partners(
-    type: Optional[str] = None,
-    search: Optional[str] = None,
-    user=Depends(get_current_user)
-):
+def list_partners(type: Optional[str] = None, search: Optional[str] = None, user=Depends(get_current_user)):
     query = {}
     if type and type != "all":
         query["type"] = type
@@ -447,9 +543,9 @@ def list_partners(
             {"companyName": {"$regex": search, "$options": "i"}},
             {"contactPerson": {"$regex": search, "$options": "i"}},
             {"email": {"$regex": search, "$options": "i"}},
+            {"companyCode": {"$regex": search, "$options": "i"}},
         ]
-    partners = list(partners_col.find(query).sort("companyName", 1))
-    return [serialize_doc(p) for p in partners]
+    return [serialize_doc(p) for p in partners_col.find(query).sort("companyName", 1)]
 
 @app.post("/api/partners")
 def create_partner(partner: PartnerCreate, user=Depends(get_current_user)):
@@ -472,33 +568,25 @@ def update_partner(partner_id: str, partner: PartnerCreate, user=Depends(get_cur
     data = partner.dict()
     data["updatedAt"] = datetime.utcnow()
     partners_col.update_one({"_id": ObjectId(partner_id)}, {"$set": data})
-    updated = partners_col.find_one({"_id": ObjectId(partner_id)})
-    return serialize_doc(updated)
+    return serialize_doc(partners_col.find_one({"_id": ObjectId(partner_id)}))
 
 @app.delete("/api/partners/{partner_id}")
 def delete_partner(partner_id: str, user=Depends(get_current_user)):
-    result = partners_col.delete_one({"_id": ObjectId(partner_id)})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Partner not found")
+    partners_col.delete_one({"_id": ObjectId(partner_id)})
     return {"message": "Partner deleted"}
 
-# ─── Vessels Endpoints ──────────────────────────────────────
+# ─── Vessels ────────────────────────────────────────────────
 @app.get("/api/vessels")
 def list_vessels(search: Optional[str] = None, user=Depends(get_current_user)):
     query = {}
     if search:
-        query["$or"] = [
-            {"name": {"$regex": search, "$options": "i"}},
-            {"imo": {"$regex": search, "$options": "i"}},
-        ]
-    vessels = list(vessels_col.find(query).sort("name", 1))
-    return [serialize_doc(v) for v in vessels]
+        query["$or"] = [{"name": {"$regex": search, "$options": "i"}}, {"imoNumber": {"$regex": search, "$options": "i"}}]
+    return [serialize_doc(v) for v in vessels_col.find(query).sort("name", 1)]
 
 @app.post("/api/vessels")
 def create_vessel(vessel: VesselCreate, user=Depends(get_current_user)):
     data = vessel.dict()
     data["createdAt"] = datetime.utcnow()
-    data["updatedAt"] = datetime.utcnow()
     result = vessels_col.insert_one(data)
     data["_id"] = result.inserted_id
     return serialize_doc(data)
@@ -506,54 +594,35 @@ def create_vessel(vessel: VesselCreate, user=Depends(get_current_user)):
 @app.put("/api/vessels/{vessel_id}")
 def update_vessel(vessel_id: str, vessel: VesselCreate, user=Depends(get_current_user)):
     data = vessel.dict()
-    data["updatedAt"] = datetime.utcnow()
     vessels_col.update_one({"_id": ObjectId(vessel_id)}, {"$set": data})
-    updated = vessels_col.find_one({"_id": ObjectId(vessel_id)})
-    return serialize_doc(updated)
+    return serialize_doc(vessels_col.find_one({"_id": ObjectId(vessel_id)}))
 
 @app.delete("/api/vessels/{vessel_id}")
 def delete_vessel(vessel_id: str, user=Depends(get_current_user)):
-    result = vessels_col.delete_one({"_id": ObjectId(vessel_id)})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Vessel not found")
+    vessels_col.delete_one({"_id": ObjectId(vessel_id)})
     return {"message": "Vessel deleted"}
 
-# ─── Documents Endpoints ────────────────────────────────────
+# ─── Documents ──────────────────────────────────────────────
 @app.get("/api/documents")
 def list_documents(tradeId: Optional[str] = None, user=Depends(get_current_user)):
     query = {}
     if tradeId:
         query["tradeId"] = tradeId
-    docs = list(documents_col.find(query).sort("createdAt", -1))
-    return [serialize_doc(d) for d in docs]
+    return [serialize_doc(d) for d in documents_col.find(query).sort("createdAt", -1)]
 
 @app.post("/api/documents")
-async def upload_document(
-    file: UploadFile = File(...),
-    tradeId: str = Form(""),
-    tradeRef: str = Form(""),
-    docType: str = Form("Other Document"),
-    user=Depends(get_current_user)
-):
+async def upload_document(file: UploadFile = File(...), tradeId: str = Form(""), tradeRef: str = Form(""), docType: str = Form("other"), user=Depends(get_current_user)):
     file_id = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1] if file.filename else ""
     saved_name = f"{file_id}{ext}"
     file_path = os.path.join(UPLOAD_DIR, saved_name)
-    
     content = await file.read()
     with open(file_path, "wb") as f:
         f.write(content)
-    
     doc = {
-        "fileName": file.filename,
-        "savedName": saved_name,
-        "fileUrl": f"/api/uploads/{saved_name}",
-        "fileSize": len(content),
-        "docType": docType,
-        "tradeId": tradeId,
-        "tradeRef": tradeRef,
-        "uploadedBy": user.get("username", ""),
-        "createdAt": datetime.utcnow()
+        "fileName": file.filename, "savedName": saved_name, "fileUrl": f"/api/uploads/{saved_name}",
+        "fileSize": len(content), "docType": docType, "tradeId": tradeId, "tradeRef": tradeRef,
+        "uploadedBy": user.get("username", ""), "createdAt": datetime.utcnow()
     }
     result = documents_col.insert_one(doc)
     doc["_id"] = result.inserted_id
@@ -562,27 +631,30 @@ async def upload_document(
 @app.delete("/api/documents/{doc_id}")
 def delete_document(doc_id: str, user=Depends(get_current_user)):
     doc = documents_col.find_one({"_id": ObjectId(doc_id)})
-    if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
-    # Delete file
-    file_path = os.path.join(UPLOAD_DIR, doc.get("savedName", ""))
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    if doc:
+        file_path = os.path.join(UPLOAD_DIR, doc.get("savedName", ""))
+        if os.path.exists(file_path):
+            os.remove(file_path)
     documents_col.delete_one({"_id": ObjectId(doc_id)})
     return {"message": "Document deleted"}
 
-# ─── Reference Data Endpoints ──────────────────────────────
+# ─── Reference Data ─────────────────────────────────────────
 @app.get("/api/commodities")
 def list_commodities(user=Depends(get_current_user)):
-    items = list(commodities_col.find().sort("name", 1))
-    return [serialize_doc(i) for i in items]
+    return [serialize_doc(i) for i in commodities_col.find().sort("name", 1)]
 
 @app.post("/api/commodities")
-def create_commodity(item: ItemCreate, user=Depends(get_current_user)):
-    data = {"name": item.name, "createdAt": datetime.utcnow()}
+def create_commodity(item: CommodityCreate, user=Depends(get_current_user)):
+    data = item.dict()
+    data["createdAt"] = datetime.utcnow()
     result = commodities_col.insert_one(data)
     data["_id"] = result.inserted_id
     return serialize_doc(data)
+
+@app.put("/api/commodities/{item_id}")
+def update_commodity(item_id: str, item: CommodityCreate, user=Depends(get_current_user)):
+    commodities_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    return serialize_doc(commodities_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/commodities/{item_id}")
 def delete_commodity(item_id: str, user=Depends(get_current_user)):
@@ -591,15 +663,20 @@ def delete_commodity(item_id: str, user=Depends(get_current_user)):
 
 @app.get("/api/origins")
 def list_origins(user=Depends(get_current_user)):
-    items = list(origins_col.find().sort("name", 1))
-    return [serialize_doc(i) for i in items]
+    return [serialize_doc(i) for i in origins_col.find().sort("name", 1)]
 
 @app.post("/api/origins")
-def create_origin(item: ItemCreate, user=Depends(get_current_user)):
-    data = {"name": item.name, "createdAt": datetime.utcnow()}
+def create_origin(item: OriginCreate, user=Depends(get_current_user)):
+    data = item.dict()
+    data["createdAt"] = datetime.utcnow()
     result = origins_col.insert_one(data)
     data["_id"] = result.inserted_id
     return serialize_doc(data)
+
+@app.put("/api/origins/{item_id}")
+def update_origin(item_id: str, item: OriginCreate, user=Depends(get_current_user)):
+    origins_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    return serialize_doc(origins_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/origins/{item_id}")
 def delete_origin(item_id: str, user=Depends(get_current_user)):
@@ -608,15 +685,20 @@ def delete_origin(item_id: str, user=Depends(get_current_user)):
 
 @app.get("/api/ports")
 def list_ports(user=Depends(get_current_user)):
-    items = list(ports_col.find().sort("name", 1))
-    return [serialize_doc(i) for i in items]
+    return [serialize_doc(i) for i in ports_col.find().sort("name", 1)]
 
 @app.post("/api/ports")
-def create_port(item: ItemCreate, user=Depends(get_current_user)):
-    data = {"name": item.name, "createdAt": datetime.utcnow()}
+def create_port(item: PortCreate, user=Depends(get_current_user)):
+    data = item.dict()
+    data["createdAt"] = datetime.utcnow()
     result = ports_col.insert_one(data)
     data["_id"] = result.inserted_id
     return serialize_doc(data)
+
+@app.put("/api/ports/{item_id}")
+def update_port(item_id: str, item: PortCreate, user=Depends(get_current_user)):
+    ports_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    return serialize_doc(ports_col.find_one({"_id": ObjectId(item_id)}))
 
 @app.delete("/api/ports/{item_id}")
 def delete_port(item_id: str, user=Depends(get_current_user)):
@@ -625,8 +707,7 @@ def delete_port(item_id: str, user=Depends(get_current_user)):
 
 @app.get("/api/surveyors")
 def list_surveyors(user=Depends(get_current_user)):
-    items = list(surveyors_col.find().sort("name", 1))
-    return [serialize_doc(i) for i in items]
+    return [serialize_doc(i) for i in surveyors_col.find().sort("name", 1)]
 
 @app.post("/api/surveyors")
 def create_surveyor(item: SurveyorCreate, user=Depends(get_current_user)):
@@ -636,16 +717,20 @@ def create_surveyor(item: SurveyorCreate, user=Depends(get_current_user)):
     data["_id"] = result.inserted_id
     return serialize_doc(data)
 
+@app.put("/api/surveyors/{item_id}")
+def update_surveyor(item_id: str, item: SurveyorCreate, user=Depends(get_current_user)):
+    surveyors_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    return serialize_doc(surveyors_col.find_one({"_id": ObjectId(item_id)}))
+
 @app.delete("/api/surveyors/{item_id}")
 def delete_surveyor(item_id: str, user=Depends(get_current_user)):
     surveyors_col.delete_one({"_id": ObjectId(item_id)})
     return {"message": "Deleted"}
 
-# ─── Events Endpoints ───────────────────────────────────────
+# ─── Events ─────────────────────────────────────────────────
 @app.get("/api/events")
 def list_events(user=Depends(get_current_user)):
-    events = list(events_col.find().sort("date", 1))
-    return [serialize_doc(e) for e in events]
+    return [serialize_doc(e) for e in events_col.find().sort("date", 1)]
 
 @app.post("/api/events")
 def create_event(event: EventCreate, user=Depends(get_current_user)):
@@ -658,6 +743,56 @@ def create_event(event: EventCreate, user=Depends(get_current_user)):
 @app.delete("/api/events/{event_id}")
 def delete_event(event_id: str, user=Depends(get_current_user)):
     events_col.delete_one({"_id": ObjectId(event_id)})
+    return {"message": "Deleted"}
+
+# ─── Invoices (Accounting) ──────────────────────────────────
+@app.get("/api/invoices")
+def list_invoices(user=Depends(get_current_user)):
+    return [serialize_doc(i) for i in invoices_col.find().sort("createdAt", -1)]
+
+@app.post("/api/invoices")
+def create_invoice(invoice: InvoiceCreate, user=Depends(get_current_user)):
+    data = invoice.dict()
+    data["createdAt"] = datetime.utcnow()
+    result = invoices_col.insert_one(data)
+    data["_id"] = result.inserted_id
+    return serialize_doc(data)
+
+@app.put("/api/invoices/{invoice_id}")
+def update_invoice(invoice_id: str, invoice: InvoiceCreate, user=Depends(get_current_user)):
+    data = invoice.dict()
+    invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": data})
+    return serialize_doc(invoices_col.find_one({"_id": ObjectId(invoice_id)}))
+
+@app.delete("/api/invoices/{invoice_id}")
+def delete_invoice(invoice_id: str, user=Depends(get_current_user)):
+    invoices_col.delete_one({"_id": ObjectId(invoice_id)})
+    return {"message": "Deleted"}
+
+# ─── Users Management ───────────────────────────────────────
+@app.get("/api/users")
+def list_users(user=Depends(get_current_user)):
+    users = list(users_col.find())
+    for u in users:
+        u.pop("password", None)
+    return [serialize_doc(u) for u in users]
+
+@app.post("/api/users")
+def create_user(u: UserCreate, user=Depends(get_current_user)):
+    if users_col.find_one({"username": u.username}):
+        raise HTTPException(status_code=400, detail="Username already exists")
+    data = u.dict()
+    data["password"] = pwd_context.hash(data.pop("password"))
+    data["status"] = "active"
+    data["createdAt"] = datetime.utcnow()
+    result = users_col.insert_one(data)
+    data["_id"] = result.inserted_id
+    data.pop("password", None)
+    return serialize_doc(data)
+
+@app.delete("/api/users/{user_id}")
+def delete_user(user_id: str, user=Depends(get_current_user)):
+    users_col.delete_one({"_id": ObjectId(user_id)})
     return {"message": "Deleted"}
 
 # ─── Health ─────────────────────────────────────────────────

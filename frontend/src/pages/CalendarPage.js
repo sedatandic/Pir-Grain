@@ -1,162 +1,143 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Calendar } from '../components/ui/calendar';
-import { Plus, Loader2, CalendarDays, Clock } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, DollarSign, Users, CalendarDays, Clock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, parseISO, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, isToday, parseISO } from 'date-fns';
+import { EVENT_TYPES } from '../lib/constants';
 
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ title: '', date: '', time: '', description: '', type: 'general' });
+  const [form, setForm] = useState({ title: '', date: '', type: 'other', description: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await api.get('/api/events');
-        setEvents(res.data);
-      } catch (err) {
-        toast.error('Failed to load events');
-      } finally {
-        setLoading(false);
-      }
+    const fetch = async () => {
+      try { const res = await api.get('/api/events'); setEvents(res.data); } catch (err) { console.error(err); } finally { setLoading(false); }
     };
-    fetchEvents();
+    fetch();
   }, []);
 
+  const calendarDays = useMemo(() => {
+    const start = startOfMonth(currentDate);
+    const end = endOfMonth(currentDate);
+    const days = eachDayOfInterval({ start, end });
+    const startDay = start.getDay();
+    const padding = [];
+    for (let i = startDay - 1; i >= 0; i--) {
+      const d = new Date(start);
+      d.setDate(d.getDate() - i - 1);
+      padding.push({ date: d, isCurrentMonth: false });
+    }
+    return [...padding, ...days.map(d => ({ date: d, isCurrentMonth: true }))];
+  }, [currentDate]);
+
+  const getEventsForDate = (date) => events.filter(e => { try { return isSameDay(parseISO(e.date), date); } catch { return false; } });
+  const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
+
   const handleCreate = async () => {
-    if (!form.title.trim() || !form.date) { toast.error('Title and date are required'); return; }
+    if (!form.title || !form.date) { toast.error('Title and date required'); return; }
     setSaving(true);
     try {
       const res = await api.post('/api/events', form);
       setEvents([...events, res.data]);
       toast.success('Event created');
       setDialogOpen(false);
-      setForm({ title: '', date: '', time: '', description: '', type: 'general' });
-    } catch (err) {
-      toast.error('Failed to create event');
-    } finally {
-      setSaving(false);
-    }
+      setForm({ title: '', date: '', type: 'other', description: '' });
+    } catch (err) { toast.error('Failed to create event'); } finally { setSaving(false); }
   };
 
-  const selectedDayEvents = events.filter(e => {
-    try {
-      return isSameDay(parseISO(e.date), selectedDate);
-    } catch { return false; }
-  });
-
-  const eventDates = events.map(e => {
-    try { return parseISO(e.date); } catch { return null; }
-  }).filter(Boolean);
-
-  const typeColors = {
-    meeting: 'bg-blue-500',
-    deadline: 'bg-amber-500',
-    payment: 'bg-emerald-500',
-    vessel: 'bg-cyan-500',
-    general: 'bg-slate-400',
-  };
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
-          <p className="text-slate-500 text-sm">Track events, deadlines, and meetings</p>
-        </div>
-        <Button onClick={() => { setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd') }); setDialogOpen(true); }} className="bg-[#0e7490] hover:bg-[#155e75]">
-          <Plus className="w-4 h-4 mr-2" /> Add Event
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div><h1 className="text-3xl font-bold tracking-tight">Calendar</h1><p className="text-muted-foreground">Track events, deadlines, and meetings</p></div>
+        <Button onClick={() => { setForm({ ...form, date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd') }); setDialogOpen(true); }}>
+          <Plus className="mr-2 h-4 w-4" />Add Event
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Calendar */}
-        <div className="lg:col-span-5">
-          <Card className="shadow-sm">
-            <CardContent className="p-4 flex justify-center">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(d) => d && setSelectedDate(d)}
-                modifiers={{ hasEvent: eventDates }}
-                modifiersStyles={{ hasEvent: { fontWeight: 'bold', textDecoration: 'underline', textDecorationColor: '#0e7490' } }}
-                className="rounded-md"
-              />
+        <div className="lg:col-span-8">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+                <h2 className="text-lg font-semibold">{format(currentDate, 'MMMM yyyy')}</h2>
+                <Button variant="ghost" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}><ChevronRight className="h-4 w-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-px bg-border rounded-lg overflow-hidden">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="bg-muted/50 p-2 text-center text-xs font-medium text-muted-foreground">{d}</div>)}
+                {calendarDays.map(({ date, isCurrentMonth }, i) => {
+                  const dayEvents = getEventsForDate(date);
+                  const selected = selectedDate && isSameDay(date, selectedDate);
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => setSelectedDate(date)}
+                      className={`bg-card p-2 min-h-[80px] cursor-pointer hover:bg-muted/30 transition-colors ${
+                        !isCurrentMonth ? 'opacity-40' : ''
+                      } ${selected ? 'ring-2 ring-primary ring-inset' : ''} ${isToday(date) ? 'bg-primary/5' : ''}`}
+                    >
+                      <div className={`text-sm font-medium mb-1 ${isToday(date) ? 'text-primary font-bold' : ''}`}>{format(date, 'd')}</div>
+                      {dayEvents.slice(0, 2).map((ev, j) => (
+                        <div key={j} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate ${EVENT_TYPES[ev.type]?.color || 'bg-muted text-muted-foreground'}`}>{ev.title}</div>
+                      ))}
+                      {dayEvents.length > 2 && <div className="text-[10px] text-muted-foreground">+{dayEvents.length - 2} more</div>}
+                    </div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Events for selected day */}
-        <div className="lg:col-span-7">
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-teal-600" />
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-              </CardTitle>
-            </CardHeader>
+        <div className="lg:col-span-4 space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}</CardTitle></CardHeader>
             <CardContent>
-              {selectedDayEvents.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <CalendarDays className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                  <p>No events on this day</p>
-                  <Button variant="ghost" size="sm" className="mt-2" onClick={() => { setForm({ ...form, date: format(selectedDate, 'yyyy-MM-dd') }); setDialogOpen(true); }}>
-                    Add an event
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedDayEvents.map((event) => (
-                    <div key={event.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
-                      <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${typeColors[event.type] || typeColors.general}`} />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{event.title}</p>
-                        {event.time && (
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <Clock className="w-3 h-3" /> {event.time}
-                          </p>
-                        )}
-                        {event.description && <p className="text-xs text-slate-500 mt-1">{event.description}</p>}
+              {selectedDate ? (
+                selectedDateEvents.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">No events on this day</p></div>
+                ) : (
+                  <div className="space-y-3">
+                    {selectedDateEvents.map(ev => (
+                      <div key={ev.id} className={`p-3 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
+                        <p className="font-medium text-sm">{ev.title}</p>
+                        <p className="text-xs mt-1 capitalize opacity-70">{ev.type}</p>
+                        {ev.description && <p className="text-xs mt-1 opacity-60">{ev.description}</p>}
                       </div>
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">{event.type}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )
+              ) : <p className="text-sm text-muted-foreground">Click on a day to see events</p>}
             </CardContent>
           </Card>
 
-          {/* All upcoming events */}
-          <Card className="shadow-sm mt-4">
-            <CardHeader><CardTitle className="text-lg">All Upcoming Events</CardTitle></CardHeader>
+          <Card>
+            <CardHeader><CardTitle className="text-lg">All Events</CardTitle></CardHeader>
             <CardContent>
-              {events.length === 0 ? (
-                <p className="text-slate-500 text-sm">No upcoming events scheduled</p>
-              ) : (
+              {events.length === 0 ? <p className="text-sm text-muted-foreground">No events scheduled</p> : (
                 <div className="space-y-2">
-                  {events.slice(0, 10).map((event) => (
-                    <div key={event.id} className="flex items-center gap-3 py-2 border-b last:border-0 border-slate-100">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${typeColors[event.type] || typeColors.general}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{event.title}</p>
-                      </div>
-                      <span className="text-xs text-slate-500 flex-shrink-0">
-                        {(() => { try { return format(parseISO(event.date), 'MMM d'); } catch { return event.date; } })()}
-                      </span>
+                  {events.slice(0, 8).map(ev => (
+                    <div key={ev.id} className="flex items-center gap-3 py-1.5">
+                      <div className={`w-2 h-2 rounded-full ${ev.type === 'payment' ? 'bg-green-500' : ev.type === 'meeting' ? 'bg-purple-500' : ev.type === 'conference' ? 'bg-amber-500' : 'bg-slate-400'}`} />
+                      <div className="flex-1 min-w-0"><p className="text-sm truncate">{ev.title}</p></div>
+                      <span className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(ev.date), 'MMM d'); } catch { return ''; } })()}</span>
                     </div>
                   ))}
                 </div>
@@ -166,37 +147,28 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Create Event Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>New Event</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} placeholder="Event title" /></div>
+            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} /></div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
-              <div className="space-y-2"><Label>Time</Label><Input type="time" value={form.time} onChange={(e) => setForm({...form, time: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="payment">Payment</SelectItem>
+                    <SelectItem value="meeting">Meeting</SelectItem>
+                    <SelectItem value="conference">Conference</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="meeting">Meeting</SelectItem>
-                  <SelectItem value="deadline">Deadline</SelectItem>
-                  <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="vessel">Vessel</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} placeholder="Optional description" /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} /></div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreate} disabled={saving} className="bg-[#0e7490] hover:bg-[#155e75]">
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />} Create Event
-            </Button>
-          </DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

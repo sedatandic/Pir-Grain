@@ -1,165 +1,116 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../lib/api';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../components/ui/alert-dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../components/ui/dropdown-menu';
+import { Badge } from '../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, Loader2, Ship } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Loader2, Ship, Anchor } from 'lucide-react';
 import { toast } from 'sonner';
-
-const emptyVessel = { name: '', imo: '', flag: '', dwt: '', built: '', vesselType: '' };
 
 export default function VesselsPage() {
   const [vessels, setVessels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingVessel, setEditingVessel] = useState(null);
-  const [deletingVessel, setDeletingVessel] = useState(null);
-  const [form, setForm] = useState(emptyVessel);
+  const [form, setForm] = useState({ name: '', imoNumber: '', flag: '', builtYear: new Date().getFullYear(), vesselType: 'Bulk Carrier' });
   const [saving, setSaving] = useState(false);
 
   const fetchVessels = useCallback(async () => {
-    try {
-      const params = search ? { search } : {};
-      const res = await api.get('/api/vessels', { params });
-      setVessels(res.data);
-    } catch (err) {
-      toast.error('Failed to load vessels');
-    } finally {
-      setLoading(false);
-    }
-  }, [search]);
+    try { const res = await api.get('/api/vessels'); setVessels(res.data); } catch (err) { toast.error('Failed to load vessels'); } finally { setLoading(false); }
+  }, []);
 
   useEffect(() => { fetchVessels(); }, [fetchVessels]);
 
-  const openCreate = () => { setEditingVessel(null); setForm(emptyVessel); setDialogOpen(true); };
-  const openEdit = (v) => {
-    setEditingVessel(v);
-    setForm({ name: v.name||'', imo: v.imo||'', flag: v.flag||'', dwt: v.dwt||'', built: v.built||'', vesselType: v.vesselType||'' });
-    setDialogOpen(true);
-  };
+  const filtered = useMemo(() => {
+    if (!search) return vessels;
+    const q = search.toLowerCase();
+    return vessels.filter(v => v.name?.toLowerCase().includes(q) || v.imoNumber?.includes(q) || v.flag?.toLowerCase().includes(q));
+  }, [vessels, search]);
+
+  const stats = useMemo(() => {
+    const ages = vessels.filter(v => v.builtYear).map(v => new Date().getFullYear() - v.builtYear);
+    return {
+      total: vessels.length,
+      avgAge: ages.length > 0 ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0,
+      flags: new Set(vessels.filter(v => v.flag).map(v => v.flag)).size,
+    };
+  }, [vessels]);
+
+  const openCreate = () => { setEditingVessel(null); setForm({ name: '', imoNumber: '', flag: '', builtYear: new Date().getFullYear(), vesselType: 'Bulk Carrier' }); setDialogOpen(true); };
+  const openEdit = (v) => { setEditingVessel(v); setForm({ name: v.name||'', imoNumber: v.imoNumber||'', flag: v.flag||'', builtYear: v.builtYear || new Date().getFullYear(), vesselType: v.vesselType||'Bulk Carrier' }); setDialogOpen(true); };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { toast.error('Vessel name is required'); return; }
+    if (!form.name || !form.imoNumber) { toast.error('Name and IMO are required'); return; }
     setSaving(true);
     try {
-      const data = { ...form, dwt: form.dwt ? parseFloat(form.dwt) : null };
-      if (editingVessel) {
-        await api.put(`/api/vessels/${editingVessel.id}`, data);
-        toast.success('Vessel updated');
-      } else {
-        await api.post('/api/vessels', data);
-        toast.success('Vessel created');
-      }
+      const data = { ...form, builtYear: parseInt(form.builtYear) || null };
+      if (editingVessel) { await api.put(`/api/vessels/${editingVessel.id}`, data); toast.success('Vessel updated'); }
+      else { await api.post('/api/vessels', data); toast.success('Vessel created'); }
       setDialogOpen(false); fetchVessels();
-    } catch (err) { toast.error('Failed to save vessel'); }
-    finally { setSaving(false); }
+    } catch (err) { toast.error('Failed to save'); } finally { setSaving(false); }
   };
 
-  const handleDelete = async () => {
-    if (!deletingVessel) return;
-    try {
-      await api.delete(`/api/vessels/${deletingVessel.id}`);
-      toast.success('Vessel deleted'); setDeleteDialogOpen(false); fetchVessels();
-    } catch (err) { toast.error('Failed to delete vessel'); }
+  const handleDelete = async (id) => {
+    try { await api.delete(`/api/vessels/${id}`); toast.success('Deleted'); fetchVessels(); } catch (err) { toast.error('Failed to delete'); }
   };
+
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Vessels</h1>
-          <p className="text-slate-500 text-sm">Manage your fleet</p>
-        </div>
-        <Button onClick={openCreate} className="bg-[#0e7490] hover:bg-[#155e75]" data-testid="vessels-new-button">
-          <Plus className="w-4 h-4 mr-2" /> Add Vessel
-        </Button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div><h1 className="text-3xl font-bold tracking-tight">Vessels</h1><p className="text-muted-foreground">Manage your fleet of vessels</p></div>
+        <Button onClick={openCreate} data-testid="vessels-new-button"><Plus className="mr-2 h-4 w-4" />Add Vessel</Button>
       </div>
-      <Card className="shadow-sm"><CardContent className="p-4">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <Input placeholder="Search vessels..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-      </CardContent></Card>
-      <div className="data-table">
-        <Table>
-          <TableHeader><TableRow className="bg-slate-50">
-            <TableHead className="font-semibold">Name</TableHead>
-            <TableHead className="font-semibold">IMO</TableHead>
-            <TableHead className="font-semibold">Flag</TableHead>
-            <TableHead className="font-semibold">DWT</TableHead>
-            <TableHead className="font-semibold">Built</TableHead>
-            <TableHead className="font-semibold">Type</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8"><Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-400" /></TableCell></TableRow>
-            ) : vessels.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                <Ship className="w-8 h-8 mx-auto mb-2 text-slate-300" /> No vessels found
-              </TableCell></TableRow>
-            ) : vessels.map((v) => (
-              <TableRow key={v.id} className="hover:bg-slate-50/70">
-                <TableCell className="font-medium">{v.name}</TableCell>
-                <TableCell className="font-mono text-sm">{v.imo || '-'}</TableCell>
-                <TableCell>{v.flag || '-'}</TableCell>
-                <TableCell className="tabular-nums">{v.dwt ? v.dwt.toLocaleString() : '-'}</TableCell>
-                <TableCell>{v.built || '-'}</TableCell>
-                <TableCell>{v.vesselType || '-'}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" /></Button></DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(v)}><Pencil className="w-4 h-4 mr-2" /> Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600" onClick={() => { setDeletingVessel(v); setDeleteDialogOpen(true); }}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Ship className="h-5 w-5 text-primary" /></div><div><p className="text-2xl font-bold">{stats.total}</p><p className="text-xs text-muted-foreground">Total Vessels</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100"><Anchor className="h-5 w-5 text-amber-600" /></div><div><p className="text-2xl font-bold">{stats.avgAge} yrs</p><p className="text-xs text-muted-foreground">Average Age</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100"><span className="text-green-600 text-lg">🏳️</span></div><div><p className="text-2xl font-bold">{stats.flags}</p><p className="text-xs text-muted-foreground">Unique Flags</p></div></div></CardContent></Card>
       </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="relative max-w-xs mb-4"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search vessels..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+          <div className="overflow-x-auto border rounded-lg">
+            <Table>
+              <TableHeader><TableRow className="bg-muted/50">
+                <TableHead>Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead className="w-[80px]"></TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {filtered.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
+                filtered.map(v => (
+                  <TableRow key={v.id}>
+                    <TableCell className="font-medium">{v.name}</TableCell>
+                    <TableCell className="font-mono text-sm">{v.imoNumber || '-'}</TableCell>
+                    <TableCell><Badge variant="secondary">{v.vesselType || '-'}</Badge></TableCell>
+                    <TableCell>{v.flag || '-'}</TableCell>
+                    <TableCell>{v.builtYear || '-'}</TableCell>
+                    <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editingVessel ? 'Edit Vessel' : 'New Vessel'}</DialogTitle></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle>{editingVessel ? 'Edit Vessel' : 'Add Vessel'}</DialogTitle><DialogDescription>Fill in the vessel details.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2 space-y-2"><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} /></div>
-            <div className="space-y-2"><Label>IMO</Label><Input value={form.imo} onChange={(e) => setForm({...form, imo: e.target.value})} /></div>
+            <div className="col-span-2 space-y-2"><Label>Vessel Name *</Label><Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} /></div>
+            <div className="space-y-2"><Label>IMO Number *</Label><Input value={form.imoNumber} onChange={(e) => setForm({...form, imoNumber: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Type</Label><Input value={form.vesselType} onChange={(e) => setForm({...form, vesselType: e.target.value})} /></div>
             <div className="space-y-2"><Label>Flag</Label><Input value={form.flag} onChange={(e) => setForm({...form, flag: e.target.value})} /></div>
-            <div className="space-y-2"><Label>DWT</Label><Input type="number" value={form.dwt} onChange={(e) => setForm({...form, dwt: e.target.value})} /></div>
-            <div className="space-y-2"><Label>Built</Label><Input value={form.built} onChange={(e) => setForm({...form, built: e.target.value})} placeholder="e.g. 2020" /></div>
-            <div className="col-span-2 space-y-2"><Label>Type</Label><Input value={form.vesselType} onChange={(e) => setForm({...form, vesselType: e.target.value})} placeholder="e.g. Bulk Carrier" /></div>
+            <div className="space-y-2"><Label>Built Year</Label><Input type="number" value={form.builtYear} onChange={(e) => setForm({...form, builtYear: e.target.value})} /></div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-[#0e7490] hover:bg-[#155e75]">
-              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              {editingVessel ? 'Update' : 'Create'}
-            </Button>
-          </DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingVessel ? 'Update' : 'Add'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Delete Vessel</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to delete {deletingVessel?.name}?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

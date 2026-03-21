@@ -1,46 +1,46 @@
 [
   {
-    "content": "Phase 2: Get design guidelines from design agent",
+    "content": "Phase 3: Update backend - Trade model + broker partners + seed data",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Backend - Auth + Data Models + CRUD APIs + Seed Data",
+    "content": "Phase 3: Update color scheme to navy blue + lime green",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - App shell, sidebar, routing, auth guard",
+    "content": "Phase 3: Rewrite Sidebar to light/white + Header bar",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Login page",
+    "content": "Phase 3: Rewrite Trades page with categorized sections + inline status + detail modal",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Dashboard page with stats",
+    "content": "Phase 3: Add /trades/new route",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Trades page with CRUD",
+    "content": "Phase 3: Rewrite Partners page with tabs",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Partners pages (buyers/sellers/co-brokers)",
+    "content": "Phase 3: Rewrite Settings page with tabs for CRUD",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend - Vessels, Documents, Calendar, Commissions, Reports, Settings pages",
+    "content": "Phase 3: Rewrite Documents, Calendar, Commissions pages",
     "status": "completed"
   },
   {
-    "content": "Phase 2: All user stories covered in Development",
+    "content": "Phase 3: Add Accounting (Omega) page",
     "status": "completed"
   },
   {
-    "content": "Phase 2: End to End Testing using Testing Agent",
+    "content": "Phase 3: Rewrite Reports page",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Fix login error display bug (from testing)",
-    "status": "completed"
+    "content": "Phase 3: End to End Testing",
+    "status": "in_progress"
   }
 ]

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,31 +6,31 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
+    --background: 220 20% 97%;
+    --foreground: 220 20% 22%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 220 20% 22%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 191 91% 28%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 35%;
-    --accent: 190 70% 92%;
-    --accent-foreground: 191 91% 20%;
+    --popover-foreground: 220 20% 22%;
+    --primary: 211 50% 34%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 90 55% 50%;
+    --secondary-foreground: 90 55% 15%;
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 90 55% 92%;
+    --accent-foreground: 90 55% 20%;
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 191 91% 28%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 90%;
+    --input: 220 14% 94%;
+    --ring: 211 50% 34%;
     --radius: 0.75rem;
-    --chart-1: 191 91% 28%;
-    --chart-2: 199 89% 48%;
-    --chart-3: 215 25% 27%;
-    --chart-4: 38 92% 50%;
-    --chart-5: 162 63% 41%;
+    --chart-1: 211 50% 34%;
+    --chart-2: 90 55% 50%;
+    --chart-3: 200 40% 40%;
+    --chart-4: 90 45% 45%;
+    --chart-5: 220 20% 40%;
   }
 }
 
@@ -40,13 +40,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
   }
 }
 
 .font-mono {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
 }

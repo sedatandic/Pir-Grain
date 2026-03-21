@@ -40,7 +40,7 @@ function DateInput({ value, onChange, ...props }) {
   return <Input {...props} value={text} onChange={handleChange} placeholder="dd/mm/yyyy" />;
 }
 
-const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF', 'FAS', 'CIP', 'DAP', 'DPU', 'DDP'];
+const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF'];
 const CURRENCIES = ['USD', 'EUR'];
 
 function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {

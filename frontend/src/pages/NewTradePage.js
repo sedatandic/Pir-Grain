@@ -321,7 +321,7 @@ export default function NewTradePage() {
 
       <Card>
         <CardHeader><CardTitle>Shipping</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Loading Port</Label>
             <Select value={form.loadingPortId} onValueChange={(v) => set('loadingPortId', v)}>

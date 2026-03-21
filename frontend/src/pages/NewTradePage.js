@@ -361,7 +361,7 @@ export default function NewTradePage() {
               <Label>Base Port</Label>
               <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -395,7 +395,7 @@ export default function NewTradePage() {
                     set('portVariations', updated);
                   }}>
                     <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>
-                    <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="w-[160px] space-y-1">

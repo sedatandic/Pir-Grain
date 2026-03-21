@@ -25,6 +25,8 @@ class TradeCreate(BaseModel):
     dischargePortId: Optional[str] = None
     basePortId: Optional[str] = None
     portVariations: Optional[list] = []
+    excludedDisports: Optional[list] = []
+    excludedSurveyors: Optional[list] = []
     shipmentWindowStart: Optional[str] = None
     shipmentWindowEnd: Optional[str] = None
     vesselName: Optional[str] = None

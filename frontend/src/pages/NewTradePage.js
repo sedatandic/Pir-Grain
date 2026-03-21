@@ -106,6 +106,7 @@ export default function NewTradePage() {
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
+    excludedDisports: [], excludedSurveyors: [],
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
     buyerTradeContact: null, buyerExecutionContact: null,
@@ -382,9 +383,9 @@ export default function NewTradePage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Shipping</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Shipping Terms</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Base Port</Label>
               <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
@@ -442,6 +443,43 @@ export default function NewTradePage() {
                 </Button>
               </div>
             ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Excluded Disports</Label>
+              <div className="border rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">
+                {dischPorts.filter(p => p.id !== form.basePortId).map(p => (
+                  <label key={p.id} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                    <input type="checkbox" className="rounded border-input" checked={form.excludedDisports.includes(p.id)} onChange={(e) => {
+                      if (e.target.checked) set('excludedDisports', [...form.excludedDisports, p.id]);
+                      else set('excludedDisports', form.excludedDisports.filter(id => id !== p.id));
+                    }} />
+                    {p.name}{p.country ? `, ${p.country}` : ''}
+                  </label>
+                ))}
+              </div>
+              {form.excludedDisports.length > 0 && (
+                <p className="text-xs text-muted-foreground">{form.excludedDisports.length} port(s) excluded</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Excluded Surveyors</Label>
+              <div className="border rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">
+                {surveyors.map(s => (
+                  <label key={s.id} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm">
+                    <input type="checkbox" className="rounded border-input" checked={form.excludedSurveyors.includes(s.id)} onChange={(e) => {
+                      if (e.target.checked) set('excludedSurveyors', [...form.excludedSurveyors, s.id]);
+                      else set('excludedSurveyors', form.excludedSurveyors.filter(id => id !== s.id));
+                    }} />
+                    {s.name}
+                  </label>
+                ))}
+              </div>
+              {form.excludedSurveyors.length > 0 && (
+                <p className="text-xs text-muted-foreground">{form.excludedSurveyors.length} surveyor(s) excluded</p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

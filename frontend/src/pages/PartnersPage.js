@@ -117,7 +117,7 @@ export default function PartnersPage({ filterType }) {
               </Tabs>
             )}
             <div className="ml-auto">
-              <Button onClick={openCreate} data-testid="partners-new-button"><Plus className="mr-2 h-4 w-4" />Add Partner</Button>
+              <Button onClick={openCreate} data-testid="partners-new-button"><Plus className="mr-2 h-4 w-4" />Add Counterparty</Button>
             </div>
           </div>
 
@@ -192,7 +192,7 @@ export default function PartnersPage({ filterType }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Partner'}</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Counterparty'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

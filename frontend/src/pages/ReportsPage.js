@@ -5,7 +5,7 @@ import { TRADE_STATUS_CONFIG } from '../lib/constants';
 import { Loader2, BarChart3, PieChart as PieChartIcon, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const COLORS = ['#2B5B84', '#8BC53F', '#0ea5e9', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899', '#334155'];
+const COLORS = ['#1B7A3D', '#C4A54D', '#5B3A7A', '#2D8B5E', '#B89340', '#7B5A9A', '#e07040', '#334155'];
 
 export default function ReportsPage() {
   const [stats, setStats] = useState(null);
@@ -53,7 +53,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" />Volume by Commodity</CardTitle><CardDescription>Total quantity (MT)</CardDescription></CardHeader>
           <CardContent>{commodityData.length === 0 ? <p className="text-center py-8 text-muted-foreground">No data</p> : (
-            <ResponsiveContainer width="100%" height={300}><BarChart data={commodityData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(220 15% 90%)" /><XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Bar dataKey="volume" fill="#2B5B84" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
+            <ResponsiveContainer width="100%" height={300}><BarChart data={commodityData}><CartesianGrid strokeDasharray="3 3" stroke="hsl(220 15% 90%)" /><XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} /><Tooltip /><Bar dataKey="volume" fill="#1B7A3D" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>
           )}</CardContent>
         </Card>
       </div>

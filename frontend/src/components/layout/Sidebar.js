@@ -8,6 +8,10 @@ import {
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 
+const PIR_GREEN = '#1B7A3D';
+const PIR_GREEN_LIGHT = 'rgba(27, 122, 61, 0.08)';
+const PIR_GREEN_ACTIVE = 'rgba(27, 122, 61, 0.14)';
+
 const mainNavItems = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Trades', href: '/trades', icon: FileText },
@@ -42,18 +46,14 @@ export default function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-center px-4 py-5 border-b border-slate-200">
+      <div className="flex items-center justify-center px-4 py-4 border-b border-slate-200">
         {collapsed ? (
-          <div className="w-8 h-8 rounded-lg bg-[#2B5B84] flex items-center justify-center">
-            <Wheat className="w-4 h-4 text-white" />
-          </div>
+          <img src="/pir-logo.jpg" alt="PIR" className="w-10 h-10 rounded-lg object-cover" />
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-[#2B5B84] flex items-center justify-center flex-shrink-0">
-              <Wheat className="w-5 h-5 text-white" />
-            </div>
+          <div className="flex items-center gap-3">
+            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
             <div>
-              <h1 className="text-sm font-bold text-[#2B5B84] tracking-wide">PIR GRAIN & PULSES</h1>
+              <h1 className="text-sm font-bold tracking-wide" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
               <p className="text-[9px] text-slate-400 tracking-wider">TRADING DASHBOARD</p>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function Sidebar() {
             data-testid={`sidebar-nav-${item.title.toLowerCase().replace(/[\s.]+/g, '-')}-link`}
             className={({ isActive }) => cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-              isActive ? 'bg-[#2B5B84]/10 text-[#2B5B84] font-medium' : 'text-slate-600 hover:bg-slate-100'
+              isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -84,7 +84,7 @@ export default function Sidebar() {
             onClick={() => setPartnersOpen(!partnersOpen)}
             className={cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm w-full transition-colors',
-              isPartnerActive ? 'bg-[#2B5B84]/10 text-[#2B5B84] font-medium' : 'text-slate-600 hover:bg-slate-100'
+              isPartnerActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
             )}
           >
             <Users className="w-4 h-4 flex-shrink-0" />
@@ -104,7 +104,7 @@ export default function Sidebar() {
                   end={sub.href === '/partners'}
                   className={({ isActive }) => cn(
                     'flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-colors',
-                    isActive ? 'text-[#2B5B84] font-medium bg-[#2B5B84]/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    isActive ? 'text-[#1B7A3D] font-medium bg-[#1B7A3D]/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                   )}
                 >
                   <sub.icon className="w-3.5 h-3.5" />
@@ -122,7 +122,7 @@ export default function Sidebar() {
           to="/settings"
           className={({ isActive }) => cn(
             'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-            isActive ? 'bg-[#2B5B84]/10 text-[#2B5B84] font-medium' : 'text-slate-600 hover:bg-slate-100'
+            isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
           )}
         >
           <Settings className="w-4 h-4" />

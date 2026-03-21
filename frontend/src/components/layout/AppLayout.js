@@ -33,7 +33,7 @@ export default function AppLayout() {
           </Button>
           <Separator orientation="vertical" className="mx-2 h-6" />
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2B5B84] text-white font-semibold text-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white font-semibold text-sm">
               {initials}
             </div>
             <div className="hidden sm:block">

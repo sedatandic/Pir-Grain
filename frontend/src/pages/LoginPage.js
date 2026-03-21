@@ -7,6 +7,9 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Wheat } from 'lucide-react';
 
+const PIR_GREEN = '#1B7A3D';
+const PIR_PURPLE = '#5B3A7A';
+
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
   const [username, setUsername] = useState('');
@@ -26,11 +29,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary">
-            <Wheat className="h-10 w-10 text-primary-foreground" />
+          <div className="mx-auto mb-4">
+            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-24 w-auto mx-auto object-contain" />
           </div>
-          <CardTitle className="text-2xl" data-testid="login-title">PIR GRAIN & PULSES</CardTitle>
-          <CardDescription>Agricultural Commodity Trading Dashboard</CardDescription>
+          <CardTitle className="text-2xl" style={{ color: PIR_GREEN }} data-testid="login-title">
+            PIR GRAIN & PULSES
+          </CardTitle>
+          <CardDescription style={{ color: PIR_PURPLE }}>Agricultural Commodity Trading Dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

@@ -17,7 +17,7 @@ const mainNavItems = [
   { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign },
   { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen },
   { title: 'Calendar', href: '/calendar', icon: CalendarDays },
-  { title: 'Omega', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
+  { title: 'Accounting', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
   { title: 'Reports', href: '/reports', icon: BarChart3 },
   { title: 'Vessels', href: '/vessels', icon: Ship },
 ];

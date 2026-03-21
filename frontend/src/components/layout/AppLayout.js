@@ -35,10 +35,10 @@ export default function AppLayout() {
       <Sidebar />
       <div className={cn('transition-all duration-200', sidebarCollapsed ? 'ml-[60px]' : 'ml-[250px]')}>
         {/* Header Bar */}
-        <header className="flex h-14 items-center gap-2 border-b bg-white px-4 sticky top-0 z-40">
+        <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
           <div className="flex-1" />
           <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5 text-slate-500" />
+            <Bell className="h-5 w-5 text-muted-foreground" />
           </Button>
           <Separator orientation="vertical" className="mx-2 h-6" />
           <DropdownMenu>
@@ -48,10 +48,10 @@ export default function AppLayout() {
                   {initials}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium leading-none">{firstName}</p>
-                  <p className="text-xs text-slate-500">{lastName}</p>
+                  <p className="text-sm font-medium leading-none text-foreground">{firstName}</p>
+                  <p className="text-xs text-muted-foreground">{lastName}</p>
                 </div>
-                <ChevronDown className="h-4 w-4 text-slate-400 hidden sm:block" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground hidden sm:block" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

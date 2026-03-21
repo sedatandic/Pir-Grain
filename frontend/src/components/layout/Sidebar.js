@@ -66,15 +66,15 @@ export default function Sidebar() {
     <aside
       data-testid="app-sidebar"
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col z-50 bg-white border-r border-slate-200 transition-all duration-200',
+        'fixed left-0 top-0 h-screen flex flex-col z-50 bg-card border-r border-border transition-all duration-200',
         collapsed ? 'w-[60px]' : 'w-[250px]'
       )}
     >
       {/* Logo + Collapse Toggle */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
+      <div className="flex items-center justify-between px-3 py-3 border-b border-border">
         {collapsed ? (
           <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity" data-testid="sidebar-expand-button">
-            <PanelLeft className="w-5 h-5 text-slate-500" />
+            <PanelLeft className="w-5 h-5 text-muted-foreground" />
           </button>
         ) : (
           <>
@@ -82,11 +82,11 @@ export default function Sidebar() {
               <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
               <div>
                 <h1 className="text-[13px] font-bold tracking-wide leading-tight" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
-                <p className="text-[9px] text-slate-400 tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
+                <p className="text-[9px] text-muted-foreground tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
               </div>
             </div>
-            <button onClick={toggleCollapse} className="hover:bg-slate-100 rounded-md p-1 transition-colors" data-testid="sidebar-collapse-button">
-              <PanelLeftClose className="w-4 h-4 text-slate-400" />
+            <button onClick={toggleCollapse} className="hover:bg-muted rounded-md p-1 transition-colors" data-testid="sidebar-collapse-button">
+              <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
             </button>
           </>
         )}
@@ -101,7 +101,7 @@ export default function Sidebar() {
             data-testid={`sidebar-nav-${item.title.toLowerCase().replace(/[\s.]+/g, '-')}-link`}
             className={({ isActive }) => cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-              isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
+              isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
             )}
           >
             <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -116,7 +116,7 @@ export default function Sidebar() {
             onClick={() => setPartnersOpen(!partnersOpen)}
             className={cn(
               'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm w-full transition-colors',
-              isPartnerActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
+              isPartnerActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
             )}
           >
             <Users className="w-4 h-4 flex-shrink-0" />
@@ -128,7 +128,7 @@ export default function Sidebar() {
             )}
           </button>
           {!collapsed && partnersOpen && (
-            <div className="ml-5 pl-3 border-l border-slate-200 mt-0.5 space-y-0.5">
+            <div className="ml-5 pl-3 border-l border-border mt-0.5 space-y-0.5">
               {partnerSubItems.map((sub) => (
                 <NavLink
                   key={sub.href}
@@ -136,7 +136,7 @@ export default function Sidebar() {
                   end={sub.href === '/partners'}
                   className={({ isActive }) => cn(
                     'flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-colors',
-                    isActive ? 'text-[#1B7A3D] font-medium bg-[#1B7A3D]/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                    isActive ? 'text-[#1B7A3D] font-medium bg-[#1B7A3D]/5' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   )}
                 >
                   <sub.icon className="w-3.5 h-3.5" />
@@ -149,7 +149,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="px-2 py-2 border-t border-slate-200 space-y-0.5">
+      <div className="px-2 py-2 border-t border-border space-y-0.5">
         <NavLink
           to="/settings"
           className={({ isActive }) => cn(
@@ -163,7 +163,7 @@ export default function Sidebar() {
         <button
           onClick={toggleDarkMode}
           data-testid="sidebar-theme-toggle"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 w-full transition-colors"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full transition-colors"
         >
           {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}

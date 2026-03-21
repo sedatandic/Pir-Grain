@@ -1,5 +1,5 @@
 export const TRADE_STATUS_CONFIG = {
-  'confirmation': { label: 'Confirmation', color: 'bg-blue-100 text-blue-800', order: 1 },
+  'confirmation': { label: 'Biz. Confirmation', color: 'bg-blue-100 text-blue-800', order: 1 },
   'draft-contract': { label: 'Draft Contract', color: 'bg-indigo-100 text-indigo-800', order: 2 },
   'nomination-sent': { label: 'Nomination Sent', color: 'bg-cyan-100 text-cyan-800', order: 3 },
   'di-sent': { label: 'Docs. Instruction Sent', color: 'bg-teal-100 text-teal-800', order: 4 },
@@ -29,7 +29,7 @@ export const WASHOUT_STATUSES = ['washout', 'wash-out'];
 export const CANCELLED_STATUSES = ['cancelled'];
 
 export const STATUS_OPTIONS = [
-  { value: 'confirmation', label: 'Confirmation' },
+  { value: 'confirmation', label: 'Biz. Confirmation' },
   { value: 'draft-contract', label: 'Draft Contract' },
   { value: 'nomination-sent', label: 'Nomination Sent' },
   { value: 'di-sent', label: 'Docs. Instruction Sent' },

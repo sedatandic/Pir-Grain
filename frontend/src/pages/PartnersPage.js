@@ -224,14 +224,13 @@ export default function PartnersPage({ filterType }) {
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Location</TableHead>
-                    <TableHead>Origins</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
                   ) : filtered.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
@@ -241,7 +240,6 @@ export default function PartnersPage({ filterType }) {
                       <TableCell className="text-sm">{p.email ? <a href={`mailto:${p.email}`} className="text-primary hover:underline flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</a> : '-'}</TableCell>
                       <TableCell className="text-sm">{p.phone ? <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span> : '-'}</TableCell>
                       <TableCell className="text-sm">{[p.city, p.country].filter(Boolean).join(', ') || '-'}</TableCell>
-                      <TableCell className="text-sm">{p.origins && p.origins.length > 0 ? <div className="flex flex-wrap gap-1">{p.origins.map((o, i) => <Badge key={i} variant="outline" className="text-xs">{o}</Badge>)}</div> : '-'}</TableCell>
                       <TableCell><Badge className={TYPE_CONFIG[p.type]?.color || 'bg-muted'}>{TYPE_CONFIG[p.type]?.label || p.type}</Badge></TableCell>
                       <TableCell>
                         <div className="flex gap-1">

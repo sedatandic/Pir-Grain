@@ -366,17 +366,6 @@ export default function NewTradePage() {
             <Label>Shipment Window End</Label>
             <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
           </div>
-          <div className="space-y-2">
-            <Label>Vessel Name</Label>
-            <Input value={form.vesselName} onChange={(e) => set('vesselName', e.target.value)} placeholder="e.g. MV GRAIN STAR" />
-          </div>
-          <div className="space-y-2">
-            <Label>Surveyor</Label>
-            <Select value={form.surveyorId} onValueChange={(v) => set('surveyorId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
         </CardContent>
       </Card>
 

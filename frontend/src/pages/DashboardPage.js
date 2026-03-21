@@ -177,8 +177,8 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">Upcoming Payments & Events</CardTitle>
-                  <CardDescription>Due invoices, meetings, and conferences</CardDescription>
+                  <CardTitle className="text-base whitespace-nowrap">Upcoming Payments & Events</CardTitle>
+                  <CardDescription className="whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
@@ -42,22 +44,28 @@ export default function TradeDetailPage() {
   const [commodities, setCommodities] = useState([]);
   const [vessels, setVessels] = useState([]);
   const [surveyors, setSurveyors] = useState([]);
+  const [ports, setPorts] = useState([]);
+  const [blDialogOpen, setBlDialogOpen] = useState(false);
+  const [blForm, setBlForm] = useState({});
+  const [blSaving, setBlSaving] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [tradeRes, partRes, comRes, vesRes, surRes] = await Promise.all([
+        const [tradeRes, partRes, comRes, vesRes, surRes, portRes] = await Promise.all([
           api.get(`/api/trades/${tradeId}`),
           api.get('/api/partners'),
           api.get('/api/commodities'),
           api.get('/api/vessels'),
           api.get('/api/surveyors'),
+          api.get('/api/ports'),
         ]);
         setTrade(tradeRes.data);
         setPartners(partRes.data);
         setCommodities(comRes.data);
         setVessels(vesRes.data);
         setSurveyors(surRes.data);
+        setPorts(portRes.data);
         setDocChecks(tradeRes.data.docChecks || {});
       } catch (err) {
         toast.error('Failed to load trade');
@@ -86,6 +94,47 @@ export default function TradeDetailPage() {
     setDocChecks(prev => ({ ...prev, [doc]: !prev[doc] }));
   };
 
+  const openBlDialog = () => {
+    setBlForm({
+      blNumber: trade.blNumber || '1',
+      blDate: trade.blDate || '',
+      blQuantity: trade.blQuantity != null ? String(trade.blQuantity) : '',
+      loadPortId: trade.loadingPortId || trade.basePortId || '',
+      dischargePortId: trade.dischargePortId || '',
+      sellerSurveyor: trade.sellerSurveyor || '',
+      buyerSurveyor: trade.buyerSurveyor || '',
+      dischargeQuantity: trade.dischargeQuantity != null ? String(trade.dischargeQuantity) : '',
+    });
+    setBlDialogOpen(true);
+  };
+
+  const handleBlQuantityChange = (val) => {
+    const qty = parseFloat(val) || 0;
+    const dischQty = qty > 0 ? (qty - qty * 0.005).toFixed(2) : '';
+    setBlForm(prev => ({ ...prev, blQuantity: val, dischargeQuantity: dischQty ? String(parseFloat(dischQty)) : '' }));
+  };
+
+  const saveBlDetails = async () => {
+    setBlSaving(true);
+    try {
+      const data = {
+        blNumber: blForm.blNumber,
+        blDate: blForm.blDate,
+        blQuantity: blForm.blQuantity ? parseFloat(blForm.blQuantity) : 0,
+        loadingPortId: blForm.loadPortId,
+        dischargePortId: blForm.dischargePortId,
+        sellerSurveyor: blForm.sellerSurveyor,
+        buyerSurveyor: blForm.buyerSurveyor,
+        dischargeQuantity: blForm.dischargeQuantity ? parseFloat(blForm.dischargeQuantity) : 0,
+      };
+      const res = await api.put(`/api/trades/${tradeId}`, data);
+      setTrade(res.data);
+      toast.success('B/L Details saved');
+      setBlDialogOpen(false);
+    } catch { toast.error('Failed to save B/L details'); }
+    finally { setBlSaving(false); }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   if (!trade) return <div className="text-center py-16 text-muted-foreground">Trade not found</div>;
 
@@ -107,7 +156,7 @@ export default function TradeDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
-        <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => navigate(`/trades/${tradeId}/edit`)}>
+        <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
           <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit B/L Details' : 'Edit Trade'}
         </Button>
       </div>
@@ -238,6 +287,83 @@ export default function TradeDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* B/L Edit Dialog */}
+      <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>Edit B/L Details</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>B/L Number</Label>
+                <Input data-testid="bl-number-input" value={blForm.blNumber || ''} onChange={(e) => setBlForm({...blForm, blNumber: e.target.value})} placeholder="1" />
+              </div>
+              <div className="space-y-2">
+                <Label>B/L Date</Label>
+                <Input data-testid="bl-date-input" value={blForm.blDate || ''} onChange={(e) => setBlForm({...blForm, blDate: e.target.value})} placeholder="dd/mm/yyyy" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>B/L Quantity (Mts)</Label>
+                <Input data-testid="bl-quantity-input" type="number" value={blForm.blQuantity || ''} onChange={(e) => handleBlQuantityChange(e.target.value)} placeholder="e.g. 25000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Discharge Quantity (Mts) <span className="text-xs text-muted-foreground">(auto: B/L Qty - 0.5%)</span></Label>
+                <Input data-testid="bl-discharge-qty-input" type="number" value={blForm.dischargeQuantity || ''} onChange={(e) => setBlForm({...blForm, dischargeQuantity: e.target.value})} placeholder="Auto-calculated" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Load Port</Label>
+                <Select value={blForm.loadPortId || ''} onValueChange={(v) => setBlForm({...blForm, loadPortId: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>
+                  <SelectContent>{ports.sort((a, b) => a.name.localeCompare(b.name)).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Discharge Port</Label>
+                <Select value={blForm.dischargePortId || ''} onValueChange={(v) => setBlForm({...blForm, dischargePortId: v})}>
+                  <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>
+                  <SelectContent>{ports.sort((a, b) => a.name.localeCompare(b.name)).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Seller Surveyor</Label>
+                <Select value={blForm.sellerSurveyor || '_custom'} onValueChange={(v) => setBlForm({...blForm, sellerSurveyor: v === '_custom' ? '' : v})}>
+                  <SelectTrigger><SelectValue placeholder="Select surveyor" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_custom">Custom...</SelectItem>
+                    {surveyors.sort((a, b) => a.name.localeCompare(b.name)).map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {(!blForm.sellerSurveyor || !surveyors.some(s => s.name === blForm.sellerSurveyor)) && (
+                  <Input value={blForm.sellerSurveyor || ''} onChange={(e) => setBlForm({...blForm, sellerSurveyor: e.target.value})} placeholder="Type surveyor name" />
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Buyer Surveyor</Label>
+                <Select value={blForm.buyerSurveyor || '_custom'} onValueChange={(v) => setBlForm({...blForm, buyerSurveyor: v === '_custom' ? '' : v})}>
+                  <SelectTrigger><SelectValue placeholder="Select surveyor" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_custom">Custom...</SelectItem>
+                    {surveyors.sort((a, b) => a.name.localeCompare(b.name)).map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                {(!blForm.buyerSurveyor || !surveyors.some(s => s.name === blForm.buyerSurveyor)) && (
+                  <Input value={blForm.buyerSurveyor || ''} onChange={(e) => setBlForm({...blForm, buyerSurveyor: e.target.value})} placeholder="Type surveyor name" />
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBlDialogOpen(false)}>Cancel</Button>
+            <Button onClick={saveBlDetails} disabled={blSaving}>{blSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save B/L Details</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

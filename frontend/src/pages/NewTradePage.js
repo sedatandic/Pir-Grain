@@ -275,7 +275,7 @@ export default function NewTradePage() {
 
       <Card>
         <CardHeader><CardTitle>Pricing & Terms</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Price per MT</Label>
             <Input type="number" value={form.pricePerMT} onChange={(e) => set('pricePerMT', e.target.value)} placeholder="0.00" />

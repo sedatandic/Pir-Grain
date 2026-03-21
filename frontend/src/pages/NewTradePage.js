@@ -43,7 +43,7 @@ function PartyContactPickers({ partyLabel, partner, tradeContact, execContact, o
   const ecIdx = execContact ? ec.findIndex(c => c.name === execContact.name && c.email === execContact.email) : -1;
 
   return (
-    <div className="col-span-2 bg-muted/30 rounded-lg p-3 space-y-2 border border-dashed">
+    <div className="col-span-4 bg-muted/30 rounded-lg p-3 space-y-2 border border-dashed">
       <div className="text-xs font-medium text-muted-foreground">{partyLabel} Contacts — {partner.companyName}</div>
       <div className="grid grid-cols-2 gap-3">
         {tc.length > 0 && (
@@ -175,7 +175,7 @@ export default function NewTradePage() {
 
       <Card>
         <CardHeader><CardTitle>Trade Parties</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Seller *</Label>
             <Select value={form.sellerId} onValueChange={handleSellerChange}>

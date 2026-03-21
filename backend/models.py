@@ -123,6 +123,7 @@ class InvoiceCreate(BaseModel):
     category: Optional[str] = "other"
     description: Optional[str] = None
     status: Optional[str] = "pending"
+    direction: Optional[str] = "outgoing"
 
 
 class BankStatementCreate(BaseModel):

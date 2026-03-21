@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, AlertCircle, CheckCircle, Clock, Receipt, FileText, Upload, Download } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -21,6 +21,34 @@ const STATUS_CONFIG = {
   overdue: { label: 'Overdue', color: 'bg-red-100 text-red-800' },
 };
 
+function InvoiceTable({ invoices, search, onEdit, onDelete }) {
+  const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
+  const fmt = (n, cur) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 0 }).format(n);
+  return (
+    <div className="overflow-x-auto border rounded-lg">
+      <Table>
+        <TableHeader><TableRow className="bg-muted/50">
+          <TableHead>Invoice #</TableHead><TableHead>Vendor</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Status</TableHead><TableHead className="w-[80px]"></TableHead>
+        </TableRow></TableHeader>
+        <TableBody>
+          {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
+          filtered.map(inv => (
+            <TableRow key={inv.id}>
+              <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
+              <TableCell>{inv.vendorName}</TableCell>
+              <TableCell><Badge variant="secondary" className="capitalize">{(inv.category||'other').replace('_', ' ')}</Badge></TableCell>
+              <TableCell className="text-right font-mono font-medium">{fmt(inv.amount, inv.currency)}</TableCell>
+              <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
+              <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status}</Badge></TableCell>
+              <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export default function AccountingPage() {
   const [invoices, setInvoices] = useState([]);
   const [bankStatements, setBankStatements] = useState([]);
@@ -28,34 +56,43 @@ export default function AccountingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending' });
+  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending', direction: 'outgoing' });
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '' });
 
-  const fetch = async () => {
+  const fetchData = async () => {
     try {
-      const [invRes, stmtRes] = await Promise.all([
-        api.get('/api/invoices'),
-        api.get('/api/bank-statements'),
-      ]);
+      const [invRes, stmtRes] = await Promise.all([api.get('/api/invoices'), api.get('/api/bank-statements')]);
       setInvoices(invRes.data);
       setBankStatements(stmtRes.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  const incoming = invoices.filter(i => i.direction === 'incoming');
+  const outgoing = invoices.filter(i => i.direction !== 'incoming');
 
   const stats = {
-    total: invoices.reduce((s, i) => s + (i.amount || 0), 0),
-    pending: invoices.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
-    paid: invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.amount || 0), 0),
+    inTotal: incoming.reduce((s, i) => s + (i.amount || 0), 0),
+    inPending: incoming.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
+    outTotal: outgoing.reduce((s, i) => s + (i.amount || 0), 0),
+    outPending: outgoing.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
   };
 
-  const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
+  const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
-  const openCreate = () => { setEditingInvoice(null); setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending' }); setDialogOpen(true); };
-  const openEdit = (inv) => { setEditingInvoice(inv); setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'other', description: inv.description||'', status: inv.status||'pending' }); setDialogOpen(true); };
+  const openCreate = (direction) => {
+    setEditingInvoice(null);
+    setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending', direction });
+    setDialogOpen(true);
+  };
+  const openEdit = (inv) => {
+    setEditingInvoice(inv);
+    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'other', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
+    setDialogOpen(true);
+  };
 
   const handleSave = async () => {
     if (!form.invoiceNumber || !form.vendorName || !form.amount) { toast.error('Invoice number, vendor, and amount required'); return; }
@@ -64,28 +101,22 @@ export default function AccountingPage() {
       const data = { ...form, amount: parseFloat(form.amount) };
       if (editingInvoice) { await api.put(`/api/invoices/${editingInvoice.id}`, data); toast.success('Invoice updated'); }
       else { await api.post('/api/invoices', data); toast.success('Invoice created'); }
-      setDialogOpen(false); fetch();
+      setDialogOpen(false); fetchData();
     } catch (err) { toast.error('Failed to save'); } finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
-    try { await api.delete(`/api/invoices/${id}`); toast.success('Deleted'); fetch(); } catch (err) { toast.error('Failed'); }
+    try { await api.delete(`/api/invoices/${id}`); toast.success('Deleted'); fetchData(); } catch (err) { toast.error('Failed'); }
   };
-
-  const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
   const handleSaveStmt = async () => {
     setSaving(true);
-    try {
-      await api.post('/api/bank-statements', stmtForm);
-      toast.success('Bank statement added');
-      setStmtDialogOpen(false);
-      fetch();
-    } catch (err) { toast.error('Failed'); } finally { setSaving(false); }
+    try { await api.post('/api/bank-statements', stmtForm); toast.success('Bank statement added'); setStmtDialogOpen(false); fetchData(); }
+    catch (err) { toast.error('Failed'); } finally { setSaving(false); }
   };
 
   const handleDeleteStmt = async (id) => {
-    try { await api.delete(`/api/bank-statements/${id}`); toast.success('Deleted'); fetch(); } catch { toast.error('Failed'); }
+    try { await api.delete(`/api/bank-statements/${id}`); toast.success('Deleted'); fetchData(); } catch { toast.error('Failed'); }
   };
 
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -96,87 +127,80 @@ export default function AccountingPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Accounting</h1>
-        <p className="text-muted-foreground">Manage invoices, expenses, and bank statements</p>
+        <p className="text-muted-foreground">Manage incoming and outgoing payments</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Invoices</CardTitle><Receipt className="h-4 w-4 text-primary" /></CardHeader><CardContent><div className="text-2xl font-bold">{fmt(stats.total)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle><Clock className="h-4 w-4 text-amber-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{fmt(stats.pending)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.paid)}</div></CardContent></Card>
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Incoming Total</CardTitle><ArrowDownLeft className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.inTotal)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Incoming Pending</CardTitle><Clock className="h-4 w-4 text-amber-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{fmt(stats.inPending)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Outgoing Total</CardTitle><ArrowUpRight className="h-4 w-4 text-red-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-red-600">{fmt(stats.outTotal)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Outgoing Pending</CardTitle><Clock className="h-4 w-4 text-amber-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{fmt(stats.outPending)}</div></CardContent></Card>
       </div>
 
-      <Tabs defaultValue="invoices">
+      <Tabs defaultValue="incoming">
         <TabsList>
-          <TabsTrigger value="invoices"><Receipt className="h-3.5 w-3.5 mr-1" />Invoices ({invoices.length})</TabsTrigger>
+          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({incoming.length})</TabsTrigger>
+          <TabsTrigger value="outgoing"><ArrowUpRight className="h-3.5 w-3.5 mr-1" />Outgoing Payments ({outgoing.length})</TabsTrigger>
           <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({bankStatements.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="invoices">
+        <TabsContent value="incoming">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
-                <div className="ml-auto"><Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Add Invoice</Button></div>
+                <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+                <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-          <div className="overflow-x-auto border rounded-lg">
-            <Table>
-              <TableHeader><TableRow className="bg-muted/50">
-                <TableHead>Invoice #</TableHead><TableHead>Vendor</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Status</TableHead><TableHead className="w-[80px]"></TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
-                filtered.map(inv => (
-                  <TableRow key={inv.id}>
-                    <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
-                    <TableCell>{inv.vendorName}</TableCell>
-                    <TableCell><Badge variant="secondary" className="capitalize">{(inv.category||'other').replace('_', ' ')}</Badge></TableCell>
-                    <TableCell className="text-right font-mono font-medium">{fmt(inv.amount)}</TableCell>
-                    <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'MMM d, yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
-                    <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status}</Badge></TableCell>
-                    <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
-      </TabsContent>
+              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      <TabsContent value="bank-statements">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Monthly Bank Statements</h3>
-              <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '' }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
-            </div>
-            <div className="overflow-x-auto border rounded-lg">
-              <Table>
-                <TableHeader><TableRow className="bg-muted/50">
-                  <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
-                </TableRow></TableHeader>
-                <TableBody>
-                  {bankStatements.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No bank statements uploaded yet</TableCell></TableRow> :
-                  bankStatements.map(s => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
-                      <TableCell>{s.description || '-'}</TableCell>
-                      <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                      <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
+        <TabsContent value="outgoing">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search outgoing..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+                <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
+              </div>
+              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bank-statements">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Monthly Bank Statements</h3>
+                <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '' }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
+              </div>
+              <div className="overflow-x-auto border rounded-lg">
+                <Table>
+                  <TableHeader><TableRow className="bg-muted/50">
+                    <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {bankStatements.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No bank statements uploaded yet</TableCell></TableRow> :
+                    bankStatements.map(s => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
+                        <TableCell>{s.description || '-'}</TableCell>
+                        <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
+                        <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
-      {/* Bank Statement Dialog */}
       <Dialog open={stmtDialogOpen} onOpenChange={setStmtDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Add Bank Statement</DialogTitle><DialogDescription>Upload monthly bank statement.</DialogDescription></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle className="text-center">Add Bank Statement</DialogTitle><DialogDescription className="text-center">Upload monthly bank statement.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Month</Label>
               <Select value={String(stmtForm.month)} onValueChange={(v) => setStmtForm({...stmtForm, month: parseInt(v)})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map((m,i) => <SelectItem key={i} value={String(i+1)}>{m}</SelectItem>)}</SelectContent></Select>
@@ -190,13 +214,13 @@ export default function AccountingPage() {
       </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle>{editingInvoice ? 'Edit Invoice' : 'New Invoice'}</DialogTitle><DialogDescription>Fill in the invoice details.</DialogDescription></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle className="text-center">{editingInvoice ? 'Edit Invoice' : `New ${form.direction === 'incoming' ? 'Incoming' : 'Outgoing'} Payment`}</DialogTitle><DialogDescription className="text-center">Fill in the payment details.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Invoice Number *</Label><Input value={form.invoiceNumber} onChange={(e) => setForm({...form, invoiceNumber: e.target.value})} placeholder="INV-001" /></div>
             <div className="space-y-2"><Label>Vendor *</Label><Input value={form.vendorName} onChange={(e) => setForm({...form, vendorName: e.target.value})} /></div>
             <div className="space-y-2"><Label>Amount *</Label><Input type="number" value={form.amount} onChange={(e) => setForm({...form, amount: e.target.value})} /></div>
             <div className="space-y-2"><Label>Currency</Label>
-              <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem><SelectItem value="GBP">GBP</SelectItem></SelectContent></Select>
+              <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Due Date</Label><Input type="date" value={form.dueDate} onChange={(e) => setForm({...form, dueDate: e.target.value})} /></div>
             <div className="space-y-2"><Label>Category</Label>
@@ -204,6 +228,9 @@ export default function AccountingPage() {
             </div>
             <div className="space-y-2"><Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="overdue">Overdue</SelectItem></SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Type</Label>
+              <Select value={form.direction} onValueChange={(v) => setForm({...form, direction: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="incoming">Incoming</SelectItem><SelectItem value="outgoing">Outgoing</SelectItem></SelectContent></Select>
             </div>
             <div className="col-span-2 space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={2} /></div>
           </div>

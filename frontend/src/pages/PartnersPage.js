@@ -259,7 +259,7 @@ export default function PartnersPage({ filterType }) {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto">
-          <DialogHeader><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
+          <DialogHeader className="text-center"><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>

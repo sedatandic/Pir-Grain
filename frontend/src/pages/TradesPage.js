@@ -219,7 +219,7 @@ export default function TradesPage() {
                 </TableCell>
                 <TableCell className="text-center text-sm">{formatDate(trade.contractDate || trade.createdAt)}</TableCell>
                 <TableCell className="text-center">
-                  <button onClick={() => { setSelectedTrade(trade); setModalOpen(true); }} className="font-medium text-primary hover:underline cursor-pointer text-sm">
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedTrade(trade); setModalOpen(true); }} className="font-medium text-primary hover:underline cursor-pointer text-sm">
                     {trade.pirContractNumber || trade.contractNumber || trade.referenceNumber}
                   </button>
                   {trade.sellerContractNumber && trade.sellerContractNumber !== 'N/A' && (
@@ -360,34 +360,71 @@ export default function TradesPage() {
 
       {/* Trade Detail Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <DialogTitle>{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
-              <Button size="sm" variant="outline" data-testid="edit-trade-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}/edit`); }}>
-                <Pencil className="h-3.5 w-3.5 mr-1" />Edit Trade
-              </Button>
+              <div className="flex items-center gap-3">
+                <DialogTitle className="text-xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
+                {selectedTrade && <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge>}
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" data-testid="view-trade-detail-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}`); }}>
+                  View Full
+                </Button>
+                <Button size="sm" variant="outline" data-testid="edit-trade-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}/edit`); }}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />Edit
+                </Button>
+              </div>
             </div>
           </DialogHeader>
           {selectedTrade && (
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-muted-foreground">Status:</span> <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge></div>
-              <div><span className="text-muted-foreground">Contract Date:</span> {formatDate(selectedTrade.contractDate)}</div>
-              <div><span className="text-muted-foreground">Seller:</span> {selectedTrade.sellerName || '-'}</div>
-              <div><span className="text-muted-foreground">Buyer:</span> {selectedTrade.buyerName || '-'}</div>
-              <div><span className="text-muted-foreground">Commodity:</span> {selectedTrade.commodityName || '-'}</div>
-              <div><span className="text-muted-foreground">Origin:</span> {selectedTrade.originName || '-'}</div>
-              <div><span className="text-muted-foreground">Quantity:</span> {formatQty(selectedTrade.quantity)}</div>
-              <div><span className="text-muted-foreground">Unit Price:</span> ${selectedTrade.pricePerMT?.toLocaleString() || 0}/{selectedTrade.currency || 'USD'}</div>
-              <div><span className="text-muted-foreground">Delivery Term:</span> {(() => { const port = selectedTrade.basePortName || selectedTrade.loadingPortName || ''; const term = selectedTrade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</div>
-              <div><span className="text-muted-foreground">Payment Terms:</span> {selectedTrade.paymentTerms || '-'}</div>
-              <div><span className="text-muted-foreground">Loading Port:</span> {selectedTrade.loadingPortName || '-'}</div>
-              <div><span className="text-muted-foreground">Discharge Port:</span> {selectedTrade.dischargePortName || '-'}</div>
-              <div><span className="text-muted-foreground">Shipment:</span> {formatShipmentDate(selectedTrade.shipmentWindowStart)} - {formatShipmentDate(selectedTrade.shipmentWindowEnd)}</div>
-              <div><span className="text-muted-foreground">Vessel:</span> {selectedTrade.vesselName || '-'}</div>
-              <div><span className="text-muted-foreground">Brokerage:</span> ${selectedTrade.brokeragePerMT || 0}/MT</div>
-              <div><span className="text-muted-foreground">Total Commission:</span> ${selectedTrade.totalCommission?.toLocaleString() || 0}</div>
-              {selectedTrade.notes && <div className="col-span-2"><span className="text-muted-foreground">Notes:</span> {selectedTrade.notes}</div>}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contract Information */}
+                <div className="border rounded-lg p-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Contract Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{selectedTrade.referenceNumber || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{selectedTrade.pirContractNumber || selectedTrade.contractNumber || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Contract Date</span><span className="font-medium">{formatDate(selectedTrade.contractDate)}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{selectedTrade.commodityName || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{selectedTrade.originName || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{selectedTrade.quantity ? `${selectedTrade.quantity.toLocaleString()} MT` : '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{selectedTrade.pricePerMT ? `${selectedTrade.currency || 'USD'} ${selectedTrade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
+                  </div>
+                </div>
+                {/* Trade Terms */}
+                <div className="border rounded-lg p-4 space-y-3">
+                  <h4 className="font-semibold text-sm">Trade Terms</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{selectedTrade.sellerName || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{selectedTrade.buyerName || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{selectedTrade.brokerName || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Delivery Term</span><span className="font-medium">{(() => { const port = selectedTrade.basePortName || selectedTrade.loadingPortName || ''; const term = selectedTrade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span className="font-medium">{selectedTrade.paymentTerms || '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Shipment Period</span><span className="font-medium">{formatShipmentDate(selectedTrade.shipmentWindowStart) && formatShipmentDate(selectedTrade.shipmentWindowEnd) ? `${formatShipmentDate(selectedTrade.shipmentWindowStart)} - ${formatShipmentDate(selectedTrade.shipmentWindowEnd)}` : '-'}</span></div>
+                    <hr />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Vessel</span><span className="font-medium uppercase">{selectedTrade.vesselName || '-'}</span></div>
+                  </div>
+                </div>
+              </div>
+              {selectedTrade.notes && (
+                <div className="border rounded-lg p-4 text-sm">
+                  <h4 className="font-semibold text-sm mb-2">Notes</h4>
+                  <p className="text-muted-foreground">{selectedTrade.notes}</p>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

@@ -116,22 +116,6 @@ export default function DashboardPage() {
             <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden" data-testid="kpi-upcoming-payments">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Payments & Events</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
-              <CalendarDays className="h-5 w-5 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{upcomingItems.length}</div>
-            {upcomingItems.length > 0 ? (
-              <div className="mt-1 text-xs text-muted-foreground truncate">Next: {upcomingItems[0].title}</div>
-            ) : (
-              <div className="mt-1 text-xs text-muted-foreground">No upcoming items</div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Upcoming Payments & Events Detail */}

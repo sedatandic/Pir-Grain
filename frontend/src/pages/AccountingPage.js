@@ -88,7 +88,7 @@ export default function AccountingPage() {
     try { await api.delete(`/api/bank-statements/${id}`); toast.success('Deleted'); fetch(); } catch { toast.error('Failed'); }
   };
 
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 

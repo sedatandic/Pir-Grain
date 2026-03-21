@@ -50,11 +50,11 @@ export default function Sidebar() {
         {collapsed ? (
           <img src="/pir-logo.jpg" alt="PIR" className="w-10 h-10 object-contain" />
         ) : (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-end gap-2.5">
             <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
-            <div>
-              <h1 className="text-[13px] font-bold tracking-wide" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
-              <p className="text-[9px] text-slate-400 tracking-wider">TRADING DASHBOARD</p>
+            <div className="pb-[1px]">
+              <h1 className="text-[13px] font-bold tracking-wide leading-tight" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+              <p className="text-[9px] text-slate-400 tracking-wider leading-tight">TRADING DASHBOARD</p>
             </div>
           </div>
         )}

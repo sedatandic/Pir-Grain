@@ -212,7 +212,6 @@ export default function NewTradePage() {
             <Select value={form.brokerId} onValueChange={handleBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select broker" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="na">N/A</SelectItem>
                 {partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('broker'); }).map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>

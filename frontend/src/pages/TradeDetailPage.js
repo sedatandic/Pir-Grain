@@ -164,6 +164,14 @@ export default function TradeDetailPage() {
               </CardContent>
             </Card>
           </div>
+          {trade.commoditySpecs && (
+            <Card className="mt-4">
+              <CardHeader className="pb-3"><CardTitle className="text-base">Commodity Specs.</CardTitle></CardHeader>
+              <CardContent>
+                <pre className="whitespace-pre-wrap text-sm font-mono bg-muted/30 rounded-lg p-4">{trade.commoditySpecs}</pre>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* B/L Details Tab */}

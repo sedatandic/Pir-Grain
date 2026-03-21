@@ -36,6 +36,7 @@ export default function TradeDetailPage() {
   const [trade, setTrade] = useState(null);
   const [loading, setLoading] = useState(true);
   const [docChecks, setDocChecks] = useState({});
+  const [activeTab, setActiveTab] = useState('summary');
   const [saving, setSaving] = useState(false);
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
@@ -107,11 +108,11 @@ export default function TradeDetailPage() {
           <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => navigate(`/trades/${tradeId}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />Edit B/L Details
+          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit B/L Details' : 'Edit Trade'}
         </Button>
       </div>
 
-      <Tabs defaultValue="summary">
+      <Tabs defaultValue="summary" onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Trade Summary</TabsTrigger>
           <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />B/L Details</TabsTrigger>

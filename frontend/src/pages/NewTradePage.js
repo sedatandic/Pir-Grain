@@ -101,7 +101,7 @@ export default function NewTradePage() {
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '', tolerance: '',
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
-    paymentTerms: '', incoterms: '', basePortId: '', dischargePortId: '',
+    paymentTerms: '100 % TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation',

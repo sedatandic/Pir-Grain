@@ -186,9 +186,9 @@ export default function DashboardPage() {
             <CardContent>
               {upcomingItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Button variant="outline" size="sm" className="mb-4" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
                   <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground mb-4">No upcoming items</p>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+                  <p className="text-sm text-muted-foreground">No upcoming items</p>
                 </div>
               ) : (
                 <div className="space-y-2">

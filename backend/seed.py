@@ -3,7 +3,7 @@ import random
 
 from database import (
     users_col, trades_col, partners_col, vessels_col,
-    commodities_col, origins_col, ports_col, surveyors_col, events_col
+    commodities_col, origins_col, ports_col, surveyors_col
 )
 from auth import pwd_context
 
@@ -160,13 +160,3 @@ def seed_data():
         for s in surveyors:
             s["createdAt"] = datetime.utcnow()
             surveyors_col.insert_one(s)
-
-    if events_col.count_documents({}) == 0:
-        events = [
-            {"title": "GAFTA Conference 2025", "date": (datetime.utcnow() + timedelta(days=15)).isoformat(), "type": "conference", "description": "Annual GAFTA conference"},
-            {"title": "Payment Due - CNT-2025-5678", "date": (datetime.utcnow() + timedelta(days=7)).isoformat(), "type": "payment", "description": "Payment due for contract"},
-            {"title": "Meeting with AgroTrade", "date": (datetime.utcnow() + timedelta(days=3)).isoformat(), "type": "meeting", "description": "Discuss new trades"},
-        ]
-        for e in events:
-            e["createdAt"] = datetime.utcnow()
-            events_col.insert_one(e)

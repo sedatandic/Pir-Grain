@@ -108,6 +108,7 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
+    dischargeRate: '', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
     excludedDisports: [], excludedSurveyors: [],
     portVariations: [],
@@ -171,6 +172,8 @@ export default function NewTradePage() {
             sellerContractNumber: t.sellerContractNumber || 'N/A',
             excludedDisports: t.excludedDisports || [],
             excludedSurveyors: t.excludedSurveyors || [],
+            dischargeRate: t.dischargeRate != null ? String(t.dischargeRate) : '',
+            demurrageRate: t.demurrageRate != null ? String(t.demurrageRate) : '',
             portVariations: t.portVariations || [],
             sellerTradeContact: t.sellerTradeContact || null,
             sellerExecutionContact: t.sellerExecutionContact || null,
@@ -245,6 +248,8 @@ export default function NewTradePage() {
         quantity: form.quantity ? parseFloat(form.quantity) : 0,
         pricePerMT: form.pricePerMT ? parseFloat(form.pricePerMT) : 0,
         brokeragePerMT: form.brokeragePerMT ? parseFloat(form.brokeragePerMT) : 0,
+        dischargeRate: form.dischargeRate ? parseFloat(form.dischargeRate) : 0,
+        demurrageRate: form.demurrageRate ? parseFloat(form.demurrageRate) : 0,
         portVariations: form.portVariations.filter(pv => pv.portId).map(pv => ({
           portId: pv.portId,
           portName: pv.portName || '',
@@ -466,6 +471,17 @@ export default function NewTradePage() {
             <div className="space-y-2">
               <Label>Shipment Period End</Label>
               <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Discharge Rate (Mts)</Label>
+              <Input type="number" value={form.dischargeRate || ''} onChange={(e) => set('dischargeRate', e.target.value)} placeholder="e.g. 5000" />
+            </div>
+            <div className="space-y-2">
+              <Label>Demurrage Rate (USD/Day)</Label>
+              <Input type="number" value={form.demurrageRate || ''} onChange={(e) => set('demurrageRate', e.target.value)} placeholder="e.g. 15000" />
             </div>
           </div>
 

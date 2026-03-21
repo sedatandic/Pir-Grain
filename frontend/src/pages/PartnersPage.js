@@ -23,7 +23,7 @@ const emptyContact = { name: '', email: '', phone: '' };
 
 const emptyForm = {
   companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '',
-  email: '', phone: '', whatsapp: '', type: 'buyer', origins: '', notes: '',
+  email: '', phone: '', whatsapp: '', type: [], origins: '', notes: '',
   tradeContacts: [], executionContacts: [],
 };
 
@@ -119,7 +119,10 @@ export default function PartnersPage({ filterType }) {
 
   const filtered = useMemo(() => {
     let list = partners;
-    if (tab !== 'all') list = list.filter(p => p.type === tab);
+    if (tab !== 'all') list = list.filter(p => {
+      const types = Array.isArray(p.type) ? p.type : [p.type];
+      return types.includes(tab);
+    });
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(p => p.companyName?.toLowerCase().includes(q) || p.contactPerson?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q) || p.companyCode?.toLowerCase().includes(q));
@@ -129,14 +132,14 @@ export default function PartnersPage({ filterType }) {
 
   const counts = useMemo(() => ({
     all: partners.length,
-    seller: partners.filter(p => p.type === 'seller').length,
-    buyer: partners.filter(p => p.type === 'buyer').length,
-    'co-broker': partners.filter(p => p.type === 'co-broker').length,
+    seller: partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('seller'); }).length,
+    buyer: partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('buyer'); }).length,
+    'co-broker': partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('co-broker'); }).length,
   }), [partners]);
 
   const openCreate = () => {
     setEditingPartner(null);
-    setForm({ ...emptyForm, type: filterType || 'buyer' });
+    setForm({ ...emptyForm, type: filterType ? [filterType] : ['buyer'] });
     setDialogOpen(true);
   };
 
@@ -147,7 +150,7 @@ export default function PartnersPage({ filterType }) {
       contactPerson: p.contactPerson || '', address: p.address || '',
       city: p.city || '', country: p.country || '',
       email: p.email || '', phone: p.phone || '', whatsapp: p.whatsapp || '',
-      type: p.type || 'buyer', origins: (p.origins || []).join(', '),
+      type: Array.isArray(p.type) ? p.type : (p.type ? [p.type] : ['buyer']), origins: (p.origins || []).join(', '),
       notes: p.notes || '',
       tradeContacts: (p.tradeContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
       executionContacts: (p.executionContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
@@ -239,7 +242,7 @@ export default function PartnersPage({ filterType }) {
                       <TableCell className="text-sm">{p.email ? <a href={`mailto:${p.email}`} className="text-primary hover:underline flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</a> : '-'}</TableCell>
                       <TableCell className="text-sm">{p.phone ? <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span> : '-'}</TableCell>
                       <TableCell className="text-sm">{[p.city, p.country].filter(Boolean).join(', ') || '-'}</TableCell>
-                      <TableCell><Badge className={TYPE_CONFIG[p.type]?.color || 'bg-muted'}>{TYPE_CONFIG[p.type]?.label || p.type}</Badge></TableCell>
+                      <TableCell><div className="flex flex-wrap gap-1">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailPartner(p)} data-testid={`partner-view-${p.id}`}><Eye className="h-3.5 w-3.5" /></Button>
@@ -266,14 +269,26 @@ export default function PartnersPage({ filterType }) {
               <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. PIR" /></div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
-                  <SelectTrigger data-testid="partner-form-type"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="seller">Seller</SelectItem>
-                    <SelectItem value="buyer">Buyer</SelectItem>
-                    <SelectItem value="co-broker">Co-Broker</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-3 pt-1" data-testid="partner-form-type">
+                  {Object.entries(TYPE_CONFIG).map(([key, cfg]) => {
+                    const types = Array.isArray(form.type) ? form.type : [form.type];
+                    const checked = types.includes(key);
+                    return (
+                      <label key={key} className="flex items-center gap-1.5 cursor-pointer text-sm">
+                        <input type="checkbox" checked={checked} onChange={() => {
+                          const cur = Array.isArray(form.type) ? [...form.type] : [form.type];
+                          if (checked) {
+                            const next = cur.filter(t => t !== key);
+                            setForm({...form, type: next.length > 0 ? next : cur});
+                          } else {
+                            setForm({...form, type: [...cur, key]});
+                          }
+                        }} className="rounded border-input" />
+                        <Badge className={cfg.color}>{cfg.label}</Badge>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div className="space-y-2"><Label>Contact Person</Label><Input value={form.contactPerson} onChange={(e) => setForm({...form, contactPerson: e.target.value})} /></div>
               <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} /></div>
@@ -326,7 +341,7 @@ export default function PartnersPage({ filterType }) {
                     <DialogTitle className="text-lg">{detailPartner.companyName}</DialogTitle>
                     <DialogDescription className="flex items-center gap-2">
                       {detailPartner.companyCode && <Badge variant="outline" className="text-xs">{detailPartner.companyCode}</Badge>}
-                      <Badge className={TYPE_CONFIG[detailPartner.type]?.color || 'bg-muted'}>{TYPE_CONFIG[detailPartner.type]?.label || detailPartner.type}</Badge>
+                      {(Array.isArray(detailPartner.type) ? detailPartner.type : [detailPartner.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}
                     </DialogDescription>
                   </div>
                 </div>

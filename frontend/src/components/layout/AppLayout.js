@@ -72,6 +72,13 @@ export default function AppLayout() {
     } catch {}
   };
 
+  const deleteAllNotifications = async () => {
+    try {
+      await api.delete('/api/notifications');
+      fetchNotifications();
+    } catch {}
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" richColors />
@@ -96,11 +103,18 @@ export default function AppLayout() {
             <DropdownMenuContent align="end" className="w-80">
               <div className="flex items-center justify-between px-3 py-2">
                 <span className="text-sm font-semibold">Notifications</span>
-                {unreadCount > 0 && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={markAllRead}>
-                    <CheckCheck className="h-3 w-3 mr-1" />Mark all read
-                  </Button>
-                )}
+                <div className="flex gap-1">
+                  {unreadCount > 0 && (
+                    <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={markAllRead}>
+                      <CheckCheck className="h-3 w-3 mr-1" />Read All
+                    </Button>
+                  )}
+                  {notifications.length > 0 && (
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={deleteAllNotifications}>
+                      Delete All
+                    </Button>
+                  )}
+                </div>
               </div>
               <DropdownMenuSeparator />
               <ScrollArea className="max-h-[300px]">

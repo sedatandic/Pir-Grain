@@ -159,7 +159,7 @@ class PartnerCreate(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     whatsapp: Optional[str] = None
-    type: str = "buyer"
+    type: Optional[list] = ["buyer"]
     origins: Optional[list] = []
     tradeContacts: Optional[list] = []
     executionContacts: Optional[list] = []
@@ -923,6 +923,12 @@ def mark_notification_read(notif_id: str, user=Depends(get_current_user)):
 def mark_all_read(user=Depends(get_current_user)):
     notifications_col.update_many({}, {"$addToSet": {"readBy": user["username"]}})
     return {"message": "All marked read"}
+
+@app.delete("/api/notifications")
+def delete_all_notifications(user=Depends(get_current_user)):
+    notifications_col.delete_many({})
+    return {"message": "All notifications deleted"}
+
 
 # ─── Trade Statuses ──────────────────────────────────────────
 @app.get("/api/trade-statuses")

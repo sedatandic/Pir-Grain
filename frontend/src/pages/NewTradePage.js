@@ -105,9 +105,9 @@ export default function NewTradePage() {
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
-  const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
-  const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
-  const coBrokers = useMemo(() => partners.filter(p => p.type === 'co-broker'), [partners]);
+  const sellers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('seller'); }), [partners]);
+  const buyers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('buyer'); }), [partners]);
+  const coBrokers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('co-broker'); }), [partners]);
   const loadPorts = useMemo(() => ports.filter(p => p.type === 'loading'), [ports]);
   const dischPorts = useMemo(() => ports.filter(p => p.type === 'discharge'), [ports]);
 
@@ -202,7 +202,7 @@ export default function NewTradePage() {
               <SelectTrigger><SelectValue placeholder="Select broker" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">-- None --</SelectItem>
-                {partners.filter(p => p.type === 'broker').map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+                {partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('broker'); }).map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

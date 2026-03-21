@@ -56,6 +56,7 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
         ("coBrokerId", partners_col, "coBrokerName", "coBrokerCode"),
         ("commodityId", commodities_col, "commodityName", None),
         ("originId", origins_col, "originName", None),
+        ("basePortId", ports_col, "basePortName", None),
         ("loadingPortId", ports_col, "loadingPortName", None),
         ("dischargePortId", ports_col, "dischargePortName", None),
     ]:
@@ -116,6 +117,7 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         ("coBrokerId", partners_col, "coBrokerName", "coBrokerCode"),
         ("commodityId", commodities_col, "commodityName", None),
         ("originId", origins_col, "originName", None),
+        ("basePortId", ports_col, "basePortName", None),
         ("loadingPortId", ports_col, "loadingPortName", None),
         ("dischargePortId", ports_col, "dischargePortName", None),
     ]:

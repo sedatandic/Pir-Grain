@@ -23,6 +23,8 @@ class TradeCreate(BaseModel):
     incoterms: Optional[str] = None
     loadingPortId: Optional[str] = None
     dischargePortId: Optional[str] = None
+    basePortId: Optional[str] = None
+    portVariations: Optional[list] = []
     shipmentWindowStart: Optional[str] = None
     shipmentWindowEnd: Optional[str] = None
     vesselName: Optional[str] = None

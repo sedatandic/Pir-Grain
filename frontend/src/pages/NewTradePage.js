@@ -10,7 +10,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parse } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -101,10 +101,11 @@ export default function NewTradePage() {
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '', tolerance: '',
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
-    paymentTerms: '', incoterms: '', loadingPortId: '', dischargePortId: '',
+    paymentTerms: '', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation',
+    portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
     buyerTradeContact: null, buyerExecutionContact: null,
     brokerTradeContact: null, brokerExecutionContact: null,
@@ -129,6 +130,12 @@ export default function NewTradePage() {
         if (pirGrain) {
           setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
         }
+
+        // Auto-select CIF Marmara Ports as default Base Port
+        const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');
+        if (marmaraPorts) {
+          setForm(prev => ({ ...prev, basePortId: marmaraPorts.id }));
+        }
       } catch (err) { console.error(err); }
     };
     fetch();
@@ -139,7 +146,6 @@ export default function NewTradePage() {
   const sellers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('seller'); }), [partners]);
   const buyers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('buyer'); }), [partners]);
   const coBrokers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('co-broker'); }), [partners]);
-  const loadPorts = useMemo(() => ports.filter(p => p.type === 'loading'), [ports]);
   const dischPorts = useMemo(() => ports.filter(p => p.type === 'discharge'), [ports]);
 
   const sellerPartner = useMemo(() => partners.find(p => p.id === form.sellerId), [partners, form.sellerId]);
@@ -171,9 +177,15 @@ export default function NewTradePage() {
         ...form,
         brokerId: form.brokerId === 'na' ? '' : form.brokerId,
         coBrokerId: form.coBrokerId === 'na' ? '' : form.coBrokerId,
+        loadingPortId: form.basePortId,
         quantity: form.quantity ? parseFloat(form.quantity) : 0,
         pricePerMT: form.pricePerMT ? parseFloat(form.pricePerMT) : 0,
         brokeragePerMT: form.brokeragePerMT ? parseFloat(form.brokeragePerMT) : 0,
+        portVariations: form.portVariations.filter(pv => pv.portId).map(pv => ({
+          portId: pv.portId,
+          portName: pv.portName || '',
+          difference: pv.difference ? parseFloat(pv.difference) : 0,
+        })),
       };
       await api.post('/api/trades', data);
       toast.success('Trade created');
@@ -343,28 +355,65 @@ export default function NewTradePage() {
 
       <Card>
         <CardHeader><CardTitle>Shipping</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Loading Port</Label>
-            <Select value={form.loadingPortId} onValueChange={(v) => set('loadingPortId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{loadPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-            </Select>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Base Port</Label>
+              <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Shipment Window Start</Label>
+              <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Shipment Window End</Label>
+              <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label>Discharge Port</Label>
-            <Select value={form.dischargePortId} onValueChange={(v) => set('dischargePortId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Shipment Window Start</Label>
-            <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Shipment Window End</Label>
-            <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Port Variations (price difference per MT)</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => set('portVariations', [...form.portVariations, { portId: '', difference: '' }])}>
+                <Plus className="h-3.5 w-3.5 mr-1" />Add Port
+              </Button>
+            </div>
+            {form.portVariations.length === 0 && (
+              <p className="text-sm text-muted-foreground">No port variations added. Click "Add Port" to specify price differences for other discharge ports.</p>
+            )}
+            {form.portVariations.map((pv, idx) => (
+              <div key={idx} className="flex items-end gap-3">
+                <div className="flex-1 space-y-1">
+                  {idx === 0 && <Label className="text-xs text-muted-foreground">Discharge Port</Label>}
+                  <Select value={pv.portId} onValueChange={(v) => {
+                    const updated = [...form.portVariations];
+                    const port = dischPorts.find(p => p.id === v);
+                    updated[idx] = { ...updated[idx], portId: v, portName: port?.name || '' };
+                    set('portVariations', updated);
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>
+                    <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div className="w-[160px] space-y-1">
+                  {idx === 0 && <Label className="text-xs text-muted-foreground">+/- per MT ({form.currency || 'USD'})</Label>}
+                  <Input type="number" value={pv.difference} placeholder="e.g. +5 or -3" onChange={(e) => {
+                    const updated = [...form.portVariations];
+                    updated[idx] = { ...updated[idx], difference: e.target.value };
+                    set('portVariations', updated);
+                  }} />
+                </div>
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => {
+                  const updated = form.portVariations.filter((_, i) => i !== idx);
+                  set('portVariations', updated);
+                }}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

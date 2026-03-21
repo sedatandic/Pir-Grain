@@ -41,7 +41,7 @@ function DateInput({ value, onChange, ...props }) {
 }
 
 const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF', 'FAS', 'CIP', 'DAP', 'DPU', 'DDP'];
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'TRY'];
+const CURRENCIES = ['USD', 'EUR'];
 
 function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {
   if (!contacts || contacts.length === 0) return null;

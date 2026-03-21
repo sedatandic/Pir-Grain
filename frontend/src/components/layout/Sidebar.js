@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import {
-  LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, LogOut,
+  LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
   DollarSign, FolderOpen, ChevronRight, Building2, ShoppingCart, Handshake,
   CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat
 } from 'lucide-react';
@@ -33,9 +33,27 @@ const partnerSubItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [partnersOpen, setPartnersOpen] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark');
+    }
+    return false;
+  });
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isPartnerActive = location.pathname.startsWith('/partners');
+
+  const toggleDarkMode = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    if (next) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   return (
     <aside
@@ -129,12 +147,12 @@ export default function Sidebar() {
           {!collapsed && <span>Settings</span>}
         </NavLink>
         <button
-          onClick={logout}
-          data-testid="sidebar-logout-button"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 w-full transition-colors"
+          onClick={toggleDarkMode}
+          data-testid="sidebar-theme-toggle"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100 w-full transition-colors"
         >
-          <LogOut className="w-4 h-4" />
-          {!collapsed && <span>Logout</span>}
+          {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
         </button>
       </div>
     </aside>

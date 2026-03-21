@@ -59,8 +59,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex items-center gap-4">
+        <div className="flex-1">
           <h1 className="text-2xl font-semibold tracking-tight" data-testid="dashboard-welcome">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Welcome back! Here is your trading overview.</p>
         </div>

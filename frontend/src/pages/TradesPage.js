@@ -383,7 +383,7 @@ export default function TradesPage() {
                 {/* Contract Information */}
                 <div className="border rounded-lg p-6 space-y-4">
                   <h4 className="font-semibold text-base">Contract Information</h4>
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-5 text-base">
                     <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{selectedTrade.referenceNumber || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{selectedTrade.pirContractNumber || selectedTrade.contractNumber || '-'}</span></div>
@@ -402,7 +402,7 @@ export default function TradesPage() {
                 {/* Trade Terms */}
                 <div className="border rounded-lg p-6 space-y-4">
                   <h4 className="font-semibold text-base">Trade Terms</h4>
-                  <div className="space-y-3 text-sm">
+                  <div className="space-y-5 text-base">
                     <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{selectedTrade.sellerName || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{selectedTrade.buyerName || '-'}</span></div>

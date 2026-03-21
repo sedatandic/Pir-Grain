@@ -163,6 +163,7 @@ class PortCreate(BaseModel):
     name: str
     type: Optional[str] = "loading"
     country: Optional[str] = None
+    countryCode: Optional[str] = None
 
 class EventCreate(BaseModel):
     title: str
@@ -243,42 +244,43 @@ def seed_data():
         c["createdAt"] = datetime.utcnow()
         commodities_col.insert_one(c)
 
-    if origins_col.count_documents({}) == 0:
-        origins = [
-            {"name": "Turkey", "adjective": "Turkish", "code": "TR"},
-            {"name": "Russia", "adjective": "Russian", "code": "RU"},
-            {"name": "Ukraine", "adjective": "Ukrainian", "code": "UA"},
-            {"name": "Kazakhstan", "adjective": "Kazakh", "code": "KZ"},
-            {"name": "India", "adjective": "Indian", "code": "IN"},
-            {"name": "Canada", "adjective": "Canadian", "code": "CA"},
-            {"name": "Australia", "adjective": "Australian", "code": "AU"},
-            {"name": "Argentina", "adjective": "Argentine", "code": "AR"},
-            {"name": "Bulgaria", "adjective": "Bulgarian", "code": "BG"},
-            {"name": "Romania", "adjective": "Romanian", "code": "RO"},
-            {"name": "France", "adjective": "French", "code": "FR"},
-        ]
-        for o in origins:
-            o["createdAt"] = datetime.utcnow()
-            origins_col.insert_one(o)
+    # Always reseed origins with the canonical list
+    origins_col.delete_many({})
+    origins = [
+        {"name": "Russia", "adjective": "Russian", "code": "RUS"},
+        {"name": "Ukraine", "adjective": "Ukrainian", "code": "UKR"},
+        {"name": "Moldova", "adjective": "Moldovian", "code": "MOL"},
+        {"name": "Romania", "adjective": "Romanian", "code": "ROM"},
+        {"name": "Italy", "adjective": "Italian", "code": "ITA"},
+        {"name": "Bulgaria", "adjective": "Bulgarian", "code": "BUL"},
+        {"name": "Any", "adjective": "Any", "code": "ANY"},
+    ]
+    for o in origins:
+        o["createdAt"] = datetime.utcnow()
+        origins_col.insert_one(o)
 
-    if ports_col.count_documents({}) == 0:
-        ports = [
-            {"name": "Mersin", "type": "loading", "country": "Turkey"},
-            {"name": "Istanbul", "type": "loading", "country": "Turkey"},
-            {"name": "Novorossiysk", "type": "loading", "country": "Russia"},
-            {"name": "Odessa", "type": "loading", "country": "Ukraine"},
-            {"name": "Constanta", "type": "loading", "country": "Romania"},
-            {"name": "Mumbai (JNPT)", "type": "discharge", "country": "India"},
-            {"name": "Karachi", "type": "discharge", "country": "Pakistan"},
-            {"name": "Jeddah", "type": "discharge", "country": "Saudi Arabia"},
-            {"name": "Dubai (Jebel Ali)", "type": "discharge", "country": "UAE"},
-            {"name": "Alexandria", "type": "discharge", "country": "Egypt"},
-            {"name": "Santos", "type": "discharge", "country": "Brazil"},
-            {"name": "Bandar Abbas", "type": "discharge", "country": "Iran"},
-        ]
-        for p in ports:
-            p["createdAt"] = datetime.utcnow()
-            ports_col.insert_one(p)
+    # Always reseed ports with the canonical list
+    ports_col.delete_many({})
+    ports = [
+        {"name": "Azov", "country": "Russia", "countryCode": "RU"},
+        {"name": "Bagaevskaya", "country": "Russia", "countryCode": "RU"},
+        {"name": "Chornomorsk", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Giurgiulești", "country": "Moldova", "countryCode": "MOL"},
+        {"name": "Izmail", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Manfredonia", "country": "Italy", "countryCode": "IT"},
+        {"name": "Molfetta", "country": "Italy", "countryCode": "IT"},
+        {"name": "Odessa", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Pivdennyi", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Ravenna", "country": "Italy", "countryCode": "IT"},
+        {"name": "Reni", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Rostov", "country": "Russia", "countryCode": "RU"},
+        {"name": "Taganrog", "country": "Russia", "countryCode": "RU"},
+        {"name": "Trieste", "country": "Italy", "countryCode": "IT"},
+        {"name": "Yeisk", "country": "Russia", "countryCode": "RU"},
+    ]
+    for p in ports:
+        p["createdAt"] = datetime.utcnow()
+        ports_col.insert_one(p)
 
     if partners_col.count_documents({}) == 0:
         partners = [

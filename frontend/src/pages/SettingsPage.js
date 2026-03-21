@@ -100,15 +100,15 @@ export default function SettingsPage() {
 
             <TabsContent value="origins">
               <div className="flex justify-between mb-4"><h3 className="font-semibold">Origins ({origins.length})</h3><Button size="sm" onClick={() => openAdd('origins', { name: '', adjective: '', code: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Country</TableHead><TableHead>Adjective</TableHead><TableHead>Code</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader><TableBody>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Origin Name</TableHead><TableHead>Origin Adjective</TableHead><TableHead>Origin Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
                 {origins.map(o => <TableRow key={o.id}><TableCell className="font-medium">{o.name}</TableCell><TableCell>{o.adjective || '-'}</TableCell><TableCell><Badge variant="secondary">{o.code || '-'}</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('origins', o.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
             <TabsContent value="ports">
-              <div className="flex justify-between mb-4"><h3 className="font-semibold">Ports ({ports.length})</h3><Button size="sm" onClick={() => openAdd('ports', { name: '', type: 'loading', country: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Port</TableHead><TableHead>Type</TableHead><TableHead>Country</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader><TableBody>
-                {ports.map(p => <TableRow key={p.id}><TableCell className="font-medium">{p.name}</TableCell><TableCell><Badge variant="secondary" className="capitalize">{p.type || '-'}</Badge></TableCell><TableCell>{p.country || '-'}</TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('ports', p.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              <div className="flex justify-between mb-4"><h3 className="font-semibold">Ports ({ports.length})</h3><Button size="sm" onClick={() => openAdd('ports', { name: '', country: '', countryCode: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Port Name</TableHead><TableHead>Country</TableHead><TableHead>Country Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {ports.map(p => <TableRow key={p.id}><TableCell className="font-medium">{p.name}</TableCell><TableCell>{p.country || '-'}</TableCell><TableCell><Badge variant="secondary">{p.countryCode || '-'}</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('ports', p.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 

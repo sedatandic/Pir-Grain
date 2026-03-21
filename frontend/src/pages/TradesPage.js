@@ -362,7 +362,7 @@ export default function TradesPage() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto [&>button.absolute]:hidden">
           <DialogHeader>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center gap-3">
               <DialogTitle className="text-2xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
               {selectedTrade && <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge>}
             </div>

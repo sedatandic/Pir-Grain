@@ -194,7 +194,7 @@ export default function TradesPage() {
               <TableHead className="text-center">Broker</TableHead>
               <TableHead className="text-center">Commodity</TableHead>
               <TableHead className="text-center">Origin</TableHead>
-              <TableHead className="text-center">Quantity<br/><span className="text-xs font-normal text-muted-foreground">(+/- 10%)</span></TableHead>
+              <TableHead className="text-center">Quantity<br/><span className="text-xs font-normal text-muted-foreground">(Mts)</span></TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
               <TableHead className="text-center">Unit Price</TableHead>
               <TableHead className="text-center">Currency</TableHead>
@@ -231,7 +231,7 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm">{trade.brokerName ? (trade.coBrokerName ? `${trade.brokerName} / ${trade.coBrokerName}` : trade.brokerName) : '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
-                <TableCell className="text-center font-mono text-sm">{formatQty(trade.quantity)}{trade.tolerance ? ` / ${trade.tolerance}` : ''}</TableCell>
+                <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.deliveryTerm || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>

@@ -79,10 +79,10 @@ export default function VesselsPage() {
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader><TableRow className="bg-muted/50">
-                <TableHead>Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead className="w-[80px]"></TableHead>
+                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="w-[80px]">Actions</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {filtered.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
+                {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
                 filtered.map(v => (
                   <TableRow key={v.id}>
                     <TableCell className="font-medium">{v.name}</TableCell>
@@ -90,6 +90,7 @@ export default function VesselsPage() {
                     <TableCell><Badge variant="secondary">{v.vesselType || '-'}</Badge></TableCell>
                     <TableCell>{v.flag || '-'}</TableCell>
                     <TableCell>{v.builtYear || '-'}</TableCell>
+                    <TableCell>{v.builtYear ? new Date().getFullYear() - v.builtYear : '-'}</TableCell>
                     <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
                   </TableRow>
                 ))}

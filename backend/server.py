@@ -324,15 +324,12 @@ def seed_data():
             p["executionContacts"] = []
             partners_col.insert_one(p)
 
-    if vessels_col.count_documents({}) == 0:
-        vessels = [
-            {"name": "MV Grain Star", "imoNumber": "9876543", "flag": "Panama", "builtYear": 2018, "vesselType": "Bulk Carrier"},
-            {"name": "MV Black Sea", "imoNumber": "9765432", "flag": "Liberia", "builtYear": 2015, "vesselType": "Bulk Carrier"},
-            {"name": "MV Mediterranean", "imoNumber": "9654321", "flag": "Marshall Islands", "builtYear": 2020, "vesselType": "Bulk Carrier"},
-        ]
-        for v in vessels:
-            v["createdAt"] = datetime.utcnow()
-            vessels_col.insert_one(v)
+    # Always reseed vessels with the canonical list
+    from vessel_data import VESSELS
+    vessels_col.delete_many({})
+    for v in VESSELS:
+        v["createdAt"] = datetime.utcnow()
+        vessels_col.insert_one(v)
 
     # Always reseed surveyors with the canonical list
     surveyors_col.delete_many({})

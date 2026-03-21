@@ -7,10 +7,18 @@ import { Bell, PanelLeft, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { cn } from '../../lib/utils';
 
 export default function AppLayout() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => setSidebarCollapsed(e.detail.collapsed);
+    window.addEventListener('sidebar-collapse', handler);
+    return () => window.removeEventListener('sidebar-collapse', handler);
+  }, []);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -25,7 +33,7 @@ export default function AppLayout() {
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" richColors />
       <Sidebar />
-      <div className="ml-[250px]">
+      <div className={cn('transition-all duration-200', sidebarCollapsed ? 'ml-[60px]' : 'ml-[250px]')}>
         {/* Header Bar */}
         <header className="flex h-14 items-center gap-2 border-b bg-white px-4 sticky top-0 z-40">
           <div className="flex-1" />

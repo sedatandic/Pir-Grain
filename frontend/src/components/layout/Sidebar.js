@@ -55,6 +55,13 @@ export default function Sidebar() {
     }
   };
 
+  // Dispatch event so AppLayout can respond to collapse changes
+  const toggleCollapse = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { collapsed: next } }));
+  };
+
   return (
     <aside
       data-testid="app-sidebar"
@@ -63,18 +70,25 @@ export default function Sidebar() {
         collapsed ? 'w-[60px]' : 'w-[250px]'
       )}
     >
-      {/* Logo */}
-      <div className="flex items-center justify-center px-3 py-3 border-b border-slate-200">
+      {/* Logo + Collapse Toggle */}
+      <div className="flex items-center justify-between px-3 py-3 border-b border-slate-200">
         {collapsed ? (
-          <img src="/pir-logo.jpg" alt="PIR" className="w-10 h-10 object-contain" />
+          <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity" data-testid="sidebar-expand-button">
+            <PanelLeft className="w-5 h-5 text-slate-500" />
+          </button>
         ) : (
-          <div className="flex items-end gap-2.5">
-            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
-            <div>
-              <h1 className="text-[13px] font-bold tracking-wide leading-tight" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
-              <p className="text-[9px] text-slate-400 tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
+          <>
+            <div className="flex items-end gap-2.5">
+              <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
+              <div>
+                <h1 className="text-[13px] font-bold tracking-wide leading-tight" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+                <p className="text-[9px] text-slate-400 tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
+              </div>
             </div>
-          </div>
+            <button onClick={toggleCollapse} className="hover:bg-slate-100 rounded-md p-1 transition-colors" data-testid="sidebar-collapse-button">
+              <PanelLeftClose className="w-4 h-4 text-slate-400" />
+            </button>
+          </>
         )}
       </div>
 

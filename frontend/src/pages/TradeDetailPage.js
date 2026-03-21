@@ -225,6 +225,13 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{trade.brokerName || getName(partners, trade.brokerId) || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{commodityName}</span></div>
+                {trade.commoditySpecs && (<>
+                <Separator />
+                <div>
+                  <span className="text-muted-foreground text-xs">Commodity Specs.</span>
+                  <pre className="whitespace-pre-wrap text-xs font-mono bg-muted/30 rounded-md p-2 mt-1">{trade.commoditySpecs}</pre>
+                </div>
+                </>)}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />
@@ -248,18 +255,14 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Demurrage Rate</span><span className="font-medium">{trade.demurrageRate ? `USD ${trade.demurrageRate.toLocaleString()}/Day` : '-'}</span></div>
                 <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Brokerage (per MT)</span><span className="font-medium">{trade.brokeragePerMT != null && trade.brokeragePerMT !== 0 ? trade.brokeragePerMT : '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Brokerage Payment</span><span className="font-medium capitalize">{trade.brokerageAccount ? `${trade.brokerageAccount} Account` : '-'}</span></div>
+                <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge></div>
               </CardContent>
             </Card>
           </div>
-          {trade.commoditySpecs && (
-            <Card className="mt-4">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Commodity Specs.</CardTitle></CardHeader>
-              <CardContent>
-                <pre className="whitespace-pre-wrap text-sm font-mono bg-muted/30 rounded-lg p-4">{trade.commoditySpecs}</pre>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         {/* B/L Details Tab */}

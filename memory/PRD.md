@@ -63,8 +63,18 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 └── lib/               - Auth, API client, constants
 ```
 
+## Recent Changes (March 21, 2026)
+- Added Edit button (pencil icon) to each commodity row in Settings → Commodities tab
+- Edit dialog now includes a "Specifications" textarea for managing commodity specs
+- Add Commodity dialog also includes the Specifications field
+- Renamed "Commodity Specs" to "Commodity Specs." on the New Trade page
+
 ## Backlog (Prioritized)
+### P1
+- Full Server-Side RBAC: Protect all API routes based on roles (admin, user), not just UI hiding
+
 ### P2
+- Refactor NewTradePage.js (~500 lines) into smaller components
 - Counterparty Departments CRUD (UI for adding/editing/deleting departments & contacts)
 - Document Templates page
 
@@ -72,4 +82,5 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - File Uploads for Bank Statements & DI Documents
 
 ### Refactoring
+- Extract NewTradePage.js into smaller components (TradePartiesSection, CommodityDetailsSection, ShippingTermsSection)
 - Extract PartnersPage.js into smaller components (400+ lines)

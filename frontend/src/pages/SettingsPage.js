@@ -3,6 +3,7 @@ import api from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -118,9 +119,9 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="commodities">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Commodities ({commodities.length})</h3><Button size="sm" onClick={() => openAdd('commodities', { name: '', code: '', group: '', hsCode: '', description: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Commodity</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Commodity Name</TableHead><TableHead>Commodity Group</TableHead><TableHead>Commodity Code</TableHead><TableHead>HS Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{c.hsCode || '-'}</TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Commodities ({commodities.length})</h3><Button size="sm" data-testid="add-commodity-btn" onClick={() => openAdd('commodities', { name: '', code: '', group: '', hsCode: '', specs: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Commodity</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Commodity Name</TableHead><TableHead>Commodity Group</TableHead><TableHead>Commodity Code</TableHead><TableHead>HS Code</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{c.hsCode || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" data-testid={`edit-commodity-${c.id}`} onClick={() => { setDialogType('commodities'); setDialogForm({ name: c.name || '', code: c.code || '', group: c.group || '', hsCode: c.hsCode || '', specs: c.specs || '', _editId: c.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" data-testid={`delete-commodity-${c.id}`} onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
@@ -183,6 +184,11 @@ export default function SettingsPage() {
                   <select className="w-full rounded-md border p-2 text-sm" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
                     <option value="admin">Admin</option><option value="user">User</option><option value="accountant">Accountant</option>
                   </select>
+                </div>
+              ) : key === 'specs' ? (
+                <div key={key} className="space-y-2">
+                  <Label>Specifications</Label>
+                  <Textarea data-testid="commodity-specs-textarea" rows={6} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="Enter commodity specifications (e.g. moisture, protein, etc.)" />
                 </div>
               ) : (
                 <div key={key} className="space-y-2">

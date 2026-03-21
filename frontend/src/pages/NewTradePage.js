@@ -333,7 +333,7 @@ export default function NewTradePage() {
           </div>
           {selectedCommodity && form.commoditySpecs && (
             <div className="col-span-4 space-y-2">
-              <Label>Commodity Specs</Label>
+              <Label>Commodity Specs.</Label>
               <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" />
             </div>
           )}

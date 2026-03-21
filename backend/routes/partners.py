@@ -8,7 +8,10 @@ from database import partners_col, serialize_doc, create_notification
 from auth import require_roles
 from models import PartnerCreate
 
+from pymongo import collation as pymongo_collation
+
 non_accountant = require_roles("admin", "user")
+turkish_collation = pymongo_collation.Collation("tr")
 
 router = APIRouter(prefix="/api/partners", tags=["partners"])
 
@@ -25,7 +28,7 @@ def list_partners(type: Optional[str] = None, search: Optional[str] = None, user
             {"email": {"$regex": search, "$options": "i"}},
             {"companyCode": {"$regex": search, "$options": "i"}},
         ]
-    return [serialize_doc(p) for p in partners_col.find(query).sort("companyName", 1)]
+    return [serialize_doc(p) for p in partners_col.find(query).sort("companyName", 1).collation(turkish_collation)]
 
 
 @router.post("")

@@ -114,7 +114,7 @@ export default function TradeDetailPage() {
       <Tabs defaultValue="confirmation">
         <TabsList className="flex-wrap">
           <TabsTrigger value="confirmation"><FileText className="h-3.5 w-3.5 mr-1" />Confirmation</TabsTrigger>
-          <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />Shipment Details</TabsTrigger>
+          <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />B/L Details</TabsTrigger>
           <TabsTrigger value="parties"><Users className="h-3.5 w-3.5 mr-1" />Parties & Agents</TabsTrigger>
           <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{docList.length})</TabsTrigger>
         </TabsList>
@@ -153,34 +153,28 @@ export default function TradeDetailPage() {
           </div>
         </TabsContent>
 
-        {/* Shipment Details Tab */}
+        {/* B/L Details Tab */}
         <TabsContent value="shipment">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Vessel & Voyage</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Vessel</span><span className="font-medium">{getName(vessels, trade.vesselId)}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Loading Port</span><span className="font-medium">{trade.loadingPortName || '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{trade.dischargePortName || '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">ETA</span><span className="font-medium">{trade.eta || '-'}</span></div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Rates</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Freight Rate</span><span className="font-medium">{trade.freightRate ? `$${trade.freightRate}/MT` : '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Rate</span><span className="font-medium">{trade.dischargeRate || trade.disRate || '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Demurrage Rate</span><span className="font-medium">{trade.demurrageRate || trade.demRate || '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Dispatch Rate</span><span className="font-medium">{trade.dispatchRate || '-'}</span></div>
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Bill of Lading Details</CardTitle></CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{trade.loadingPortName || trade.basePortName || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{trade.dischargePortName || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Parties & Agents Tab */}

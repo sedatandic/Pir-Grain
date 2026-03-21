@@ -360,11 +360,11 @@ export default function TradesPage() {
 
       {/* Trade Detail Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <DialogTitle className="text-xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
+                <DialogTitle className="text-2xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
                 {selectedTrade && <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge>}
               </div>
               <div className="flex gap-2">
@@ -381,9 +381,9 @@ export default function TradesPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Contract Information */}
-                <div className="border rounded-lg p-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Contract Information</h4>
-                  <div className="space-y-2 text-sm">
+                <div className="border rounded-lg p-6 space-y-4">
+                  <h4 className="font-semibold text-base">Contract Information</h4>
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{selectedTrade.referenceNumber || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{selectedTrade.pirContractNumber || selectedTrade.contractNumber || '-'}</span></div>
@@ -400,9 +400,9 @@ export default function TradesPage() {
                   </div>
                 </div>
                 {/* Trade Terms */}
-                <div className="border rounded-lg p-4 space-y-3">
-                  <h4 className="font-semibold text-sm">Trade Terms</h4>
-                  <div className="space-y-2 text-sm">
+                <div className="border rounded-lg p-6 space-y-4">
+                  <h4 className="font-semibold text-base">Trade Terms</h4>
+                  <div className="space-y-3 text-sm">
                     <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{selectedTrade.sellerName || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{selectedTrade.buyerName || '-'}</span></div>

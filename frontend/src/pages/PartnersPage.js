@@ -17,7 +17,6 @@ import { Separator } from '../components/ui/separator';
 const TYPE_CONFIG = {
   seller: { label: 'Seller', color: 'bg-blue-100 text-blue-800' },
   buyer: { label: 'Buyer', color: 'bg-green-100 text-green-800' },
-  broker: { label: 'Broker', color: 'bg-purple-100 text-purple-800' },
   'co-broker': { label: 'Co-Broker', color: 'bg-amber-100 text-amber-800' },
 };
 
@@ -178,7 +177,6 @@ export default function PartnersPage({ filterType }) {
                   <SelectItem value="seller">Seller</SelectItem>
                   <SelectItem value="buyer">Buyer</SelectItem>
                   <SelectItem value="co-broker">Co-Broker</SelectItem>
-                  <SelectItem value="broker">Broker</SelectItem>
                 </SelectContent>
               </Select>
             </div>

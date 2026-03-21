@@ -79,8 +79,8 @@ export default function DashboardPage() {
     <div className="space-y-6" data-testid="dashboard-page">
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden" data-testid="kpi-ongoing-trades">
+      <div className="flex justify-end gap-4">
+        <Card className="relative overflow-hidden w-64" data-testid="kpi-ongoing-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Ongoing Trades</CardTitle>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
             <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden" data-testid="kpi-pending-trades">
+        <Card className="relative overflow-hidden w-64" data-testid="kpi-pending-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Trades</CardTitle>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
@@ -104,7 +104,7 @@ export default function DashboardPage() {
             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden" data-testid="kpi-completed-trades">
+        <Card className="relative overflow-hidden w-64" data-testid="kpi-completed-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Completed Trades</CardTitle>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">

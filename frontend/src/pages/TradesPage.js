@@ -80,8 +80,8 @@ export default function TradesPage() {
   }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, search]);
 
   const categorized = useMemo(() => ({
-    ongoing: trades.filter(t => ONGOING_STATUSES.includes(t.status)),
-    pending: trades.filter(t => PENDING_STATUSES.includes(t.status)),
+    ongoing: trades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
+    pending: trades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && !t.vesselName),
     completed: trades.filter(t => COMPLETED_STATUSES.includes(t.status)),
     washout: trades.filter(t => WASHOUT_STATUSES.includes(t.status)),
     cancelled: trades.filter(t => CANCELLED_STATUSES.includes(t.status)),

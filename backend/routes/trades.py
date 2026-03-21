@@ -78,16 +78,16 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
 @router.get("/stats/overview")
 def trade_stats(user=Depends(non_accountant)):
     total = trades_col.count_documents({})
-    pending_statuses = ["confirmation", "draft-contract", "nomination-sent", "pending", "draft"]
-    ongoing_statuses = ["di-sent", "drafts-confirmation", "appropriation", "dox", "pmt", "disch", "shortage", "demurrage", "dispatch", "brokerage", "ongoing", "active"]
-    active = trades_col.count_documents({"status": {"$in": ongoing_statuses}})
-    pending = trades_col.count_documents({"status": {"$in": pending_statuses}})
     completed = trades_col.count_documents({"status": "completed"})
+    cancelled = trades_col.count_documents({"status": {"$in": ["cancelled", "washout"]}})
+    active_trades = list(trades_col.find({"status": {"$nin": ["completed", "cancelled", "washout"]}}))
+    ongoing = sum(1 for t in active_trades if t.get("vesselName"))
+    pending = sum(1 for t in active_trades if not t.get("vesselName"))
     pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
     status_dist = {item["_id"]: item["count"] for item in trades_col.aggregate(pipeline)}
     return {
         "totalTrades": total,
-        "activeTrades": active,
+        "activeTrades": ongoing,
         "pendingTrades": pending,
         "completedTrades": completed,
         "completionRate": round((completed / total * 100) if total > 0 else 0, 1),

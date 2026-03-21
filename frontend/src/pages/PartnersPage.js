@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe, UserPlus, Briefcase, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Separator } from '../components/ui/separator';
@@ -20,7 +20,81 @@ const TYPE_CONFIG = {
   'co-broker': { label: 'Co-Broker', color: 'bg-amber-100 text-amber-800' },
 };
 
-const emptyForm = { companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '', email: '', phone: '', whatsapp: '', type: 'buyer', origins: '', notes: '' };
+const emptyContact = { name: '', email: '', phone: '' };
+
+const emptyForm = {
+  companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '',
+  email: '', phone: '', whatsapp: '', type: 'buyer', origins: '', notes: '',
+  tradeContacts: [], executionContacts: [],
+};
+
+function ContactRow({ contact, onChange, onRemove }) {
+  return (
+    <div className="flex items-start gap-2 p-2 rounded-md border bg-muted/30" data-testid="contact-row">
+      <div className="grid grid-cols-3 gap-2 flex-1 min-w-0">
+        <Input placeholder="Name" value={contact.name} onChange={(e) => onChange({ ...contact, name: e.target.value })} className="h-8 text-sm" data-testid="contact-name" />
+        <Input placeholder="Email" value={contact.email} onChange={(e) => onChange({ ...contact, email: e.target.value })} className="h-8 text-sm" data-testid="contact-email" />
+        <Input placeholder="Phone" value={contact.phone} onChange={(e) => onChange({ ...contact, phone: e.target.value })} className="h-8 text-sm" data-testid="contact-phone" />
+      </div>
+      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-destructive hover:text-destructive" onClick={onRemove} data-testid="contact-remove"><X className="h-3.5 w-3.5" /></Button>
+    </div>
+  );
+}
+
+function ContactSection({ title, icon: Icon, contacts, onChange, testIdPrefix }) {
+  const addContact = () => onChange([...contacts, { ...emptyContact }]);
+  const updateContact = (idx, updated) => {
+    const next = [...contacts];
+    next[idx] = updated;
+    onChange(next);
+  };
+  const removeContact = (idx) => onChange(contacts.filter((_, i) => i !== idx));
+
+  return (
+    <div className="col-span-2 space-y-2" data-testid={`${testIdPrefix}-section`}>
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" />{title}</Label>
+        <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={addContact} data-testid={`${testIdPrefix}-add-btn`}>
+          <UserPlus className="h-3 w-3 mr-1" />Add
+        </Button>
+      </div>
+      {contacts.length === 0 ? (
+        <div className="text-xs text-muted-foreground italic py-1">No contacts added yet</div>
+      ) : (
+        <div className="space-y-2">
+          {contacts.length > 0 && (
+            <div className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 px-2 text-[11px] text-muted-foreground font-medium">
+              <span>Name</span><span>Email</span><span>Phone</span><span />
+            </div>
+          )}
+          {contacts.map((c, i) => (
+            <ContactRow key={i} contact={c} onChange={(u) => updateContact(i, u)} onRemove={() => removeContact(i)} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ContactDisplay({ title, icon: Icon, contacts }) {
+  if (!contacts || contacts.length === 0) return null;
+  return (
+    <div className="rounded-lg border p-3 space-y-2">
+      <div className="flex items-center gap-2 text-sm font-medium"><Icon className="h-4 w-4 text-primary" />{title} ({contacts.length})</div>
+      <div className="space-y-2">
+        {contacts.map((c, i) => (
+          <div key={i} className="ml-1 text-sm border-l-2 border-primary/20 pl-3 py-1">
+            <div className="font-medium">{c.name || 'Unnamed'}</div>
+            <div className="text-muted-foreground space-y-0.5">
+              {c.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</div>}
+              {c.phone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.phone}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function PartnersPage({ filterType }) {
   const [partners, setPartners] = useState([]);
@@ -61,10 +135,24 @@ export default function PartnersPage({ filterType }) {
     'co-broker': partners.filter(p => p.type === 'co-broker').length,
   }), [partners]);
 
-  const openCreate = () => { setEditingPartner(null); setForm({ ...emptyForm, type: filterType || 'buyer' }); setDialogOpen(true); };
+  const openCreate = () => {
+    setEditingPartner(null);
+    setForm({ ...emptyForm, type: filterType || 'buyer' });
+    setDialogOpen(true);
+  };
+
   const openEdit = (p) => {
     setEditingPartner(p);
-    setForm({ companyName: p.companyName||'', companyCode: p.companyCode||'', contactPerson: p.contactPerson||'', address: p.address||'', city: p.city||'', country: p.country||'', email: p.email||'', phone: p.phone||'', whatsapp: p.whatsapp||'', type: p.type||'buyer', origins: (p.origins || []).join(', '), notes: p.notes||'' });
+    setForm({
+      companyName: p.companyName || '', companyCode: p.companyCode || '',
+      contactPerson: p.contactPerson || '', address: p.address || '',
+      city: p.city || '', country: p.country || '',
+      email: p.email || '', phone: p.phone || '', whatsapp: p.whatsapp || '',
+      type: p.type || 'buyer', origins: (p.origins || []).join(', '),
+      notes: p.notes || '',
+      tradeContacts: (p.tradeContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
+      executionContacts: (p.executionContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
+    });
     setDialogOpen(true);
   };
 
@@ -72,7 +160,12 @@ export default function PartnersPage({ filterType }) {
     if (!form.companyName.trim()) { toast.error('Company name is required'); return; }
     setSaving(true);
     try {
-      const payload = { ...form, origins: form.origins ? form.origins.split(',').map(o => o.trim()).filter(Boolean) : [] };
+      const payload = {
+        ...form,
+        origins: form.origins ? form.origins.split(',').map(o => o.trim()).filter(Boolean) : [],
+        tradeContacts: form.tradeContacts.filter(c => c.name || c.email || c.phone),
+        executionContacts: form.executionContacts.filter(c => c.name || c.email || c.phone),
+      };
       if (editingPartner) {
         await api.put(`/api/partners/${editingPartner.id}`, payload);
         toast.success('Partner updated');
@@ -166,42 +259,65 @@ export default function PartnersPage({ filterType }) {
         </CardContent>
       </Card>
 
+      {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader><DialogTitle>{editingPartner ? 'Edit Partner' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} /></div>
-            <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. PIR" /></div>
-            <div className="space-y-2">
-              <Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="seller">Seller</SelectItem>
-                  <SelectItem value="buyer">Buyer</SelectItem>
-                  <SelectItem value="co-broker">Co-Broker</SelectItem>
-                </SelectContent>
-              </Select>
+          <ScrollArea className="flex-1 pr-4 -mr-4">
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>
+              <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. PIR" /></div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+                  <SelectTrigger data-testid="partner-form-type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="seller">Seller</SelectItem>
+                    <SelectItem value="buyer">Buyer</SelectItem>
+                    <SelectItem value="co-broker">Co-Broker</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><Label>Contact Person</Label><Input value={form.contactPerson} onChange={(e) => setForm({...form, contactPerson: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} /></div>
+              <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={(e) => setForm({...form, whatsapp: e.target.value})} /></div>
+              <div className="col-span-2 space-y-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} /></div>
+              <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} /></div>
+              <div className="col-span-2 space-y-2"><Label>Origins</Label><Input value={form.origins} onChange={(e) => setForm({...form, origins: e.target.value})} placeholder="e.g. Russia, Ukraine" /></div>
+
+              <div className="col-span-2"><Separator className="my-1" /></div>
+
+              <ContactSection
+                title="Trade Contacts"
+                icon={Briefcase}
+                contacts={form.tradeContacts}
+                onChange={(tc) => setForm({ ...form, tradeContacts: tc })}
+                testIdPrefix="trade-contacts"
+              />
+
+              <div className="col-span-2"><Separator className="my-1" /></div>
+
+              <ContactSection
+                title="Execution Contacts"
+                icon={User}
+                contacts={form.executionContacts}
+                onChange={(ec) => setForm({ ...form, executionContacts: ec })}
+                testIdPrefix="execution-contacts"
+              />
             </div>
-            <div className="space-y-2"><Label>Contact Person</Label><Input value={form.contactPerson} onChange={(e) => setForm({...form, contactPerson: e.target.value})} /></div>
-            <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({...form, email: e.target.value})} /></div>
-            <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({...form, phone: e.target.value})} /></div>
-            <div className="space-y-2"><Label>WhatsApp</Label><Input value={form.whatsapp} onChange={(e) => setForm({...form, whatsapp: e.target.value})} /></div>
-            <div className="col-span-2 space-y-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} /></div>
-            <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} /></div>
-            <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} /></div>
-            <div className="col-span-2 space-y-2"><Label>Origins</Label><Input value={form.origins} onChange={(e) => setForm({...form, origins: e.target.value})} placeholder="e.g. Russia, Ukraine" /></div>
-          </div>
-          <DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="pt-4 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Counterparty'}</Button>
+            <Button onClick={handleSave} disabled={saving} data-testid="partner-form-save">{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Counterparty'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Business Card / Detail Dialog */}
       <Dialog open={!!detailPartner} onOpenChange={() => setDetailPartner(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
           {detailPartner && (
             <>
               <DialogHeader>
@@ -219,68 +335,76 @@ export default function PartnersPage({ filterType }) {
                 </div>
               </DialogHeader>
 
-              <div className="space-y-4 py-2">
-                {/* Main Contact */}
-                {detailPartner.contactPerson && (
-                  <div className="rounded-lg border p-3 space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium"><User className="h-4 w-4 text-primary" />Primary Contact</div>
-                    <div className="text-sm font-semibold">{detailPartner.contactPerson}</div>
-                    <div className="grid grid-cols-1 gap-1 text-sm text-muted-foreground">
-                      {detailPartner.email && <a href={`mailto:${detailPartner.email}`} className="flex items-center gap-2 hover:text-primary"><Mail className="h-3.5 w-3.5" />{detailPartner.email}</a>}
-                      {detailPartner.phone && <span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{detailPartner.phone}</span>}
-                      {detailPartner.whatsapp && <span className="flex items-center gap-2"><MessageCircle className="h-3.5 w-3.5" />{detailPartner.whatsapp}</span>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Location */}
-                {(detailPartner.address || detailPartner.city || detailPartner.country) && (
-                  <div className="rounded-lg border p-3 space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium"><Building2 className="h-4 w-4 text-primary" />Location</div>
-                    <div className="text-sm text-muted-foreground">
-                      {detailPartner.address && <div>{detailPartner.address}</div>}
-                      <div>{[detailPartner.city, detailPartner.country].filter(Boolean).join(', ')}</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Origins */}
-                {detailPartner.origins && detailPartner.origins.length > 0 && (
-                  <div className="rounded-lg border p-3 space-y-1">
-                    <div className="flex items-center gap-2 text-sm font-medium"><Globe className="h-4 w-4 text-primary" />Origins</div>
-                    <div className="flex flex-wrap gap-1">{detailPartner.origins.map((o, i) => <Badge key={i} variant="outline">{o}</Badge>)}</div>
-                  </div>
-                )}
-
-                {/* Departments */}
-                {detailPartner.departments && detailPartner.departments.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Departments</div>
-                    {detailPartner.departments.map((dept, di) => (
-                      <div key={di} className="rounded-lg border p-3 space-y-2">
-                        <div className="text-sm font-semibold">{dept.name}</div>
-                        {dept.contacts && dept.contacts.map((c, ci) => (
-                          <div key={ci} className="ml-2 text-sm border-l-2 border-primary/20 pl-3 py-1">
-                            <div className="font-medium">{c.name} {c.role && <Badge variant="outline" className="text-[10px] ml-1">{c.role}</Badge>}</div>
-                            <div className="text-muted-foreground space-y-0.5">
-                              {c.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</div>}
-                              {c.phone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.phone}</div>}
-                            </div>
-                          </div>
-                        ))}
+              <ScrollArea className="flex-1 pr-4 -mr-4">
+                <div className="space-y-4 py-2">
+                  {/* Main Contact */}
+                  {detailPartner.contactPerson && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <div className="flex items-center gap-2 text-sm font-medium"><User className="h-4 w-4 text-primary" />Primary Contact</div>
+                      <div className="text-sm font-semibold">{detailPartner.contactPerson}</div>
+                      <div className="grid grid-cols-1 gap-1 text-sm text-muted-foreground">
+                        {detailPartner.email && <a href={`mailto:${detailPartner.email}`} className="flex items-center gap-2 hover:text-primary"><Mail className="h-3.5 w-3.5" />{detailPartner.email}</a>}
+                        {detailPartner.phone && <span className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{detailPartner.phone}</span>}
+                        {detailPartner.whatsapp && <span className="flex items-center gap-2"><MessageCircle className="h-3.5 w-3.5" />{detailPartner.whatsapp}</span>}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  )}
 
-                {/* Notes */}
-                {detailPartner.notes && (
-                  <div className="rounded-lg border p-3 space-y-1">
-                    <div className="text-sm font-medium">Notes</div>
-                    <div className="text-sm text-muted-foreground">{detailPartner.notes}</div>
-                  </div>
-                )}
-              </div>
+                  {/* Trade Contacts */}
+                  <ContactDisplay title="Trade Contacts" icon={Briefcase} contacts={detailPartner.tradeContacts} />
+
+                  {/* Execution Contacts */}
+                  <ContactDisplay title="Execution Contacts" icon={User} contacts={detailPartner.executionContacts} />
+
+                  {/* Location */}
+                  {(detailPartner.address || detailPartner.city || detailPartner.country) && (
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <div className="flex items-center gap-2 text-sm font-medium"><Building2 className="h-4 w-4 text-primary" />Location</div>
+                      <div className="text-sm text-muted-foreground">
+                        {detailPartner.address && <div>{detailPartner.address}</div>}
+                        <div>{[detailPartner.city, detailPartner.country].filter(Boolean).join(', ')}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Origins */}
+                  {detailPartner.origins && detailPartner.origins.length > 0 && (
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <div className="flex items-center gap-2 text-sm font-medium"><Globe className="h-4 w-4 text-primary" />Origins</div>
+                      <div className="flex flex-wrap gap-1">{detailPartner.origins.map((o, i) => <Badge key={i} variant="outline">{o}</Badge>)}</div>
+                    </div>
+                  )}
+
+                  {/* Departments */}
+                  {detailPartner.departments && detailPartner.departments.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium">Departments</div>
+                      {detailPartner.departments.map((dept, di) => (
+                        <div key={di} className="rounded-lg border p-3 space-y-2">
+                          <div className="text-sm font-semibold">{dept.name}</div>
+                          {dept.contacts && dept.contacts.map((c, ci) => (
+                            <div key={ci} className="ml-2 text-sm border-l-2 border-primary/20 pl-3 py-1">
+                              <div className="font-medium">{c.name} {c.role && <Badge variant="outline" className="text-[10px] ml-1">{c.role}</Badge>}</div>
+                              <div className="text-muted-foreground space-y-0.5">
+                                {c.email && <div className="flex items-center gap-1.5"><Mail className="h-3 w-3" />{c.email}</div>}
+                                {c.phone && <div className="flex items-center gap-1.5"><Phone className="h-3 w-3" />{c.phone}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Notes */}
+                  {detailPartner.notes && (
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <div className="text-sm font-medium">Notes</div>
+                      <div className="text-sm text-muted-foreground">{detailPartner.notes}</div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
             </>
           )}
         </DialogContent>

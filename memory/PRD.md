@@ -15,18 +15,17 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Light/Dark mode theming
 - **Trades**: Excel-like table with 16 statuses, filtering, row-click detail view
 - **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents) with commodity-based document checklist
-- **Counterparties**: Partner list with "business card" detail view. Types: Seller, Buyer, Co-Broker (Broker removed). Origins field added for sellers.
+- **Counterparties**: Partner list with business card detail view. Types: Seller, Buyer, Co-Broker. Origins field for sellers. Multiple Trade Contacts and Execution Contacts per counterparty.
 - **Vessels**: 194 vessels seeded
 - **Accounting**: Invoices and Bank Statements tabs (RBAC: admin/accountant only)
 - **Calendar**: Event management
-- **Settings**: Commodities, Ports (Loading/Discharge), Origins, Surveyors, Users management
+- **Settings**: Commodities, Ports, Origins, Surveyors, Users management
 - **Notifications**: Bell icon with recent activities dropdown
-- **Admin Password Change**: Admins can change any user's password from Settings > Users tab
+- **Admin Password Change**: Admins can change any user's password
 
 ## Data Seeded
 - Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
 - Partners: 177 total (95 buyers, 79 sellers, 2 co-brokers, 1 broker)
-- 19 buyer/seller dual-type companies updated with origins data
 - Sample trades (8), Events (3)
 
 ## Credentials
@@ -37,8 +36,8 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 ```
 /app/backend/server.py        - Monolithic FastAPI backend
 /app/backend/vessel_data.py   - Vessel seed data
-/app/backend/seed_buyers.py   - Buyer counterparty seed data (95 companies)
-/app/backend/seed_sellers.py  - Seller counterparty seed data (77 companies + 19 updates)
+/app/backend/seed_buyers.py   - Buyer counterparty seed data
+/app/backend/seed_sellers.py  - Seller counterparty seed data
 /app/frontend/src/pages/      - Page components
 /app/frontend/src/components/  - Layout + UI components
 /app/frontend/src/lib/        - Auth, API client, constants

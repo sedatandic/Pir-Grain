@@ -317,7 +317,7 @@ export default function NewTradePage() {
           </div>
           <div className="space-y-2">
             <Label>Quantity (MT)</Label>
-            <Input type="number" value={form.quantity} onChange={(e) => set('quantity', e.target.value)} placeholder="0" />
+            <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => set('quantity', e.target.value.replace(/,/g, ''))} placeholder="0" />
           </div>
           <div className="space-y-2">
             <Label>Tolerance (%)</Label>
@@ -386,11 +386,11 @@ export default function NewTradePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Shipment Window Start</Label>
+              <Label>Shipment Period Start</Label>
               <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
             </div>
             <div className="space-y-2">
-              <Label>Shipment Window End</Label>
+              <Label>Shipment Period End</Label>
               <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
             </div>
           </div>

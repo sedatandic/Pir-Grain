@@ -1,0 +1,151 @@
+from datetime import datetime
+from typing import Optional
+import random
+import string
+
+from fastapi import APIRouter, HTTPException, Depends
+from bson import ObjectId
+
+from database import (
+    trades_col, partners_col, commodities_col, origins_col, ports_col,
+    serialize_doc, create_notification
+)
+from auth import get_current_user
+from models import TradeCreate, TradeStatusUpdate
+from config import TRADE_STATUSES
+
+
+def generate_ref():
+    year = datetime.now().strftime("%y")
+    num = random.randint(1000, 9999)
+    letters = ''.join(random.choices(string.ascii_uppercase, k=2))
+    return f"PIR-{year}-{letters}{num}"
+
+
+router = APIRouter(prefix="/api/trades", tags=["trades"])
+
+
+@router.get("")
+def list_trades(status: Optional[str] = None, search: Optional[str] = None, user=Depends(get_current_user)):
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    if search:
+        query["$or"] = [
+            {"referenceNumber": {"$regex": search, "$options": "i"}},
+            {"buyerName": {"$regex": search, "$options": "i"}},
+            {"sellerName": {"$regex": search, "$options": "i"}},
+            {"commodityName": {"$regex": search, "$options": "i"}},
+            {"vesselName": {"$regex": search, "$options": "i"}},
+        ]
+    return [serialize_doc(t) for t in trades_col.find(query).sort("createdAt", -1)]
+
+
+@router.post("")
+def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
+    data = trade.dict()
+    data["referenceNumber"] = data.get("contractNumber") or generate_ref()
+    data["createdAt"] = datetime.utcnow()
+    data["updatedAt"] = datetime.utcnow()
+    for field, col, name_field, code_field in [
+        ("buyerId", partners_col, "buyerName", "buyerCode"),
+        ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("commodityId", commodities_col, "commodityName", None),
+        ("originId", origins_col, "originName", None),
+        ("loadingPortId", ports_col, "loadingPortName", None),
+        ("dischargePortId", ports_col, "dischargePortName", None),
+    ]:
+        if data.get(field):
+            try:
+                doc = col.find_one({"_id": ObjectId(data[field])})
+                if doc:
+                    data[name_field] = doc.get("companyName", doc.get("name", ""))
+                    if code_field:
+                        data[code_field] = doc.get("companyCode", "")
+            except Exception:
+                pass
+    qty = data.get("quantity") or 0
+    brok = data.get("brokeragePerMT") or 0
+    data["totalCommission"] = round(qty * brok, 2)
+    result = trades_col.insert_one(data)
+    data["_id"] = result.inserted_id
+    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id), user.get("username"))
+    return serialize_doc(data)
+
+
+@router.get("/stats/overview")
+def trade_stats(user=Depends(get_current_user)):
+    total = trades_col.count_documents({})
+    pending_statuses = ["confirmation", "draft-contract", "nomination-sent", "pending", "draft"]
+    ongoing_statuses = ["di-sent", "drafts-confirmation", "appropriation", "dox", "pmt", "disch", "shortage", "demurrage", "dispatch", "brokerage", "ongoing", "active"]
+    active = trades_col.count_documents({"status": {"$in": ongoing_statuses}})
+    pending = trades_col.count_documents({"status": {"$in": pending_statuses}})
+    completed = trades_col.count_documents({"status": "completed"})
+    pipeline = [{"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    status_dist = {item["_id"]: item["count"] for item in trades_col.aggregate(pipeline)}
+    return {
+        "totalTrades": total,
+        "activeTrades": active,
+        "pendingTrades": pending,
+        "completedTrades": completed,
+        "completionRate": round((completed / total * 100) if total > 0 else 0, 1),
+        "statusDistribution": status_dist
+    }
+
+
+@router.get("/{trade_id}")
+def get_trade(trade_id: str, user=Depends(get_current_user)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    return serialize_doc(trade)
+
+
+@router.put("/{trade_id}")
+def update_trade(trade_id: str, body: dict, user=Depends(get_current_user)):
+    data = {k: v for k, v in body.items() if v is not None}
+    data["updatedAt"] = datetime.utcnow()
+    for field, col, name_field, code_field in [
+        ("buyerId", partners_col, "buyerName", "buyerCode"),
+        ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("commodityId", commodities_col, "commodityName", None),
+        ("originId", origins_col, "originName", None),
+        ("loadingPortId", ports_col, "loadingPortName", None),
+        ("dischargePortId", ports_col, "dischargePortName", None),
+    ]:
+        if data.get(field):
+            try:
+                doc = col.find_one({"_id": ObjectId(data[field])})
+                if doc:
+                    data[name_field] = doc.get("companyName", doc.get("name", ""))
+                    if code_field:
+                        data[code_field] = doc.get("companyCode", "")
+            except Exception:
+                pass
+    if "quantity" in data or "brokeragePerMT" in data:
+        existing = trades_col.find_one({"_id": ObjectId(trade_id)})
+        qty = data.get("quantity", existing.get("quantity", 0) if existing else 0) or 0
+        brok = data.get("brokeragePerMT", existing.get("brokeragePerMT", 0) if existing else 0) or 0
+        data["totalCommission"] = round(qty * brok, 2)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": data})
+    updated = trades_col.find_one({"_id": ObjectId(trade_id)})
+    create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"))
+    return serialize_doc(updated)
+
+
+@router.patch("/{trade_id}/status")
+def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(get_current_user)):
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
+    t = trades_col.find_one({"_id": ObjectId(trade_id)})
+    create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"))
+    return serialize_doc(t)
+
+
+@router.delete("/{trade_id}")
+def delete_trade(trade_id: str, user=Depends(get_current_user)):
+    t = trades_col.find_one({"_id": ObjectId(trade_id)})
+    result = trades_col.delete_one({"_id": ObjectId(trade_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    create_notification("trade", f"Trade deleted: {t.get('referenceNumber', trade_id) if t else trade_id}", trade_id, user.get("username"))
+    return {"message": "Trade deleted"}

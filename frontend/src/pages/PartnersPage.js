@@ -201,6 +201,11 @@ export default function PartnersPage({ filterType }) {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search partners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="partners-search-input" />
             </div>
+            {search && (
+              <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={() => setSearch('')}>
+                <X className="h-3.5 w-3.5 mr-1" />Clear
+              </Button>
+            )}
             {!filterType && (
               <Tabs value={tab} onValueChange={setTab}>
                 <TabsList>

@@ -11,7 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe, UserPlus, Briefcase, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { ScrollArea } from '../components/ui/scroll-area';
 import { Separator } from '../components/ui/separator';
 
 const TYPE_CONFIG = {
@@ -261,7 +260,7 @@ export default function PartnersPage({ filterType }) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto">
           <DialogHeader><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
-          <ScrollArea className="flex-1 pr-4 -mr-4">
+          <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>
               <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. PIR" /></div>
@@ -305,7 +304,7 @@ export default function PartnersPage({ filterType }) {
                 testIdPrefix="execution-contacts"
               />
             </div>
-          </ScrollArea>
+          </div>
           <DialogFooter className="pt-4 border-t">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving} data-testid="partner-form-save">{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingPartner ? 'Update' : 'Add Counterparty'}</Button>
@@ -333,7 +332,7 @@ export default function PartnersPage({ filterType }) {
                 </div>
               </DialogHeader>
 
-              <ScrollArea className="flex-1 pr-4 -mr-4">
+              <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(85vh - 120px)' }}>
                 <div className="space-y-4 py-2">
                   {/* Main Contact */}
                   {detailPartner.contactPerson && (
@@ -402,7 +401,7 @@ export default function PartnersPage({ filterType }) {
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             </>
           )}
         </DialogContent>

@@ -129,7 +129,7 @@ export default function PartnersPage({ filterType }) {
                     <TableHead>Phone</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead className="w-[80px]"></TableHead>
+                    <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

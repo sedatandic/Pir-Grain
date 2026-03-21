@@ -187,7 +187,8 @@ export default function DashboardPage() {
               {upcomingItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No upcoming items</p>
+                  <p className="text-sm text-muted-foreground mb-4">No upcoming items</p>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
                 </div>
               ) : (
                 <div className="space-y-2">

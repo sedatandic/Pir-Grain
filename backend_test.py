@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 class CommodityTradingAPITester:
-    def __init__(self, base_url="https://grain-trading.preview.emergentagent.com"):
+    def __init__(self, base_url="https://vessel-desk.preview.emergentagent.com"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0

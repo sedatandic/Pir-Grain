@@ -107,7 +107,7 @@ export default function TradeDetailPage() {
           <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => navigate(`/trades/${tradeId}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />Edit Trade
+          <Pencil className="h-4 w-4 mr-2" />Edit B/L Details
         </Button>
       </div>
 

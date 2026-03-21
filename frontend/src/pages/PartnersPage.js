@@ -168,13 +168,13 @@ export default function PartnersPage({ filterType }) {
       };
       if (editingPartner) {
         await api.put(`/api/partners/${editingPartner.id}`, payload);
-        toast.success('Partner updated');
+        toast.success('Counterparty updated');
       } else {
         await api.post('/api/partners', payload);
-        toast.success('Partner created');
+        toast.success('Counterparty created');
       }
       setDialogOpen(false); fetchPartners();
-    } catch (err) { toast.error('Failed to save partner'); }
+    } catch (err) { toast.error('Failed to save counterparty'); }
     finally { setSaving(false); }
   };
 
@@ -259,8 +259,8 @@ export default function PartnersPage({ filterType }) {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-          <DialogHeader><DialogTitle>{editingPartner ? 'Edit Partner' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto">
+          <DialogHeader><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
           <ScrollArea className="flex-1 pr-4 -mr-4">
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>

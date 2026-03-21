@@ -5,7 +5,7 @@ export const TRADE_STATUS_CONFIG = {
   'di-sent': { label: 'Docs. Instruction Sent', color: 'bg-teal-100 text-teal-800', order: 4 },
   'drafts-confirmation': { label: 'Drafts Confirmation', color: 'bg-sky-100 text-sky-800', order: 5 },
   'appropriation': { label: 'Appropriation', color: 'bg-violet-100 text-violet-800', order: 6 },
-  'dox': { label: 'Dox', color: 'bg-purple-100 text-purple-800', order: 7 },
+  'dox': { label: 'Documents', color: 'bg-purple-100 text-purple-800', order: 7 },
   'pmt': { label: 'Pmt', color: 'bg-fuchsia-100 text-fuchsia-800', order: 8 },
   'disch': { label: 'Disch', color: 'bg-pink-100 text-pink-800', order: 9 },
   'shortage': { label: 'Shortage', color: 'bg-orange-100 text-orange-800', order: 10 },

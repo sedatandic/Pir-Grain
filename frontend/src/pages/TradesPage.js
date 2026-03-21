@@ -108,7 +108,7 @@ export default function TradesPage() {
   };
 
   const formatDate = (d) => { if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return '-'; } };
-  const formatShipment = (d) => { try { return format(parseISO(d), 'MMM yyyy'); } catch { return '-'; } };
+  const formatShipmentDate = (d) => { if (!d) return ''; const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) { try { return format(new Date(m[3], m[2] - 1, m[1]), 'dd MMM yyyy'); } catch { return d; } } try { return format(parseISO(d), 'dd MMM yyyy'); } catch { return d; } };
   const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
 
   const handleVesselUpdate = async (tradeId, vesselName) => {
@@ -235,7 +235,7 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
-                <TableCell className="text-center text-sm">{formatShipment(trade.shipmentWindowStart)}</TableCell>
+                <TableCell className="text-center text-sm">{trade.shipmentWindowStart || trade.shipmentWindowEnd ? <div>{formatShipmentDate(trade.shipmentWindowStart) && <div>{formatShipmentDate(trade.shipmentWindowStart)}</div>}{formatShipmentDate(trade.shipmentWindowEnd) && <div>{formatShipmentDate(trade.shipmentWindowEnd)}</div>}</div> : '-'}</TableCell>
                 <TableCell className="text-center text-sm"><VesselPicker trade={trade} /></TableCell>
               </TableRow>
             ))}
@@ -383,7 +383,7 @@ export default function TradesPage() {
               <div><span className="text-muted-foreground">Payment Terms:</span> {selectedTrade.paymentTerms || '-'}</div>
               <div><span className="text-muted-foreground">Loading Port:</span> {selectedTrade.loadingPortName || '-'}</div>
               <div><span className="text-muted-foreground">Discharge Port:</span> {selectedTrade.dischargePortName || '-'}</div>
-              <div><span className="text-muted-foreground">Shipment:</span> {formatShipment(selectedTrade.shipmentWindowStart)} - {formatShipment(selectedTrade.shipmentWindowEnd)}</div>
+              <div><span className="text-muted-foreground">Shipment:</span> {formatShipmentDate(selectedTrade.shipmentWindowStart)} - {formatShipmentDate(selectedTrade.shipmentWindowEnd)}</div>
               <div><span className="text-muted-foreground">Vessel:</span> {selectedTrade.vesselName || '-'}</div>
               <div><span className="text-muted-foreground">Brokerage:</span> ${selectedTrade.brokeragePerMT || 0}/MT</div>
               <div><span className="text-muted-foreground">Total Commission:</span> ${selectedTrade.totalCommission?.toLocaleString() || 0}</div>

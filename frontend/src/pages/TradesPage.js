@@ -51,8 +51,8 @@ export default function TradesPage() {
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const hasActiveFilters = filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all';
-  const clearFilters = () => { setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); };
+  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all';
+  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); };
 
   const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
   const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
@@ -188,6 +188,7 @@ export default function TradesPage() {
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input data-testid="trades-search-input" placeholder="Search trades..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 w-[200px]" />
             </div>
+            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="trades-clear-filter"><X className="h-4 w-4 mr-1" />Clear Filter</Button>}
             <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
             <Select value={filterCommodity} onValueChange={setFilterCommodity}>
               <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Commodity" /></SelectTrigger>
@@ -231,7 +232,6 @@ export default function TradesPage() {
                 {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0"><X className="h-4 w-4 mr-1" />Clear</Button>}
             <div className="ml-auto shrink-0">
               <Button onClick={() => navigate('/trades/new')} data-testid="trades-new-trade-button"><Plus className="mr-2 h-4 w-4" />New Trade</Button>
             </div>

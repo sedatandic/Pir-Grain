@@ -52,6 +52,8 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
     for field, col, name_field, code_field in [
         ("buyerId", partners_col, "buyerName", "buyerCode"),
         ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("brokerId", partners_col, "brokerName", "brokerCode"),
+        ("coBrokerId", partners_col, "coBrokerName", "coBrokerCode"),
         ("commodityId", commodities_col, "commodityName", None),
         ("originId", origins_col, "originName", None),
         ("loadingPortId", ports_col, "loadingPortName", None),
@@ -110,6 +112,8 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
     for field, col, name_field, code_field in [
         ("buyerId", partners_col, "buyerName", "buyerCode"),
         ("sellerId", partners_col, "sellerName", "sellerCode"),
+        ("brokerId", partners_col, "brokerName", "brokerCode"),
+        ("coBrokerId", partners_col, "coBrokerName", "coBrokerCode"),
         ("commodityId", commodities_col, "commodityName", None),
         ("originId", origins_col, "originName", None),
         ("loadingPortId", ports_col, "loadingPortName", None),

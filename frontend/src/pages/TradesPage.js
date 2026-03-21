@@ -120,6 +120,7 @@ export default function TradesPage() {
               <TableHead className="text-center">Contract No</TableHead>
               <TableHead className="text-center">Seller</TableHead>
               <TableHead className="text-center">Buyer</TableHead>
+              <TableHead className="text-center">Broker</TableHead>
               <TableHead className="text-center">Commodity</TableHead>
               <TableHead className="text-center">Origin</TableHead>
               <TableHead className="text-center">Quantity</TableHead>
@@ -154,6 +155,7 @@ export default function TradesPage() {
                 </TableCell>
                 <TableCell className="text-center text-sm">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm">{trade.brokerName ? (trade.coBrokerName ? `${trade.brokerName} / ${trade.coBrokerName}` : trade.brokerName) : '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{formatQty(trade.quantity)}</TableCell>

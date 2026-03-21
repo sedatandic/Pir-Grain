@@ -33,6 +33,8 @@ class TradeCreate(BaseModel):
     brokerageAccount: Optional[str] = "seller"
     contractDate: Optional[str] = None
     contractNumber: Optional[str] = None
+    pirContractNumber: Optional[str] = None
+    sellerContractNumber: Optional[str] = "N/A"
     specialConditions: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = "confirmation"

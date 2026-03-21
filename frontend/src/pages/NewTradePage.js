@@ -105,6 +105,7 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
+    pirContractNumber: '', sellerContractNumber: 'N/A',
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
     buyerTradeContact: null, buyerExecutionContact: null,
@@ -176,6 +177,8 @@ export default function NewTradePage() {
     try {
       const data = {
         ...form,
+        contractNumber: form.pirContractNumber || '',
+        sellerContractNumber: form.sellerContractNumber || 'N/A',
         brokerId: form.brokerId === 'na' ? '' : form.brokerId,
         coBrokerId: form.coBrokerId === 'na' ? '' : form.coBrokerId,
         loadingPortId: form.basePortId,
@@ -216,8 +219,12 @@ export default function NewTradePage() {
             <DatePicker value={form.contractDate} onChange={(v) => set('contractDate', v)} />
           </div>
           <div className="space-y-2">
-            <Label>Contract Number</Label>
-            <Input value={form.contractNumber} onChange={(e) => set('contractNumber', e.target.value)} placeholder="Auto-generated if empty" />
+            <Label>Pir Grain Contract Number</Label>
+            <Input value={form.pirContractNumber} onChange={(e) => set('pirContractNumber', e.target.value)} placeholder="Auto-generated if empty" />
+          </div>
+          <div className="space-y-2">
+            <Label>Seller Contract Number</Label>
+            <Input value={form.sellerContractNumber} onChange={(e) => set('sellerContractNumber', e.target.value)} placeholder="N/A" />
           </div>
         </CardContent>
       </Card>

@@ -94,28 +94,29 @@ export default function PartnersPage({ filterType }) {
           <h1 className="text-3xl font-bold tracking-tight">Counterparties</h1>
           <p className="text-muted-foreground">Manage your trading partners</p>
         </div>
-        <Button onClick={openCreate} data-testid="partners-new-button"><Plus className="mr-2 h-4 w-4" />Add Partner</Button>
       </div>
 
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1 max-w-xs">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input placeholder="Search partners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="partners-search-input" />
             </div>
+            {!filterType && (
+              <Tabs value={tab} onValueChange={setTab}>
+                <TabsList>
+                  <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
+                  <TabsTrigger value="seller">Sellers ({counts.seller})</TabsTrigger>
+                  <TabsTrigger value="buyer">Buyers ({counts.buyer})</TabsTrigger>
+                  <TabsTrigger value="co-broker">Co-Brokers ({counts['co-broker']})</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+            <div className="ml-auto">
+              <Button onClick={openCreate} data-testid="partners-new-button"><Plus className="mr-2 h-4 w-4" />Add Partner</Button>
+            </div>
           </div>
-
-          {!filterType && (
-            <Tabs value={tab} onValueChange={setTab} className="mb-4">
-              <TabsList>
-                <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-                <TabsTrigger value="seller">Sellers ({counts.seller})</TabsTrigger>
-                <TabsTrigger value="buyer">Buyers ({counts.buyer})</TabsTrigger>
-                <TabsTrigger value="co-broker">Co-Brokers ({counts['co-broker']})</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          )}
 
           {loading ? <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> : (
             <div className="overflow-x-auto border rounded-lg">

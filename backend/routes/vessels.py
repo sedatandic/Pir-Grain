@@ -5,14 +5,16 @@ from fastapi import APIRouter, Depends
 from bson import ObjectId
 
 from database import vessels_col, serialize_doc, create_notification
-from auth import get_current_user
+from auth import require_roles
 from models import VesselCreate
+
+non_accountant = require_roles("admin", "user")
 
 router = APIRouter(prefix="/api/vessels", tags=["vessels"])
 
 
 @router.get("")
-def list_vessels(search: Optional[str] = None, user=Depends(get_current_user)):
+def list_vessels(search: Optional[str] = None, user=Depends(non_accountant)):
     query = {}
     if search:
         query["$or"] = [{"name": {"$regex": search, "$options": "i"}}, {"imoNumber": {"$regex": search, "$options": "i"}}]
@@ -20,7 +22,7 @@ def list_vessels(search: Optional[str] = None, user=Depends(get_current_user)):
 
 
 @router.post("")
-def create_vessel(vessel: VesselCreate, user=Depends(get_current_user)):
+def create_vessel(vessel: VesselCreate, user=Depends(non_accountant)):
     data = vessel.dict()
     data["createdAt"] = datetime.utcnow()
     result = vessels_col.insert_one(data)
@@ -30,7 +32,7 @@ def create_vessel(vessel: VesselCreate, user=Depends(get_current_user)):
 
 
 @router.put("/{vessel_id}")
-def update_vessel(vessel_id: str, vessel: VesselCreate, user=Depends(get_current_user)):
+def update_vessel(vessel_id: str, vessel: VesselCreate, user=Depends(non_accountant)):
     data = vessel.dict()
     vessels_col.update_one({"_id": ObjectId(vessel_id)}, {"$set": data})
     updated = vessels_col.find_one({"_id": ObjectId(vessel_id)})
@@ -39,7 +41,7 @@ def update_vessel(vessel_id: str, vessel: VesselCreate, user=Depends(get_current
 
 
 @router.delete("/{vessel_id}")
-def delete_vessel(vessel_id: str, user=Depends(get_current_user)):
+def delete_vessel(vessel_id: str, user=Depends(non_accountant)):
     v = vessels_col.find_one({"_id": ObjectId(vessel_id)})
     vessels_col.delete_one({"_id": ObjectId(vessel_id)})
     create_notification("vessel", f"Vessel deleted: {v.get('name', '') if v else vessel_id}", vessel_id, user.get("username"))

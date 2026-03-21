@@ -12,14 +12,14 @@ const PIR_GREEN_LIGHT = 'rgba(27, 122, 61, 0.08)';
 const PIR_GREEN_ACTIVE = 'rgba(27, 122, 61, 0.14)';
 
 const mainNavItems = [
-  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { title: 'Trades', href: '/trades', icon: FileText },
-  { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign },
-  { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen },
-  { title: 'Calendar', href: '/calendar', icon: CalendarDays },
+  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'user'] },
+  { title: 'Trades', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
+  { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
+  { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
+  { title: 'Calendar', href: '/calendar', icon: CalendarDays, roles: ['admin', 'user'] },
   { title: 'Accounting', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
-  { title: 'Reports', href: '/reports', icon: BarChart3 },
-  { title: 'Vessels', href: '/vessels', icon: Ship },
+  { title: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'user'] },
+  { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
 ];
 
 export default function Sidebar() {
@@ -102,31 +102,35 @@ export default function Sidebar() {
         ))}
 
         {/* Counterparties - single link, tabs inside the page */}
-        <NavLink
-          to="/partners"
-          data-testid="sidebar-nav-counterparties-link"
-          className={({ isActive }) => cn(
-            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-            isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
-          )}
-        >
-          <Users className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && <span>Counterparties</span>}
-        </NavLink>
+        {userRole !== 'accountant' && (
+          <NavLink
+            to="/partners"
+            data-testid="sidebar-nav-counterparties-link"
+            className={({ isActive }) => cn(
+              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+              isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
+            )}
+          >
+            <Users className="w-4 h-4 flex-shrink-0" />
+            {!collapsed && <span>Counterparties</span>}
+          </NavLink>
+        )}
       </nav>
 
       {/* Footer */}
       <div className="px-2 py-2 border-t border-border space-y-0.5">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) => cn(
-            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-            isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
-          )}
-        >
-          <Settings className="w-4 h-4" />
-          {!collapsed && <span>Settings</span>}
-        </NavLink>
+        {userRole !== 'accountant' && (
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => cn(
+              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+              isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-slate-600 hover:bg-slate-100'
+            )}
+          >
+            <Settings className="w-4 h-4" />
+            {!collapsed && <span>Settings</span>}
+          </NavLink>
+        )}
         <button
           onClick={toggleDarkMode}
           data-testid="sidebar-theme-toggle"

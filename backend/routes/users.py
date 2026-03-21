@@ -4,15 +4,18 @@ from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 
 from database import users_col, serialize_doc
-from auth import get_current_user, pwd_context
+from auth import require_roles, pwd_context
 from models import UserCreate
 from config import TRADE_STATUSES
+
+non_accountant = require_roles("admin", "user")
+admin_only = require_roles("admin")
 
 router = APIRouter(prefix="/api", tags=["users"])
 
 
 @router.get("/users")
-def list_users(user=Depends(get_current_user)):
+def list_users(user=Depends(non_accountant)):
     users = list(users_col.find())
     for u in users:
         u.pop("password", None)
@@ -20,7 +23,7 @@ def list_users(user=Depends(get_current_user)):
 
 
 @router.post("/users")
-def create_user(u: UserCreate, user=Depends(get_current_user)):
+def create_user(u: UserCreate, user=Depends(admin_only)):
     if users_col.find_one({"username": u.username}):
         raise HTTPException(status_code=400, detail="Username already exists")
     data = u.dict()
@@ -34,20 +37,19 @@ def create_user(u: UserCreate, user=Depends(get_current_user)):
 
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: str, user=Depends(get_current_user)):
+def delete_user(user_id: str, user=Depends(admin_only)):
     users_col.delete_one({"_id": ObjectId(user_id)})
     return {"message": "Deleted"}
 
 
 @router.put("/users/{user_id}")
-def update_user(user_id: str, body: dict, user=Depends(get_current_user)):
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Only admins can update users")
+def update_user(user_id: str, body: dict, user=Depends(admin_only)):
     update_fields = {}
     for field in ["name", "email", "whatsapp", "role", "username"]:
         if field in body and body[field] is not None:
             update_fields[field] = body[field]
     if "password" in body and body["password"]:
+        from auth import pwd_context
         update_fields["password"] = pwd_context.hash(body["password"])
     if update_fields:
         users_col.update_one({"_id": ObjectId(user_id)}, {"$set": update_fields})
@@ -58,5 +60,5 @@ def update_user(user_id: str, body: dict, user=Depends(get_current_user)):
 
 
 @router.get("/trade-statuses")
-def get_trade_statuses(user=Depends(get_current_user)):
+def get_trade_statuses(user=Depends(non_accountant)):
     return TRADE_STATUSES

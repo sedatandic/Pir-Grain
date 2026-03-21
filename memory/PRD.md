@@ -23,6 +23,7 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - **Settings**: Commodities, Ports, Origins, Surveyors, Users management
 - **Notifications**: Bell icon with recent activities dropdown
 - **Admin Password Change**: Admins can change any user's password
+- **Server-Side RBAC**: Accountant role restricted to Accounting endpoints only; admin has full access; user role has access to all except Accounting and user management
 
 ## Data Seeded
 - Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
@@ -63,9 +64,6 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 ```
 
 ## Backlog (Prioritized)
-### P1
-- Full Server-Side RBAC (protect all backend routes by role)
-
 ### P2
 - Counterparty Departments CRUD (UI for adding/editing/deleting departments & contacts)
 - Document Templates page

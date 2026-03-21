@@ -10,9 +10,11 @@ from database import (
     trades_col, partners_col, commodities_col, origins_col, ports_col,
     serialize_doc, create_notification
 )
-from auth import get_current_user
+from auth import get_current_user, require_roles
 from models import TradeCreate, TradeStatusUpdate
 from config import TRADE_STATUSES
+
+non_accountant = require_roles("admin", "user")
 
 
 def generate_ref():
@@ -26,7 +28,7 @@ router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 
 @router.get("")
-def list_trades(status: Optional[str] = None, search: Optional[str] = None, user=Depends(get_current_user)):
+def list_trades(status: Optional[str] = None, search: Optional[str] = None, user=Depends(non_accountant)):
     query = {}
     if status and status != "all":
         query["status"] = status
@@ -42,7 +44,7 @@ def list_trades(status: Optional[str] = None, search: Optional[str] = None, user
 
 
 @router.post("")
-def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
+def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
     data = trade.dict()
     data["referenceNumber"] = data.get("contractNumber") or generate_ref()
     data["createdAt"] = datetime.utcnow()
@@ -74,7 +76,7 @@ def create_trade(trade: TradeCreate, user=Depends(get_current_user)):
 
 
 @router.get("/stats/overview")
-def trade_stats(user=Depends(get_current_user)):
+def trade_stats(user=Depends(non_accountant)):
     total = trades_col.count_documents({})
     pending_statuses = ["confirmation", "draft-contract", "nomination-sent", "pending", "draft"]
     ongoing_statuses = ["di-sent", "drafts-confirmation", "appropriation", "dox", "pmt", "disch", "shortage", "demurrage", "dispatch", "brokerage", "ongoing", "active"]
@@ -94,7 +96,7 @@ def trade_stats(user=Depends(get_current_user)):
 
 
 @router.get("/{trade_id}")
-def get_trade(trade_id: str, user=Depends(get_current_user)):
+def get_trade(trade_id: str, user=Depends(non_accountant)):
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
@@ -102,7 +104,7 @@ def get_trade(trade_id: str, user=Depends(get_current_user)):
 
 
 @router.put("/{trade_id}")
-def update_trade(trade_id: str, body: dict, user=Depends(get_current_user)):
+def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
     data = {k: v for k, v in body.items() if v is not None}
     data["updatedAt"] = datetime.utcnow()
     for field, col, name_field, code_field in [
@@ -134,7 +136,7 @@ def update_trade(trade_id: str, body: dict, user=Depends(get_current_user)):
 
 
 @router.patch("/{trade_id}/status")
-def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(get_current_user)):
+def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non_accountant)):
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
     t = trades_col.find_one({"_id": ObjectId(trade_id)})
     create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"))
@@ -142,7 +144,7 @@ def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(get
 
 
 @router.delete("/{trade_id}")
-def delete_trade(trade_id: str, user=Depends(get_current_user)):
+def delete_trade(trade_id: str, user=Depends(non_accountant)):
     t = trades_col.find_one({"_id": ObjectId(trade_id)})
     result = trades_col.delete_one({"_id": ObjectId(trade_id)})
     if result.deleted_count == 0:

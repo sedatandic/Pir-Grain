@@ -44,6 +44,11 @@ export default function AppLayout() {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Accountant can only access /omega (Accounting)
+  if (user?.role === 'accountant' && location.pathname !== '/omega') {
+    return <Navigate to="/omega" replace />;
+  }
+
   const nameParts = (user?.name || user?.fullName || 'User').split(' ');
   const firstName = nameParts[0] || '';
   const lastName = nameParts.slice(1).join(' ') || '';

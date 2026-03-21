@@ -33,3 +33,12 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
         return serialize_doc(user)
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def require_roles(*allowed_roles):
+    """Dependency that restricts access to specific roles."""
+    def check_role(user=Depends(get_current_user)):
+        if user.get("role") not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Access denied")
+        return user
+    return check_role

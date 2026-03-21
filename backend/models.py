@@ -97,6 +97,7 @@ class CommodityCreate(BaseModel):
     hsCode: Optional[str] = None
     description: Optional[str] = None
     specs: Optional[str] = None
+    documents: Optional[List[str]] = None
 
 
 class OriginCreate(BaseModel):

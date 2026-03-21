@@ -15,22 +15,19 @@ import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
 import { format, parseISO } from 'date-fns';
 
-const WHEAT_DOCS = [
-  "Commercial Invoice", "Packing List", "Bill of Lading (B/L)", "Certificate of Origin",
-  "Phytosanitary Certificate", "Quality Certificate", "Weight Certificate",
-  "Fumigation Certificate", "Insurance Certificate", "Health Certificate",
-  "Certificate of Analysis", "Radiation Certificate", "Draft Survey Report"
+const DEFAULT_DOCS = [
+  "Bill of Ladings", "Commercial Invoice", "Phytosanitary Certificate",
+  "Certificate of Origin", "Weight Certificate", "Quality Certificate",
+  "Hold Cleanliness Certificate", "Hold Sealing Certificate", "Fumigation Certificate",
+  "Non-Radioactivity Certificate", "Cargo Manifest", "Marine Insurance Certificate",
+  "Master's Receipt"
 ];
 
-const CORN_EXTRA_DOCS = ["Mycotoxin Test Report", "GMO Certificate", "Moisture Analysis Report"];
-const WBP_EXTRA_DOCS = ["Pellet Durability Index (PDI) Certificate"];
-
-function getDocChecklist(commodityName) {
-  const name = (commodityName || '').toLowerCase();
-  let docs = [...WHEAT_DOCS];
-  if (name.includes('corn')) docs = [...docs, ...CORN_EXTRA_DOCS];
-  if (name.includes('bran') || name.includes('wbp')) docs = [...docs, ...WBP_EXTRA_DOCS];
-  return docs;
+function getDocChecklist(commodity) {
+  if (commodity && Array.isArray(commodity.documents) && commodity.documents.length > 0) {
+    return commodity.documents;
+  }
+  return DEFAULT_DOCS;
 }
 
 export default function TradeDetailPage() {
@@ -93,8 +90,9 @@ export default function TradeDetailPage() {
 
   const statusConfig = STATUS_OPTIONS.find(s => s.value === trade.status);
   const statusColor = TRADE_STATUS_CONFIG[trade.status] || {};
-  const commodityName = getName(commodities, trade.commodityId);
-  const docList = getDocChecklist(commodityName);
+  const commodity = commodities.find(c => c.id === trade.commodityId);
+  const commodityName = commodity?.name || commodity?.companyName || '-';
+  const docList = getDocChecklist(commodity);
   const completedDocs = docList.filter(d => docChecks[d]).length;
 
   return (

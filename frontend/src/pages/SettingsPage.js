@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 
@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [pwdUserName, setPwdUserName] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [pwdSaving, setPwdSaving] = useState(false);
+  const [newDocInput, setNewDocInput] = useState('');
 
   const fetchAll = useCallback(async () => {
     try {
@@ -119,9 +120,9 @@ export default function SettingsPage() {
             </TabsList>
 
             <TabsContent value="commodities">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Commodities ({commodities.length})</h3><Button size="sm" data-testid="add-commodity-btn" onClick={() => openAdd('commodities', { name: '', code: '', group: '', hsCode: '', specs: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Commodity</Button></div>
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Commodities ({commodities.length})</h3><Button size="sm" data-testid="add-commodity-btn" onClick={() => openAdd('commodities', { name: '', code: '', group: '', hsCode: '', specs: '', documents: [] })}><Plus className="h-3.5 w-3.5 mr-1" />Add Commodity</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Commodity Name</TableHead><TableHead>Commodity Group</TableHead><TableHead>Commodity Code</TableHead><TableHead>HS Code</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{c.hsCode || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" data-testid={`edit-commodity-${c.id}`} onClick={() => { setDialogType('commodities'); setDialogForm({ name: c.name || '', code: c.code || '', group: c.group || '', hsCode: c.hsCode || '', specs: c.specs || '', _editId: c.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" data-testid={`delete-commodity-${c.id}`} onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{c.hsCode || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" data-testid={`edit-commodity-${c.id}`} onClick={() => { setDialogType('commodities'); setDialogForm({ name: c.name || '', code: c.code || '', group: c.group || '', hsCode: c.hsCode || '', specs: c.specs || '', documents: c.documents || [], _editId: c.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" data-testid={`delete-commodity-${c.id}`} onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
@@ -166,11 +167,11 @@ export default function SettingsPage() {
       </Card>
 
       {/* Generic Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewDocInput(''); }}>
+        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
           <DialogHeader><DialogTitle>{dialogForm._editId ? 'Edit' : 'Add'} {dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
-            {Object.entries(dialogForm).filter(([key]) => key !== '_editId').map(([key, val]) => (
+            {Object.entries(dialogForm).filter(([key]) => key !== '_editId' && key !== 'documents').map(([key, val]) => (
               key === 'type' ? (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{key}</Label>
@@ -197,6 +198,50 @@ export default function SettingsPage() {
                 </div>
               )
             ))}
+            {/* Documents management for commodities */}
+            {Array.isArray(dialogForm.documents) && (
+              <div className="space-y-2 pt-2 border-t">
+                <Label>Shipment Documents ({dialogForm.documents.length})</Label>
+                <div className="flex gap-2">
+                  <Input
+                    data-testid="new-doc-input"
+                    value={newDocInput}
+                    onChange={(e) => setNewDocInput(e.target.value)}
+                    placeholder="Add new document..."
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newDocInput.trim()) {
+                        e.preventDefault();
+                        if (!dialogForm.documents.includes(newDocInput.trim())) {
+                          setDialogForm({...dialogForm, documents: [...dialogForm.documents, newDocInput.trim()]});
+                        }
+                        setNewDocInput('');
+                      }
+                    }}
+                  />
+                  <Button type="button" size="sm" variant="outline" data-testid="add-doc-btn" onClick={() => {
+                    if (newDocInput.trim() && !dialogForm.documents.includes(newDocInput.trim())) {
+                      setDialogForm({...dialogForm, documents: [...dialogForm.documents, newDocInput.trim()]});
+                      setNewDocInput('');
+                    }
+                  }}><Plus className="h-3.5 w-3.5" /></Button>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {dialogForm.documents.map((doc, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-md border bg-muted/30 text-sm group">
+                      <span>{doc}</span>
+                      <button
+                        type="button"
+                        data-testid={`remove-doc-${i}`}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive/80"
+                        onClick={() => setDialogForm({...dialogForm, documents: dialogForm.documents.filter((_, j) => j !== i)})}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{dialogForm._editId ? 'Save' : 'Add'}</Button></DialogFooter>
         </DialogContent>

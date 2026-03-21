@@ -123,7 +123,7 @@ export default function TradesPage() {
               <TableHead className="text-center">Broker</TableHead>
               <TableHead className="text-center">Commodity</TableHead>
               <TableHead className="text-center">Origin</TableHead>
-              <TableHead className="text-center">Quantity (+/- %)</TableHead>
+              <TableHead className="text-center">Quantity (+/- 10%)</TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
               <TableHead className="text-center">Unit Price</TableHead>
               <TableHead className="text-center">Currency</TableHead>

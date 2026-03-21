@@ -74,6 +74,11 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Moved tolerance display (+/- %) from per-row to Quantity column header
 - Implemented Edit Trade feature: route /trades/:tradeId/edit reuses NewTradePage in edit mode, pre-fills all fields, uses PUT to update
 - Added Edit Trade button on TradeDetailPage and in trade detail modal
+- Updated Quantity column header to "Quantity (+/- 10%)" with compact row format
+- Implemented commodity-specific shipment document templates stored in DB
+- Wheat: 13 base docs, Corn: +3 extras (Non-Dioxin, Non-GMO, Aflatoxin), WBP: +1 extra (Non-Dioxin)
+- Settings commodity edit dialog now shows Shipment Documents section with add/remove per commodity
+- TradeDetailPage Documents tab dynamically loads docs from the commodity's DB record
 
 ## Backlog (Prioritized)
 ### P1

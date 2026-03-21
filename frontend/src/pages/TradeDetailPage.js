@@ -127,21 +127,21 @@ export default function TradeDetailPage() {
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.contractNumber || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{commodityName}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{trade.price ? `$${trade.price.toFixed(2)}/MT` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Total Value</span><span className="font-medium font-mono">{trade.price && trade.quantity ? `$${(trade.price * trade.quantity).toLocaleString()}` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Total Value</span><span className="font-medium font-mono">{trade.pricePerMT && trade.quantity ? `${trade.currency || 'USD'} ${(trade.pricePerMT * trade.quantity).toLocaleString()}` : '-'}</span></div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Trade Terms</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Incoterm</span><span className="font-medium">{trade.incoterm || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Incoterm</span><span className="font-medium">{trade.deliveryTerm || trade.incoterm || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span className="font-medium">{trade.paymentTerms || '-'}</span></div>
                 <Separator />

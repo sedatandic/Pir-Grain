@@ -118,66 +118,11 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Upcoming Payments & Events Detail */}
-      <Card data-testid="upcoming-payments-events">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Upcoming Payments & Events</CardTitle>
-              <CardDescription>Due invoices, meetings, and conferences</CardDescription>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {upcomingItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No upcoming payments or events</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {upcomingItems.map((item) => (
-                <div key={`${item.type}-${item.id}`} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' :
-                    item.icon === 'meeting' ? 'bg-blue-100' :
-                    item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
-                  }`}>
-                    {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-5 w-5 text-green-600" /> :
-                     item.icon === 'meeting' ? <Users className="h-5 w-5 text-blue-600" /> :
-                     item.icon === 'conference' ? <Building className="h-5 w-5 text-purple-600" /> :
-                     <CalendarDays className="h-5 w-5 text-gray-600" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {item.type === 'invoice' ? `Due payment - ${item.subtitle}` : item.subtitle}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={
-                      item.type === 'invoice' ? 'border-green-200 text-green-700 bg-green-50' :
-                      item.icon === 'meeting' ? 'border-blue-200 text-blue-700 bg-blue-50' :
-                      item.icon === 'conference' ? 'border-purple-200 text-purple-700 bg-purple-50' :
-                      'border-gray-200 text-gray-700 bg-gray-50'
-                    }>
-                      {item.type === 'invoice' ? 'Invoice' : item.subtitle}
-                    </Badge>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{(() => { try { return format(parseISO(item.date), 'MMM d'); } catch { return ''; }})()}</p>
-                      <p className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'yyyy'); } catch { return ''; }})()}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Trade Progress */}
-      <Card data-testid="trade-progress">
+      {/* Upcoming Payments & Events - Right Side Summary */}
+      <div className="flex gap-4">
+        {/* Trade Progress - Left */}
+        <div className="flex-1">
+          <Card data-testid="trade-progress">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -224,6 +169,56 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
+        </div>
+
+        {/* Upcoming Payments & Events - Right */}
+        <div className="w-96">
+          <Card data-testid="upcoming-payments-events" className="h-full">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Upcoming Payments & Events</CardTitle>
+                  <CardDescription>Due invoices, meetings, and conferences</CardDescription>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {upcomingItems.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                  <p className="text-sm text-muted-foreground">No upcoming items</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcomingItems.map((item) => (
+                    <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/30">
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                        item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' :
+                        item.icon === 'meeting' ? 'bg-blue-100' :
+                        item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
+                      }`}>
+                        {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-4 w-4 text-green-600" /> :
+                         item.icon === 'meeting' ? <Users className="h-4 w-4 text-blue-600" /> :
+                         item.icon === 'conference' ? <Building className="h-4 w-4 text-purple-600" /> :
+                         <CalendarDays className="h-4 w-4 text-gray-600" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{item.type === 'invoice' ? 'Payment' : item.subtitle}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-medium">{(() => { try { return format(parseISO(item.date), 'MMM d'); } catch { return ''; }})()}</p>
+                        <p className="text-[10px] text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'yyyy'); } catch { return ''; }})()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

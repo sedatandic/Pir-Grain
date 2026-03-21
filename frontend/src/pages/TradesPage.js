@@ -242,7 +242,7 @@ export default function TradesPage() {
       {/* Ongoing */}
       <Card className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Contracts</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
+          <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Trades</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
           <CardDescription className="text-emerald-700">DI Sent through Brokerage</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.ongoing, 'No ongoing contracts')}</CardContent>
@@ -251,7 +251,7 @@ export default function TradesPage() {
       {/* Pending */}
       <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-blue-600" /><CardTitle className="text-blue-800">Pending Contracts</CardTitle><Badge variant="secondary" className="bg-blue-100 text-blue-800">{filtered.pending.length}</Badge></div>
+          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-blue-600" /><CardTitle className="text-blue-800">Pending Trades</CardTitle><Badge variant="secondary" className="bg-blue-100 text-blue-800">{filtered.pending.length}</Badge></div>
           <CardDescription className="text-blue-700">Waiting for Vessel Nomination</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.pending, 'No pending contracts')}</CardContent>
@@ -260,7 +260,7 @@ export default function TradesPage() {
       {/* Completed */}
       <Card className="border-l-4 border-l-slate-400 bg-slate-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Contracts</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
+          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Trades</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
           <CardDescription className="text-slate-600">Successfully completed trades</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
@@ -269,7 +269,7 @@ export default function TradesPage() {
       {/* Washout */}
       <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Washout Contracts</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.washout.length}</Badge></div>
+          <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Washout Trades</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.washout.length}</Badge></div>
           <CardDescription className="text-amber-700">Trades settled by washout</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.washout, 'No washout contracts')}</CardContent>
@@ -278,7 +278,7 @@ export default function TradesPage() {
       {/* Cancelled */}
       <Card className="border-l-4 border-l-red-400 bg-red-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Ban className="h-5 w-5 text-red-500" /><CardTitle className="text-red-700">Cancelled Contracts</CardTitle><Badge variant="secondary" className="bg-red-100 text-red-700">{filtered.cancelled.length}</Badge></div>
+          <div className="flex items-center gap-2"><Ban className="h-5 w-5 text-red-500" /><CardTitle className="text-red-700">Cancelled Trades</CardTitle><Badge variant="secondary" className="bg-red-100 text-red-700">{filtered.cancelled.length}</Badge></div>
           <CardDescription className="text-red-600">Cancelled or terminated trades</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.cancelled, 'No cancelled contracts')}</CardContent>

@@ -14,7 +14,8 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Collapsible sidebar + header with user menu and notifications
 - Light/Dark mode theming
 - **Trades**: Excel-like table with 16 statuses, filtering, row-click detail view
-- **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents) with commodity-based document checklist
+- **Trade Creation**: New Trade page with party selection (Seller, Buyer, Broker, Co-Broker). When a party is selected, their Trade Contacts and Execution Contacts appear as dropdowns for selection. Contacts are saved on the trade.
+- **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents). Parties tab shows selected Trade/Execution contacts per party with name, email, phone.
 - **Counterparties**: Partner list with business card detail view. Types: Seller, Buyer, Co-Broker. Origins field for sellers. Multiple Trade Contacts and Execution Contacts per counterparty.
 - **Vessels**: 194 vessels seeded
 - **Accounting**: Invoices and Bank Statements tabs (RBAC: admin/accountant only)
@@ -26,7 +27,7 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 ## Data Seeded
 - Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
 - Partners: 177 total (95 buyers, 79 sellers, 2 co-brokers, 1 broker)
-- Sample trades (8), Events (3)
+- Sample trades (8+), Events (3)
 
 ## Credentials
 - Admin: salih.karagoz / salih123

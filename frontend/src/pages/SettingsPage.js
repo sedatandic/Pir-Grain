@@ -44,15 +44,23 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const editId = dialogForm._editId;
+      const formData = { ...dialogForm };
+      delete formData._editId;
       const endpoint = `/api/${dialogType}`;
-      if (dialogType === 'users') {
-        if (!dialogForm.name || !dialogForm.username || !dialogForm.password) { toast.error('Name, username, password required'); setSaving(false); return; }
+      if (editId) {
+        await api.put(`${endpoint}/${editId}`, formData);
+        toast.success('Updated');
+      } else {
+        if (dialogType === 'users') {
+          if (!formData.name || !formData.username || !formData.password) { toast.error('Name, username, password required'); setSaving(false); return; }
+        }
+        await api.post(endpoint, formData);
+        toast.success('Added');
       }
-      await api.post(endpoint, dialogForm);
-      toast.success('Added');
       setDialogOpen(false);
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to add'); }
+    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to save'); }
     finally { setSaving(false); }
   };
 
@@ -130,21 +138,21 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="users">
-              <div className="flex justify-between mb-4"><h3 className="font-semibold">Users ({users.length})</h3><Button size="sm" onClick={() => openAdd('users', { name: '', username: '', email: '', mobile: '', password: '', role: 'user' })}><Plus className="h-3.5 w-3.5 mr-1" />Add User</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Username</TableHead><TableHead>Email</TableHead><TableHead>Role</TableHead><TableHead>Status</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader><TableBody>
-                {users.map(u => <TableRow key={u.id}><TableCell className="font-medium">{u.name || '-'}</TableCell><TableCell>{u.username}</TableCell><TableCell>{u.email || '-'}</TableCell><TableCell><Badge variant="secondary" className="capitalize">{u.role || 'user'}</Badge></TableCell><TableCell><Badge className="bg-green-100 text-green-800">Active</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('users', u.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              <div className="flex justify-between mb-4"><h3 className="font-semibold">Users ({users.length})</h3><Button size="sm" onClick={() => openAdd('users', { name: '', username: '', email: '', whatsapp: '', password: '', role: 'user' })}><Plus className="h-3.5 w-3.5 mr-1" />Add User</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Username</TableHead><TableHead>Email</TableHead><TableHead>WhatsApp</TableHead><TableHead>Role</TableHead><TableHead>Admin Status</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {users.map(u => <TableRow key={u.id}><TableCell className="font-medium">{u.name || '-'}</TableCell><TableCell>{u.username}</TableCell><TableCell>{u.email || '-'}</TableCell><TableCell>{u.whatsapp || '-'}</TableCell><TableCell><Badge variant="secondary" className="capitalize">{u.role || 'user'}</Badge></TableCell><TableCell><Badge className="bg-green-100 text-green-800">Active</Badge></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('users'); setDialogForm({ name: u.name || '', username: u.username || '', email: u.email || '', whatsapp: u.whatsapp || '', role: u.role || 'user', _editId: u.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('users', u.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
 
-      {/* Generic Add Dialog */}
+      {/* Generic Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Add {dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>{dialogForm._editId ? 'Edit' : 'Add'} {dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
-            {Object.entries(dialogForm).map(([key, val]) => (
+            {Object.entries(dialogForm).filter(([key]) => key !== '_editId').map(([key, val]) => (
               key === 'type' ? (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{key}</Label>
@@ -167,7 +175,7 @@ export default function SettingsPage() {
               )
             ))}
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Add</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{dialogForm._editId ? 'Save' : 'Add'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -188,6 +188,7 @@ class UserCreate(BaseModel):
     name: str
     username: str
     email: Optional[str] = None
+    whatsapp: Optional[str] = None
     mobile: Optional[str] = None
     password: str
     role: Optional[str] = "user"
@@ -838,6 +839,21 @@ def create_user(u: UserCreate, user=Depends(get_current_user)):
 def delete_user(user_id: str, user=Depends(get_current_user)):
     users_col.delete_one({"_id": ObjectId(user_id)})
     return {"message": "Deleted"}
+
+@app.put("/api/users/{user_id}")
+def update_user(user_id: str, body: dict, user=Depends(get_current_user)):
+    update_fields = {}
+    for field in ["name", "email", "whatsapp", "role", "username"]:
+        if field in body and body[field] is not None:
+            update_fields[field] = body[field]
+    if "password" in body and body["password"]:
+        update_fields["password"] = pwd_context.hash(body["password"])
+    if update_fields:
+        users_col.update_one({"_id": ObjectId(user_id)}, {"$set": update_fields})
+    doc = users_col.find_one({"_id": ObjectId(user_id)})
+    if doc:
+        doc.pop("password", None)
+    return serialize_doc(doc)
 
 # ─── Health ─────────────────────────────────────────────────
 @app.get("/api/health")

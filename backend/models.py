@@ -30,6 +30,7 @@ class TradeCreate(BaseModel):
     vesselName: Optional[str] = None
     surveyorId: Optional[str] = None
     brokeragePerMT: Optional[float] = 0
+    brokerageAccount: Optional[str] = "seller"
     contractDate: Optional[str] = None
     contractNumber: Optional[str] = None
     specialConditions: Optional[str] = None

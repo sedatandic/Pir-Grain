@@ -103,7 +103,7 @@ export default function NewTradePage() {
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '100 % TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
-    surveyorId: '', brokeragePerMT: '', contractDate: '', contractNumber: '',
+    surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation',
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
@@ -349,6 +349,16 @@ export default function NewTradePage() {
           <div className="space-y-2">
             <Label>Brokerage (per MT)</Label>
             <Input type="number" value={form.brokeragePerMT} onChange={(e) => set('brokeragePerMT', e.target.value)} placeholder="0.00" />
+          </div>
+          <div className="space-y-2">
+            <Label>Brokerage Payment</Label>
+            <Select value={form.brokerageAccount} onValueChange={(v) => set('brokerageAccount', v)}>
+              <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="seller">Seller Account</SelectItem>
+                <SelectItem value="buyer">Buyer Account</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

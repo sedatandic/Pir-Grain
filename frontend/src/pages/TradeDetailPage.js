@@ -114,9 +114,17 @@ export default function TradeDetailPage() {
   };
 
   const handleBlQuantityChange = (val) => {
-    const qty = parseFloat(val) || 0;
-    const dischQty = qty > 0 ? (qty - qty * 0.005).toFixed(2) : '';
-    setBlForm(prev => ({ ...prev, blQuantity: val, dischargeQuantity: dischQty ? String(parseFloat(dischQty)) : '' }));
+    setBlForm(prev => ({ ...prev, blQuantity: val }));
+  };
+
+  const calcShortage = (blQty, dischQty) => {
+    const bl = parseFloat(blQty) || 0;
+    const disch = parseFloat(dischQty) || 0;
+    if (!bl || !disch) return null;
+    const allowance = bl * 0.005;
+    const diff = bl - disch;
+    if (diff > allowance) return diff - allowance;
+    return 0;
   };
 
   const saveBlDetails = async () => {
@@ -275,6 +283,8 @@ export default function TradeDetailPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity (Mts)</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
               <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Shortage (Mts)</span><span className="font-medium">{(() => { const s = calcShortage(trade.blQuantity, trade.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">None</span>; })()}</span></div>
+              <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
             </CardContent>
           </Card>
@@ -380,9 +390,16 @@ export default function TradeDetailPage() {
                 <Input data-testid="bl-quantity-input" type="number" value={blForm.blQuantity || ''} onChange={(e) => handleBlQuantityChange(e.target.value)} placeholder="e.g. 25000" />
               </div>
               <div className="space-y-2">
-                <Label>Discharge Quantity (Mts) <span className="text-xs text-muted-foreground">(auto: B/L Qty - 0.5%)</span></Label>
-                <Input data-testid="bl-discharge-qty-input" type="number" value={blForm.dischargeQuantity || ''} onChange={(e) => setBlForm({...blForm, dischargeQuantity: e.target.value})} placeholder="Auto-calculated" />
+                <Label>Discharge Quantity (Mts)</Label>
+                <Input data-testid="bl-discharge-qty-input" type="number" value={blForm.dischargeQuantity || ''} onChange={(e) => setBlForm({...blForm, dischargeQuantity: e.target.value})} placeholder="Enter discharge quantity" />
               </div>
+            </div>
+            <div className="p-3 rounded-lg border bg-muted/30 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Shortage (Mts)</span>
+                <span className="font-medium">{(() => { const s = calcShortage(blForm.blQuantity, blForm.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">None</span>; })()}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Allowance: B/L Qty x 0.5% = {blForm.blQuantity ? (parseFloat(blForm.blQuantity) * 0.005).toLocaleString(undefined, {maximumFractionDigits: 2}) : '0'} MT</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

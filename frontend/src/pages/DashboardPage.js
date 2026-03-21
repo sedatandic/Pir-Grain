@@ -79,41 +79,41 @@ export default function DashboardPage() {
     <div className="space-y-6" data-testid="dashboard-page">
 
       {/* KPI Cards */}
-      <div className="flex justify-end gap-4">
-        <Card className="relative overflow-hidden w-80 p-2" data-testid="kpi-ongoing-trades">
+      <div className="grid grid-cols-3 gap-4">
+        <Card className="relative overflow-hidden p-4" data-testid="kpi-ongoing-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
               <Ship className="h-5 w-5 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold">{stats?.activeTrades || 0}</div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
+            <div className="text-6xl font-bold mt-4">{stats?.activeTrades || 0}</div>
+            <div className="mt-4 flex items-center gap-1 text-sm text-secondary"><TrendingUp className="h-3.5 w-3.5" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden w-80 p-2" data-testid="kpi-pending-trades">
+        <Card className="relative overflow-hidden p-4" data-testid="kpi-pending-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold text-muted-foreground">Pending Trades</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold">{stats?.pendingTrades || 0}</div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
+            <div className="text-6xl font-bold mt-4">{stats?.pendingTrades || 0}</div>
+            <div className="mt-4 flex items-center gap-1 text-sm text-muted-foreground"><AlertCircle className="h-3.5 w-3.5" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden w-80 p-2" data-testid="kpi-completed-trades">
+        <Card className="relative overflow-hidden p-4" data-testid="kpi-completed-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-semibold text-muted-foreground">Completed Trades</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
               <CheckCircle2 className="h-5 w-5 text-secondary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-bold">{stats?.completedTrades || 0}</div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
+            <div className="text-6xl font-bold mt-4">{stats?.completedTrades || 0}</div>
+            <div className="mt-4 flex items-center gap-1 text-sm text-secondary"><TrendingUp className="h-3.5 w-3.5" /><span>Increased from last month</span></div>
           </CardContent>
         </Card>
       </div>

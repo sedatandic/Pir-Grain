@@ -151,6 +151,7 @@ class PartnerCreate(BaseModel):
     phone: Optional[str] = None
     whatsapp: Optional[str] = None
     type: str = "buyer"
+    origins: Optional[list] = []
     tradeContacts: Optional[list] = []
     executionContacts: Optional[list] = []
     departments: Optional[list] = []  # [{name, contacts: [{name, email, phone, role}]}]

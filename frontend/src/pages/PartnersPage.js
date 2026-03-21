@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { ScrollArea } from '../components/ui/scroll-area';
 import { Separator } from '../components/ui/separator';
@@ -20,7 +20,7 @@ const TYPE_CONFIG = {
   'co-broker': { label: 'Co-Broker', color: 'bg-amber-100 text-amber-800' },
 };
 
-const emptyForm = { companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '', email: '', phone: '', whatsapp: '', type: 'buyer', notes: '' };
+const emptyForm = { companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '', email: '', phone: '', whatsapp: '', type: 'buyer', origins: '', notes: '' };
 
 export default function PartnersPage({ filterType }) {
   const [partners, setPartners] = useState([]);
@@ -64,7 +64,7 @@ export default function PartnersPage({ filterType }) {
   const openCreate = () => { setEditingPartner(null); setForm({ ...emptyForm, type: filterType || 'buyer' }); setDialogOpen(true); };
   const openEdit = (p) => {
     setEditingPartner(p);
-    setForm({ companyName: p.companyName||'', companyCode: p.companyCode||'', contactPerson: p.contactPerson||'', address: p.address||'', city: p.city||'', country: p.country||'', email: p.email||'', phone: p.phone||'', whatsapp: p.whatsapp||'', type: p.type||'buyer', notes: p.notes||'' });
+    setForm({ companyName: p.companyName||'', companyCode: p.companyCode||'', contactPerson: p.contactPerson||'', address: p.address||'', city: p.city||'', country: p.country||'', email: p.email||'', phone: p.phone||'', whatsapp: p.whatsapp||'', type: p.type||'buyer', origins: (p.origins || []).join(', '), notes: p.notes||'' });
     setDialogOpen(true);
   };
 
@@ -72,11 +72,12 @@ export default function PartnersPage({ filterType }) {
     if (!form.companyName.trim()) { toast.error('Company name is required'); return; }
     setSaving(true);
     try {
+      const payload = { ...form, origins: form.origins ? form.origins.split(',').map(o => o.trim()).filter(Boolean) : [] };
       if (editingPartner) {
-        await api.put(`/api/partners/${editingPartner.id}`, form);
+        await api.put(`/api/partners/${editingPartner.id}`, payload);
         toast.success('Partner updated');
       } else {
-        await api.post('/api/partners', form);
+        await api.post('/api/partners', payload);
         toast.success('Partner created');
       }
       setDialogOpen(false); fetchPartners();
@@ -130,13 +131,14 @@ export default function PartnersPage({ filterType }) {
                     <TableHead>Email</TableHead>
                     <TableHead>Phone</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Origins</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
                   ) : filtered.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
@@ -146,6 +148,7 @@ export default function PartnersPage({ filterType }) {
                       <TableCell className="text-sm">{p.email ? <a href={`mailto:${p.email}`} className="text-primary hover:underline flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</a> : '-'}</TableCell>
                       <TableCell className="text-sm">{p.phone ? <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span> : '-'}</TableCell>
                       <TableCell className="text-sm">{[p.city, p.country].filter(Boolean).join(', ') || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.origins && p.origins.length > 0 ? <div className="flex flex-wrap gap-1">{p.origins.map((o, i) => <Badge key={i} variant="outline" className="text-xs">{o}</Badge>)}</div> : '-'}</TableCell>
                       <TableCell><Badge className={TYPE_CONFIG[p.type]?.color || 'bg-muted'}>{TYPE_CONFIG[p.type]?.label || p.type}</Badge></TableCell>
                       <TableCell>
                         <div className="flex gap-1">
@@ -187,6 +190,7 @@ export default function PartnersPage({ filterType }) {
             <div className="col-span-2 space-y-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} /></div>
             <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} /></div>
             <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} /></div>
+            <div className="col-span-2 space-y-2"><Label>Origins</Label><Input value={form.origins} onChange={(e) => setForm({...form, origins: e.target.value})} placeholder="e.g. Russia, Ukraine" /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
@@ -237,6 +241,14 @@ export default function PartnersPage({ filterType }) {
                       {detailPartner.address && <div>{detailPartner.address}</div>}
                       <div>{[detailPartner.city, detailPartner.country].filter(Boolean).join(', ')}</div>
                     </div>
+                  </div>
+                )}
+
+                {/* Origins */}
+                {detailPartner.origins && detailPartner.origins.length > 0 && (
+                  <div className="rounded-lg border p-3 space-y-1">
+                    <div className="flex items-center gap-2 text-sm font-medium"><Globe className="h-4 w-4 text-primary" />Origins</div>
+                    <div className="flex flex-wrap gap-1">{detailPartner.origins.map((o, i) => <Badge key={i} variant="outline">{o}</Badge>)}</div>
                   </div>
                 )}
 

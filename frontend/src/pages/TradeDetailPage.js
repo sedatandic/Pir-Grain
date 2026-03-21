@@ -111,23 +111,30 @@ export default function TradeDetailPage() {
         </Button>
       </div>
 
-      <Tabs defaultValue="confirmation">
+      <Tabs defaultValue="summary">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="confirmation"><FileText className="h-3.5 w-3.5 mr-1" />Confirmation</TabsTrigger>
+          <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Trade Summary</TabsTrigger>
           <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />B/L Details</TabsTrigger>
-          <TabsTrigger value="parties"><Users className="h-3.5 w-3.5 mr-1" />Parties & Agents</TabsTrigger>
           <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{docList.length})</TabsTrigger>
         </TabsList>
 
-        {/* Confirmation Tab */}
-        <TabsContent value="confirmation">
+        {/* Trade Summary Tab */}
+        <TabsContent value="summary">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Contract Information</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Contract Date</span><span className="font-medium">{(() => { const d = trade.contractDate; if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { const m = d.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[3]}/${m[2]}/${m[1]}`; return d; } catch { return d; } })()}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{trade.sellerName || getName(partners, trade.sellerId)}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{trade.buyerName || getName(partners, trade.buyerId)}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{trade.brokerName || getName(partners, trade.brokerId) || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{commodityName}</span></div>
                 <Separator />
@@ -138,14 +145,20 @@ export default function TradeDetailPage() {
             </Card>
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Trade Terms</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
+              <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Incoterm</span><span className="font-medium">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span className="font-medium">{trade.paymentTerms || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{trade.originName || getName([], trade.originId)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{trade.originName || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipment Window</span><span className="font-medium">{trade.shipmentWindowStart && trade.shipmentWindowEnd ? `${(() => { try { return format(parseISO(trade.shipmentWindowStart), 'dd MMM yyyy'); } catch { return trade.shipmentWindowStart; }})() } - ${(() => { try { return format(parseISO(trade.shipmentWindowEnd), 'dd MMM yyyy'); } catch { return trade.shipmentWindowEnd; }})()}` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipment Window</span><span className="font-medium">{trade.shipmentWindowStart && trade.shipmentWindowEnd ? `${(() => { try { const m = trade.shipmentWindowStart.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return format(new Date(m[3], m[2]-1, m[1]), 'dd MMM yyyy'); return format(parseISO(trade.shipmentWindowStart), 'dd MMM yyyy'); } catch { return trade.shipmentWindowStart; }})() } - ${(() => { try { const m = trade.shipmentWindowEnd.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return format(new Date(m[3], m[2]-1, m[1]), 'dd MMM yyyy'); return format(parseISO(trade.shipmentWindowEnd), 'dd MMM yyyy'); } catch { return trade.shipmentWindowEnd; }})()}` : '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Vessel</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Rate</span><span className="font-medium">{trade.dischargeRate ? `${trade.dischargeRate.toLocaleString()} Mts` : '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Demurrage Rate</span><span className="font-medium">{trade.demurrageRate ? `USD ${trade.demurrageRate.toLocaleString()}/Day` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge></div>
               </CardContent>
@@ -177,97 +190,6 @@ export default function TradeDetailPage() {
           </Card>
         </TabsContent>
 
-        {/* Parties & Agents Tab */}
-        <TabsContent value="parties">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Trading Parties</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{getName(partners, trade.sellerId)}</span></div>
-                {trade.sellerTradeContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Seller Trade Contact</div>
-                    <div className="text-sm">{trade.sellerTradeContact.name}</div>
-                    {trade.sellerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.sellerTradeContact.email}</div>}
-                    {trade.sellerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.sellerTradeContact.phone}</div>}
-                  </div>
-                )}
-                {trade.sellerExecutionContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Seller Execution Contact</div>
-                    <div className="text-sm">{trade.sellerExecutionContact.name}</div>
-                    {trade.sellerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.sellerExecutionContact.email}</div>}
-                    {trade.sellerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.sellerExecutionContact.phone}</div>}
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{getName(partners, trade.buyerId)}</span></div>
-                {trade.buyerTradeContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Buyer Trade Contact</div>
-                    <div className="text-sm">{trade.buyerTradeContact.name}</div>
-                    {trade.buyerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.buyerTradeContact.email}</div>}
-                    {trade.buyerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.buyerTradeContact.phone}</div>}
-                  </div>
-                )}
-                {trade.buyerExecutionContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Buyer Execution Contact</div>
-                    <div className="text-sm">{trade.buyerExecutionContact.name}</div>
-                    {trade.buyerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.buyerExecutionContact.email}</div>}
-                    {trade.buyerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.buyerExecutionContact.phone}</div>}
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{getName(partners, trade.brokerId) || '-'}</span></div>
-                {trade.brokerTradeContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Broker Trade Contact</div>
-                    <div className="text-sm">{trade.brokerTradeContact.name}</div>
-                    {trade.brokerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.brokerTradeContact.email}</div>}
-                    {trade.brokerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.brokerTradeContact.phone}</div>}
-                  </div>
-                )}
-                {trade.brokerExecutionContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Broker Execution Contact</div>
-                    <div className="text-sm">{trade.brokerExecutionContact.name}</div>
-                    {trade.brokerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.brokerExecutionContact.email}</div>}
-                    {trade.brokerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.brokerExecutionContact.phone}</div>}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Co-Broker, Surveyor & Agents</CardTitle></CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Co-Broker</span><span className="font-medium">{getName(partners, trade.coBrokerId) || '-'}</span></div>
-                {trade.coBrokerTradeContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Co-Broker Trade Contact</div>
-                    <div className="text-sm">{trade.coBrokerTradeContact.name}</div>
-                    {trade.coBrokerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.coBrokerTradeContact.email}</div>}
-                    {trade.coBrokerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.coBrokerTradeContact.phone}</div>}
-                  </div>
-                )}
-                {trade.coBrokerExecutionContact && (
-                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
-                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Co-Broker Execution Contact</div>
-                    <div className="text-sm">{trade.coBrokerExecutionContact.name}</div>
-                    {trade.coBrokerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.coBrokerExecutionContact.email}</div>}
-                    {trade.coBrokerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.coBrokerExecutionContact.phone}</div>}
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Surveyor</span><span className="font-medium">{getName(surveyors, trade.surveyorId)}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Loading Agent</span><span className="font-medium">{trade.loadingAgent || '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Agent</span><span className="font-medium">{trade.dischargeAgent || '-'}</span></div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
 
         {/* Documents Checklist Tab */}
         <TabsContent value="documents">

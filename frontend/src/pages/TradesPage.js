@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { TRADE_STATUS_CONFIG, STATUS_OPTIONS, COMPLETED_STATUSES, WASHOUT_STATUSES, CANCELLED_STATUSES } from '../lib/constants';
@@ -19,6 +19,7 @@ export default function TradesPage() {
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [origins, setOrigins] = useState([]);
+  const [vessels, setVessels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCommodity, setFilterCommodity] = useState('all');
@@ -32,16 +33,18 @@ export default function TradesPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [tr, pa, co, or] = await Promise.all([
+      const [tr, pa, co, or, ve] = await Promise.all([
         api.get('/api/trades'),
         api.get('/api/partners'),
         api.get('/api/commodities'),
         api.get('/api/origins'),
+        api.get('/api/vessels'),
       ]);
       setTrades(tr.data);
       setPartners(pa.data);
       setCommodities(co.data);
       setOrigins(or.data);
+      setVessels(ve.data);
     } catch (err) {
       toast.error('Failed to load data');
     } finally {
@@ -108,6 +111,74 @@ export default function TradesPage() {
   const formatShipment = (d) => { try { return format(parseISO(d), 'MMM yyyy'); } catch { return '-'; } };
   const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
 
+  const handleVesselUpdate = async (tradeId, vesselName) => {
+    try {
+      await api.put(`/api/trades/${tradeId}`, { vesselName: vesselName || '' });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, vesselName } : t));
+      toast.success('Vessel updated');
+    } catch { toast.error('Failed to update vessel'); }
+  };
+
+  const VesselPicker = ({ trade }) => {
+    const [open, setOpen] = useState(false);
+    const [q, setQ] = useState('');
+    const ref = useRef(null);
+
+    useEffect(() => {
+      const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      if (open) document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    const sorted = useMemo(() => {
+      const list = vessels.map(v => v.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+      if (!q) return list;
+      return list.filter(n => n.toLowerCase().includes(q.toLowerCase()));
+    }, [q]);
+
+    if (!open) {
+      return (
+        <button
+          data-testid={`vessel-picker-${trade.id}`}
+          className="w-full text-center text-sm uppercase cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5 transition-colors"
+          onClick={(e) => { e.stopPropagation(); setOpen(true); setQ(''); }}
+        >
+          {trade.vesselName || <span className="text-muted-foreground">-</span>}
+        </button>
+      );
+    }
+
+    return (
+      <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+        <Input
+          autoFocus
+          data-testid={`vessel-search-${trade.id}`}
+          className="h-7 text-xs"
+          placeholder="Search vessel..."
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+        <div className="absolute z-50 mt-1 w-48 max-h-40 overflow-y-auto rounded-md border bg-popover shadow-md text-sm">
+          {trade.vesselName && (
+            <button className="w-full text-left px-3 py-1.5 hover:bg-muted text-destructive text-xs" onClick={() => { handleVesselUpdate(trade.id, ''); setOpen(false); }}>
+              Clear vessel
+            </button>
+          )}
+          {sorted.length === 0 && <div className="px-3 py-2 text-muted-foreground text-xs">No vessels found</div>}
+          {sorted.map(name => (
+            <button
+              key={name}
+              className={`w-full text-left px-3 py-1.5 hover:bg-muted text-xs uppercase ${name === trade.vesselName ? 'bg-muted font-medium' : ''}`}
+              onClick={() => { handleVesselUpdate(trade.id, name); setOpen(false); }}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const renderTable = (list, empty) => {
     if (list.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">{search || hasActiveFilters ? 'No trades match your search or filters' : empty}</div>;
     return (
@@ -165,7 +236,7 @@ export default function TradesPage() {
                 <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
                 <TableCell className="text-center text-sm">{formatShipment(trade.shipmentWindowStart)}</TableCell>
-                <TableCell className="text-center text-sm uppercase">{trade.vesselName || '-'}</TableCell>
+                <TableCell className="text-center text-sm"><VesselPicker trade={trade} /></TableCell>
               </TableRow>
             ))}
           </TableBody>

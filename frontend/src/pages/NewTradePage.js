@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_OPTIONS } from '../lib/constants';
@@ -8,12 +8,62 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Briefcase, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF', 'FAS', 'CIP', 'DAP', 'DPU', 'DDP'];
-const INCOTERMS = ['FOB', 'CFR', 'CIF', 'FAS', 'EXW'];
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'TRY'];
+
+function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {
+  if (!contacts || contacts.length === 0) return null;
+  const selectedIdx = value !== null && value !== undefined ? String(value) : '';
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs flex items-center gap-1 text-muted-foreground"><Icon className="h-3 w-3" />{label}</Label>
+      <Select value={selectedIdx} onValueChange={(v) => onChange(v === 'none' ? null : contacts[parseInt(v)])}>
+        <SelectTrigger className="h-8 text-sm" data-testid={testId}><SelectValue placeholder="Select contact" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">-- None --</SelectItem>
+          {contacts.map((c, i) => (
+            <SelectItem key={i} value={String(i)}>{c.name}{c.email ? ` (${c.email})` : ''}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function PartyContactPickers({ partyLabel, partner, tradeContact, execContact, onTradeChange, onExecChange, testPrefix }) {
+  if (!partner) return null;
+  const tc = partner.tradeContacts || [];
+  const ec = partner.executionContacts || [];
+  if (tc.length === 0 && ec.length === 0) return null;
+
+  const tcIdx = tradeContact ? tc.findIndex(c => c.name === tradeContact.name && c.email === tradeContact.email) : -1;
+  const ecIdx = execContact ? ec.findIndex(c => c.name === execContact.name && c.email === execContact.email) : -1;
+
+  return (
+    <div className="col-span-2 bg-muted/30 rounded-lg p-3 space-y-2 border border-dashed">
+      <div className="text-xs font-medium text-muted-foreground">{partyLabel} Contacts — {partner.companyName}</div>
+      <div className="grid grid-cols-2 gap-3">
+        {tc.length > 0 && (
+          <ContactPicker
+            label="Trade Contact" icon={Briefcase} contacts={tc}
+            value={tcIdx >= 0 ? tcIdx : null} onChange={onTradeChange}
+            testId={`${testPrefix}-trade-contact`}
+          />
+        )}
+        {ec.length > 0 && (
+          <ContactPicker
+            label="Execution Contact" icon={User} contacts={ec}
+            value={ecIdx >= 0 ? ecIdx : null} onChange={onExecChange}
+            testId={`${testPrefix}-exec-contact`}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function NewTradePage() {
   const navigate = useNavigate();
@@ -33,6 +83,10 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation',
+    sellerTradeContact: null, sellerExecutionContact: null,
+    buyerTradeContact: null, buyerExecutionContact: null,
+    brokerTradeContact: null, brokerExecutionContact: null,
+    coBrokerTradeContact: null, coBrokerExecutionContact: null,
   });
 
   useEffect(() => {
@@ -50,11 +104,30 @@ export default function NewTradePage() {
   }, []);
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
-  const sellers = partners.filter(p => p.type === 'seller');
-  const buyers = partners.filter(p => p.type === 'buyer');
-  const brokers = partners.filter(p => p.type === 'broker' || p.type === 'co-broker');
-  const loadPorts = ports.filter(p => p.type === 'loading');
-  const dischPorts = ports.filter(p => p.type === 'discharge');
+
+  const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
+  const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
+  const coBrokers = useMemo(() => partners.filter(p => p.type === 'co-broker'), [partners]);
+  const loadPorts = useMemo(() => ports.filter(p => p.type === 'loading'), [ports]);
+  const dischPorts = useMemo(() => ports.filter(p => p.type === 'discharge'), [ports]);
+
+  const sellerPartner = useMemo(() => partners.find(p => p.id === form.sellerId), [partners, form.sellerId]);
+  const buyerPartner = useMemo(() => partners.find(p => p.id === form.buyerId), [partners, form.buyerId]);
+  const brokerPartner = useMemo(() => partners.find(p => p.id === form.brokerId), [partners, form.brokerId]);
+  const coBrokerPartner = useMemo(() => partners.find(p => p.id === form.coBrokerId), [partners, form.coBrokerId]);
+
+  const handleSellerChange = (v) => {
+    setForm(prev => ({ ...prev, sellerId: v, sellerTradeContact: null, sellerExecutionContact: null }));
+  };
+  const handleBuyerChange = (v) => {
+    setForm(prev => ({ ...prev, buyerId: v, buyerTradeContact: null, buyerExecutionContact: null }));
+  };
+  const handleBrokerChange = (v) => {
+    setForm(prev => ({ ...prev, brokerId: v, brokerTradeContact: null, brokerExecutionContact: null }));
+  };
+  const handleCoBrokerChange = (v) => {
+    setForm(prev => ({ ...prev, coBrokerId: v, coBrokerTradeContact: null, coBrokerExecutionContact: null }));
+  };
 
   const handleSave = async () => {
     if (!form.sellerId || !form.buyerId || !form.commodityId) {
@@ -94,32 +167,71 @@ export default function NewTradePage() {
         <CardContent className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Seller *</Label>
-            <Select value={form.sellerId} onValueChange={(v) => set('sellerId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select seller" /></SelectTrigger>
+            <Select value={form.sellerId} onValueChange={handleSellerChange}>
+              <SelectTrigger data-testid="trade-seller-select"><SelectValue placeholder="Select seller" /></SelectTrigger>
               <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Buyer *</Label>
-            <Select value={form.buyerId} onValueChange={(v) => set('buyerId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select buyer" /></SelectTrigger>
+            <Select value={form.buyerId} onValueChange={handleBuyerChange}>
+              <SelectTrigger data-testid="trade-buyer-select"><SelectValue placeholder="Select buyer" /></SelectTrigger>
               <SelectContent>{buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+
+          {/* Seller Contacts */}
+          <PartyContactPickers
+            partyLabel="Seller" partner={sellerPartner}
+            tradeContact={form.sellerTradeContact} execContact={form.sellerExecutionContact}
+            onTradeChange={(c) => set('sellerTradeContact', c)} onExecChange={(c) => set('sellerExecutionContact', c)}
+            testPrefix="seller"
+          />
+
+          {/* Buyer Contacts */}
+          <PartyContactPickers
+            partyLabel="Buyer" partner={buyerPartner}
+            tradeContact={form.buyerTradeContact} execContact={form.buyerExecutionContact}
+            onTradeChange={(c) => set('buyerTradeContact', c)} onExecChange={(c) => set('buyerExecutionContact', c)}
+            testPrefix="buyer"
+          />
+
           <div className="space-y-2">
             <Label>Broker</Label>
-            <Select value={form.brokerId} onValueChange={(v) => set('brokerId', v)}>
+            <Select value={form.brokerId} onValueChange={handleBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select broker" /></SelectTrigger>
-              <SelectContent>{brokers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                <SelectItem value="none">-- None --</SelectItem>
+                {partners.filter(p => p.type === 'broker').map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Co-Broker</Label>
-            <Select value={form.coBrokerId} onValueChange={(v) => set('coBrokerId', v)}>
+            <Select value={form.coBrokerId} onValueChange={handleCoBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select co-broker" /></SelectTrigger>
-              <SelectContent>{brokers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                <SelectItem value="none">-- None --</SelectItem>
+                {coBrokers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
             </Select>
           </div>
+
+          {/* Broker Contacts */}
+          <PartyContactPickers
+            partyLabel="Broker" partner={brokerPartner}
+            tradeContact={form.brokerTradeContact} execContact={form.brokerExecutionContact}
+            onTradeChange={(c) => set('brokerTradeContact', c)} onExecChange={(c) => set('brokerExecutionContact', c)}
+            testPrefix="broker"
+          />
+
+          {/* Co-Broker Contacts */}
+          <PartyContactPickers
+            partyLabel="Co-Broker" partner={coBrokerPartner}
+            tradeContact={form.coBrokerTradeContact} execContact={form.coBrokerExecutionContact}
+            onTradeChange={(c) => set('coBrokerTradeContact', c)} onExecChange={(c) => set('coBrokerExecutionContact', c)}
+            testPrefix="co-broker"
+          />
         </CardContent>
       </Card>
 

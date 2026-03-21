@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -191,15 +191,81 @@ export default function TradeDetailPage() {
               <CardHeader className="pb-3"><CardTitle className="text-base">Trading Parties</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{getName(partners, trade.sellerId)}</span></div>
+                {trade.sellerTradeContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Seller Trade Contact</div>
+                    <div className="text-sm">{trade.sellerTradeContact.name}</div>
+                    {trade.sellerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.sellerTradeContact.email}</div>}
+                    {trade.sellerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.sellerTradeContact.phone}</div>}
+                  </div>
+                )}
+                {trade.sellerExecutionContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Seller Execution Contact</div>
+                    <div className="text-sm">{trade.sellerExecutionContact.name}</div>
+                    {trade.sellerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.sellerExecutionContact.email}</div>}
+                    {trade.sellerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.sellerExecutionContact.phone}</div>}
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{getName(partners, trade.buyerId)}</span></div>
+                {trade.buyerTradeContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Buyer Trade Contact</div>
+                    <div className="text-sm">{trade.buyerTradeContact.name}</div>
+                    {trade.buyerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.buyerTradeContact.email}</div>}
+                    {trade.buyerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.buyerTradeContact.phone}</div>}
+                  </div>
+                )}
+                {trade.buyerExecutionContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Buyer Execution Contact</div>
+                    <div className="text-sm">{trade.buyerExecutionContact.name}</div>
+                    {trade.buyerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.buyerExecutionContact.email}</div>}
+                    {trade.buyerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.buyerExecutionContact.phone}</div>}
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{getName(partners, trade.brokerId) || '-'}</span></div>
+                {trade.brokerTradeContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Broker Trade Contact</div>
+                    <div className="text-sm">{trade.brokerTradeContact.name}</div>
+                    {trade.brokerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.brokerTradeContact.email}</div>}
+                    {trade.brokerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.brokerTradeContact.phone}</div>}
+                  </div>
+                )}
+                {trade.brokerExecutionContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Broker Execution Contact</div>
+                    <div className="text-sm">{trade.brokerExecutionContact.name}</div>
+                    {trade.brokerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.brokerExecutionContact.email}</div>}
+                    {trade.brokerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.brokerExecutionContact.phone}</div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Surveyor & Agents</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Co-Broker, Surveyor & Agents</CardTitle></CardHeader>
               <CardContent className="space-y-3 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Co-Broker</span><span className="font-medium">{getName(partners, trade.coBrokerId) || '-'}</span></div>
+                {trade.coBrokerTradeContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-blue-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><Briefcase className="h-3 w-3" />Co-Broker Trade Contact</div>
+                    <div className="text-sm">{trade.coBrokerTradeContact.name}</div>
+                    {trade.coBrokerTradeContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.coBrokerTradeContact.email}</div>}
+                    {trade.coBrokerTradeContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.coBrokerTradeContact.phone}</div>}
+                  </div>
+                )}
+                {trade.coBrokerExecutionContact && (
+                  <div className="ml-4 pl-3 border-l-2 border-green-200 space-y-0.5">
+                    <div className="text-xs font-medium text-muted-foreground flex items-center gap-1"><UserIcon className="h-3 w-3" />Co-Broker Execution Contact</div>
+                    <div className="text-sm">{trade.coBrokerExecutionContact.name}</div>
+                    {trade.coBrokerExecutionContact.email && <div className="text-xs text-muted-foreground flex items-center gap-1"><Mail className="h-3 w-3" />{trade.coBrokerExecutionContact.email}</div>}
+                    {trade.coBrokerExecutionContact.phone && <div className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="h-3 w-3" />{trade.coBrokerExecutionContact.phone}</div>}
+                  </div>
+                )}
+                <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Surveyor</span><span className="font-medium">{getName(surveyors, trade.surveyorId)}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Loading Agent</span><span className="font-medium">{trade.loadingAgent || '-'}</span></div>

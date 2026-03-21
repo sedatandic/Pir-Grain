@@ -133,6 +133,14 @@ class TradeCreate(BaseModel):
     specialConditions: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = "confirmation"
+    sellerTradeContact: Optional[dict] = None
+    sellerExecutionContact: Optional[dict] = None
+    buyerTradeContact: Optional[dict] = None
+    buyerExecutionContact: Optional[dict] = None
+    brokerTradeContact: Optional[dict] = None
+    brokerExecutionContact: Optional[dict] = None
+    coBrokerTradeContact: Optional[dict] = None
+    coBrokerExecutionContact: Optional[dict] = None
 
 class TradeUpdate(TradeCreate):
     pass

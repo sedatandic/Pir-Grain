@@ -104,7 +104,7 @@ export default function TradesPage() {
     }
   };
 
-  const formatDate = (d) => { try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return '-'; } };
+  const formatDate = (d) => { if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return '-'; } };
   const formatShipment = (d) => { try { return format(parseISO(d), 'MMM yyyy'); } catch { return '-'; } };
   const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
 
@@ -149,7 +149,7 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm">{formatDate(trade.contractDate || trade.createdAt)}</TableCell>
                 <TableCell className="text-center">
                   <button onClick={() => { setSelectedTrade(trade); setModalOpen(true); }} className="font-medium text-primary hover:underline cursor-pointer text-sm">
-                    {trade.contractNumber || trade.referenceNumber}
+                    {trade.pirContractNumber || trade.contractNumber || trade.referenceNumber}
                   </button>
                   {trade.sellerContractNumber && trade.sellerContractNumber !== 'N/A' && (
                     <div className="text-xs text-muted-foreground">{trade.sellerContractNumber}</div>

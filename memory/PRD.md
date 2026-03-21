@@ -68,6 +68,9 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Edit dialog now includes a "Specifications" textarea for managing commodity specs
 - Add Commodity dialog also includes the Specifications field
 - Renamed "Commodity Specs" to "Commodity Specs." on the New Trade page
+- Seeded 9 trades from user's spreadsheet (MC010525, S-48-SFMP, RC0107, BEK446, RB050925, MW101025, MW2611, BAH55, RC1712)
+- Updated Contract No column to show pirContractNumber as primary display
+- Fixed date formatting to handle dd/MM/yyyy format in addition to ISO format
 
 ## Backlog (Prioritized)
 ### P1

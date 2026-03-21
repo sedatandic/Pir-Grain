@@ -104,7 +104,7 @@ export default function NewTradePage() {
     paymentTerms: '100 % TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
-    specialConditions: '', notes: '', status: 'confirmation',
+    specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
     buyerTradeContact: null, buyerExecutionContact: null,
@@ -148,6 +148,7 @@ export default function NewTradePage() {
   const coBrokers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('co-broker'); }), [partners]);
   const dischPorts = useMemo(() => ports.filter(p => p.type === 'discharge'), [ports]);
 
+  const selectedCommodity = useMemo(() => commodities.find(c => c.id === form.commodityId), [commodities, form.commodityId]);
   const sellerPartner = useMemo(() => partners.find(p => p.id === form.sellerId), [partners, form.sellerId]);
   const buyerPartner = useMemo(() => partners.find(p => p.id === form.buyerId), [partners, form.buyerId]);
   const brokerPartner = useMemo(() => form.brokerId && form.brokerId !== 'na' ? partners.find(p => p.id === form.brokerId) : null, [partners, form.brokerId]);
@@ -298,7 +299,11 @@ export default function NewTradePage() {
         <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Commodity *</Label>
-            <Select value={form.commodityId} onValueChange={(v) => set('commodityId', v)}>
+            <Select value={form.commodityId} onValueChange={(v) => {
+              set('commodityId', v);
+              const comm = commodities.find(c => c.id === v);
+              if (comm?.specs) set('commoditySpecs', comm.specs);
+            }}>
               <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
               <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
             </Select>
@@ -318,6 +323,12 @@ export default function NewTradePage() {
             <Label>Tolerance (%)</Label>
             <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
           </div>
+          {selectedCommodity && form.commoditySpecs && (
+            <div className="col-span-4 space-y-2">
+              <Label>Commodity Specs</Label>
+              <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" />
+            </div>
+          )}
         </CardContent>
       </Card>
 

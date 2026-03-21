@@ -92,6 +92,7 @@ class CommodityCreate(BaseModel):
     group: Optional[str] = None
     hsCode: Optional[str] = None
     description: Optional[str] = None
+    specs: Optional[str] = None
 
 
 class OriginCreate(BaseModel):

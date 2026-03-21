@@ -174,6 +174,20 @@ export default function NewTradePage() {
       </div>
 
       <Card>
+        <CardHeader><CardTitle>Contract Details</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <Label>Contract Date</Label>
+            <Input type="date" value={form.contractDate} onChange={(e) => set('contractDate', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Contract Number</Label>
+            <Input value={form.contractNumber} onChange={(e) => set('contractNumber', e.target.value)} placeholder="Auto-generated if empty" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle>Trade Parties</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
@@ -301,10 +315,6 @@ export default function NewTradePage() {
           <div className="space-y-2">
             <Label>Brokerage (per MT)</Label>
             <Input type="number" value={form.brokeragePerMT} onChange={(e) => set('brokeragePerMT', e.target.value)} placeholder="0.00" />
-          </div>
-          <div className="space-y-2">
-            <Label>Contract Date</Label>
-            <Input type="date" value={form.contractDate} onChange={(e) => set('contractDate', e.target.value)} />
           </div>
         </CardContent>
       </Card>

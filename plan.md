@@ -1,132 +1,147 @@
 # plan.md
 
 ## 1) Objectives
-- **Completed:** Clone the “PIR GRAIN & PULSES” commodity trading dashboard UX and core workflows.
-- **Completed:** Deliver an MVP with working CRUD for Trades + Counterparties + Vessels + Shipment Docs, plus Dashboard + Calendar views.
-- **Completed:** Implement a simple, reliable backend (FastAPI + MongoDB) and a responsive frontend (React + Tailwind + shadcn/ui).
-- **Completed:** Ensure all routes, sidebar nav, status badges, and core interactions match the reference app closely.
-- **Current objective:** Transition from MVP to “production-friendly hardening” (data quality, reporting depth, master-data management UI, and role-based access) while maintaining the cloned look/feel.
+- **Completed:** Clone the “PIR GRAIN & PULSES” commodity trading dashboard to match the **GitHub reference implementation** (`sedatandic/v0-commodity-trading-dashboard`) in both UX and functionality.
+- **Completed:** Deliver a working full-stack app with seeded data, auth, CRUD workflows, and dashboard analytics.
+- **Completed:** Ensure all routes, sidebar/header layout, categorized trade pipeline, and core interactions align with the reference app.
+- **Current objective:** Move from “feature-complete clone” to **production-friendly hardening** (data integrity, RBAC, document status tracking, deeper reporting, and operational polish) while preserving the reference look/feel.
 
 ## 2) Implementation Steps
 
 ### Phase 1: Core Function/Feature POC (Isolation) — Not required
-- App complexity is CRUD + simple auth + file upload; proceeded directly to V1 build.
+- App complexity is CRUD + auth + charts + file upload; proceeded directly to build.
 
-### Phase 2: V1 App Development (MVP) — **Completed**
+### Phase 2: V1 App Development (Initial MVP) — **Completed**
 **User stories (V1) — Completed**
 1. ✅ As a user, I want to sign in with a demo username/password so I can access the dashboard.
-2. ✅ As a user, I want to create a trade with key commercial + shipment fields so I can track a deal end-to-end.
-3. ✅ As a user, I want to change a trade’s status through the predefined pipeline so I can track progress.
-4. ✅ As a user, I want to manage counterparties (buyers/sellers/co-brokers) so I can reuse them in trades.
-5. ✅ As a user, I want to upload and attach shipment documents to a trade so I can keep all files centralized.
-6. ✅ As a user, I want a dashboard overview (active/pending/completed + progress + upcoming events) so I can see the current state quickly.
+2. ✅ As a user, I want to create and manage trades so I can track deals end-to-end.
+3. ✅ As a user, I want to change a trade’s status through a predefined pipeline so I can track progress.
+4. ✅ As a user, I want to manage counterparties so I can reuse them in trades.
+5. ✅ As a user, I want to upload and attach shipment documents so I can keep files centralized.
+6. ✅ As a user, I want a dashboard overview and a calendar so I can see current state quickly.
+
+> Note: Phase 2 produced a working MVP, but the GitHub reference app required a substantial model + UI rewrite which was implemented in Phase 3.
+
+### Phase 3: GitHub-Accurate Rewrite (Source-of-Truth Clone) — **Completed**
+A full rewrite was performed to match the GitHub repository’s information architecture, styling, and feature set.
+
+**User stories (GitHub clone) — Completed**
+1. ✅ As a user, I can navigate a light-themed sidebar + header shell consistent with the reference UI.
+2. ✅ As a user, I can view Trades grouped into **Ongoing / Pending / Completed / Washout / Cancelled** sections.
+3. ✅ As a user, I can update trade status **inline from the table**.
+4. ✅ As a user, I can create a trade from a dedicated **/trades/new** page.
+5. ✅ As a user, I can open a trade detail modal by clicking the **Contract No**.
+6. ✅ As a user, I can manage counterparties with tabbed filtering and CRUD dialogs.
+7. ✅ As a user, I can manage vessels including basic fleet stats.
+8. ✅ As a user, I can view a custom monthly calendar grid and add events.
+9. ✅ As a user, I can view brokerage commissions split into sections and totals.
+10. ✅ As a user, I can manage accounting invoices in an **Accounting (/omega)** page.
+11. ✅ As an admin, I can manage master/reference data and users from **Settings** via tabbed CRUD.
 
 **Backend (FastAPI + MongoDB) — Completed**
-- Data layer
-  - ✅ Collections implemented: `users`, `trades`, `partners`, `vessels`, `documents`, `commodities`, `origins`, `ports`, `surveyors`, `events`.
-  - ✅ Pydantic models + CRUD endpoints; timestamps (`createdAt/updatedAt`) on core entities.
-  - ✅ Trade reference generator: `generate_trade_ref()`.
-- Auth (MVP)
+- Data layer (updated to GitHub reference)
+  - ✅ Collections implemented: `users`, `trades`, `partners`, `vessels`, `documents`, `commodities`, `origins`, `ports`, `surveyors`, `events`, `invoices`.
+  - ✅ Trade model aligned to reference: `referenceNumber`, `tolerance`, `deliveryTerm`, `pricePerMT`, `currency`, `incoterms`, `originId`, `loadingPortId`, `dischargePortId`, `vesselName`, `brokeragePerMT`, `totalCommission`, `coBrokerId`, etc.
+  - ✅ Partner types expanded: `buyer`, `seller`, `co-broker`, **`broker`** (seeded: PIR / Atria / Nord Star).
+  - ✅ Inline status update endpoint: `PATCH /api/trades/{id}/status`.
+- Auth
   - ✅ JWT login endpoint; protected routes.
-  - ✅ Demo user seeded: `salihkaragoz / salih123`.
+  - ✅ Demo users seeded: `salihkaragoz / salih123` (admin), `piraccount / piraccount123` (accountant).
 - API endpoints (implemented)
   - ✅ `/api/auth/login`, `/api/auth/me`
   - ✅ `/api/trades` (list/create), `/api/trades/{id}` (get/update/delete)
+  - ✅ `/api/trades/{id}/status` (inline status patch)
   - ✅ `/api/trades/stats/overview` (dashboard KPIs)
-  - ✅ `/api/partners` + filter by `type`
+  - ✅ `/api/partners` CRUD + filter/search
   - ✅ `/api/vessels` CRUD
   - ✅ `/api/documents` list/delete + upload via multipart
-  - ✅ Reference lists: `/api/commodities`, `/api/origins`, `/api/ports`, `/api/surveyors`
-  - ✅ `/api/events` list/create/delete
+  - ✅ `/api/events` CRUD
+  - ✅ Reference lists CRUD: `/api/commodities`, `/api/origins`, `/api/ports`, `/api/surveyors`
+  - ✅ User admin endpoints: `/api/users` (list/create/delete)
+  - ✅ Accounting endpoints: `/api/invoices` CRUD
   - ✅ `/api/uploads/*` static hosting for uploaded files
-- File upload
-  - ✅ Multipart upload; files stored under `/app/backend/uploads`; returned `fileUrl` used by frontend.
+- Seed data
+  - ✅ Trades, partners, vessels, surveyors, ports/origins/commodities, and events seeded on startup.
 
 **Frontend (React + Tailwind + shadcn/ui) — Completed**
-- App shell + layout
-  - ✅ Sidebar with exact nav structure + collapsible “Counterparties” section.
-  - ✅ Route guard: redirect to `/login` when unauthenticated.
-  - ✅ Logout clears auth and returns to login.
+- App shell
+  - ✅ Light sidebar (white) with nested “Counterparties” section.
+  - ✅ Top header bar with notification bell + user initials/name.
+  - ✅ Auth guard redirect to `/login` when unauthenticated.
+  - ✅ Logout clears session and returns to login.
+- Visual design alignment
+  - ✅ Primary color: **navy** (#2B5B84-ish), secondary accent: **lime** (#8BC53F-ish).
+  - ✅ Table-heavy layouts with centered cells and grid-like borders matching reference.
 - Pages (implemented)
-  - ✅ `/login`: card layout/colors; demo credentials shown; **invalid-credential error display fixed**.
-  - ✅ `/dashboard`: KPI cards + trade progress + recent trades + upcoming events.
-  - ✅ `/trades`: table + search/filter + modal create/edit + delete confirmation + status badge colors.
-  - ✅ `/partners` + buyers/sellers/co-brokers subroutes: table + modal create/edit + delete confirmation.
-  - ✅ `/vessels`: table + modal create/edit + delete confirmation.
-  - ✅ `/documents`: list + upload dialog + link to trade + download + delete.
-  - ✅ `/calendar`: month picker + daily event list + create event dialog.
-  - ✅ `/commissions`: brokerage summary derived from trades.
-  - ✅ `/reports`: recharts charts + summary stats.
-  - ✅ `/settings`: profile display + placeholders for future preferences.
-- State/hooks
-  - ✅ Auth context (`useAuth`) and Axios client with auth header.
-  - ✅ Fixed Axios 401 interceptor to **not** redirect on `/auth/login` (enables inline login error messaging).
+  - ✅ `/login`: reference-styled login + demo credentials + correct invalid-credential inline errors.
+  - ✅ `/dashboard`: KPI cards, events list, trade progress with recent trades.
+  - ✅ `/trades`: categorized tables + inline status editing + filters + trade detail modal.
+  - ✅ `/trades/new`: dedicated creation form with sections.
+  - ✅ `/partners` + subroutes: tabbed UX + CRUD dialogs.
+  - ✅ `/vessels`: stats cards + CRUD.
+  - ✅ `/documents`: contract-based matrix view (doc-type columns) consistent with reference UX.
+  - ✅ `/calendar`: custom month grid + add event dialog + sidebar lists.
+  - ✅ `/commissions`: brokerage totals + categorized sections.
+  - ✅ `/omega`: accounting/invoices CRUD.
+  - ✅ `/reports`: pie + bar charts + summary stats.
+  - ✅ `/settings`: profile + CRUD tabs for commodities/origins/ports/surveyors/users.
+- State + integration
+  - ✅ Auth context + Axios client.
+  - ✅ 401 interceptor excludes `/auth/login` so login errors render correctly.
 
-**Seed data — Completed**
-- ✅ Demo user + partners + trades + vessels + surveyors + events seeded on startup.
-
-**End of Phase 2: Testing — Completed**
+**End of Phase 3: Testing — Completed**
 - ✅ Full E2E pass executed.
-  - Backend: **100% pass**
-  - Frontend: **95%+ pass**, remaining issue fixed (login error messaging).
+  - Backend: **100% (38/38 tests passed)**
+  - Frontend: **100%**
+  - Integration: **100%**
 
-### Phase 3: Adding More Features (Production-friendly hardening) — **Next**
-**User stories (Expansion)**
-1. As a user, I want inline editing for trade status steps so updates are fast.
-2. As a user, I want configurable master data (commodities/origins/ports/surveyors) so the system matches my business.
-3. As a user, I want richer reports (by commodity/origin/status/date range) so I can analyze performance.
-4. As a user, I want accounting entries/brokerage invoices tied to trades so I can track commissions.
-5. As a user, I want calendar reminders and upcoming-deadline highlighting so I don’t miss shipment windows.
+### Phase 4: Production Hardening + Data Quality + RBAC — **Next**
+**User stories (Hardening)**
+1. As an admin, I want RBAC enforcement (admin/accountant/user) so access is controlled.
+2. As a user, I want stricter validation and uniqueness constraints so data stays clean (e.g., unique `referenceNumber`).
+3. As a user, I want document statuses (received/reviewed/approved) so document tracking is actionable.
+4. As a user, I want audit-friendly trade details (change history) so compliance is easier.
+5. As a user, I want richer reports (date ranges, counterparties, commodity/origin slicing) to analyze performance.
 
 **Planned enhancements**
+- Auth/RBAC
+  - Enforce permissions server-side for master data + user management + accounting.
+  - Add role-based navigation hiding/disabled states.
+- Data integrity
+  - Add DB indexes + unique constraints (`referenceNumber`, optional `companyCode`).
+  - Add backend validation for numeric ranges (tolerance %, prices, quantities) and date coherence (shipment start <= end).
 - Documents
-  - Add document review states (received/reviewed/approved) and metadata dialog preview.
-  - Add filters by `docType`, `tradeRef`, and date range.
+  - Add per-document status tracking + upload/list UI to replace the current “matrix placeholder” state.
+  - Add linking documents to trades by type and “received” timestamp.
 - Trades
-  - Advanced filters (status, date range, commodity, buyer/seller) + pagination.
-  - Optional enforcement of status order transitions.
-  - Add trade detail drawer/page for audit-friendly viewing.
-- Master data
-  - Add UI pages for maintaining commodities/origins/ports/surveyors.
-- Accounting (/commissions)
-  - Introduce an Invoice/Commission entity linked to trade; export CSV.
-- Calendar
-  - Derive events from shipment window dates and highlight nearing deadlines.
+  - Add optional enforcement of status transition ordering.
+  - Add pagination for large datasets.
+  - Add trade revision/audit log.
+- Accounting
+  - Tie invoices to trades (optional) + export CSV.
+  - Add due/overdue auto-status.
 - Reports
-  - Expand charts (monthly volume, completion trend, top counterparties).
+  - Expand charts: monthly volume trend, completion trend, top sellers/buyers, total commission by month.
+  - Add filters and downloadable summaries.
 - Testing
-  - Run one E2E pass validating new filters, invoice creation, and report rendering.
-
-### Phase 4: Auth/Role + Robustness + Polish — **Later**
-**User stories (Polish)**
-1. As an admin, I want to manage users and roles so access is controlled.
-2. As a user, I want session expiry + re-login prompts so security is clear.
-3. As a user, I want optimistic UI + toasts for saves/errors so interactions feel reliable.
-4. As a user, I want consistent empty states across pages so I always know what to do next.
-5. As a user, I want import/export for partners/trades so onboarding data is easy.
-
-**Planned hardening**
-- Proper RBAC (admin vs user), user management UI.
-- Harden backend validation, indexes, and unique constraints (e.g., `tradeRef`).
-- Improve error handling consistency (HTTP status codes, error schemas).
-- Add comprehensive regression tests (pytest) for API + basic frontend smoke tests.
+  - Add regression tests for RBAC rules, document workflows, and reporting filters.
 
 ## 3) Next Actions
-1. Phase 3 kickoff: define the “Trade Details” view + advanced filtering requirements.
-2. Add master-data management UI (commodities/origins/ports/surveyors) with CRUD dialogs.
-3. Add derived calendar events from shipment windows + deadline highlighting.
-4. Introduce brokerage invoice entity + CSV export.
-5. Run a second E2E test pass after Phase 3 features land.
+1. Implement RBAC end-to-end (backend enforcement + frontend gating).
+2. Add real document tracking: upload per type + per-trade completeness status.
+3. Add database constraints + indexes for reference integrity.
+4. Expand reports with filtering + export.
+5. Run another full E2E pass after Phase 4 hardening.
 
 ## 4) Success Criteria
 - ✅ All listed routes exist and are reachable from the sidebar; no dead navigation.
 - ✅ Login works with demo credentials; protected pages redirect to `/login`.
 - ✅ Invalid login shows an inline error message.
-- ✅ Trades CRUD works; statuses display as colored badges and update correctly.
-- ✅ Counterparties CRUD works with buyer/seller/co-broker filtering.
-- ✅ Documents can be uploaded, stored, listed, downloaded, and linked to trades.
-- ✅ Dashboard shows correct counts and Upcoming Events.
-- ✅ Calendar works with event creation and date-based filtering.
-- ✅ Commissions and Reports pages render correctly with seeded data.
+- ✅ Trades render in categorized sections and inline status changes persist.
+- ✅ New Trade flow works via `/trades/new`.
+- ✅ Counterparties management works with tabbed filtering and CRUD.
+- ✅ Vessels CRUD works and stats render.
+- ✅ Calendar renders custom month grid and events can be created.
+- ✅ Commissions, Accounting, Reports, and Settings pages render correctly with seeded data.
 - ✅ One full E2E test run passes without critical bugs or broken flows.
-- Phase 3 success (future): master-data UI + advanced filters + invoices + derived calendar events + expanded reports with maintained UX consistency.
+- **Phase 4 success (next):** RBAC + data integrity constraints + document status workflow + richer reports, while preserving GitHub-reference UX consistency.

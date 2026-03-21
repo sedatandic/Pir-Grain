@@ -2,8 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, ChevronRight, Building2, ShoppingCart, Handshake,
-  CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
@@ -23,16 +22,8 @@ const mainNavItems = [
   { title: 'Vessels', href: '/vessels', icon: Ship },
 ];
 
-const partnerSubItems = [
-  { title: 'All Counterparties', href: '/partners', icon: Users },
-  { title: 'Sellers', href: '/partners/sellers', icon: Building2 },
-  { title: 'Buyers', href: '/partners/buyers', icon: ShoppingCart },
-  { title: 'Co-Brokers', href: '/partners/co-brokers', icon: Handshake },
-];
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [partnersOpen, setPartnersOpen] = useState(true);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return document.documentElement.classList.contains('dark');
@@ -41,7 +32,6 @@ export default function Sidebar() {
   });
   const location = useLocation();
   const { user } = useAuth();
-  const isPartnerActive = location.pathname.startsWith('/partners');
 
   const toggleDarkMode = () => {
     const next = !darkMode;
@@ -109,43 +99,18 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Counterparties */}
-        <div>
-          <button
-            data-testid="sidebar-nav-counterparties-link"
-            onClick={() => setPartnersOpen(!partnersOpen)}
-            className={cn(
-              'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm w-full transition-colors',
-              isPartnerActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
-            )}
-          >
-            <Users className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && (
-              <>
-                <span className="flex-1 text-left">Counterparties</span>
-                <ChevronRight className={cn('w-3.5 h-3.5 transition-transform', partnersOpen && 'rotate-90')} />
-              </>
-            )}
-          </button>
-          {!collapsed && partnersOpen && (
-            <div className="ml-5 pl-3 border-l border-border mt-0.5 space-y-0.5">
-              {partnerSubItems.map((sub) => (
-                <NavLink
-                  key={sub.href}
-                  to={sub.href}
-                  end={sub.href === '/partners'}
-                  className={({ isActive }) => cn(
-                    'flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-colors',
-                    isActive ? 'text-[#1B7A3D] font-medium bg-[#1B7A3D]/5' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  )}
-                >
-                  <sub.icon className="w-3.5 h-3.5" />
-                  <span>{sub.title}</span>
-                </NavLink>
-              ))}
-            </div>
+        {/* Counterparties - single link, tabs inside the page */}
+        <NavLink
+          to="/partners"
+          data-testid="sidebar-nav-counterparties-link"
+          className={({ isActive }) => cn(
+            'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
+            isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
           )}
-        </div>
+        >
+          <Users className="w-4 h-4 flex-shrink-0" />
+          {!collapsed && <span>Counterparties</span>}
+        </NavLink>
       </nav>
 
       {/* Footer */}

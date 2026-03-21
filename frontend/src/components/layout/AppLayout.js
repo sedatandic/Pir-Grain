@@ -49,6 +49,20 @@ export default function AppLayout() {
   const lastName = nameParts.slice(1).join(' ') || '';
   const initials = firstName.charAt(0).toUpperCase() + (lastName ? lastName.charAt(0).toUpperCase() : '');
 
+  const PAGE_TITLES = {
+    '/': { title: 'Dashboard', subtitle: 'Welcome back! Here is your trading overview.' },
+    '/trades': { title: 'Trades', subtitle: 'Manage your commodity trades' },
+    '/partners': { title: 'Counterparties', subtitle: 'Manage your trading partners' },
+    '/vessels': { title: 'Vessels', subtitle: 'Manage your fleet of vessels' },
+    '/documents': { title: 'Shipment Docs.', subtitle: 'Manage shipment documents' },
+    '/calendar': { title: 'Calendar', subtitle: 'Events, meetings, and deadlines' },
+    '/omega': { title: 'Omega — Accounting', subtitle: 'Invoices, expenses, and bank statements' },
+    '/reports': { title: 'Reports', subtitle: 'Analytics and reporting' },
+    '/commissions': { title: 'Brokerage Inv.', subtitle: 'Manage brokerage invoices' },
+    '/settings': { title: 'Settings', subtitle: 'System configuration' },
+  };
+  const currentPage = PAGE_TITLES[location.pathname] || { title: '', subtitle: '' };
+
   const unreadCount = notifications.filter(n => !(n.readBy || []).includes(user?.username)).length;
 
   const markAllRead = async () => {
@@ -65,7 +79,14 @@ export default function AppLayout() {
       <div className={cn('transition-all duration-200', sidebarCollapsed ? 'ml-[60px]' : 'ml-[250px]')}>
         {/* Header Bar */}
         <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
-          <div className="flex-1" />
+          <div className="flex-1 min-w-0">
+            {currentPage.title && (
+              <div>
+                <h1 className="text-sm font-semibold text-foreground leading-tight">{currentPage.title}</h1>
+                <p className="text-xs text-muted-foreground leading-tight truncate">{currentPage.subtitle}</p>
+              </div>
+            )}
+          </div>
 
           {/* Notifications Bell */}
           <DropdownMenu>

@@ -93,8 +93,8 @@ export default function SettingsPage() {
 
             <TabsContent value="commodities">
               <div className="flex justify-between mb-4"><h3 className="font-semibold">Commodities ({commodities.length})</h3><Button size="sm" onClick={() => openAdd('commodities', { name: '', code: '', group: '', hsCode: '', description: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Code</TableHead><TableHead>Group</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader><TableBody>
-                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Commodity Name</TableHead><TableHead>Commodity Group</TableHead><TableHead>Commodity Code</TableHead><TableHead>HS Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {commodities.map(c => <TableRow key={c.id}><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.group || '-'}</TableCell><TableCell><Badge variant="secondary">{c.code || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{c.hsCode || '-'}</TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('commodities', c.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 

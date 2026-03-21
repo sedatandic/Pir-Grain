@@ -215,24 +215,33 @@ def seed_data():
             }
         ])
 
-    if commodities_col.count_documents({}) == 0:
-        comms = [
-            {"name": "Wheat", "code": "WHT", "group": "Grains"},
-            {"name": "Barley", "code": "BRL", "group": "Grains"},
-            {"name": "Corn", "code": "CRN", "group": "Grains"},
-            {"name": "Red Lentils", "code": "RDL", "group": "Pulses"},
-            {"name": "Green Lentils", "code": "GRL", "group": "Pulses"},
-            {"name": "Chickpeas", "code": "CHP", "group": "Pulses"},
-            {"name": "Yellow Peas", "code": "YLP", "group": "Pulses"},
-            {"name": "Sunflower Seeds", "code": "SFS", "group": "Oilseeds"},
-            {"name": "Sunflower Meal Pellets", "code": "SMP", "group": "Oilseeds"},
-            {"name": "Soybeans", "code": "SOY", "group": "Oilseeds"},
-            {"name": "Rice", "code": "RCE", "group": "Grains"},
-            {"name": "Millet", "code": "MLT", "group": "Grains"},
-        ]
-        for c in comms:
-            c["createdAt"] = datetime.utcnow()
-            commodities_col.insert_one(c)
+    # Always reseed commodities with the canonical list
+    commodities_col.delete_many({})
+    comms = [
+        {"name": "10.5 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "11.5 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "12.5 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "13.5 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "14.5 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "15.3 % Pro. Wheat", "code": "WH", "group": "Grains", "hsCode": "1001.99.00.00.11"},
+        {"name": "Barley", "code": "BAR", "group": "Grains", "hsCode": "1003.90.00.00.19"},
+        {"name": "Yellow Corn", "code": "CORN", "group": "Grains", "hsCode": "1005.90.00.00.19"},
+        {"name": "34,5 % Pro. Sunflower Meal Pellets", "code": "SFMP", "group": "Feedstuffs", "hsCode": "2306.30.00.00.00"},
+        {"name": "35 % Pro. Sunflower Meal Pellets", "code": "SFMP", "group": "Feedstuffs", "hsCode": "2306.30.00.00.00"},
+        {"name": "Sugar Beet Pulp Pellets", "code": "SBPP", "group": "Feedstuffs", "hsCode": "2303.20.10.00.00"},
+        {"name": "Sunflower Husk Pellets", "code": "HUSK", "group": "Feedstuffs", "hsCode": "2308.00.90.00.00"},
+        {"name": "Wheat Bran Pellets", "code": "WBP", "group": "Feedstuffs", "hsCode": "2302.30.10.00.11"},
+        {"name": "Soybeans", "code": "SBS", "group": "Oilseeds", "hsCode": "1201.90.00.00.00"},
+        {"name": "Sunflower Seeds", "code": "SFS", "group": "Oilseeds", "hsCode": "1206.00.99.00.19"},
+        {"name": "Green Lentils", "code": "WGL", "group": "Pulses & Rice", "hsCode": "0713.40.00.00.12"},
+        {"name": "Kabuli Chickpeas", "code": "KCP", "group": "Pulses & Rice", "hsCode": "0713.20.00.00.19"},
+        {"name": "Red Lentils", "code": "WRL", "group": "Pulses & Rice", "hsCode": "0713.40.00.00.13"},
+        {"name": "White Rice", "code": "RICE", "group": "Pulses & Rice", "hsCode": "1006.30.27.00.00"},
+        {"name": "Yellow Peas", "code": "PEAS", "group": "Pulses & Rice", "hsCode": "0713.10.10.00.00"},
+    ]
+    for c in comms:
+        c["createdAt"] = datetime.utcnow()
+        commodities_col.insert_one(c)
 
     if origins_col.count_documents({}) == 0:
         origins = [

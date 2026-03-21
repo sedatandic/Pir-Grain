@@ -27,6 +27,15 @@ def create_event(event: EventCreate, user=Depends(non_accountant)):
     return serialize_doc(data)
 
 
+@router.put("/{event_id}")
+def update_event(event_id: str, event: EventCreate, user=Depends(non_accountant)):
+    data = event.dict()
+    events_col.update_one({"_id": ObjectId(event_id)}, {"$set": data})
+    updated = events_col.find_one({"_id": ObjectId(event_id)})
+    create_notification("event", f"Event updated: {data.get('title', '')}", event_id, user.get("username"))
+    return serialize_doc(updated)
+
+
 @router.delete("/{event_id}")
 def delete_event(event_id: str, user=Depends(non_accountant)):
     e = events_col.find_one({"_id": ObjectId(event_id)})

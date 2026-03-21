@@ -2,15 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Plus, ChevronLeft, ChevronRight, DollarSign, Users, CalendarDays, Clock, Loader2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, CalendarDays, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isSameMonth, isToday, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isToday, parseISO } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
 
 export default function CalendarPage() {
@@ -19,6 +18,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({ title: '', date: '', type: 'other', description: '' });
   const [saving, setSaving] = useState(false);
 
@@ -46,16 +46,46 @@ export default function CalendarPage() {
   const getEventsForDate = (date) => events.filter(e => { try { return isSameDay(parseISO(e.date), date); } catch { return false; } });
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
-  const handleCreate = async () => {
+  const openCreateDialog = () => {
+    setEditingEvent(null);
+    setForm({ title: '', date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'), type: 'other', description: '' });
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (ev) => {
+    setEditingEvent(ev);
+    let dateStr = '';
+    try { dateStr = format(parseISO(ev.date), 'yyyy-MM-dd'); } catch { dateStr = ev.date || ''; }
+    setForm({ title: ev.title || '', date: dateStr, type: ev.type || 'other', description: ev.description || '' });
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!form.title || !form.date) { toast.error('Title and date required'); return; }
     setSaving(true);
     try {
-      const res = await api.post('/api/events', form);
-      setEvents([...events, res.data]);
-      toast.success('Event created');
+      if (editingEvent) {
+        const res = await api.put(`/api/events/${editingEvent.id}`, form);
+        setEvents(events.map(e => e.id === editingEvent.id ? res.data : e));
+        toast.success('Event updated');
+      } else {
+        const res = await api.post('/api/events', form);
+        setEvents([...events, res.data]);
+        toast.success('Event created');
+      }
       setDialogOpen(false);
+      setEditingEvent(null);
       setForm({ title: '', date: '', type: 'other', description: '' });
-    } catch (err) { toast.error('Failed to create event'); } finally { setSaving(false); }
+    } catch (err) { toast.error('Failed to save event'); } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      await api.delete(`/api/events/${eventId}`);
+      setEvents(events.filter(e => e.id !== eventId));
+      toast.success('Event deleted');
+      if (editingEvent?.id === eventId) { setDialogOpen(false); setEditingEvent(null); }
+    } catch (err) { toast.error('Failed to delete event'); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -64,9 +94,7 @@ export default function CalendarPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div><h1 className="text-3xl font-bold tracking-tight">Calendar</h1><p className="text-muted-foreground">Track events, deadlines, and meetings</p></div>
-        <Button onClick={() => { setForm({ ...form, date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd') }); setDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" />Add Event
-        </Button>
+        <Button onClick={openCreateDialog} data-testid="calendar-add-event"><Plus className="mr-2 h-4 w-4" />Add Event</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -117,9 +145,21 @@ export default function CalendarPage() {
                   <div className="space-y-3">
                     {selectedDateEvents.map(ev => (
                       <div key={ev.id} className={`p-3 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
-                        <p className="font-medium text-sm">{ev.title}</p>
-                        <p className="text-xs mt-1 capitalize opacity-70">{ev.type}</p>
-                        {ev.description && <p className="text-xs mt-1 opacity-60">{ev.description}</p>}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{ev.title}</p>
+                            <p className="text-xs mt-1 capitalize opacity-70">{ev.type}</p>
+                            {ev.description && <p className="text-xs mt-1 opacity-60">{ev.description}</p>}
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(ev)} data-testid={`edit-event-${ev.id}`}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(ev.id)} data-testid={`delete-event-${ev.id}`}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -134,10 +174,10 @@ export default function CalendarPage() {
               {events.length === 0 ? <p className="text-sm text-muted-foreground">No events scheduled</p> : (
                 <div className="space-y-2">
                   {events.slice(0, 8).map(ev => (
-                    <div key={ev.id} className="flex items-center gap-3 py-1.5">
-                      <div className={`w-2 h-2 rounded-full ${ev.type === 'payment' ? 'bg-green-500' : ev.type === 'meeting' ? 'bg-purple-500' : ev.type === 'conference' ? 'bg-amber-500' : 'bg-slate-400'}`} />
+                    <div key={ev.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1" onClick={() => openEditDialog(ev)}>
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${ev.type === 'payment' ? 'bg-green-500' : ev.type === 'meeting' ? 'bg-purple-500' : ev.type === 'conference' ? 'bg-amber-500' : 'bg-slate-400'}`} />
                       <div className="flex-1 min-w-0"><p className="text-sm truncate">{ev.title}</p></div>
-                      <span className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(ev.date), 'MMM d'); } catch { return ''; } })()}</span>
+                      <span className="text-xs text-muted-foreground shrink-0">{(() => { try { return format(parseISO(ev.date), 'MMM d'); } catch { return ''; } })()}</span>
                     </div>
                   ))}
                 </div>
@@ -149,14 +189,14 @@ export default function CalendarPage() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>New Event</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-center">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} data-testid="event-title-input" /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} data-testid="event-date-input" /></div>
               <div className="space-y-2"><Label>Type</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="event-type-select"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="payment">Payment</SelectItem>
                     <SelectItem value="meeting">Meeting</SelectItem>
@@ -166,9 +206,22 @@ export default function CalendarPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} /></div>
+            <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} data-testid="event-description-input" /></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button></DialogFooter>
+          <DialogFooter className="flex justify-between">
+            {editingEvent && (
+              <Button variant="destructive" size="sm" onClick={() => handleDelete(editingEvent.id)} data-testid="event-delete-btn">
+                <Trash2 className="h-4 w-4 mr-1" />Delete
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" onClick={() => { setDialogOpen(false); setEditingEvent(null); }}>Cancel</Button>
+              <Button onClick={handleSave} disabled={saving} data-testid="event-save-btn">
+                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {editingEvent ? 'Save Changes' : 'Create'}
+              </Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

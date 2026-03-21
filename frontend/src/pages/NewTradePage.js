@@ -11,6 +11,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { ArrowLeft, Save, Loader2, Briefcase, User } from 'lucide-react';
 import { toast } from 'sonner';
 
+function DateInput({ value, onChange, ...props }) {
+  const toDisplay = (iso) => {
+    if (!iso) return '';
+    const parts = iso.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return iso;
+  };
+  const toISO = (display) => {
+    const parts = display.replace(/[^0-9/]/g, '').split('/');
+    if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return null;
+  };
+  const [text, setText] = useState(toDisplay(value));
+  useEffect(() => { setText(toDisplay(value)); }, [value]);
+  const handleChange = (e) => {
+    let v = e.target.value.replace(/[^0-9/]/g, '');
+    if (v.length === 2 && !v.includes('/')) v += '/';
+    if (v.length === 5 && v.split('/').length === 2) v += '/';
+    if (v.length > 10) v = v.slice(0, 10);
+    setText(v);
+    const iso = toISO(v);
+    if (iso) onChange(iso);
+    else if (v === '') onChange('');
+  };
+  return <Input {...props} value={text} onChange={handleChange} placeholder="dd/mm/yyyy" />;
+}
+
 const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF', 'FAS', 'CIP', 'DAP', 'DPU', 'DDP'];
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'TRY'];
 
@@ -178,7 +207,7 @@ export default function NewTradePage() {
         <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Contract Date</Label>
-            <Input type="date" value={form.contractDate} onChange={(e) => set('contractDate', e.target.value)} />
+            <DateInput value={form.contractDate} onChange={(v) => set('contractDate', v)} />
           </div>
           <div className="space-y-2">
             <Label>Contract Number</Label>
@@ -338,11 +367,11 @@ export default function NewTradePage() {
           </div>
           <div className="space-y-2">
             <Label>Shipment Window Start</Label>
-            <Input type="date" value={form.shipmentWindowStart} onChange={(e) => set('shipmentWindowStart', e.target.value)} />
+            <DateInput value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
           </div>
           <div className="space-y-2">
             <Label>Shipment Window End</Label>
-            <Input type="date" value={form.shipmentWindowEnd} onChange={(e) => set('shipmentWindowEnd', e.target.value)} />
+            <DateInput value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
           </div>
           <div className="space-y-2">
             <Label>Vessel Name</Label>

@@ -360,21 +360,11 @@ export default function TradesPage() {
 
       {/* Trade Detail Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto [&>button.absolute]:hidden">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <DialogTitle className="text-2xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
-                {selectedTrade && <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge>}
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" data-testid="view-trade-detail-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}`); }}>
-                  View Full
-                </Button>
-                <Button size="sm" variant="outline" data-testid="edit-trade-btn" onClick={() => { setModalOpen(false); navigate(`/trades/${selectedTrade.id}/edit`); }}>
-                  <Pencil className="h-3.5 w-3.5 mr-1" />Edit
-                </Button>
-              </div>
+            <div className="flex items-center gap-3">
+              <DialogTitle className="text-2xl">{selectedTrade?.pirContractNumber || selectedTrade?.referenceNumber || 'Trade Details'}</DialogTitle>
+              {selectedTrade && <Badge className={TRADE_STATUS_CONFIG[selectedTrade.status]?.color || ''}>{TRADE_STATUS_CONFIG[selectedTrade.status]?.label}</Badge>}
             </div>
           </DialogHeader>
           {selectedTrade && (
@@ -440,6 +430,9 @@ export default function TradesPage() {
                   </div>
                 </div>
               )}
+              <div className="flex justify-end pt-4">
+                <Button variant="outline" onClick={() => setModalOpen(false)}>Close</Button>
+              </div>
             </div>
           )}
         </DialogContent>

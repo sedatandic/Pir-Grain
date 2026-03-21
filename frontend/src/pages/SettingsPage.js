@@ -8,7 +8,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 
@@ -21,6 +21,11 @@ export default function SettingsPage() {
   const [surveyors, setSurveyors] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
+  const [pwdUserId, setPwdUserId] = useState(null);
+  const [pwdUserName, setPwdUserName] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -66,6 +71,18 @@ export default function SettingsPage() {
 
   const handleDelete = async (type, id) => {
     try { await api.delete(`/api/${type}/${id}`); toast.success('Deleted'); fetchAll(); } catch (err) { toast.error('Failed'); }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword || newPassword.length < 4) { toast.error('Password must be at least 4 characters'); return; }
+    setPwdSaving(true);
+    try {
+      await api.put(`/api/users/${pwdUserId}`, { password: newPassword });
+      toast.success(`Password changed for ${pwdUserName}`);
+      setPwdDialogOpen(false);
+      setNewPassword('');
+    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to change password'); }
+    finally { setPwdSaving(false); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -140,7 +157,7 @@ export default function SettingsPage() {
             <TabsContent value="users">
               <div className="flex justify-between mb-4"><h3 className="font-semibold">Users ({users.length})</h3><Button size="sm" onClick={() => openAdd('users', { name: '', username: '', email: '', whatsapp: '', password: '', role: 'user' })}><Plus className="h-3.5 w-3.5 mr-1" />Add User</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Username</TableHead><TableHead>Email</TableHead><TableHead>WhatsApp</TableHead><TableHead>Role</TableHead><TableHead>Admin Status</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {users.map(u => <TableRow key={u.id}><TableCell className="font-medium">{u.name || '-'}</TableCell><TableCell>{u.username}</TableCell><TableCell>{u.email || '-'}</TableCell><TableCell>{u.whatsapp || '-'}</TableCell><TableCell><Badge variant="secondary" className="capitalize">{u.role || 'user'}</Badge></TableCell><TableCell><Badge className="bg-green-100 text-green-800">Active</Badge></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('users'); setDialogForm({ name: u.name || '', username: u.username || '', email: u.email || '', whatsapp: u.whatsapp || '', role: u.role || 'user', _editId: u.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('users', u.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+                {users.map(u => <TableRow key={u.id}><TableCell className="font-medium">{u.name || '-'}</TableCell><TableCell>{u.username}</TableCell><TableCell>{u.email || '-'}</TableCell><TableCell>{u.whatsapp || '-'}</TableCell><TableCell><Badge variant="secondary" className="capitalize">{u.role || 'user'}</Badge></TableCell><TableCell><Badge className="bg-green-100 text-green-800">Active</Badge></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" title="Change Password" onClick={() => { setPwdUserId(u.id); setPwdUserName(u.name || u.username); setNewPassword(''); setPwdDialogOpen(true); }}><KeyRound className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('users'); setDialogForm({ name: u.name || '', username: u.username || '', email: u.email || '', whatsapp: u.whatsapp || '', role: u.role || 'user', _editId: u.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('users', u.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
           </Tabs>
@@ -176,6 +193,23 @@ export default function SettingsPage() {
             ))}
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{dialogForm._editId ? 'Save' : 'Add'}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={pwdDialogOpen} onOpenChange={setPwdDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Change Password</DialogTitle><DialogDescription>Set a new password for {pwdUserName}.</DialogDescription></DialogHeader>
+          <div className="space-y-3 py-4">
+            <div className="space-y-2">
+              <Label>New Password</Label>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPwdDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleChangePassword} disabled={pwdSaving}>{pwdSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Change Password</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

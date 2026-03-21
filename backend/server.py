@@ -906,6 +906,8 @@ def delete_user(user_id: str, user=Depends(get_current_user)):
 
 @app.put("/api/users/{user_id}")
 def update_user(user_id: str, body: dict, user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can update users")
     update_fields = {}
     for field in ["name", "email", "whatsapp", "role", "username"]:
         if field in body and body[field] is not None:

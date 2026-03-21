@@ -136,7 +136,7 @@ export default function TradesPage() {
               <TableRow key={trade.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/trades/${trade.id}`)}>
                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                   <Select value={trade.status} onValueChange={(v) => handleStatusChange(trade.id, v)}>
-                    <SelectTrigger className="w-full h-8">
+                    <SelectTrigger className="w-full h-8 justify-center">
                       <Badge className={`${TRADE_STATUS_CONFIG[trade.status]?.color || 'bg-muted text-muted-foreground'} status-badge truncate`}>
                         {(TRADE_STATUS_CONFIG[trade.status]?.label || trade.status).toUpperCase()}
                       </Badge>

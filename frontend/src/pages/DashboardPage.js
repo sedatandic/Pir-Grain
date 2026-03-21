@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -17,22 +17,22 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [trades, setTrades] = useState([]);
-  const [partners, setPartners] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, eventsRes, tradesRes, partnersRes] = await Promise.all([
+        const [statsRes, eventsRes, tradesRes, invoicesRes] = await Promise.all([
           api.get('/api/trades/stats/overview'),
           api.get('/api/events'),
           api.get('/api/trades'),
-          api.get('/api/partners'),
+          api.get('/api/invoices'),
         ]);
         setStats(statsRes.data);
         setEvents(eventsRes.data);
         setTrades(tradesRes.data);
-        setPartners(partnersRes.data);
+        setInvoices(invoicesRes.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -49,8 +49,26 @@ export default function DashboardPage() {
         const d = parseISO(e.date);
         return isAfter(d, today) || format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
       } catch { return false; }
-    }).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 5);
+    }).sort((a, b) => new Date(a.date) - new Date(b.date));
   }, [events]);
+
+  const pendingInvoices = useMemo(() => {
+    return invoices.filter(i => i.status === 'pending').sort((a, b) => {
+      try { return new Date(a.dueDate) - new Date(b.dueDate); } catch { return 0; }
+    });
+  }, [invoices]);
+
+  const upcomingItems = useMemo(() => {
+    const items = [];
+    pendingInvoices.forEach(inv => {
+      items.push({ id: inv.id, type: 'invoice', title: `Invoice ${inv.invoiceNumber} - ${inv.vendorName}`, subtitle: `${inv.currency} ${inv.amount?.toLocaleString()}`, date: inv.dueDate, icon: 'payment' });
+    });
+    upcomingEvents.forEach(evt => {
+      items.push({ id: evt.id, type: 'event', title: evt.title, subtitle: evt.type, date: evt.date, icon: evt.type });
+    });
+    items.sort((a, b) => { try { return new Date(a.date) - new Date(b.date); } catch { return 0; } });
+    return items;
+  }, [pendingInvoices, upcomingEvents]);
 
   const completionRate = stats ? stats.completionRate : 0;
   const recentTrades = trades.slice(0, 5);
@@ -58,41 +76,13 @@ export default function DashboardPage() {
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="dashboard-page">
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden" data-testid="kpi-ongoing-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Events</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
-              <CalendarDays className="h-5 w-5 text-purple-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{upcomingEvents.length}</div>
-            {upcomingEvents.length > 0 ? (
-              <div className="mt-1 text-xs text-muted-foreground truncate">Next: {upcomingEvents[0].title}</div>
-            ) : (
-              <div className="mt-1 text-xs text-muted-foreground">No upcoming events</div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Trades</CardTitle>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">
-              <CheckCircle2 className="h-5 w-5 text-secondary" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{stats?.completedTrades || 0}</div>
-            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
-          </CardContent>
-        </Card>
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Trades</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Ongoing Trades</CardTitle>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100">
               <Ship className="h-5 w-5 text-primary" />
             </div>
@@ -102,7 +92,7 @@ export default function DashboardPage() {
             <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden">
+        <Card className="relative overflow-hidden" data-testid="kpi-pending-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Trades</CardTitle>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100">
@@ -114,44 +104,86 @@ export default function DashboardPage() {
             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
+        <Card className="relative overflow-hidden" data-testid="kpi-completed-trades">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed Trades</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">
+              <CheckCircle2 className="h-5 w-5 text-secondary" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{stats?.completedTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden" data-testid="kpi-upcoming-payments">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Upcoming Payments & Events</CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-100">
+              <CalendarDays className="h-5 w-5 text-purple-600" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{upcomingItems.length}</div>
+            {upcomingItems.length > 0 ? (
+              <div className="mt-1 text-xs text-muted-foreground truncate">Next: {upcomingItems[0].title}</div>
+            ) : (
+              <div className="mt-1 text-xs text-muted-foreground">No upcoming items</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Upcoming Events */}
-      <Card>
+      {/* Upcoming Payments & Events Detail */}
+      <Card data-testid="upcoming-payments-events">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Upcoming Events</CardTitle>
-              <CardDescription>Conferences, Meetings, and Payments</CardDescription>
+              <CardTitle className="text-lg">Upcoming Payments & Events</CardTitle>
+              <CardDescription>Due invoices, meetings, and conferences</CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
           </div>
         </CardHeader>
         <CardContent>
-          {upcomingEvents.length === 0 ? (
+          {upcomingItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <CalendarDays className="h-12 w-12 text-muted-foreground/30 mb-3" />
-              <p className="text-sm text-muted-foreground">No upcoming events scheduled</p>
+              <p className="text-sm text-muted-foreground">No upcoming payments or events</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {upcomingEvents.map((event) => (
-                <div key={event.id} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30">
+              {upcomingItems.map((item) => (
+                <div key={`${item.type}-${item.id}`} className="flex items-center gap-4 p-3 rounded-lg border bg-muted/30">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                    event.type === 'payment' ? 'bg-green-100' : event.type === 'meeting' ? 'bg-blue-100' : event.type === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
+                    item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' :
+                    item.icon === 'meeting' ? 'bg-blue-100' :
+                    item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
                   }`}>
-                    {event.type === 'payment' ? <DollarSign className="h-5 w-5 text-green-600" /> :
-                     event.type === 'meeting' ? <Users className="h-5 w-5 text-blue-600" /> :
-                     event.type === 'conference' ? <Building className="h-5 w-5 text-purple-600" /> :
+                    {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-5 w-5 text-green-600" /> :
+                     item.icon === 'meeting' ? <Users className="h-5 w-5 text-blue-600" /> :
+                     item.icon === 'conference' ? <Building className="h-5 w-5 text-purple-600" /> :
                      <CalendarDays className="h-5 w-5 text-gray-600" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{event.title}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{event.type}</p>
+                    <p className="text-sm font-medium truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {item.type === 'invoice' ? `Due payment - ${item.subtitle}` : item.subtitle}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{(() => { try { return format(parseISO(event.date), 'MMM d'); } catch { return ''; }})()}</p>
-                    <p className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(event.date), 'yyyy'); } catch { return ''; }})()}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={
+                      item.type === 'invoice' ? 'border-green-200 text-green-700 bg-green-50' :
+                      item.icon === 'meeting' ? 'border-blue-200 text-blue-700 bg-blue-50' :
+                      item.icon === 'conference' ? 'border-purple-200 text-purple-700 bg-purple-50' :
+                      'border-gray-200 text-gray-700 bg-gray-50'
+                    }>
+                      {item.type === 'invoice' ? 'Invoice' : item.subtitle}
+                    </Badge>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{(() => { try { return format(parseISO(item.date), 'MMM d'); } catch { return ''; }})()}</p>
+                      <p className="text-xs text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'yyyy'); } catch { return ''; }})()}</p>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -161,7 +193,7 @@ export default function DashboardPage() {
       </Card>
 
       {/* Trade Progress */}
-      <Card>
+      <Card data-testid="trade-progress">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>

@@ -1,15 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 
 const PIR_GREEN = '#1B7A3D';
-const PIR_GREEN_LIGHT = 'rgba(27, 122, 61, 0.08)';
-const PIR_GREEN_ACTIVE = 'rgba(27, 122, 61, 0.14)';
 
 const mainNavItems = [
   { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'user'] },
@@ -24,6 +22,7 @@ const mainNavItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return document.documentElement.classList.contains('dark');
@@ -32,6 +31,18 @@ export default function Sidebar() {
   });
   const location = useLocation();
   const { user } = useAuth();
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
+  // Listen for mobile toggle events from AppLayout header
+  useEffect(() => {
+    const handler = () => setMobileOpen(prev => !prev);
+    window.addEventListener('toggle-mobile-sidebar', handler);
+    return () => window.removeEventListener('toggle-mobile-sidebar', handler);
+  }, []);
 
   const toggleDarkMode = () => {
     const next = !darkMode;
@@ -55,13 +66,24 @@ export default function Sidebar() {
   const userRole = user?.role || 'user';
 
   return (
-    <aside
-      data-testid="app-sidebar"
-      className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col z-50 bg-card border-r border-border transition-all duration-200',
-        collapsed ? 'w-[60px]' : 'w-[250px]'
+    <>
+      {/* Mobile overlay backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+          data-testid="sidebar-mobile-overlay"
+        />
       )}
-    >
+      <aside
+        data-testid="app-sidebar"
+        className={cn(
+          'fixed left-0 top-0 h-screen flex flex-col z-50 bg-card border-r border-border transition-all duration-200',
+          collapsed ? 'w-[60px]' : 'w-[250px]',
+          'max-md:w-[250px]',
+          mobileOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'
+        )}
+      >
       {/* Logo + Collapse Toggle */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-border">
         {collapsed ? (
@@ -141,5 +163,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

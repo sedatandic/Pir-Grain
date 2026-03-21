@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../lib/auth';
 import Sidebar from './Sidebar';
 import { Toaster } from 'sonner';
-import { Bell, LogOut, ChevronDown, CheckCheck } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, CheckCheck, Menu } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
@@ -88,9 +88,19 @@ export default function AppLayout() {
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" richColors />
       <Sidebar />
-      <div className={cn('transition-all duration-200', sidebarCollapsed ? 'ml-[60px]' : 'ml-[250px]')}>
+      <div className={cn('transition-all duration-200', sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[250px]')}>
         {/* Header Bar */}
         <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
+          {/* Mobile hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            data-testid="mobile-menu-button"
+            onClick={() => window.dispatchEvent(new Event('toggle-mobile-sidebar'))}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <div className="flex-1" />
 
           {/* Notifications Bell */}
@@ -167,7 +177,7 @@ export default function AppLayout() {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="p-6 animate-fade-in">
+        <main className="p-3 md:p-6 animate-fade-in">
           <Outlet />
         </main>
       </div>

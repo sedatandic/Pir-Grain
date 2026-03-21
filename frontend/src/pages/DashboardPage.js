@@ -79,49 +79,49 @@ export default function DashboardPage() {
     <div className="space-y-6" data-testid="dashboard-page">
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="relative overflow-hidden p-4" data-testid="kpi-ongoing-trades">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-ongoing-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
-              <Ship className="h-5 w-5 text-primary" />
+            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-blue-100">
+              <Ship className="h-4 w-4 md:h-5 md:w-5 text-primary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-6xl font-bold mt-4">{stats?.activeTrades || 0}</div>
-            <div className="mt-4 flex items-center gap-1 text-sm text-secondary"><TrendingUp className="h-3.5 w-3.5" /><span>In transit</span></div>
+            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.activeTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-4" data-testid="kpi-pending-trades">
+        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-pending-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-muted-foreground">Pending Trades</CardTitle>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100">
-              <Clock className="h-5 w-5 text-amber-600" />
+            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Pending Trades</CardTitle>
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-amber-100">
+              <Clock className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-6xl font-bold mt-4">{stats?.pendingTrades || 0}</div>
-            <div className="mt-4 flex items-center gap-1 text-sm text-muted-foreground"><AlertCircle className="h-3.5 w-3.5" /><span>Awaiting confirmation</span></div>
+            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.pendingTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-muted-foreground"><AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-4" data-testid="kpi-completed-trades">
+        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-completed-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-base font-semibold text-muted-foreground">Completed Trades</CardTitle>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
-              <CheckCircle2 className="h-5 w-5 text-secondary" />
+            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Completed Trades</CardTitle>
+            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-green-50">
+              <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-secondary" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-6xl font-bold mt-4">{stats?.completedTrades || 0}</div>
-            <div className="mt-4 flex items-center gap-1 text-sm text-secondary"><TrendingUp className="h-3.5 w-3.5" /><span>Increased from last month</span></div>
+            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.completedTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>Increased from last month</span></div>
           </CardContent>
         </Card>
       </div>
 
       {/* Upcoming Payments & Events - Right Side Summary */}
-      <div className="flex gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         {/* Trade Progress - Left */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Card data-testid="trade-progress">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -172,12 +172,12 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming Payments & Events - Right */}
-        <div className="w-96">
+        <div className="w-full md:w-96">
           <Card data-testid="upcoming-payments-events" className="h-full">
             <CardHeader className="pb-3">
               <div>
-                <CardTitle className="text-base whitespace-nowrap">Upcoming Payments & Events</CardTitle>
-                <CardDescription className="whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
+                <CardTitle className="text-base md:whitespace-nowrap">Upcoming Payments & Events</CardTitle>
+                <CardDescription className="md:whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
               </div>
             </CardHeader>
             <CardContent>

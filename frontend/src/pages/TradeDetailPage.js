@@ -184,9 +184,11 @@ export default function TradeDetailPage() {
           </div>
           <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
+        {activeTab !== 'documents' && (
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
           <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit B/L Details' : 'Edit Trade'}
         </Button>
+        )}
       </div>
 
       <Tabs defaultValue="summary" onValueChange={setActiveTab}>

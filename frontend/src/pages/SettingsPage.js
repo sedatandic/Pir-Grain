@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [ports, setPorts] = useState([]);
   const [surveyors, setSurveyors] = useState([]);
   const [users, setUsers] = useState([]);
+  const [disportAgents, setDisportAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
   const [pwdUserId, setPwdUserId] = useState(null);
@@ -31,10 +32,10 @@ export default function SettingsPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [co, or, po, su, us] = await Promise.all([
-        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'),
+      const [co, or, po, su, us, da] = await Promise.all([
+        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'),
       ]);
-      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data);
+      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, []);
 
@@ -116,6 +117,7 @@ export default function SettingsPage() {
               <TabsTrigger value="loading-ports"><Anchor className="h-3.5 w-3.5 mr-1" />Loading Ports</TabsTrigger>
               <TabsTrigger value="discharge-ports"><Ship className="h-3.5 w-3.5 mr-1" />Discharge Ports</TabsTrigger>
               <TabsTrigger value="surveyors"><Map className="h-3.5 w-3.5 mr-1" />Surveyors</TabsTrigger>
+              <TabsTrigger value="disport-agents"><Anchor className="h-3.5 w-3.5 mr-1" />Disport Agents</TabsTrigger>
               <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1" />Users</TabsTrigger>
             </TabsList>
 
@@ -153,6 +155,13 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Surveyors ({surveyors.length})</h3><Button size="sm" onClick={() => openAdd('surveyors', { name: '', countriesServed: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Surveyor</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Surveyor Name</TableHead><TableHead>Countries Served</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
                 {surveyors.map(s => <TableRow key={s.id}><TableCell className="font-medium">{s.name}</TableCell><TableCell><div className="flex flex-wrap gap-1">{(s.countriesServed || []).map((c, i) => <Badge key={i} variant="outline" className="text-xs">{c}</Badge>)}</div></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('surveyors', s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              </TableBody></Table></div>
+            </TabsContent>
+
+            <TabsContent value="disport-agents">
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Agent</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 

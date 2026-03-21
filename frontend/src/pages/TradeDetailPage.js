@@ -48,17 +48,20 @@ export default function TradeDetailPage() {
   const [blDialogOpen, setBlDialogOpen] = useState(false);
   const [blForm, setBlForm] = useState({});
   const [blSaving, setBlSaving] = useState(false);
+  const [disportAgents, setDisportAgents] = useState([]);
+  const [diUploading, setDiUploading] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [tradeRes, partRes, comRes, vesRes, surRes, portRes] = await Promise.all([
+        const [tradeRes, partRes, comRes, vesRes, surRes, portRes, daRes] = await Promise.all([
           api.get(`/api/trades/${tradeId}`),
           api.get('/api/partners'),
           api.get('/api/commodities'),
           api.get('/api/vessels'),
           api.get('/api/surveyors'),
           api.get('/api/ports'),
+          api.get('/api/disport-agents'),
         ]);
         setTrade(tradeRes.data);
         setPartners(partRes.data);
@@ -66,6 +69,7 @@ export default function TradeDetailPage() {
         setVessels(vesRes.data);
         setSurveyors(surRes.data);
         setPorts(portRes.data);
+        setDisportAgents(daRes.data);
         setDocChecks(tradeRes.data.docChecks || {});
       } catch (err) {
         toast.error('Failed to load trade');
@@ -104,6 +108,7 @@ export default function TradeDetailPage() {
       sellerSurveyor: trade.sellerSurveyor || '',
       buyerSurveyor: trade.buyerSurveyor || '',
       dischargeQuantity: trade.dischargeQuantity != null ? String(trade.dischargeQuantity) : '',
+      disportAgent: trade.disportAgent || '',
     });
     setBlDialogOpen(true);
   };
@@ -126,6 +131,7 @@ export default function TradeDetailPage() {
         sellerSurveyor: blForm.sellerSurveyor,
         buyerSurveyor: blForm.buyerSurveyor,
         dischargeQuantity: blForm.dischargeQuantity ? parseFloat(blForm.dischargeQuantity) : 0,
+        disportAgent: blForm.disportAgent,
       };
       const res = await api.put(`/api/trades/${tradeId}`, data);
       setTrade(res.data);
@@ -133,6 +139,28 @@ export default function TradeDetailPage() {
       setBlDialogOpen(false);
     } catch { toast.error('Failed to save B/L details'); }
     finally { setBlSaving(false); }
+  };
+
+  const toggleDiReceived = async (val) => {
+    try {
+      const res = await api.put(`/api/trades/${tradeId}`, { diReceived: val });
+      setTrade(res.data);
+      toast.success(val ? 'DI marked as received' : 'DI marked as not received');
+    } catch { toast.error('Failed to update'); }
+  };
+
+  const uploadDiDocument = async (file) => {
+    if (!file) return;
+    setDiUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await api.post(`/api/trades/${tradeId}/upload-di`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.get(`/api/trades/${tradeId}`);
+      setTrade(res.data);
+      toast.success('DI document uploaded');
+    } catch (err) { toast.error(err.response?.data?.detail || 'Upload failed'); }
+    finally { setDiUploading(false); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -243,7 +271,48 @@ export default function TradeDetailPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity (Mts)</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
+            </CardContent>
+          </Card>
+
+          {/* Documentary Instruction */}
+          <Card className="mt-4">
+            <CardHeader className="pb-3"><CardTitle className="text-base">Documentary Instruction</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">DI Received?</span>
+                <div className="flex gap-2">
+                  <Button size="sm" variant={trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(true)}>Yes</Button>
+                  <Button size="sm" variant={!trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(false)}>No</Button>
+                </div>
+              </div>
+              {trade.diReceived && (
+                <div className="space-y-3">
+                  {trade.diDocumentFilename && (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
+                        <p className="text-xs text-muted-foreground">Uploaded document</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => window.open(`${api.defaults.baseURL}/api/trades/${tradeId}/download-di`, '_blank')}>Download</Button>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      data-testid="di-file-upload"
+                      className="max-w-sm"
+                      onChange={(e) => uploadDiDocument(e.target.files[0])}
+                    />
+                    {diUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Accepted formats: PDF, Word (.doc, .docx)</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -356,6 +425,19 @@ export default function TradeDetailPage() {
                   <Input value={blForm.buyerSurveyor || ''} onChange={(e) => setBlForm({...blForm, buyerSurveyor: e.target.value})} placeholder="Type surveyor name" />
                 )}
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Disport Agent</Label>
+              <Select value={blForm.disportAgent || '_custom'} onValueChange={(v) => setBlForm({...blForm, disportAgent: v === '_custom' ? '' : v})}>
+                <SelectTrigger><SelectValue placeholder="Select disport agent" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_custom">Custom...</SelectItem>
+                  {disportAgents.sort((a, b) => a.name.localeCompare(b.name)).map(a => <SelectItem key={a.id} value={a.name}>{a.name}{a.port ? ` (${a.port})` : ''}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {(!blForm.disportAgent || !disportAgents.some(a => a.name === blForm.disportAgent)) && (
+                <Input value={blForm.disportAgent || ''} onChange={(e) => setBlForm({...blForm, disportAgent: e.target.value})} placeholder="Type agent name" />
+              )}
             </div>
           </div>
           <DialogFooter>

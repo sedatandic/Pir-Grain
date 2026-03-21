@@ -2,8 +2,10 @@ from datetime import datetime
 from typing import Optional
 import random
 import string
+import os
+import base64
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from bson import ObjectId
 
 from database import (
@@ -157,3 +159,36 @@ def delete_trade(trade_id: str, user=Depends(non_accountant)):
         raise HTTPException(status_code=404, detail="Trade not found")
     create_notification("trade", f"Trade deleted: {t.get('referenceNumber', trade_id) if t else trade_id}", trade_id, user.get("username"))
     return {"message": "Trade deleted"}
+
+
+UPLOAD_DIR = "/app/backend/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/trades/{trade_id}/upload-di")
+async def upload_di_document(trade_id: str, file: UploadFile = File(...), user=Depends(non_accountant)):
+    if not file.filename.lower().endswith(('.pdf', '.doc', '.docx')):
+        raise HTTPException(status_code=400, detail="Only PDF and Word documents are allowed")
+    ext = file.filename.rsplit('.', 1)[-1]
+    filename = f"di_{trade_id}.{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    trades_col.update_one(
+        {"_id": ObjectId(trade_id)},
+        {"$set": {"diDocumentFilename": file.filename, "diDocumentPath": filename}}
+    )
+    return {"filename": file.filename, "path": filename}
+
+
+@router.get("/trades/{trade_id}/download-di")
+def download_di_document(trade_id: str, user=Depends(non_accountant)):
+    from fastapi.responses import FileResponse
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("diDocumentPath"):
+        raise HTTPException(status_code=404, detail="No DI document found")
+    filepath = os.path.join(UPLOAD_DIR, trade["diDocumentPath"])
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(filepath, filename=trade.get("diDocumentFilename", "di_document"), media_type="application/octet-stream")

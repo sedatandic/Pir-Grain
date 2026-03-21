@@ -90,6 +90,12 @@ class SurveyorCreate(BaseModel):
     countriesServed: Optional[list] = []
 
 
+class DisportAgentCreate(BaseModel):
+    name: str
+    port: Optional[str] = None
+    contact: Optional[str] = None
+
+
 class CommodityCreate(BaseModel):
     name: str
     code: Optional[str] = None

@@ -8,7 +8,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 
@@ -83,10 +83,11 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="pt-6">
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 flex-wrap">
               <TabsTrigger value="commodities"><Wheat className="h-3.5 w-3.5 mr-1" />Commodities</TabsTrigger>
               <TabsTrigger value="origins"><Globe className="h-3.5 w-3.5 mr-1" />Origins</TabsTrigger>
-              <TabsTrigger value="ports"><Anchor className="h-3.5 w-3.5 mr-1" />Ports</TabsTrigger>
+              <TabsTrigger value="loading-ports"><Anchor className="h-3.5 w-3.5 mr-1" />Loading Ports</TabsTrigger>
+              <TabsTrigger value="discharge-ports"><Ship className="h-3.5 w-3.5 mr-1" />Discharge Ports</TabsTrigger>
               <TabsTrigger value="surveyors"><Map className="h-3.5 w-3.5 mr-1" />Surveyors</TabsTrigger>
               <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1" />Users</TabsTrigger>
             </TabsList>
@@ -105,17 +106,26 @@ export default function SettingsPage() {
               </TableBody></Table></div>
             </TabsContent>
 
-            <TabsContent value="ports">
-              <div className="flex justify-between mb-4"><h3 className="font-semibold">Ports ({ports.length})</h3><Button size="sm" onClick={() => openAdd('ports', { name: '', country: '', countryCode: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
+            <TabsContent value="loading-ports">
+              {(() => { const loadingPorts = ports.filter(p => p.type === 'loading'); return (<>
+              <div className="flex justify-between mb-4"><h3 className="font-semibold">Loading Ports ({loadingPorts.length})</h3><Button size="sm" onClick={() => openAdd('ports', { name: '', type: 'loading', country: '', countryCode: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Port Name</TableHead><TableHead>Country</TableHead><TableHead>Country Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {ports.map(p => <TableRow key={p.id}><TableCell className="font-medium">{p.name}</TableCell><TableCell>{p.country || '-'}</TableCell><TableCell><Badge variant="secondary">{p.countryCode || '-'}</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('ports', p.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
-              </TableBody></Table></div>
+                {loadingPorts.map(p => <TableRow key={p.id}><TableCell className="font-medium">{p.name}</TableCell><TableCell>{p.country || '-'}</TableCell><TableCell><Badge variant="secondary">{p.countryCode || '-'}</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('ports', p.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              </TableBody></Table></div></>); })()}
+            </TabsContent>
+
+            <TabsContent value="discharge-ports">
+              {(() => { const dischargePorts = ports.filter(p => p.type === 'discharge'); return (<>
+              <div className="flex justify-between mb-4"><h3 className="font-semibold">Discharge Ports ({dischargePorts.length})</h3><Button size="sm" onClick={() => openAdd('ports', { name: '', type: 'discharge', country: '', countryCode: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Port Name</TableHead><TableHead>Country</TableHead><TableHead>Country Code</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {dischargePorts.map(p => <TableRow key={p.id}><TableCell className="font-medium">{p.name}</TableCell><TableCell>{p.country || '-'}</TableCell><TableCell><Badge variant="secondary">{p.countryCode || '-'}</Badge></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('ports', p.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              </TableBody></Table></div></>); })()}
             </TabsContent>
 
             <TabsContent value="surveyors">
-              <div className="flex justify-between mb-4"><h3 className="font-semibold">Surveyors ({surveyors.length})</h3><Button size="sm" onClick={() => openAdd('surveyors', { name: '', contact: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Contact</TableHead><TableHead className="w-[50px]"></TableHead></TableRow></TableHeader><TableBody>
-                {surveyors.map(s => <TableRow key={s.id}><TableCell className="font-medium">{s.name}</TableCell><TableCell>{s.contact || '-'}</TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('surveyors', s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
+              <div className="flex justify-between mb-4"><h3 className="font-semibold">Surveyors ({surveyors.length})</h3><Button size="sm" onClick={() => openAdd('surveyors', { name: '', countriesServed: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Surveyor Name</TableHead><TableHead>Countries Served</TableHead><TableHead className="w-[50px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {surveyors.map(s => <TableRow key={s.id}><TableCell className="font-medium">{s.name}</TableCell><TableCell><div className="flex flex-wrap gap-1">{(s.countriesServed || []).map((c, i) => <Badge key={i} variant="outline" className="text-xs">{c}</Badge>)}</div></TableCell><TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('surveyors', s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 

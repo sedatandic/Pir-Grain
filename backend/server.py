@@ -262,21 +262,42 @@ def seed_data():
     # Always reseed ports with the canonical list
     ports_col.delete_many({})
     ports = [
-        {"name": "Azov", "country": "Russia", "countryCode": "RU"},
-        {"name": "Bagaevskaya", "country": "Russia", "countryCode": "RU"},
-        {"name": "Chornomorsk", "country": "Ukraine", "countryCode": "UA"},
-        {"name": "Giurgiulești", "country": "Moldova", "countryCode": "MOL"},
-        {"name": "Izmail", "country": "Ukraine", "countryCode": "UA"},
-        {"name": "Manfredonia", "country": "Italy", "countryCode": "IT"},
-        {"name": "Molfetta", "country": "Italy", "countryCode": "IT"},
-        {"name": "Odessa", "country": "Ukraine", "countryCode": "UA"},
-        {"name": "Pivdennyi", "country": "Ukraine", "countryCode": "UA"},
-        {"name": "Ravenna", "country": "Italy", "countryCode": "IT"},
-        {"name": "Reni", "country": "Ukraine", "countryCode": "UA"},
-        {"name": "Rostov", "country": "Russia", "countryCode": "RU"},
-        {"name": "Taganrog", "country": "Russia", "countryCode": "RU"},
-        {"name": "Trieste", "country": "Italy", "countryCode": "IT"},
-        {"name": "Yeisk", "country": "Russia", "countryCode": "RU"},
+        # Loading Ports
+        {"name": "Azov", "type": "loading", "country": "Russia", "countryCode": "RU"},
+        {"name": "Bagaevskaya", "type": "loading", "country": "Russia", "countryCode": "RU"},
+        {"name": "Chornomorsk", "type": "loading", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Giurgiulești", "type": "loading", "country": "Moldova", "countryCode": "MOL"},
+        {"name": "Izmail", "type": "loading", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Manfredonia", "type": "loading", "country": "Italy", "countryCode": "IT"},
+        {"name": "Molfetta", "type": "loading", "country": "Italy", "countryCode": "IT"},
+        {"name": "Odessa", "type": "loading", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Pivdennyi", "type": "loading", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Ravenna", "type": "loading", "country": "Italy", "countryCode": "IT"},
+        {"name": "Reni", "type": "loading", "country": "Ukraine", "countryCode": "UA"},
+        {"name": "Rostov", "type": "loading", "country": "Russia", "countryCode": "RU"},
+        {"name": "Taganrog", "type": "loading", "country": "Russia", "countryCode": "RU"},
+        {"name": "Trieste", "type": "loading", "country": "Italy", "countryCode": "IT"},
+        {"name": "Yeisk", "type": "loading", "country": "Russia", "countryCode": "RU"},
+        # Discharge Ports
+        {"name": "Adana Sanko", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Alexandria", "type": "discharge", "country": "Egypt", "countryCode": "EG"},
+        {"name": "Bandırma", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Bizerte", "type": "discharge", "country": "Tunisia", "countryCode": "TN"},
+        {"name": "Catania", "type": "discharge", "country": "Italy", "countryCode": "IT"},
+        {"name": "Ceyhan Toros", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Famagusta", "type": "discharge", "country": "Cyprus", "countryCode": "CY"},
+        {"name": "Gemlik", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Giresun", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "İskenderun", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "İzmir", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "İzmit", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Karasu", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Mersin", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Pozzallo", "type": "discharge", "country": "Italy", "countryCode": "IT"},
+        {"name": "Samsun", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Sfax", "type": "discharge", "country": "Tunisia", "countryCode": "TN"},
+        {"name": "Tekirdağ", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
+        {"name": "Trabzon", "type": "discharge", "country": "Türkiye", "countryCode": "TR"},
     ]
     for p in ports:
         p["createdAt"] = datetime.utcnow()
@@ -312,15 +333,27 @@ def seed_data():
             v["createdAt"] = datetime.utcnow()
             vessels_col.insert_one(v)
 
-    if surveyors_col.count_documents({}) == 0:
-        surveyors = [
-            {"name": "SGS Turkey", "contact": "mehmet@sgs.com.tr", "countriesServed": ["Turkey", "Bulgaria"]},
-            {"name": "Bureau Veritas", "contact": "jean@bureauveritas.com", "countriesServed": ["France", "Romania"]},
-            {"name": "Intertek", "contact": "contact@intertek.com", "countriesServed": ["Russia", "Ukraine", "Kazakhstan"]},
-        ]
-        for s in surveyors:
-            s["createdAt"] = datetime.utcnow()
-            surveyors_col.insert_one(s)
+    # Always reseed surveyors with the canonical list
+    surveyors_col.delete_many({})
+    surveyors = [
+        {"name": "Baltic Control", "countriesServed": ["Russia"]},
+        {"name": "Bureau Veritas", "countriesServed": ["Russia", "Turkey"]},
+        {"name": "Control Union", "countriesServed": ["Turkey", "Ukraine", "Russia", "Romania", "Bulgaria"]},
+        {"name": "Cotecna", "countriesServed": ["Turkey", "Ukraine", "Russia", "Italy"]},
+        {"name": "General Survey", "countriesServed": ["Kazakhstan", "Turkey", "Ukraine", "Russia"]},
+        {"name": "GSP Worldwide", "countriesServed": ["Italy"]},
+        {"name": "Inspectorate", "countriesServed": ["Italy"]},
+        {"name": "Intertek", "countriesServed": ["Turkey", "Russia", "Ukraine"]},
+        {"name": "Navi Mar", "countriesServed": ["Ukraine"]},
+        {"name": "Russian Register", "countriesServed": ["Russia"]},
+        {"name": "SGS", "countriesServed": ["Ukraine", "Turkey", "Russia", "Italy", "Bulgaria", "Romania", "Kazakhstan"]},
+        {"name": "Top Logistic", "countriesServed": ["Russia"]},
+        {"name": "TopFrame", "countriesServed": ["Russia"]},
+        {"name": "Viglienzone", "countriesServed": ["Italy"]},
+    ]
+    for s in surveyors:
+        s["createdAt"] = datetime.utcnow()
+        surveyors_col.insert_one(s)
 
     if trades_col.count_documents({}) == 0:
         buyers = list(partners_col.find({"type": "buyer"}))

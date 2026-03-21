@@ -4,6 +4,7 @@
 - **Completed:** Clone the “PIR GRAIN & PULSES” commodity trading dashboard to match the **GitHub reference implementation** (`sedatandic/v0-commodity-trading-dashboard`) in both UX and functionality.
 - **Completed:** Deliver a working full-stack app with seeded data, auth, CRUD workflows, and dashboard analytics.
 - **Completed:** Ensure all routes, sidebar/header layout, categorized trade pipeline, and core interactions align with the reference app.
+- **Completed (P0 bugfix):** Fix **logo visibility** on **Login page** and **Sidebar** so the full “PIR Grain and Pulses” logo is displayed correctly (verified via UI screenshots; uses `object-contain` + appropriate sizing).
 - **Current objective:** Move from “feature-complete clone” to **production-friendly hardening** (data integrity, RBAC, document status tracking, deeper reporting, and operational polish) while preserving the reference look/feel.
 
 ## 2) Implementation Steps
@@ -95,6 +96,12 @@ A full rewrite was performed to match the GitHub repository’s information arch
   - Frontend: **100%**
   - Integration: **100%**
 
+### Phase 3.5: UX/Branding Bugfixes — **Completed**
+- ✅ **P0 Logo visibility fix**
+  - Login: logo displays fully and consistently.
+  - Sidebar: logo displays fully in expanded and collapsed states.
+  - Verification: confirmed visually with updated UI screenshots.
+
 ### Phase 4: Production Hardening + Data Quality + RBAC — **Next**
 **User stories (Hardening)**
 1. As an admin, I want RBAC enforcement (admin/accountant/user) so access is controlled.
@@ -103,35 +110,39 @@ A full rewrite was performed to match the GitHub repository’s information arch
 4. As a user, I want audit-friendly trade details (change history) so compliance is easier.
 5. As a user, I want richer reports (date ranges, counterparties, commodity/origin slicing) to analyze performance.
 
-**Planned enhancements**
-- Auth/RBAC
-  - Enforce permissions server-side for master data + user management + accounting.
-  - Add role-based navigation hiding/disabled states.
-- Data integrity
-  - Add DB indexes + unique constraints (`referenceNumber`, optional `companyCode`).
+**Planned enhancements (ordered)**
+- Auth/RBAC (P0)
+  - Enforce permissions **server-side** for master data + user management + accounting.
+  - Add role-based navigation gating (hide/disable) on the frontend.
+  - Add regression tests for RBAC rules.
+- Documents: real status tracking workflow (P1)
+  - Add per-document status (`missing/received/reviewed/approved` or similar) and timestamps.
+  - Support linking documents to trades by **type** (e.g., BL/Invoice/COA/etc.) and compute completeness.
+  - Update `/documents` UI from “matrix placeholder” to actionable per-trade/per-type status and upload actions.
+  - Add tests for document upload + status transitions.
+- Data integrity + performance (P1)
+  - Add DB indexes + unique constraints (Mongo indexes) for `referenceNumber` (and other high-cardinality fields as needed).
   - Add backend validation for numeric ranges (tolerance %, prices, quantities) and date coherence (shipment start <= end).
-- Documents
-  - Add per-document status tracking + upload/list UI to replace the current “matrix placeholder” state.
-  - Add linking documents to trades by type and “received” timestamp.
-- Trades
-  - Add optional enforcement of status transition ordering.
-  - Add pagination for large datasets.
-  - Add trade revision/audit log.
-- Accounting
+  - Add pagination for list endpoints (trades/partners/documents) to support growth.
+- Reports & exports (P2)
+  - Expand charts: monthly volume trend, completion trend, top sellers/buyers, total commission by month.
+  - Add filters (date range, status, counterparty, commodity, origin, ports) and export CSV.
+- Trades: auditability (P2)
+  - Add trade revision/audit log (who/when/what changed).
+  - Optional enforcement of status transition ordering.
+- Accounting (P2)
   - Tie invoices to trades (optional) + export CSV.
   - Add due/overdue auto-status.
-- Reports
-  - Expand charts: monthly volume trend, completion trend, top sellers/buyers, total commission by month.
-  - Add filters and downloadable summaries.
-- Testing
-  - Add regression tests for RBAC rules, document workflows, and reporting filters.
+- Testing & verification (continuous)
+  - Add regression tests for RBAC, document workflows, and reporting filters.
+  - Run another full E2E pass after Phase 4 changes.
 
 ## 3) Next Actions
-1. Implement RBAC end-to-end (backend enforcement + frontend gating).
-2. Add real document tracking: upload per type + per-trade completeness status.
-3. Add database constraints + indexes for reference integrity.
-4. Expand reports with filtering + export.
-5. Run another full E2E pass after Phase 4 hardening.
+1. **Implement RBAC end-to-end** (backend enforcement + frontend gating) and add RBAC regression coverage.
+2. Implement **real document tracking**: per-trade/per-type upload + status workflow + completeness signals in UI.
+3. Add **Mongo indexes/constraints** + stricter backend validation; introduce pagination where needed.
+4. Expand **reports** with filtering + CSV export.
+5. Run a full E2E/regression pass for Phase 4 hardening.
 
 ## 4) Success Criteria
 - ✅ All listed routes exist and are reachable from the sidebar; no dead navigation.
@@ -144,4 +155,5 @@ A full rewrite was performed to match the GitHub repository’s information arch
 - ✅ Calendar renders custom month grid and events can be created.
 - ✅ Commissions, Accounting, Reports, and Settings pages render correctly with seeded data.
 - ✅ One full E2E test run passes without critical bugs or broken flows.
+- ✅ **Logo is fully visible** on Login page and Sidebar (expanded + collapsed).
 - **Phase 4 success (next):** RBAC + data integrity constraints + document status workflow + richer reports, while preserving GitHub-reference UX consistency.

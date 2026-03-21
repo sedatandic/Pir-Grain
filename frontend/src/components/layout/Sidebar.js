@@ -46,14 +46,14 @@ export default function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-center px-4 py-4 border-b border-slate-200">
+      <div className="flex items-center justify-center px-3 py-3 border-b border-slate-200">
         {collapsed ? (
-          <img src="/pir-logo.jpg" alt="PIR" className="w-10 h-10 rounded-lg object-cover" />
+          <img src="/pir-logo.jpg" alt="PIR" className="w-10 h-10 object-contain" />
         ) : (
-          <div className="flex items-center gap-3">
-            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="w-11 h-11 rounded-lg object-cover flex-shrink-0" />
+          <div className="flex items-center gap-2.5">
+            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
             <div>
-              <h1 className="text-sm font-bold tracking-wide" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+              <h1 className="text-[13px] font-bold tracking-wide" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
               <p className="text-[9px] text-slate-400 tracking-wider">TRADING DASHBOARD</p>
             </div>
           </div>

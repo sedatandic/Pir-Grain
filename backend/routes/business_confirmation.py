@@ -6,7 +6,7 @@ from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.pdfbase import pdfmetrics
@@ -143,8 +143,10 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     def row(label, value, style=s_val):
         return [Paragraph(label, s_label), Paragraph(str(value), style)]
 
-    # Build data rows
+    # Build data rows — Date & Contract No as first row in the table
     data = [
+        row("DATE", contract_date),
+        row("CONTRACT NO", contract_no),
         [Paragraph("SELLERS", s_label), Paragraph(partner_text(seller).replace("\n", "<br/>"), s_val)],
         [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
         [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
@@ -224,17 +226,16 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=12 * mm, bottomMargin=12 * mm, leftMargin=margin, rightMargin=margin)
     story = []
 
-    # Logo (smaller)
+    # Logo top-left
     if os.path.exists(LOGO_PATH):
-        logo = Image(LOGO_PATH, width=25 * mm, height=25 * mm)
-        logo.hAlign = 'CENTER'
+        logo = Image(LOGO_PATH, width=38 * mm, height=17 * mm)
+        logo.hAlign = 'LEFT'
         story.append(logo)
-        story.append(Spacer(1, 1 * mm))
+        story.append(Spacer(1, 4 * mm))
 
-    story.append(Paragraph("BUSINESS CONFIRMATION", s_title))
-    story.append(Spacer(1, 1 * mm))
-    story.append(Paragraph(f"Date: {contract_date}  |  Contract No: {contract_no}", s_date))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Paragraph("Business Confirmation", s_title))
+    story.append(Spacer(1, 1.5 * mm))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=PIR_GREEN, spaceAfter=4 * mm))
 
     story.append(tbl)
     story.append(Spacer(1, 3 * mm))

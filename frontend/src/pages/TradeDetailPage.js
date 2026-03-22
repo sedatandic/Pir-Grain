@@ -463,7 +463,7 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Vessel</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Rate</span><span className="font-medium">{trade.dischargeRate ? `${Number(trade.dischargeRate).toLocaleString()} Mts` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Discharge Rate</span><span className="font-medium">{trade.dischargeRate ? `${Number(trade.dischargeRate).toLocaleString()} Mts/Day` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Demurrage Rate</span><span className="font-medium">{trade.demurrageRate ? `USD ${Number(trade.demurrageRate).toLocaleString()}/Day` : '-'}</span></div>
                 <Separator />

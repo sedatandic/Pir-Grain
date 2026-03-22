@@ -79,48 +79,48 @@ export default function DashboardPage() {
     <div className="space-y-6" data-testid="dashboard-page">
 
       {/* KPI Cards + Upcoming Events as 4th card */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-ongoing-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-ongoing' } })}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
-            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-blue-100">
-              <Ship className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-ongoing-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-ongoing' } })}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-blue-100">
+              <Ship className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.activeTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{stats?.activeTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-pending-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-pending' } })}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Pending Trades</CardTitle>
-            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-amber-100">
-              <Clock className="h-4 w-4 md:h-5 md:w-5 text-amber-600" />
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-pending-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-pending' } })}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Pending Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-amber-100">
+              <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.pendingTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{stats?.pendingTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-completed-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-completed' } })}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Completed Trades</CardTitle>
-            <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-green-50">
-              <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5 text-secondary" />
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-completed-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-completed' } })}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Completed Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-green-50">
+              <CheckCircle2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-secondary" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.completedTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{stats?.completedTrades || 0}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
           </CardContent>
         </Card>
 
         {/* Upcoming Payments & Events - 4th card */}
-        <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Upcoming Payments & Events</CardTitle>
+        <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
+          <CardHeader className="pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Upcoming Payments & Events</CardTitle>
             <CardDescription className="text-xs">Due invoices, meetings, and conferences</CardDescription>
           </CardHeader>
           <CardContent>

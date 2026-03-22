@@ -102,7 +102,7 @@ export default function NewTradePage() {
 
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
-    commodityId: '', originId: '', quantity: '', tolerance: '',
+    commodityId: '', originId: '', quantity: '', tolerance: '', cropYear: new Date().getFullYear().toString(),
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
@@ -148,6 +148,7 @@ export default function NewTradePage() {
             coBrokerId: t.coBrokerId || 'na',
             commodityId: t.commodityId || '',
             originId: t.originId || '',
+            cropYear: t.cropYear || new Date().getFullYear().toString(),
             quantity: t.quantity != null ? String(t.quantity) : '',
             tolerance: t.tolerance || '',
             deliveryTerm: t.deliveryTerm || '',
@@ -398,6 +399,16 @@ export default function NewTradePage() {
             }}>
               <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
               <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Crop Year</Label>
+            <Select value={form.cropYear} onValueChange={(v) => set('cropYear', v)}>
+              <SelectTrigger data-testid="crop-year-select"><SelectValue placeholder="Select crop year" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(new Date().getFullYear())}>{new Date().getFullYear()}</SelectItem>
+                <SelectItem value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</SelectItem>
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">

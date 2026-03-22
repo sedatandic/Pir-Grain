@@ -194,7 +194,7 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"><Box className="h-5 w-5 text-primary" /></div>
                     <div>
-                      <p className="font-medium">{trade.commodityName || 'Unknown'}</p>
+                      <p className="font-medium">{trade.commodityDisplayName || trade.commodityName || 'Unknown'}</p>
                       <p className="text-xs text-muted-foreground">Due: {(() => { try { return format(parseISO(trade.shipmentWindowEnd), 'MMM d, yyyy'); } catch { return '-'; } })()}</p>
                     </div>
                   </div>

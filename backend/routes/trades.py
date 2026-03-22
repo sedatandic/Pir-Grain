@@ -74,6 +74,23 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
                         data[name_field.replace("Name", "Country")] = doc.get("country", "")
             except Exception:
                 pass
+    # Compose commodity display name with origin adjective and crop year
+    if data.get("originId"):
+        try:
+            origin_doc = origins_col.find_one({"_id": ObjectId(data["originId"])})
+            if origin_doc and origin_doc.get("adjective"):
+                data["originAdjective"] = origin_doc["adjective"]
+        except Exception:
+            pass
+    adj = data.get("originAdjective") or ""
+    cname = data.get("commodityName") or ""
+    cyear = data.get("cropYear") or ""
+    if adj and cname and cyear:
+        data["commodityDisplayName"] = f"{adj} {cname}, Crop {cyear}"
+    elif adj and cname:
+        data["commodityDisplayName"] = f"{adj} {cname}"
+    else:
+        data["commodityDisplayName"] = cname
     qty = data.get("quantity") or 0
     brok = data.get("brokeragePerMT") or 0
     data["totalCommission"] = round(qty * brok, 2)
@@ -138,6 +155,25 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
                         data[name_field.replace("Name", "Country")] = doc.get("country", "")
             except Exception:
                 pass
+    # Compose commodity display name with origin adjective and crop year on update
+    if data.get("originId") or data.get("commodityId") or data.get("cropYear"):
+        existing_t = trades_col.find_one({"_id": ObjectId(trade_id)}) or {}
+        if data.get("originId"):
+            try:
+                origin_doc = origins_col.find_one({"_id": ObjectId(data["originId"])})
+                if origin_doc and origin_doc.get("adjective"):
+                    data["originAdjective"] = origin_doc["adjective"]
+            except Exception:
+                pass
+        adj = data.get("originAdjective") or existing_t.get("originAdjective") or ""
+        cname = data.get("commodityName") or existing_t.get("commodityName") or ""
+        cyear = data.get("cropYear") or existing_t.get("cropYear") or ""
+        if adj and cname and cyear:
+            data["commodityDisplayName"] = f"{adj} {cname}, Crop {cyear}"
+        elif adj and cname:
+            data["commodityDisplayName"] = f"{adj} {cname}"
+        else:
+            data["commodityDisplayName"] = cname
     if "quantity" in data or "brokeragePerMT" in data:
         existing = trades_col.find_one({"_id": ObjectId(trade_id)})
         qty = data.get("quantity", existing.get("quantity", 0) if existing else 0) or 0

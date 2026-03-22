@@ -85,7 +85,7 @@ export default function DocumentsPage() {
                 ) : filtered.map(({ trade }) => (
                   <TableRow key={trade.id}>
                     <TableCell className="font-medium text-primary">{trade.referenceNumber}</TableCell>
-                    <TableCell className="text-sm">{trade.commodityName || '-'}</TableCell>
+                    <TableCell className="text-sm">{trade.commodityDisplayName || trade.commodityName || '-'}</TableCell>
                     <TableCell className="text-sm">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
                     <TableCell className="text-sm">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
                     <TableCell className="text-sm uppercase">{trade.vesselName || '-'}</TableCell>

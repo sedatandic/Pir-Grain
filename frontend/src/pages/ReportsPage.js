@@ -139,7 +139,7 @@ function DetailBreakdown({ trades, filterField, codeField, label, breakdowns }) 
                     {filtered.map(t => (
                       <TableRow key={t.id}>
                         <TableCell className="font-medium text-xs">{t.pirContractNumber || t.referenceNumber}</TableCell>
-                        <TableCell className="text-xs">{t.commodityName || '-'}</TableCell>
+                        <TableCell className="text-xs">{t.commodityDisplayName || t.commodityName || '-'}</TableCell>
                         <TableCell className="text-xs">{t.sellerCode || t.sellerName || '-'}</TableCell>
                         <TableCell className="text-xs">{t.buyerCode || t.buyerName || '-'}</TableCell>
                         <TableCell className="text-xs">{t.originName || '-'}</TableCell>
@@ -230,7 +230,7 @@ export default function ReportsPage() {
 
   const topSellers = useMemo(() => buildTop10(filteredTrades, 'sellerName', metricType), [filteredTrades, metricType]);
   const topBuyers = useMemo(() => buildTop10(filteredTrades, 'buyerName', metricType), [filteredTrades, metricType]);
-  const topCommodities = useMemo(() => buildTop10(filteredTrades, 'commodityName', metricType), [filteredTrades, metricType]);
+  const topCommodities = useMemo(() => buildTop10(filteredTrades.map(t => ({...t, commodityName: t.commodityDisplayName || t.commodityName})), 'commodityName', metricType), [filteredTrades, metricType]);
   const topOrigins = useMemo(() => buildTop10(filteredTrades, 'originName', metricType), [filteredTrades, metricType]);
   const topDischPorts = useMemo(() => buildTop10(filteredTrades, 'dischargePortName', metricType), [filteredTrades, metricType]);
   const topCoBrokers = useMemo(() => buildTop10(filteredTrades, 'coBrokerName', metricType), [filteredTrades, metricType]);
@@ -382,10 +382,10 @@ export default function ReportsPage() {
 
         <TabsContent value="commodities">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Commodities by Quantity" description="Mts" data={buildTop10(filteredTrades, 'commodityName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Wheat} />
-            <TopChart title="Top 10 Commodities by Trade Value" description="USD" data={buildTop10(filteredTrades, 'commodityName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Commodities by Commission" description="USD" data={buildTop10(filteredTrades, 'commodityName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Commodities by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'commodityName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Commodities by Quantity" description="Mts" data={buildTop10(filteredTrades.map(t => ({...t, commodityName: t.commodityDisplayName || t.commodityName})), 'commodityName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Wheat} />
+            <TopChart title="Top 10 Commodities by Trade Value" description="USD" data={buildTop10(filteredTrades.map(t => ({...t, commodityName: t.commodityDisplayName || t.commodityName})), 'commodityName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Commodities by Commission" description="USD" data={buildTop10(filteredTrades.map(t => ({...t, commodityName: t.commodityDisplayName || t.commodityName})), 'commodityName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Commodities by Trade Count" description="Trades" data={buildTop10(filteredTrades.map(t => ({...t, commodityName: t.commodityDisplayName || t.commodityName})), 'commodityName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
         </TabsContent>
 

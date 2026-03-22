@@ -1,11 +1,12 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { TRADE_STATUS_CONFIG } from '../lib/constants';
+import { Button } from '../components/ui/button';
+import { TRADE_STATUS_CONFIG, COMPLETED_STATUSES, CANCELLED_STATUSES, WASHOUT_STATUSES } from '../lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Loader2, BarChart3, TrendingUp, Users, Wheat, Globe, Anchor, DollarSign, Ship } from 'lucide-react';
+import { Loader2, BarChart3, TrendingUp, Users, Wheat, Globe, Anchor, DollarSign, Ship, CalendarDays, Filter, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const COLORS = ['#1B7A3D', '#C4A54D', '#2563EB', '#DC2626', '#7C3AED', '#059669', '#D97706', '#0891B2', '#BE185D', '#65A30D'];
@@ -161,35 +162,86 @@ function DetailBreakdown({ trades, filterField, codeField, label, breakdowns }) 
 
 export default function ReportsPage() {
   const [trades, setTrades] = useState([]);
+  const [partners, setPartners] = useState([]);
+  const [commodities, setCommodities] = useState([]);
+  const [origins, setOrigins] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('overview');
   const [metricType, setMetricType] = useState('quantity');
 
+  // Filters
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+  const [filterSeller, setFilterSeller] = useState('all');
+  const [filterBuyer, setFilterBuyer] = useState('all');
+  const [filterCommodity, setFilterCommodity] = useState('all');
+  const [filterOrigin, setFilterOrigin] = useState('all');
+
   useEffect(() => {
     const fetch = async () => {
       try {
-        const [s, t] = await Promise.all([api.get('/api/trades/stats/overview'), api.get('/api/trades')]);
-        setStats(s.data); setTrades(t.data);
+        const [s, t, p, c, o] = await Promise.all([
+          api.get('/api/trades/stats/overview'), api.get('/api/trades'),
+          api.get('/api/partners'), api.get('/api/commodities'), api.get('/api/origins'),
+        ]);
+        setStats(s.data); setTrades(t.data); setPartners(p.data); setCommodities(c.data); setOrigins(o.data);
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetch();
   }, []);
 
-  const totalVolume = useMemo(() => trades.reduce((s, t) => s + (t.blQuantity || t.quantity || 0), 0), [trades]);
-  const totalValue = useMemo(() => trades.reduce((s, t) => s + ((t.blQuantity || t.quantity || 0) * (t.pricePerMT || 0)), 0), [trades]);
-  const totalComm = useMemo(() => trades.reduce((s, t) => s + (t.totalCommission || 0), 0), [trades]);
+  const currentYear = new Date().getFullYear().toString();
+  const hasActiveFilters = filterYear !== currentYear || filterSeller !== 'all' || filterBuyer !== 'all' || filterCommodity !== 'all' || filterOrigin !== 'all';
+  const clearFilters = () => { setFilterYear(currentYear); setFilterSeller('all'); setFilterBuyer('all'); setFilterCommodity('all'); setFilterOrigin('all'); };
 
-  const topSellers = useMemo(() => buildTop10(trades, 'sellerName', metricType), [trades, metricType]);
-  const topBuyers = useMemo(() => buildTop10(trades, 'buyerName', metricType), [trades, metricType]);
-  const topCommodities = useMemo(() => buildTop10(trades, 'commodityName', metricType), [trades, metricType]);
-  const topOrigins = useMemo(() => buildTop10(trades, 'originName', metricType), [trades, metricType]);
-  const topDischPorts = useMemo(() => buildTop10(trades, 'dischargePortName', metricType), [trades, metricType]);
-  const topCoBrokers = useMemo(() => buildTop10(trades, 'coBrokerName', metricType), [trades, metricType]);
-  const topBrokers = useMemo(() => buildTop10(trades, 'brokerName', metricType), [trades, metricType]);
-  const topLoadPorts = useMemo(() => buildTop10(trades, 'loadingPortName', metricType), [trades, metricType]);
+  const getTradeYear = useCallback((trade) => {
+    const d = trade.contractDate || trade.createdAt || '';
+    const slashMatch = d.match(/^\d{2}\/\d{2}\/(\d{4})$/);
+    if (slashMatch) return slashMatch[1];
+    if (d.length >= 4) return d.substring(0, 4);
+    return '';
+  }, []);
 
-  const statusData = useMemo(() => Object.entries(stats?.statusDistribution || {}).map(([key, value]) => ({ name: TRADE_STATUS_CONFIG[key]?.label || key, value })), [stats]);
+  const sellers = useMemo(() => partners.filter(p => String(p.type || '').toLowerCase() === 'seller'), [partners]);
+  const buyers = useMemo(() => partners.filter(p => String(p.type || '').toLowerCase() === 'buyer'), [partners]);
+
+  const filteredTrades = useMemo(() => {
+    let result = trades;
+    // Year filter
+    result = result.filter(t => {
+      const tradeYear = getTradeYear(t);
+      if (tradeYear === filterYear) return true;
+      if (filterYear === currentYear) {
+        return !COMPLETED_STATUSES.includes(t.status) && !CANCELLED_STATUSES.includes(t.status) && !WASHOUT_STATUSES.includes(t.status);
+      }
+      return false;
+    });
+    // Entity filters
+    if (filterSeller !== 'all') result = result.filter(t => t.sellerId === filterSeller);
+    if (filterBuyer !== 'all') result = result.filter(t => t.buyerId === filterBuyer);
+    if (filterCommodity !== 'all') result = result.filter(t => t.commodityId === filterCommodity);
+    if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
+    return result;
+  }, [trades, filterYear, filterSeller, filterBuyer, filterCommodity, filterOrigin, currentYear, getTradeYear]);
+
+  const totalVolume = useMemo(() => filteredTrades.reduce((s, t) => s + (t.blQuantity || t.quantity || 0), 0), [filteredTrades]);
+  const totalValue = useMemo(() => filteredTrades.reduce((s, t) => s + ((t.blQuantity || t.quantity || 0) * (t.pricePerMT || 0)), 0), [filteredTrades]);
+  const totalComm = useMemo(() => filteredTrades.reduce((s, t) => s + (t.totalCommission || 0), 0), [filteredTrades]);
+
+  const topSellers = useMemo(() => buildTop10(filteredTrades, 'sellerName', metricType), [filteredTrades, metricType]);
+  const topBuyers = useMemo(() => buildTop10(filteredTrades, 'buyerName', metricType), [filteredTrades, metricType]);
+  const topCommodities = useMemo(() => buildTop10(filteredTrades, 'commodityName', metricType), [filteredTrades, metricType]);
+  const topOrigins = useMemo(() => buildTop10(filteredTrades, 'originName', metricType), [filteredTrades, metricType]);
+  const topDischPorts = useMemo(() => buildTop10(filteredTrades, 'dischargePortName', metricType), [filteredTrades, metricType]);
+  const topCoBrokers = useMemo(() => buildTop10(filteredTrades, 'coBrokerName', metricType), [filteredTrades, metricType]);
+  const topBrokers = useMemo(() => buildTop10(filteredTrades, 'brokerName', metricType), [filteredTrades, metricType]);
+  const topLoadPorts = useMemo(() => buildTop10(filteredTrades, 'loadingPortName', metricType), [filteredTrades, metricType]);
+
+  const statusData = useMemo(() => {
+    const dist = {};
+    filteredTrades.forEach(t => { dist[t.status] = (dist[t.status] || 0) + 1; });
+    return Object.entries(dist).map(([key, value]) => ({ name: TRADE_STATUS_CONFIG[key]?.label || key, value }));
+  }, [filteredTrades]);
 
   const metricLabel = metricType === 'quantity' ? 'Quantity (Mts)' : metricType === 'value' ? 'Trade Value ($)' : metricType === 'commission' ? 'Commission ($)' : 'Trades';
   const metricFormatter = metricType === 'value' || metricType === 'commission' ? fmtUsd : fmt;
@@ -202,9 +254,55 @@ export default function ReportsPage() {
         <div><h1 className="text-3xl font-bold tracking-tight">Reports</h1><p className="text-muted-foreground">Analyze your trading performance</p></div>
       </div>
 
+      {/* Filters */}
+      <Card>
+        <CardContent className="pt-5 pb-4">
+          <div className="flex items-center gap-3 overflow-x-auto">
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="w-[100px] shrink-0" data-testid="reports-year-filter"><CalendarDays className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2026">2026</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="reports-clear-filter"><X className="h-4 w-4 mr-1" />Clear</Button>}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
+            <Select value={filterSeller} onValueChange={setFilterSeller}>
+              <SelectTrigger className="w-[150px] shrink-0" data-testid="reports-seller-filter"><SelectValue placeholder="Seller" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sellers</SelectItem>
+                {sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterBuyer} onValueChange={setFilterBuyer}>
+              <SelectTrigger className="w-[150px] shrink-0" data-testid="reports-buyer-filter"><SelectValue placeholder="Buyer" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Buyers</SelectItem>
+                {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterCommodity} onValueChange={setFilterCommodity}>
+              <SelectTrigger className="w-[160px] shrink-0" data-testid="reports-commodity-filter"><SelectValue placeholder="Commodity" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Commodities</SelectItem>
+                {commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterOrigin} onValueChange={setFilterOrigin}>
+              <SelectTrigger className="w-[140px] shrink-0" data-testid="reports-origin-filter"><SelectValue placeholder="Origin" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Origins</SelectItem>
+                {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard label="Total Trades" value={stats?.totalTrades || 0} icon={BarChart3} />
+        <KpiCard label="Total Trades" value={filteredTrades.length} icon={BarChart3} />
         <KpiCard label="Total Volume" value={`${fmt(totalVolume)} Mts`} icon={Ship} color="text-blue-600" />
         <KpiCard label="Total Value" value={fmtUsd(totalValue)} icon={DollarSign} color="text-green-600" />
         <KpiCard label="Total Commission" value={fmtUsd(totalComm)} icon={TrendingUp} color="text-amber-600" />
@@ -255,12 +353,12 @@ export default function ReportsPage() {
 
         <TabsContent value="sellers">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Sellers by Quantity" description="Mts" data={buildTop10(trades, 'sellerName', 'quantity')} dataKey="quantity" fill="#2563EB" formatter={fmt} icon={Users} />
-            <TopChart title="Top 10 Sellers by Trade Value" description="USD" data={buildTop10(trades, 'sellerName', 'value')} dataKey="value" fill={GREEN} formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Sellers by Commission" description="USD" data={buildTop10(trades, 'sellerName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Sellers by Trade Count" description="Trades" data={buildTop10(trades, 'sellerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Sellers by Quantity" description="Mts" data={buildTop10(filteredTrades, 'sellerName', 'quantity')} dataKey="quantity" fill="#2563EB" formatter={fmt} icon={Users} />
+            <TopChart title="Top 10 Sellers by Trade Value" description="USD" data={buildTop10(filteredTrades, 'sellerName', 'value')} dataKey="value" fill={GREEN} formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Sellers by Commission" description="USD" data={buildTop10(filteredTrades, 'sellerName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Sellers by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'sellerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
-          <DetailBreakdown trades={trades} filterField="sellerName" codeField="sellerCode" label="Seller" breakdowns={[
+          <DetailBreakdown trades={filteredTrades} filterField="sellerName" codeField="sellerCode" label="Seller" breakdowns={[
             { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
             { title: 'By Origin', field: 'originName', fill: '#2563EB', icon: Globe },
             { title: 'By Discharge Port', field: 'dischargePortName', fill: GOLD, icon: Anchor },
@@ -270,12 +368,12 @@ export default function ReportsPage() {
 
         <TabsContent value="buyers">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Buyers by Quantity" description="Mts" data={buildTop10(trades, 'buyerName', 'quantity')} dataKey="quantity" fill={GOLD} formatter={fmt} icon={Users} />
-            <TopChart title="Top 10 Buyers by Trade Value" description="USD" data={buildTop10(trades, 'buyerName', 'value')} dataKey="value" fill={GREEN} formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Buyers by Commission" description="USD" data={buildTop10(trades, 'buyerName', 'commission')} dataKey="commission" fill="#DC2626" formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Buyers by Trade Count" description="Trades" data={buildTop10(trades, 'buyerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Buyers by Quantity" description="Mts" data={buildTop10(filteredTrades, 'buyerName', 'quantity')} dataKey="quantity" fill={GOLD} formatter={fmt} icon={Users} />
+            <TopChart title="Top 10 Buyers by Trade Value" description="USD" data={buildTop10(filteredTrades, 'buyerName', 'value')} dataKey="value" fill={GREEN} formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Buyers by Commission" description="USD" data={buildTop10(filteredTrades, 'buyerName', 'commission')} dataKey="commission" fill="#DC2626" formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Buyers by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'buyerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
-          <DetailBreakdown trades={trades} filterField="buyerName" codeField="buyerCode" label="Buyer" breakdowns={[
+          <DetailBreakdown trades={filteredTrades} filterField="buyerName" codeField="buyerCode" label="Buyer" breakdowns={[
             { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
             { title: 'By Origin', field: 'originName', fill: '#2563EB', icon: Globe },
             { title: 'By Load Port', field: 'loadingPortName', fill: GOLD, icon: Anchor },
@@ -285,30 +383,30 @@ export default function ReportsPage() {
 
         <TabsContent value="commodities">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Commodities by Quantity" description="Mts" data={buildTop10(trades, 'commodityName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Wheat} />
-            <TopChart title="Top 10 Commodities by Trade Value" description="USD" data={buildTop10(trades, 'commodityName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Commodities by Commission" description="USD" data={buildTop10(trades, 'commodityName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Commodities by Trade Count" description="Trades" data={buildTop10(trades, 'commodityName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Commodities by Quantity" description="Mts" data={buildTop10(filteredTrades, 'commodityName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Wheat} />
+            <TopChart title="Top 10 Commodities by Trade Value" description="USD" data={buildTop10(filteredTrades, 'commodityName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Commodities by Commission" description="USD" data={buildTop10(filteredTrades, 'commodityName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Commodities by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'commodityName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
         </TabsContent>
 
         <TabsContent value="brokers">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Brokers by Commission" description="USD" data={buildTop10(trades, 'brokerName', 'commission')} dataKey="commission" fill={GREEN} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Co-Brokers by Commission" description="USD" data={buildTop10(trades, 'coBrokerName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Brokers by Trade Count" description="Trades" data={buildTop10(trades, 'brokerName', 'count')} dataKey="count" fill="#2563EB" formatter={fmt} icon={BarChart3} />
-            <TopChart title="Top 10 Co-Brokers by Quantity" description="Mts" data={buildTop10(trades, 'coBrokerName', 'quantity')} dataKey="quantity" fill="#7C3AED" formatter={fmt} icon={Ship} />
+            <TopChart title="Top 10 Brokers by Commission" description="USD" data={buildTop10(filteredTrades, 'brokerName', 'commission')} dataKey="commission" fill={GREEN} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Co-Brokers by Commission" description="USD" data={buildTop10(filteredTrades, 'coBrokerName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Brokers by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'brokerName', 'count')} dataKey="count" fill="#2563EB" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Co-Brokers by Quantity" description="Mts" data={buildTop10(filteredTrades, 'coBrokerName', 'quantity')} dataKey="quantity" fill="#7C3AED" formatter={fmt} icon={Ship} />
           </div>
         </TabsContent>
 
         <TabsContent value="origins">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Origins by Quantity" description="Mts" data={buildTop10(trades, 'originName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Globe} />
-            <TopChart title="Top 10 Origins by Trade Value" description="USD" data={buildTop10(trades, 'originName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Origins by Commission" description="USD" data={buildTop10(trades, 'originName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
-            <TopChart title="Top 10 Origins by Trade Count" description="Trades" data={buildTop10(trades, 'originName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
+            <TopChart title="Top 10 Origins by Quantity" description="Mts" data={buildTop10(filteredTrades, 'originName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Globe} />
+            <TopChart title="Top 10 Origins by Trade Value" description="USD" data={buildTop10(filteredTrades, 'originName', 'value')} dataKey="value" fill="#2563EB" formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Origins by Commission" description="USD" data={buildTop10(filteredTrades, 'originName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
+            <TopChart title="Top 10 Origins by Trade Count" description="Trades" data={buildTop10(filteredTrades, 'originName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
-          <DetailBreakdown trades={trades} filterField="originName" codeField={null} label="Origin" breakdowns={[
+          <DetailBreakdown trades={filteredTrades} filterField="originName" codeField={null} label="Origin" breakdowns={[
             { title: 'By Seller', field: 'sellerName', fill: '#2563EB', icon: Users },
             { title: 'By Buyer', field: 'buyerName', fill: GOLD, icon: Users },
             { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
@@ -318,10 +416,10 @@ export default function ReportsPage() {
 
         <TabsContent value="ports">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <TopChart title="Top 10 Load Ports by Quantity" description="Mts" data={buildTop10(trades, 'loadingPortName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Anchor} />
-            <TopChart title="Top 10 Discharge Ports by Quantity" description="Mts" data={buildTop10(trades, 'dischargePortName', 'quantity')} dataKey="quantity" fill="#2563EB" formatter={fmt} icon={Anchor} />
-            <TopChart title="Top 10 Load Ports by Trade Value" description="USD" data={buildTop10(trades, 'loadingPortName', 'value')} dataKey="value" fill={GOLD} formatter={fmtUsd} icon={DollarSign} />
-            <TopChart title="Top 10 Discharge Ports by Trade Value" description="USD" data={buildTop10(trades, 'dischargePortName', 'value')} dataKey="value" fill="#DC2626" formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Load Ports by Quantity" description="Mts" data={buildTop10(filteredTrades, 'loadingPortName', 'quantity')} dataKey="quantity" fill={GREEN} formatter={fmt} icon={Anchor} />
+            <TopChart title="Top 10 Discharge Ports by Quantity" description="Mts" data={buildTop10(filteredTrades, 'dischargePortName', 'quantity')} dataKey="quantity" fill="#2563EB" formatter={fmt} icon={Anchor} />
+            <TopChart title="Top 10 Load Ports by Trade Value" description="USD" data={buildTop10(filteredTrades, 'loadingPortName', 'value')} dataKey="value" fill={GOLD} formatter={fmtUsd} icon={DollarSign} />
+            <TopChart title="Top 10 Discharge Ports by Trade Value" description="USD" data={buildTop10(filteredTrades, 'dischargePortName', 'value')} dataKey="value" fill="#DC2626" formatter={fmtUsd} icon={DollarSign} />
           </div>
         </TabsContent>
       </Tabs>

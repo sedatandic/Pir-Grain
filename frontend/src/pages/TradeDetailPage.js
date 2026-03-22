@@ -304,7 +304,7 @@ export default function TradeDetailPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity (Mts)</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Shortage (Mts)</span><span className="font-medium">{(() => { const s = calcShortage(trade.blQuantity, trade.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">None</span>; })()}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Shortage (Mts)</span><span className="font-medium">{(() => { const s = calcShortage(trade.blQuantity, trade.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">N/A</span>; })()}</span></div>
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
             </CardContent>
@@ -418,7 +418,7 @@ export default function TradeDetailPage() {
             <div className="p-3 rounded-lg border bg-muted/30 text-sm">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Shortage (Mts)</span>
-                <span className="font-medium">{(() => { const s = calcShortage(blForm.blQuantity, blForm.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">None</span>; })()}</span>
+                <span className="font-medium">{(() => { const s = calcShortage(blForm.blQuantity, blForm.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">N/A</span>; })()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">Allowance: B/L Qty x 0.5% = {blForm.blQuantity ? (parseFloat(blForm.blQuantity) * 0.005).toLocaleString(undefined, {maximumFractionDigits: 2}) : '0'} MT</p>
             </div>

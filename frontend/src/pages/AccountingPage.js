@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
@@ -23,28 +23,32 @@ const STATUS_CONFIG = {
   overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
-function InvoiceTable({ invoices, search, onEdit, onDelete, direction }) {
+function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap }) {
   const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
   const fmtAmt = (n, cur) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0)} ${cur || 'USD'}`;
   return (
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice #</TableHead><TableHead>{direction === 'incoming' ? 'Seller' : 'Vendor'}</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice #</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
-          filtered.map(inv => (
+          {filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
+          filtered.map(inv => {
+            const trade = tradeMap?.[inv.tradeId];
+            const commodityName = trade?.commodityName || '-';
+            return (
             <TableRow key={inv.id}>
               <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status?.toUpperCase()}</Badge></TableCell>
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
               <TableCell>{inv.vendorName}</TableCell>
+              <TableCell className="text-sm max-w-[150px]">{commodityName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
               <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
             </TableRow>
-          ))}
+          );})}
         </TableBody>
       </Table>
     </div>
@@ -53,6 +57,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction }) {
 
 export default function AccountingPage() {
   const [invoices, setInvoices] = useState([]);
+  const [trades, setTrades] = useState([]);
   const [bankStatements, setBankStatements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,10 +73,11 @@ export default function AccountingPage() {
 
   const fetchData = async () => {
     try {
-      const [invRes, stmtRes, bankRes, partnersRes, vendorsRes] = await Promise.all([
-        api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts'), api.get('/api/partners'), api.get('/api/vendors')
+      const [invRes, stmtRes, bankRes, partnersRes, vendorsRes, tradesRes] = await Promise.all([
+        api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts'), api.get('/api/partners'), api.get('/api/vendors'), api.get('/api/trades')
       ]);
       setInvoices(invRes.data);
+      setTrades(tradesRes.data);
       setBankStatements(stmtRes.data);
       setBankAccounts(bankRes.data);
       setSellers((partnersRes.data || []).filter(p => p.type === 'seller' || p.type === 'both').map(p => p.companyName).filter(Boolean));
@@ -80,6 +86,12 @@ export default function AccountingPage() {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const tradeMap = useMemo(() => {
+    const m = {};
+    trades.forEach(t => { m[t.id] = t; });
+    return m;
+  }, [trades]);
 
   const incoming = invoices.filter(i => i.direction === 'incoming');
   const outgoing = invoices.filter(i => i.direction !== 'incoming');
@@ -161,7 +173,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" />
+              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -173,7 +185,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search outgoing..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
-              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" />
+              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -267,9 +279,9 @@ export default function AccountingPage() {
         <DialogContent><DialogHeader><DialogTitle className="text-center">{editingInvoice ? 'Edit Invoice' : `New ${form.direction === 'incoming' ? 'Incoming' : 'Outgoing'} Payment`}</DialogTitle><DialogDescription className="text-center">Fill in the payment details.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Invoice Number *</Label><Input value={form.invoiceNumber} onChange={(e) => setForm({...form, invoiceNumber: e.target.value})} placeholder="INV-001" /></div>
-            <div className="space-y-2"><Label>{form.direction === 'incoming' ? 'Seller' : 'Vendor'} *</Label>
+            <div className="space-y-2"><Label>{form.direction === 'incoming' ? 'Invoice To' : 'Vendor'} *</Label>
               <Select value={form.vendorName} onValueChange={(v) => setForm({...form, vendorName: v})}>
-                <SelectTrigger><SelectValue placeholder={`Select ${form.direction === 'incoming' ? 'seller' : 'vendor'}`} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={`Select ${form.direction === 'incoming' ? 'company' : 'vendor'}`} /></SelectTrigger>
                 <SelectContent>
                   {(form.direction === 'incoming' ? sellers : vendors).map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                 </SelectContent>

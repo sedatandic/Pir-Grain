@@ -431,10 +431,10 @@ export default function NewTradePage() {
             <Label>Tolerance (%)</Label>
             <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
           </div>
-          {selectedCommodity && form.commoditySpecs && (
+          {selectedCommodity && (
             <div className="col-span-4 space-y-2">
               <Label>Commodity Specs.</Label>
-              <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" />
+              <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" placeholder="Enter commodity specifications" />
             </div>
           )}
         </CardContent>

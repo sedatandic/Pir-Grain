@@ -116,6 +116,7 @@ export default function NewTradePage() {
     buyerTradeContact: null, buyerExecutionContact: null,
     brokerTradeContact: null, brokerExecutionContact: null,
     coBrokerTradeContact: null, coBrokerExecutionContact: null,
+    executionHandledBy: '',
   });
 
   useEffect(() => {
@@ -183,6 +184,7 @@ export default function NewTradePage() {
             brokerExecutionContact: t.brokerExecutionContact || null,
             coBrokerTradeContact: t.coBrokerTradeContact || null,
             coBrokerExecutionContact: t.coBrokerExecutionContact || null,
+            executionHandledBy: t.executionHandledBy || '',
           });
           setLoadingTrade(false);
         } else {
@@ -297,6 +299,16 @@ export default function NewTradePage() {
           <div className="space-y-2">
             <Label>Seller Contract Number</Label>
             <Input value={form.sellerContractNumber} onChange={(e) => set('sellerContractNumber', e.target.value)} placeholder="N/A" />
+          </div>
+          <div className="space-y-2">
+            <Label>Execution Handled By</Label>
+            <Select value={form.executionHandledBy} onValueChange={(v) => set('executionHandledBy', v)}>
+              <SelectTrigger data-testid="execution-handled-by-select"><SelectValue placeholder="Select person" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Alena Karagoz">Alena Karagoz</SelectItem>
+                <SelectItem value="Melisa Karagoz">Melisa Karagoz</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

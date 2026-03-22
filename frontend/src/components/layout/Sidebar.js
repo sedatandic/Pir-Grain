@@ -79,7 +79,7 @@ export default function Sidebar() {
         data-testid="app-sidebar"
         className={cn(
           'fixed left-0 top-0 h-screen flex flex-col z-50 bg-card border-r border-border transition-all duration-200',
-          collapsed ? 'w-[60px]' : 'w-[250px]',
+          collapsed ? 'w-[60px]' : 'w-[200px]',
           'max-md:w-[250px]',
           mobileOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'
         )}

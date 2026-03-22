@@ -88,7 +88,7 @@ export default function AppLayout() {
     <div className="min-h-screen bg-background">
       <Toaster position="top-right" richColors />
       <Sidebar />
-      <div className={cn('transition-all duration-200', sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[250px]')}>
+      <div className={cn('transition-all duration-200', sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[200px]')}>
         {/* Header Bar */}
         <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
           {/* Mobile hamburger */}

@@ -197,7 +197,6 @@ export default function TradesPage() {
               <TableHead className="text-center">Quantity<br/><span className="text-xs font-normal text-muted-foreground">(Mts)</span></TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
               <TableHead className="text-center">Unit Price</TableHead>
-              <TableHead className="text-center">Currency</TableHead>
               <TableHead className="text-center">Shipment Period</TableHead>
               <TableHead className="text-center">Vessel</TableHead>
             </TableRow>
@@ -226,17 +225,16 @@ export default function TradesPage() {
                     <div className="text-xs text-muted-foreground">{trade.sellerContractNumber}</div>
                   )}
                 </TableCell>
-                <TableCell className="text-center text-sm">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.brokerName ? (trade.coBrokerName ? `${trade.brokerName} / ${trade.coBrokerName}` : trade.brokerName) : '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.commodityName || '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.originName || '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{trade.brokerCode || trade.brokerName ? (trade.coBrokerName ? `${trade.brokerCode || trade.brokerName} / ${trade.coBrokerName}` : (trade.brokerCode || trade.brokerName)) : '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{trade.commodityName || '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
-                <TableCell className="text-center text-sm">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</TableCell>
-                <TableCell className="text-center font-mono text-sm">{trade.pricePerMT?.toLocaleString() || '-'}</TableCell>
-                <TableCell className="text-center text-sm">{trade.currency || 'USD'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</TableCell>
+                <TableCell className="text-center font-mono text-sm whitespace-nowrap">{trade.pricePerMT ? `${trade.pricePerMT.toLocaleString()} ${trade.currency || 'USD'}` : '-'}</TableCell>
                 <TableCell className="text-center text-sm">{trade.shipmentWindowStart || trade.shipmentWindowEnd ? <div>{formatShipmentDate(trade.shipmentWindowStart) && <div>{formatShipmentDate(trade.shipmentWindowStart)}</div>}{formatShipmentDate(trade.shipmentWindowEnd) && <div>{formatShipmentDate(trade.shipmentWindowEnd)}</div>}</div> : '-'}</TableCell>
-                <TableCell className="text-center text-sm"><VesselPicker trade={trade} /></TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap"><VesselPicker trade={trade} /></TableCell>
               </TableRow>
             ))}
           </TableBody>

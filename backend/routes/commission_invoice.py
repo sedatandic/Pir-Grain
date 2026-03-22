@@ -407,7 +407,13 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", bankIds: 
                     pass
 
     invoice_number = f"COMM-{contract_num}"
-    invoice_date = datetime.utcnow().strftime("%d.%m.%Y")
+    # Use buyer payment date if available, otherwise current date
+    buyer_payment_date = trade.get("buyerPaymentDate")
+    if buyer_payment_date:
+        # Convert dd/MM/yyyy to dd.MM.yyyy
+        invoice_date = buyer_payment_date.replace("/", ".")
+    else:
+        invoice_date = datetime.utcnow().strftime("%d.%m.%Y")
 
     pdf_buffer = generate_invoice_pdf(
         trade=trade,

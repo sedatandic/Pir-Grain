@@ -400,7 +400,7 @@ export default function NewTradePage() {
             <Select value={form.commodityId} onValueChange={(v) => {
               set('commodityId', v);
               const comm = commodities.find(c => c.id === v);
-              if (comm?.specs) set('commoditySpecs', comm.specs);
+              set('commoditySpecs', comm?.specs || '');
             }}>
               <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
               <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
@@ -431,12 +431,10 @@ export default function NewTradePage() {
             <Label>Tolerance (%)</Label>
             <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
           </div>
-          {selectedCommodity && (
-            <div className="col-span-4 space-y-2">
-              <Label>Commodity Specs.</Label>
-              <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" placeholder="Enter commodity specifications" />
-            </div>
-          )}
+          <div className="col-span-4 space-y-2">
+            <Label>Commodity Specs.</Label>
+            <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" placeholder="Enter commodity specifications" />
+          </div>
         </CardContent>
       </Card>
 

@@ -92,7 +92,7 @@ export default function Sidebar() {
           </button>
         ) : null}
         <div className={cn('flex-1 flex justify-center', collapsed && 'max-md:flex md:hidden')}>
-          <img src="/pir-logo-new.jpeg" alt="PIR Grain and Pulses" className="h-16 w-auto object-contain" />
+          <img src="/pir-logo-new.jpeg" alt="PIR Grain and Pulses" className="h-20 w-auto object-contain" />
         </div>
         {/* Desktop: collapse toggle */}
         {!collapsed && (

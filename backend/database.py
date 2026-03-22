@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 from pymongo import MongoClient
 from config import MONGO_URL, DB_NAME
@@ -28,6 +28,8 @@ def serialize_doc(doc):
     doc["id"] = str(doc.pop("_id"))
     for key, value in doc.items():
         if isinstance(value, datetime):
+            if value.tzinfo is None:
+                value = value.replace(tzinfo=timezone.utc)
             doc[key] = value.isoformat()
         elif isinstance(value, ObjectId):
             doc[key] = str(value)
@@ -41,5 +43,5 @@ def create_notification(ntype, message, entity_ref=None, username=None):
         "entityRef": entity_ref,
         "username": username or "system",
         "readBy": [],
-        "createdAt": datetime.utcnow()
+        "createdAt": datetime.now(timezone.utc).isoformat()
     })

@@ -11,7 +11,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -57,6 +57,7 @@ export default function TradeDetailPage() {
   const [bulkUploading, setBulkUploading] = useState(false);
   const [draggedFile, setDraggedFile] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
+  const [sendingSA, setSendingSA] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -188,6 +189,23 @@ export default function TradeDetailPage() {
       reassignFile(draggedFile.file, draggedFile.fromDoc, toDoc);
     }
     setDraggedFile(null);
+  };
+
+  const sendShipmentAppropriation = async () => {
+    setSendingSA(true);
+    try {
+      await api.put(`/api/trades/${tradeId}`, {
+        shipmentAppropriationSentBy: trade.executionHandledBy || 'Admin',
+        shipmentAppropriationSentAt: new Date().toISOString(),
+      });
+      setTrade(prev => ({
+        ...prev,
+        shipmentAppropriationSentBy: prev.executionHandledBy || 'Admin',
+        shipmentAppropriationSentAt: new Date().toISOString(),
+      }));
+      toast.success('Shipment Appropriation sent');
+    } catch { toast.error('Failed to send'); }
+    finally { setSendingSA(false); }
   };
 
   const addAdditionalDoc = () => {
@@ -425,44 +443,71 @@ export default function TradeDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Documentary Instruction */}
-          <Card className="mt-4">
-            <CardHeader className="pb-3"><CardTitle className="text-base">Documentary Instruction</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-muted-foreground">DI Received?</span>
-                <div className="flex gap-2">
-                  <Button size="sm" variant={trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(true)}>Yes</Button>
-                  <Button size="sm" variant={!trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(false)}>No</Button>
-                </div>
-              </div>
-              {trade.diReceived && (
-                <div className="space-y-3">
-                  {trade.diDocumentFilename && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
-                        <p className="text-xs text-muted-foreground">Uploaded document</p>
-                      </div>
-                      <Button size="sm" variant="outline" onClick={() => window.open(`${api.defaults.baseURL}/api/trades/${tradeId}/download-di`, '_blank')}>Download</Button>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      data-testid="di-file-upload"
-                      className="max-w-sm"
-                      onChange={(e) => uploadDiDocument(e.target.files[0])}
-                    />
-                    {diUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {/* Documentary Instruction & Shipment Appropriation */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Documentary Instruction</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground">DI Received?</span>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant={trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(true)}>Yes</Button>
+                    <Button size="sm" variant={!trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(false)}>No</Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Accepted formats: PDF, Word (.doc, .docx)</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                {trade.diReceived && (
+                  <div className="space-y-3">
+                    {trade.diDocumentFilename && (
+                      <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
+                          <p className="text-xs text-muted-foreground">Uploaded document</p>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => window.open(`${api.defaults.baseURL}/api/trades/${tradeId}/download-di`, '_blank')}>Download</Button>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3">
+                      <Input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        data-testid="di-file-upload"
+                        className="max-w-sm"
+                        onChange={(e) => uploadDiDocument(e.target.files[0])}
+                      />
+                      {diUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Accepted formats: PDF, Word (.doc, .docx)</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Shipment Appropriation</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                {trade.shipmentAppropriationSentAt ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 p-3 rounded-lg border bg-green-50 border-green-200">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-green-800">Sent</p>
+                        <p className="text-xs text-green-600">By {trade.shipmentAppropriationSentBy || '-'}</p>
+                        <p className="text-xs text-green-600">{(() => { try { const d = new Date(trade.shipmentAppropriationSentAt); return `${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`; } catch { return trade.shipmentAppropriationSentAt; } })()}</p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="resend-sa-btn">
+                      {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="send-sa-btn">
+                    {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
 

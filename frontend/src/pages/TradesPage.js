@@ -32,6 +32,7 @@ export default function TradesPage() {
   const [filterCoBroker, setFilterCoBroker] = useState('all');
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [entityFilter, setEntityFilter] = useState(null); // { type: 'seller'|'buyer'|'broker', name: '...', code: '...' }
 
   const fetchAll = useCallback(async () => {
     try {
@@ -79,6 +80,16 @@ export default function TradesPage() {
     trades.forEach(t => { if (t.coBrokerId && t.coBrokerName) map.set(t.coBrokerId, t.coBrokerName); });
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [trades]);
+
+  const entityTrades = useMemo(() => {
+    if (!entityFilter) return [];
+    return trades.filter(t => {
+      if (entityFilter.type === 'seller') return t.sellerName === entityFilter.name;
+      if (entityFilter.type === 'buyer') return t.buyerName === entityFilter.name;
+      if (entityFilter.type === 'broker') return t.brokerName === entityFilter.name || t.coBrokerName === entityFilter.name;
+      return false;
+    });
+  }, [trades, entityFilter]);
 
   const applyFilters = useCallback((list) => {
     let result = list;
@@ -245,16 +256,16 @@ export default function TradesPage() {
                     <div className="text-xs text-muted-foreground">{trade.sellerContractNumber}</div>
                   )}
                 </TableCell>
-                <TableCell className="text-center text-sm whitespace-nowrap">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
-                <TableCell className="text-center text-sm whitespace-nowrap">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap"><span className="cursor-pointer text-primary hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'seller', name: trade.sellerName, code: trade.sellerCode || trade.sellerName }); }}>{trade.sellerCode || trade.sellerName || '-'}</span></TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap"><span className="cursor-pointer text-primary hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'buyer', name: trade.buyerName, code: trade.buyerCode || trade.buyerName }); }}>{trade.buyerCode || trade.buyerName || '-'}</span></TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{(trade.brokerCode || trade.brokerName) ? (
                   trade.coBrokerName ? (
                     <div className="flex flex-col items-center">
-                      <span>{trade.brokerCode || trade.brokerName}</span>
+                      <span className="cursor-pointer text-primary hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
                       <hr className="w-full border-t border-border my-0.5" />
-                      <span className="text-orange-600">{trade.coBrokerCode || trade.coBrokerName}</span>
+                      <span className="cursor-pointer text-orange-600 hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.coBrokerName, code: trade.coBrokerCode || trade.coBrokerName }); }}>{trade.coBrokerCode || trade.coBrokerName}</span>
                     </div>
-                  ) : (trade.brokerCode || trade.brokerName)
+                  ) : <span className="cursor-pointer text-primary hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
                 ) : '-'}</TableCell>
                 <TableCell className="text-center text-sm max-w-[180px]">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
@@ -484,6 +495,46 @@ export default function TradesPage() {
                 <Button variant="outline" onClick={() => setModalOpen(false)}>Close</Button>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Entity Trades Dialog */}
+      <Dialog open={!!entityFilter} onOpenChange={(open) => { if (!open) setEntityFilter(null); }}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          {entityFilter && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="capitalize">{entityFilter.type}: {entityFilter.code || entityFilter.name} — All Trades ({entityTrades.length})</DialogTitle>
+              </DialogHeader>
+              <div className="overflow-x-auto border rounded-lg">
+                <Table className="trade-table">
+                  <TableHeader><TableRow className="bg-muted/50">
+                    <TableHead>Status</TableHead><TableHead>Contract</TableHead><TableHead>Commodity</TableHead>
+                    <TableHead>Seller</TableHead><TableHead>Buyer</TableHead><TableHead>Quantity</TableHead>
+                    <TableHead>Price/MT</TableHead><TableHead>Vessel</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {entityTrades.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-6 text-muted-foreground">No trades found</TableCell></TableRow> :
+                    entityTrades.map(t => {
+                      const sc = TRADE_STATUS_CONFIG[t.status] || {};
+                      return (
+                        <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEntityFilter(null); navigate(`/trades/${t.id}`); }}>
+                          <TableCell><Badge className={`text-xs ${sc.color || 'bg-muted'}`}>{sc.label || t.status}</Badge></TableCell>
+                          <TableCell className="font-medium text-sm">{t.pirContractNumber || t.referenceNumber}</TableCell>
+                          <TableCell className="text-sm">{t.commodityName || '-'}</TableCell>
+                          <TableCell className="text-sm">{t.sellerCode || t.sellerName || '-'}</TableCell>
+                          <TableCell className="text-sm">{t.buyerCode || t.buyerName || '-'}</TableCell>
+                          <TableCell className="text-sm">{t.quantity ? `${t.quantity.toLocaleString()} Mts` : '-'}</TableCell>
+                          <TableCell className="text-sm">{t.pricePerMT ? `$${t.pricePerMT}` : '-'}</TableCell>
+                          <TableCell className="text-sm">{t.vesselName || '-'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>

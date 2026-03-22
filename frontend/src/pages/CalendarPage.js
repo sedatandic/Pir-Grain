@@ -12,10 +12,8 @@ import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isToday, parseISO } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
 import { getHolidaysForDate } from '../lib/holidays';
-import { useI18n } from '../lib/i18n';
 
 export default function CalendarPage() {
-  const { t } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -146,7 +144,7 @@ export default function CalendarPage() {
 
         <div className="lg:col-span-4 space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : t('calendar.selectDate')}</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}</CardTitle></CardHeader>
             <CardContent>
               {selectedDate ? (() => {
                 const holidays = getHolidaysForDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
@@ -156,7 +154,7 @@ export default function CalendarPage() {
                     {holidays.map((h, i) => (
                       <div key={`hol-${i}`} className={`p-3 rounded-lg border ${h.colorClass}`}>
                         <p className="font-medium text-sm">{h.flag} {h.title}</p>
-                        <p className="text-xs mt-1 opacity-70">{t('calendar.holidays')} ({h.country})</p>
+                        <p className="text-xs mt-1 opacity-70">Holiday ({h.country})</p>
                       </div>
                     ))}
                     {selectedDateEvents.map(ev => (
@@ -180,9 +178,9 @@ export default function CalendarPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">{t('calendar.noEvents')}</p></div>
+                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">No events on this day</p></div>
                 );
-              })() : <p className="text-sm text-muted-foreground">{t('calendar.clickDay')}</p>}
+              })() : <p className="text-sm text-muted-foreground">Click on a day to see events</p>}
             </CardContent>
           </Card>
 

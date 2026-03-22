@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
-import { I18nProvider } from './lib/i18n';
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -21,7 +20,6 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <I18nProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AppLayout />}>
@@ -44,7 +42,6 @@ function App() {
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </I18nProvider>
       </AuthProvider>
     </BrowserRouter>
   );

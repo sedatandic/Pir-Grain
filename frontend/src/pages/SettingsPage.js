@@ -184,7 +184,7 @@ export default function SettingsPage() {
       {/* Generic Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewDocInput(''); }}>
         <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
-          <DialogHeader><DialogTitle>{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
+          <DialogHeader className="text-center"><DialogTitle className="text-center">{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType === 'commodities' ? 'Commodity' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription className="text-center">Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
             {Object.entries(dialogForm).filter(([key]) => key !== '_editId' && key !== 'documents').map(([key, val]) => (
               key === 'type' ? (

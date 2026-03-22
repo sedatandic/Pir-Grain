@@ -11,7 +11,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -54,6 +54,9 @@ export default function TradeDetailPage() {
   const [diUploading, setDiUploading] = useState(false);
   const [docFiles, setDocFiles] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [draggedFile, setDraggedFile] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -138,6 +141,53 @@ export default function TradeDetailPage() {
       }));
       toast.success('File removed');
     } catch { toast.error('Delete failed'); }
+  };
+
+  const bulkUploadFiles = async (files) => {
+    if (!files || files.length === 0) return;
+    setBulkUploading(true);
+    let count = 0;
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('tradeId', tradeId);
+        formData.append('tradeRef', trade?.referenceNumber || '');
+        formData.append('docType', 'checklist');
+        formData.append('docName', '_unassigned');
+        const res = await api.post('/api/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        setDocFiles(prev => ({ ...prev, _unassigned: [...(prev._unassigned || []), res.data] }));
+        count++;
+      } catch { /* skip failed */ }
+    }
+    setBulkUploading(false);
+    if (count > 0) toast.success(`${count} file(s) uploaded — drag them to assign`);
+  };
+
+  const reassignFile = async (file, fromDoc, toDoc) => {
+    try {
+      await api.put(`/api/documents/${file.id}/assign`, { docName: toDoc });
+      setDocFiles(prev => {
+        const next = { ...prev };
+        next[fromDoc] = (next[fromDoc] || []).filter(f => f.id !== file.id);
+        if (next[fromDoc].length === 0) delete next[fromDoc];
+        next[toDoc] = [...(next[toDoc] || []), { ...file, docName: toDoc }];
+        return next;
+      });
+      toast.success(`Moved to ${toDoc}`);
+    } catch { toast.error('Failed to reassign'); }
+  };
+
+  const handleDragStart = (file, fromDoc) => { setDraggedFile({ file, fromDoc }); };
+  const handleDragOver = (e, docName) => { e.preventDefault(); setDropTarget(docName); };
+  const handleDragLeave = () => { setDropTarget(null); };
+  const handleDrop = (e, toDoc) => {
+    e.preventDefault();
+    setDropTarget(null);
+    if (draggedFile && draggedFile.fromDoc !== toDoc) {
+      reassignFile(draggedFile.file, draggedFile.fromDoc, toDoc);
+    }
+    setDraggedFile(null);
   };
 
   const addAdditionalDoc = () => {
@@ -418,6 +468,46 @@ export default function TradeDetailPage() {
 
         {/* Documents Checklist Tab */}
         <TabsContent value="documents">
+          {/* Bulk Upload Zone */}
+          <Card className="mb-4">
+            <CardContent className="pt-5 pb-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <label
+                    className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors"
+                    data-testid="bulk-upload-zone"
+                  >
+                    {bulkUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
+                    <span className="text-sm text-muted-foreground">{bulkUploading ? 'Uploading...' : 'Click to bulk upload documents, then drag them to the correct slot below'}</span>
+                    <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
+                  </label>
+                </div>
+              </div>
+              {/* Unassigned Files */}
+              {docFiles._unassigned && docFiles._unassigned.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <h4 className="text-sm font-semibold text-amber-700">Unassigned Files — Drag to a document slot below</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {docFiles._unassigned.map(f => (
+                      <div
+                        key={f.id}
+                        draggable
+                        onDragStart={() => handleDragStart(f, '_unassigned')}
+                        className="flex items-center gap-2 text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+                        data-testid={`unassigned-file-${f.id}`}
+                      >
+                        <GripVertical className="h-3 w-3 text-amber-400 flex-shrink-0" />
+                        <FileText className="h-3 w-3 text-primary flex-shrink-0" />
+                        <span className="truncate max-w-[200px]">{f.fileName}</span>
+                        <button onClick={() => deleteDocFile('_unassigned', f.id)} className="text-red-400 hover:text-red-600 flex-shrink-0 ml-1"><Trash2 className="h-3 w-3" /></button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <div>
@@ -436,7 +526,14 @@ export default function TradeDetailPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {docList.map((doc, i) => (
-                  <div key={i} className="p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                  <div
+                    key={i}
+                    className={`p-3 rounded-lg border hover:bg-muted/50 transition-colors ${dropTarget === doc ? 'ring-2 ring-primary bg-primary/5 border-primary' : ''}`}
+                    onDragOver={(e) => handleDragOver(e, doc)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, doc)}
+                    data-testid={`doc-slot-${i}`}
+                  >
                     <div className="flex items-center gap-3 cursor-pointer" onClick={() => toggleDoc(doc)}>
                       {docChecks[doc] ? (
                         <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -456,10 +553,16 @@ export default function TradeDetailPage() {
                     {docFiles[doc] && docFiles[doc].length > 0 && (
                       <div className="mt-2 ml-8 space-y-1">
                         {docFiles[doc].map(f => (
-                          <div key={f.id} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1">
+                          <div
+                            key={f.id}
+                            draggable
+                            onDragStart={() => handleDragStart(f, doc)}
+                            className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1 cursor-grab active:cursor-grabbing"
+                          >
+                            <GripVertical className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                             <FileText className="h-3 w-3 text-primary flex-shrink-0" />
-                            <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1" data-testid={`doc-file-link-${f.id}`}>{f.fileName}</a>
-                            <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600 flex-shrink-0" data-testid={`delete-doc-file-${f.id}`}><Trash2 className="h-3 w-3" /></button>
+                            <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1" onClick={(e) => e.stopPropagation()} data-testid={`doc-file-link-${f.id}`}>{f.fileName}</a>
+                            <button onClick={(e) => { e.stopPropagation(); deleteDocFile(doc, f.id); }} className="text-red-400 hover:text-red-600 flex-shrink-0" data-testid={`delete-doc-file-${f.id}`}><Trash2 className="h-3 w-3" /></button>
                           </div>
                         ))}
                       </div>
@@ -490,7 +593,10 @@ export default function TradeDetailPage() {
                     {additionalDocs.map((doc, i) => (
                       <div
                         key={`add-${i}`}
-                        className="p-3 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 transition-colors group"
+                        className={`p-3 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 transition-colors group ${dropTarget === doc ? 'ring-2 ring-primary bg-primary/5 border-primary' : ''}`}
+                        onDragOver={(e) => handleDragOver(e, doc)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, doc)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="cursor-pointer flex-1 flex items-center gap-3" onClick={() => toggleDoc(doc)}>
@@ -520,10 +626,16 @@ export default function TradeDetailPage() {
                         {docFiles[doc] && docFiles[doc].length > 0 && (
                           <div className="mt-2 ml-8 space-y-1">
                             {docFiles[doc].map(f => (
-                              <div key={f.id} className="flex items-center gap-2 text-xs bg-white/70 rounded px-2 py-1">
+                              <div
+                                key={f.id}
+                                draggable
+                                onDragStart={() => handleDragStart(f, doc)}
+                                className="flex items-center gap-2 text-xs bg-white/70 rounded px-2 py-1 cursor-grab active:cursor-grabbing"
+                              >
+                                <GripVertical className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                                 <FileText className="h-3 w-3 text-primary flex-shrink-0" />
-                                <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1">{f.fileName}</a>
-                                <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="h-3 w-3" /></button>
+                                <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1" onClick={(e) => e.stopPropagation()}>{f.fileName}</a>
+                                <button onClick={(e) => { e.stopPropagation(); deleteDocFile(doc, f.id); }} className="text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="h-3 w-3" /></button>
                               </div>
                             ))}
                           </div>

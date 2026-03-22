@@ -53,3 +53,10 @@ def delete_document(doc_id: str, user=Depends(non_accountant)):
             os.remove(file_path)
     documents_col.delete_one({"_id": ObjectId(doc_id)})
     return {"message": "Document deleted"}
+
+
+@router.put("/{doc_id}/assign")
+def assign_document(doc_id: str, body: dict, user=Depends(non_accountant)):
+    new_doc_name = body.get("docName", "")
+    documents_col.update_one({"_id": ObjectId(doc_id)}, {"$set": {"docName": new_doc_name}})
+    return {"message": "Document reassigned", "docName": new_doc_name}

@@ -338,7 +338,7 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Demurrage Rate</span><span className="font-medium">{trade.demurrageRate ? `USD ${Number(trade.demurrageRate).toLocaleString()}/Day` : '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Brokerage (per MT)</span><span className="font-medium">{trade.brokeragePerMT != null && trade.brokeragePerMT !== 0 ? trade.brokeragePerMT : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Brokerage (per MT)</span><span className="font-medium">{trade.brokeragePerMT != null && trade.brokeragePerMT !== 0 ? `${trade.brokeragePerMT} ${trade.brokerageCurrency || 'USD'}` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Brokerage Payment</span><span className="font-medium capitalize">{trade.brokerageAccount ? `${trade.brokerageAccount} Account` : '-'}</span></div>
                 <Separator />

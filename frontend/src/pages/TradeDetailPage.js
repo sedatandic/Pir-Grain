@@ -11,7 +11,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -43,6 +43,8 @@ export default function TradeDetailPage() {
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [vessels, setVessels] = useState([]);
+  const [additionalDocs, setAdditionalDocs] = useState([]);
+  const [newDocInput, setNewDocInput] = useState('');
   const [surveyors, setSurveyors] = useState([]);
   const [ports, setPorts] = useState([]);
   const [blDialogOpen, setBlDialogOpen] = useState(false);
@@ -71,6 +73,7 @@ export default function TradeDetailPage() {
         setPorts(portRes.data);
         setDisportAgents(daRes.data);
         setDocChecks(tradeRes.data.docChecks || {});
+        setAdditionalDocs(tradeRes.data.additionalDocuments || []);
       } catch (err) {
         toast.error('Failed to load trade');
       } finally {
@@ -88,10 +91,23 @@ export default function TradeDetailPage() {
   const saveDocChecks = async () => {
     setSaving(true);
     try {
-      await api.put(`/api/trades/${tradeId}`, { docChecks });
+      await api.put(`/api/trades/${tradeId}`, { docChecks, additionalDocuments: additionalDocs });
       toast.success('Document checklist saved');
     } catch { toast.error('Failed to save'); }
     finally { setSaving(false); }
+  };
+
+  const addAdditionalDoc = () => {
+    const name = newDocInput.trim();
+    if (!name) return;
+    if (additionalDocs.includes(name)) { toast.error('Document already exists'); return; }
+    setAdditionalDocs(prev => [...prev, name]);
+    setNewDocInput('');
+  };
+
+  const removeAdditionalDoc = (doc) => {
+    setAdditionalDocs(prev => prev.filter(d => d !== doc));
+    setDocChecks(prev => { const next = {...prev}; delete next[doc]; return next; });
   };
 
   const toggleDoc = (doc) => {
@@ -179,7 +195,8 @@ export default function TradeDetailPage() {
   const commodity = commodities.find(c => c.id === trade.commodityId);
   const commodityName = commodity?.name || commodity?.companyName || '-';
   const docList = getDocChecklist(commodity);
-  const completedDocs = docList.filter(d => docChecks[d]).length;
+  const allDocs = [...docList, ...additionalDocs];
+  const completedDocs = allDocs.filter(d => docChecks[d]).length;
 
   return (
     <div className="space-y-6" data-testid="trade-detail-page">
@@ -203,7 +220,7 @@ export default function TradeDetailPage() {
         <TabsList className="flex-wrap">
           <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Trade Summary</TabsTrigger>
           <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />B/L Details</TabsTrigger>
-          <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{docList.length})</TabsTrigger>
+          <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
         </TabsList>
 
         {/* Trade Summary Tab */}
@@ -361,7 +378,7 @@ export default function TradeDetailPage() {
               <div>
                 <CardTitle className="text-base">Shipment Document Checklist</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {commodityName} — {completedDocs} of {docList.length} documents completed
+                  {commodityName} — {completedDocs} of {allDocs.length} documents completed
                 </p>
               </div>
               <Button onClick={saveDocChecks} disabled={saving} size="sm">
@@ -370,7 +387,7 @@ export default function TradeDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="w-full bg-muted rounded-full h-2 mb-4">
-                <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${docList.length > 0 ? (completedDocs / docList.length) * 100 : 0}%` }} />
+                <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${allDocs.length > 0 ? (completedDocs / allDocs.length) * 100 : 0}%` }} />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {docList.map((doc, i) => (
@@ -387,6 +404,54 @@ export default function TradeDetailPage() {
                     <span className={docChecks[doc] ? 'line-through text-muted-foreground' : 'text-sm'}>{doc}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Additional Trade-Specific Documents */}
+              <Separator className="my-4" />
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold">Additional Documents (Trade-Specific)</h4>
+                <div className="flex gap-2">
+                  <Input
+                    data-testid="add-additional-doc-input"
+                    value={newDocInput}
+                    onChange={(e) => setNewDocInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addAdditionalDoc()}
+                    placeholder="Add new document..."
+                    className="flex-1"
+                  />
+                  <Button size="sm" onClick={addAdditionalDoc} disabled={!newDocInput.trim()} data-testid="add-additional-doc-btn">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {additionalDocs.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {additionalDocs.map((doc, i) => (
+                      <div
+                        key={`add-${i}`}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 transition-colors group"
+                      >
+                        <div className="cursor-pointer flex-1 flex items-center gap-3" onClick={() => toggleDoc(doc)}>
+                          {docChecks[doc] ? (
+                            <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                          ) : (
+                            <Circle className="h-5 w-5 text-orange-400 flex-shrink-0" />
+                          )}
+                          <span className={docChecks[doc] ? 'line-through text-muted-foreground text-sm' : 'text-sm'}>{doc}</span>
+                        </div>
+                        <button
+                          data-testid={`remove-additional-doc-${i}`}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                          onClick={() => removeAdditionalDoc(doc)}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {additionalDocs.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No additional documents added for this trade.</p>
+                )}
               </div>
             </CardContent>
           </Card>

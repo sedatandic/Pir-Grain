@@ -99,6 +99,14 @@ export default function CommissionsPage() {
     } catch { toast.error('Failed to save payment date'); }
   };
 
+  const clearPaymentDate = async (tradeId) => {
+    try {
+      await api.put(`/api/trades/${tradeId}`, { buyerPaymentDate: '', invoicePaid: false });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, buyerPaymentDate: '', invoicePaid: false } : t));
+      toast.success('Payment date cleared & marked as PENDING');
+    } catch { toast.error('Failed to clear payment date'); }
+  };
+
   const openInvoiceDialog = (tradeId, account) => {
     setPendingInvoice({ tradeId, account: account || 'seller' });
     setBankDialogOpen(true);
@@ -193,17 +201,20 @@ export default function CommissionsPage() {
                   </Button>
                 </TableCell>}
                 <TableCell className="text-center">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className={cn('text-xs whitespace-nowrap', !t.buyerPaymentDate && 'text-muted-foreground')}>
-                        <CalendarDays className="h-3.5 w-3.5 mr-1" />
-                        {t.buyerPaymentDate || 'Set date'}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                      <Calendar mode="single" selected={t.buyerPaymentDate ? (() => { try { const [dd,mm,yyyy] = t.buyerPaymentDate.split('/'); return new Date(yyyy, mm-1, dd); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) savePaymentDate(t.id, format(d, 'dd/MM/yyyy')); }} initialFocus />
-                    </PopoverContent>
-                  </Popover>
+                  <div className="flex items-center justify-center gap-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className={cn('text-xs whitespace-nowrap', !t.buyerPaymentDate && 'text-muted-foreground')}>
+                          <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                          {t.buyerPaymentDate || 'Set date'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar mode="single" selected={t.buyerPaymentDate ? (() => { try { const [dd,mm,yyyy] = t.buyerPaymentDate.split('/'); return new Date(yyyy, mm-1, dd); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) savePaymentDate(t.id, format(d, 'dd/MM/yyyy')); }} initialFocus />
+                      </PopoverContent>
+                    </Popover>
+                    {t.buyerPaymentDate && <button className="text-destructive hover:text-destructive/80 text-xs p-0.5" onClick={() => clearPaymentDate(t.id)} title="Clear date">&times;</button>}
+                  </div>
                 </TableCell>
               </TableRow>
             );

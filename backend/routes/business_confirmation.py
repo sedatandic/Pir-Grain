@@ -145,9 +145,12 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         return [Paragraph(label, s_label), Paragraph(str(value), style)]
 
     # Build data rows — Date & Contract No as first row in the table
+    pir_ref_no = trade.get("referenceNumber") or "-"
+
     data = [
         row("DATE", contract_date),
         row("CONTRACT NO", contract_no),
+        row("PIR GRAIN REF. NO", pir_ref_no),
         [Paragraph("SELLERS", s_label), Paragraph(partner_text(seller).replace("\n", "<br/>"), s_val)],
         [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
         [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
@@ -208,7 +211,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         row("PAYMENT", payment_terms, s_small),
         row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
         [Paragraph("DOCUMENTS", s_label), Paragraph(docs_text, s_val)],
-        row("GAFTA", gafta_display),
+        row("GAFTA RULE", gafta_display),
     ]
 
     tbl = Table(data, colWidths=[col_label, col_val])

@@ -74,6 +74,7 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 ## Completed (March 22, 2026)
 - **Bank Accounts Management UI**: Added "Bank Accounts" tab in Settings with full CRUD (add, edit, delete). Currency dropdown with USD/EUR/GBP/TRY/CHF/AED/UAH. Address textarea. 100% test pass rate.
 - **Trades Year Filter**: Added year-based filter dropdown (2026, 2025, 2024) to Trades page. Defaults to current year (2026). For current year, also shows incomplete trades from previous years (not completed/cancelled/washout). 100% test pass rate.
+- **Reports Page Filters**: Added Year, Seller, Buyer, Commodity, Origin filters to Reports page. All combinable. KPIs, charts, status distribution, and drill-downs all reflect filtered data. 100% test pass rate.
 
 ## Backlog (Prioritized)
 ### P1

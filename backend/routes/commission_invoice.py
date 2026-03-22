@@ -32,7 +32,7 @@ PIR_GREEN_MED = colors.HexColor("#D4EADB")
 DARK_TEXT = colors.HexColor("#1A1A1A")
 GREY_TEXT = colors.HexColor("#666666")
 LIGHT_BORDER = colors.HexColor("#D0D0D0")
-LOGO_PATH = os.path.join(os.path.dirname(__file__), "pir-logo.jpeg")
+LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo.jpeg")
 
 PIR_COMPANY = {
     "name": "PIR GRAIN AND PULSES LTD",

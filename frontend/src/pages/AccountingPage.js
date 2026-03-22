@@ -18,9 +18,9 @@ const CATEGORIES = ['Commission Payment', 'Salary Payment', 'Pension Payment', '
 const INCOMING_CATEGORIES = ['Commission Payment', 'Other Payments'];
 const OUTGOING_CATEGORIES = ['Salary Payment', 'Pension Payment', 'Accountant Payment', 'Other Payments'];
 const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: 'bg-amber-100 text-amber-800' },
-  paid: { label: 'Paid', color: 'bg-green-100 text-green-800' },
-  overdue: { label: 'Overdue', color: 'bg-red-100 text-red-800' },
+  pending: { label: 'PENDING', color: 'bg-amber-100 text-amber-800' },
+  paid: { label: 'PAID', color: 'bg-green-100 text-green-800' },
+  overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
 function InvoiceTable({ invoices, search, onEdit, onDelete }) {
@@ -28,20 +28,20 @@ function InvoiceTable({ invoices, search, onEdit, onDelete }) {
   const fmt = (n, cur) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 0 }).format(n);
   return (
     <div className="overflow-x-auto border rounded-lg">
-      <Table>
+      <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Invoice #</TableHead><TableHead>Vendor</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Status</TableHead><TableHead className="w-[80px]"></TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice #</TableHead><TableHead>Vendor</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]"></TableHead>
         </TableRow></TableHeader>
         <TableBody>
           {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
           filtered.map(inv => (
             <TableRow key={inv.id}>
+              <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status?.toUpperCase()}</Badge></TableCell>
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
               <TableCell>{inv.vendorName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-mono font-medium">{fmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
-              <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status}</Badge></TableCell>
               <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
             </TableRow>
           ))}

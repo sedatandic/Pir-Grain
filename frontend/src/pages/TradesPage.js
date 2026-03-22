@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 import { TRADE_STATUS_CONFIG, STATUS_OPTIONS, COMPLETED_STATUSES, WASHOUT_STATUSES, CANCELLED_STATUSES } from '../lib/constants';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -15,6 +15,7 @@ import { format, parseISO } from 'date-fns';
 
 export default function TradesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [trades, setTrades] = useState([]);
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
@@ -53,6 +54,18 @@ export default function TradesPage() {
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // Scroll to section when navigating from dashboard
+  useEffect(() => {
+    if (location.state?.scrollTo && !loading) {
+      const el = document.getElementById(location.state.scrollTo);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+      // Clear state so refresh doesn't re-scroll
+      window.history.replaceState({}, '');
+    }
+  }, [location.state, loading]);
 
   const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all';
   const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); };
@@ -312,7 +325,7 @@ export default function TradesPage() {
       </Card>
 
       {/* Ongoing */}
-      <Card className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
+      <Card id="trades-ongoing" className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Trades</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
           <CardDescription className="text-emerald-700">Trades with vessel details</CardDescription>
@@ -321,7 +334,7 @@ export default function TradesPage() {
       </Card>
 
       {/* Pending */}
-      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
+      <Card id="trades-pending" className="border-l-4 border-l-blue-500 bg-blue-50/50">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-blue-600" /><CardTitle className="text-blue-800">Pending Trades</CardTitle><Badge variant="secondary" className="bg-blue-100 text-blue-800">{filtered.pending.length}</Badge></div>
           <CardDescription className="text-blue-700">Waiting for vessel nomination</CardDescription>
@@ -330,7 +343,7 @@ export default function TradesPage() {
       </Card>
 
       {/* Completed */}
-      <Card className="border-l-4 border-l-slate-400 bg-slate-50/50">
+      <Card id="trades-completed" className="border-l-4 border-l-slate-400 bg-slate-50/50">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Trades</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
           <CardDescription className="text-slate-600">Successfully completed trades</CardDescription>

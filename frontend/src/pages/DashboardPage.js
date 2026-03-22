@@ -80,7 +80,7 @@ export default function DashboardPage() {
 
       {/* KPI Cards + Upcoming Events as 4th card */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-ongoing-trades">
+        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-ongoing-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-ongoing' } })}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
             <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-blue-100">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
             <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-pending-trades">
+        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-pending-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-pending' } })}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Pending Trades</CardTitle>
             <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-amber-100">
@@ -104,7 +104,7 @@ export default function DashboardPage() {
             <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
-        <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-completed-trades">
+        <Card className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" data-testid="kpi-completed-trades" onClick={() => navigate('/trades', { state: { scrollTo: 'trades-completed' } })}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Completed Trades</CardTitle>
             <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-green-50">
@@ -118,7 +118,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Upcoming Payments & Events - 4th card */}
-        <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-2 md:p-4">
+        <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-2 md:p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Upcoming Payments & Events</CardTitle>
             <CardDescription className="text-xs">Due invoices, meetings, and conferences</CardDescription>
@@ -126,7 +126,7 @@ export default function DashboardPage() {
           <CardContent>
             {upcomingItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-4 text-center">
-                <Button variant="outline" size="sm" className="mb-4 rounded-full" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+                <Button variant="outline" size="sm" className="mb-4 rounded-full" onClick={(e) => { e.stopPropagation(); navigate('/calendar'); }}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
                 <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-2" />
                 <p className="text-sm text-muted-foreground">No upcoming items</p>
               </div>

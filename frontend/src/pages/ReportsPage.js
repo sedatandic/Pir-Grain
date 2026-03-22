@@ -267,7 +267,6 @@ export default function ReportsPage() {
               </SelectContent>
             </Select>
             {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="reports-clear-filter"><X className="h-4 w-4 mr-1" />Clear</Button>}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
             <Select value={filterSeller} onValueChange={setFilterSeller}>
               <SelectTrigger className="w-[150px] shrink-0" data-testid="reports-seller-filter"><SelectValue placeholder="Seller" /></SelectTrigger>
               <SelectContent>

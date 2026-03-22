@@ -364,7 +364,6 @@ export default function TradesPage() {
                 <SelectItem value="2024">2024</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
             <Select value={filterCommodity} onValueChange={setFilterCommodity}>
               <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Commodity" /></SelectTrigger>
               <SelectContent>

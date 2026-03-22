@@ -91,10 +91,10 @@ export default function Sidebar() {
             <PanelLeft className="w-5 h-5 text-muted-foreground" />
           </button>
         ) : null}
-        <div className={cn('flex items-center gap-2 min-w-0', collapsed && 'max-md:flex md:hidden')}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-lg font-black tracking-tight" style={{ color: PIR_GREEN }}>PIR</span>
-            <span className="text-lg font-light tracking-tight text-muted-foreground">APP</span>
+        <div className={cn('flex items-center justify-center', collapsed && 'max-md:flex md:hidden')}>
+          <div className="flex items-center gap-2">
+            <span className="text-3xl font-black tracking-tight" style={{ color: PIR_GREEN }}>PIR</span>
+            <span className="text-3xl font-light tracking-tight text-muted-foreground">APP</span>
           </div>
         </div>
         {/* Desktop: collapse toggle */}

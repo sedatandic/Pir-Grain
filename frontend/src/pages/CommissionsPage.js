@@ -78,7 +78,7 @@ export default function CommissionsPage() {
           <TableBody>
             {filtered.map(t => (
               <TableRow key={t.id}>
-                <TableCell className="font-medium text-primary whitespace-nowrap"><Link to={`/trades/${t.id}`}>{t.pirContractNumber || t.referenceNumber}</Link></TableCell>
+                <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
                 <TableCell className="text-sm max-w-[180px]">{t.commodityName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>

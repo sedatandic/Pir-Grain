@@ -16,6 +16,7 @@ from routes.events import router as events_router
 from routes.accounting import router as accounting_router
 from routes.notifications import router as notifications_router
 from routes.users import router as users_router
+from routes.commission_invoice import router as commission_invoice_router
 
 
 @asynccontextmanager
@@ -37,6 +38,7 @@ app.include_router(events_router)
 app.include_router(accounting_router)
 app.include_router(notifications_router)
 app.include_router(users_router)
+app.include_router(commission_invoice_router)
 
 
 @app.get("/api/health")

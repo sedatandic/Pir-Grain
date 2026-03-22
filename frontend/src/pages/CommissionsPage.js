@@ -3,10 +3,12 @@ import api from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { TRADE_STATUS_CONFIG, PENDING_STATUSES, ONGOING_STATUSES, COMPLETED_STATUSES } from '../lib/constants';
-import { DollarSign, TrendingUp, Clock, CheckCircle, Search, Loader2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, CheckCircle, Search, Loader2, FileDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function CommissionsPage() {
   const [trades, setTrades] = useState([]);
@@ -32,17 +34,36 @@ export default function CommissionsPage() {
     return list.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q) || (t.buyerName||'').toLowerCase().includes(q));
   };
 
-  const stats = useMemo(() => ({
-    total: trades.reduce((s, t) => s + (t.totalCommission || 0), 0),
-    ongoing: categorized.ongoing.reduce((s, t) => s + (t.totalCommission || 0), 0),
-    pending: categorized.pending.reduce((s, t) => s + (t.totalCommission || 0), 0),
-    completed: categorized.completed.reduce((s, t) => s + (t.totalCommission || 0), 0),
-  }), [trades, categorized]);
+  const stats = useMemo(() => {
+    const calcComm = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
+    return {
+      total: trades.reduce((s, t) => s + calcComm(t), 0),
+      ongoing: categorized.ongoing.reduce((s, t) => s + calcComm(t), 0),
+      pending: categorized.pending.reduce((s, t) => s + calcComm(t), 0),
+      completed: categorized.completed.reduce((s, t) => s + calcComm(t), 0),
+    };
+  }, [trades, categorized]);
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
   const fmtQty = (q) => `${(q||0).toLocaleString()} MT`;
+  const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
 
-  const renderTable = (list, empty) => {
+  const downloadInvoice = async (tradeId, account) => {
+    try {
+      const res = await api.get(`/api/commission-invoice/${tradeId}?account=${account || 'seller'}`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Commission_Invoice_${tradeId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded');
+    } catch (err) {
+      toast.error('Failed to generate invoice');
+    }
+  };
+
+  const renderTable = (list, empty, showInvoice = false) => {
     const filtered = applySearch(list);
     if (filtered.length === 0) return <div className="text-center py-6 text-muted-foreground text-sm">{empty}</div>;
     return (
@@ -50,25 +71,36 @@ export default function CommissionsPage() {
         <Table>
           <TableHeader><TableRow className="bg-muted/50">
             <TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
-            <TableHead className="text-right">Quantity</TableHead><TableHead className="text-right">Rate/MT</TableHead><TableHead className="text-right">Commission</TableHead><TableHead>Status</TableHead>
+            <TableHead>Vessel</TableHead><TableHead className="text-right">B/L Qty</TableHead><TableHead>Load Port</TableHead><TableHead>Disch Port</TableHead>
+            <TableHead className="text-right">Rate/MT</TableHead><TableHead className="text-right">Commission</TableHead><TableHead>Status</TableHead>
+            {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
             {filtered.map(t => (
               <TableRow key={t.id}>
-                <TableCell className="font-medium text-primary">{t.referenceNumber}</TableCell>
-                <TableCell className="text-sm">{t.commodityName||'-'}</TableCell>
-                <TableCell className="text-sm">{t.sellerCode||t.sellerName||'-'}</TableCell>
-                <TableCell className="text-sm">{t.buyerCode||t.buyerName||'-'}</TableCell>
-                <TableCell className="text-right font-mono text-sm">{fmtQty(t.quantity)}</TableCell>
+                <TableCell className="font-medium text-primary whitespace-nowrap"><Link to={`/trades/${t.id}`}>{t.pirContractNumber || t.referenceNumber}</Link></TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.commodityName||'-'}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
+                <TableCell className="text-right font-mono text-sm">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} MT` : fmtQty(t.quantity)}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.loadingPortName || t.basePortName || '-'}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.dischargePortName || '-'}</TableCell>
                 <TableCell className="text-right font-mono text-sm">${t.brokeragePerMT||0}</TableCell>
-                <TableCell className="text-right font-mono text-sm font-medium">{fmt(t.totalCommission||0)}</TableCell>
+                <TableCell className="text-right font-mono text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
                 <TableCell><Badge className={TRADE_STATUS_CONFIG[t.status]?.color||'bg-muted'}>{TRADE_STATUS_CONFIG[t.status]?.label||t.status}</Badge></TableCell>
+                {showInvoice && <TableCell className="text-center">
+                  <Button variant="outline" size="sm" onClick={() => downloadInvoice(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
+                    <FileDown className="h-3.5 w-3.5 mr-1" />PDF
+                  </Button>
+                </TableCell>}
               </TableRow>
             ))}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={6} className="text-right">Total:</TableCell>
-              <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+(t.totalCommission||0),0))}</TableCell>
+              <TableCell colSpan={9} className="text-right">Total:</TableCell>
+              <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
               <TableCell></TableCell>
+              {showInvoice && <TableCell></TableCell>}
             </TableRow>
           </TableBody>
         </Table>
@@ -94,7 +126,7 @@ export default function CommissionsPage() {
       <div className="space-y-4">
         <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Ongoing ({categorized.ongoing.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.ongoing, 'No ongoing trades')}</CardContent></Card>
         <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending trades')}</CardContent></Card>
-        <Card className="border-l-4 border-l-slate-400"><CardHeader className="pb-3"><CardTitle className="text-lg text-slate-700">Completed ({categorized.completed.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.completed, 'No completed trades')}</CardContent></Card>
+        <Card className="border-l-4 border-l-slate-400"><CardHeader className="pb-3"><CardTitle className="text-lg text-slate-700">Completed ({categorized.completed.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.completed, 'No completed trades', true)}</CardContent></Card>
       </div>
     </div>
   );

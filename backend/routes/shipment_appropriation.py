@@ -189,7 +189,7 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
     story.append(Paragraph(body1, s_body))
 
     body2 = (
-        f"<b>{origin_adj}</b> origin <b>{commodity_display}</b>, in bulk, "
+        f"<b>{commodity_display}</b>, in bulk, "
         f'shipped as per <b>"{vessel}"</b> under the following details:'
     )
     story.append(Paragraph(body2, s_body))

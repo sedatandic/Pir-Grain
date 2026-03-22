@@ -292,7 +292,7 @@ export default function TradesPage() {
                     </div>
                   ) : <span className="cursor-pointer text-primary hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
                 ) : '-'}</TableCell>
-                <TableCell className="text-center text-sm max-w-[180px]">{trade.commodityDisplayName || trade.commodityName || '-'}</TableCell>
+                <TableCell className="text-center text-sm max-w-[160px]">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{(() => {
@@ -473,7 +473,7 @@ export default function TradesPage() {
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Contract Date</span><span className="font-medium">{formatDate(selectedTrade.contractDate)}</span></div>
                     <hr />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{selectedTrade.commodityDisplayName || selectedTrade.commodityName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{selectedTrade.commodityName || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{selectedTrade.originName || '-'}</span></div>
                     <hr />
@@ -554,7 +554,7 @@ export default function TradesPage() {
                         <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEntityFilter(null); navigate(`/trades/${t.id}`); }}>
                           <TableCell><Badge className={`text-xs ${sc.color || 'bg-muted'}`}>{sc.label || t.status}</Badge></TableCell>
                           <TableCell className="font-medium text-sm">{t.pirContractNumber || t.referenceNumber}</TableCell>
-                          <TableCell className="text-sm">{t.commodityDisplayName || t.commodityName || '-'}</TableCell>
+                          <TableCell className="text-sm max-w-[150px]">{t.commodityName || '-'}</TableCell>
                           <TableCell className="text-sm">{t.sellerCode || t.sellerName || '-'}</TableCell>
                           <TableCell className="text-sm">{t.buyerCode || t.buyerName || '-'}</TableCell>
                           <TableCell className="text-sm">{t.quantity ? `${t.quantity.toLocaleString()} Mts` : '-'}</TableCell>

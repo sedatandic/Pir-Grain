@@ -135,9 +135,8 @@ export default function CommissionsPage() {
               <TableRow key={t.id}>
                 <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
                 <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
-                <TableCell className="text-sm max-w-[180px]">
+                <TableCell className="text-sm max-w-[160px]">
                   <div>{t.commodityName||'-'}</div>
-                  {t.cropYear && <div className="text-xs text-muted-foreground">Crop {t.cropYear}</div>}
                 </TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>

@@ -61,13 +61,19 @@ export default function AccountingPage() {
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: '' });
   const [bankAccounts, setBankAccounts] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [vendors, setVendors] = useState([]);
 
   const fetchData = async () => {
     try {
-      const [invRes, stmtRes, bankRes] = await Promise.all([api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts')]);
+      const [invRes, stmtRes, bankRes, partnersRes, vendorsRes] = await Promise.all([
+        api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts'), api.get('/api/partners'), api.get('/api/vendors')
+      ]);
       setInvoices(invRes.data);
       setBankStatements(stmtRes.data);
       setBankAccounts(bankRes.data);
+      setSellers((partnersRes.data || []).filter(p => p.type === 'seller' || p.type === 'both').map(p => p.companyName).filter(Boolean));
+      setVendors((vendorsRes.data || []).map(v => v.name).filter(Boolean));
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
@@ -259,7 +265,14 @@ export default function AccountingPage() {
         <DialogContent><DialogHeader><DialogTitle className="text-center">{editingInvoice ? 'Edit Invoice' : `New ${form.direction === 'incoming' ? 'Incoming' : 'Outgoing'} Payment`}</DialogTitle><DialogDescription className="text-center">Fill in the payment details.</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Invoice Number *</Label><Input value={form.invoiceNumber} onChange={(e) => setForm({...form, invoiceNumber: e.target.value})} placeholder="INV-001" /></div>
-            <div className="space-y-2"><Label>Vendor *</Label><Input value={form.vendorName} onChange={(e) => setForm({...form, vendorName: e.target.value})} /></div>
+            <div className="space-y-2"><Label>{form.direction === 'incoming' ? 'Seller' : 'Vendor'} *</Label>
+              <Select value={form.vendorName} onValueChange={(v) => setForm({...form, vendorName: v})}>
+                <SelectTrigger><SelectValue placeholder={`Select ${form.direction === 'incoming' ? 'seller' : 'vendor'}`} /></SelectTrigger>
+                <SelectContent>
+                  {(form.direction === 'incoming' ? sellers : vendors).map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2"><Label>Amount *</Label><Input type="number" value={form.amount} onChange={(e) => setForm({...form, amount: e.target.value})} /></div>
             <div className="space-y-2"><Label>Currency</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>

@@ -21,6 +21,7 @@ bank_statements_col = db["bank_statements"]
 notifications_col = db["notifications"]
 disport_agents_col = db["disport_agents"]
 bank_accounts_col = db["bank_accounts"]
+vendors_col = db["vendors"]
 
 
 def serialize_doc(doc):

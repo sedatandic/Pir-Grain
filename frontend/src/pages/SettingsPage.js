@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound, X, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [surveyors, setSurveyors] = useState([]);
   const [users, setUsers] = useState([]);
   const [disportAgents, setDisportAgents] = useState([]);
+  const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
   const [pwdUserId, setPwdUserId] = useState(null);
@@ -32,10 +33,10 @@ export default function SettingsPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [co, or, po, su, us, da] = await Promise.all([
-        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'),
+      const [co, or, po, su, us, da, ve] = await Promise.all([
+        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'), api.get('/api/vendors'),
       ]);
-      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data);
+      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data); setVendors(ve.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, []);
 
@@ -124,6 +125,7 @@ export default function SettingsPage() {
               <TabsTrigger value="discharge-ports"><Ship className="h-3.5 w-3.5 mr-1" />Discharge Ports</TabsTrigger>
               <TabsTrigger value="surveyors"><Map className="h-3.5 w-3.5 mr-1" />Surveyors</TabsTrigger>
               <TabsTrigger value="disport-agents"><Anchor className="h-3.5 w-3.5 mr-1" />Disport Agents</TabsTrigger>
+              <TabsTrigger value="vendors"><DollarSign className="h-3.5 w-3.5 mr-1" />Vendors</TabsTrigger>
               <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1" />Users</TabsTrigger>
             </TabsList>
 
@@ -168,6 +170,13 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Disport-Agent</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
                 {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell><p className="text-xs whitespace-pre-line">{a.address || '-'}</p></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', address: a.address || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              </TableBody></Table></div>
+            </TabsContent>
+
+            <TabsContent value="vendors">
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Vendors ({vendors.length})</h3><Button size="sm" onClick={() => openAdd('vendors', { name: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Vendor</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Vendor Name</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {vendors.map(v => <TableRow key={v.id}><TableCell className="font-medium">{v.name}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('vendors'); setDialogForm({ name: v.name || '', _editId: v.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('vendors', v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 

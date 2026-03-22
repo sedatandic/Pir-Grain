@@ -194,8 +194,10 @@ export default function TradeDetailPage() {
   const sendShipmentAppropriation = async () => {
     setSendingSA(true);
     try {
-      // Open PDF in new tab
-      window.open(`${process.env.REACT_APP_BACKEND_URL}/api/shipment-appropriation/${tradeId}/pdf`, '_blank');
+      // Download PDF as blob with auth header
+      const res = await api.get(`/api/shipment-appropriation/${tradeId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
       // Record the send
       await api.put(`/api/trades/${tradeId}`, {
         shipmentAppropriationSentBy: trade.executionHandledBy || 'Admin',

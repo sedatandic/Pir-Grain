@@ -67,7 +67,7 @@ export default function DocumentsPage() {
           </div>
 
           <div className="overflow-x-auto border rounded-lg">
-            <Table>
+            <Table className="trade-table">
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead>Contract No</TableHead>
@@ -85,7 +85,7 @@ export default function DocumentsPage() {
                 ) : filtered.map(({ trade }) => (
                   <TableRow key={trade.id}>
                     <TableCell className="font-medium text-primary">{trade.referenceNumber}</TableCell>
-                    <TableCell className="text-sm">{trade.commodityDisplayName || trade.commodityName || '-'}</TableCell>
+                    <TableCell className="text-sm max-w-[160px]">{trade.commodityName || '-'}</TableCell>
                     <TableCell className="text-sm">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
                     <TableCell className="text-sm">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
                     <TableCell className="text-sm uppercase">{trade.vesselName || '-'}</TableCell>

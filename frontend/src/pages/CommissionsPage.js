@@ -95,14 +95,17 @@ export default function CommissionsPage() {
       <div className="overflow-x-auto border rounded-lg">
         <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
-            <TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
+            <TableHead>Status</TableHead><TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
             <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead className="text-center">Load Port<hr className="my-0.5 border-muted-foreground/30"/>Disch. Port</TableHead>
-            <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead><TableHead>Status</TableHead>
+            <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
-            {filtered.map(t => (
+            {filtered.map(t => {
+              const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
+              return (
               <TableRow key={t.id}>
+                <TableCell><Badge className={invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>{invoiceStatus}</Badge></TableCell>
                 <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
                 <TableCell className="text-sm max-w-[180px]">{t.commodityName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
@@ -116,18 +119,16 @@ export default function CommissionsPage() {
                 </TableCell>
                 <TableCell className="text-sm">${t.brokeragePerMT||0}</TableCell>
                 <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
-                <TableCell><Badge className={TRADE_STATUS_CONFIG[t.status]?.color||'bg-muted'}>{TRADE_STATUS_CONFIG[t.status]?.label||t.status}</Badge></TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
                     <FileDown className="h-3.5 w-3.5 mr-1" />PDF
                   </Button>
                 </TableCell>}
               </TableRow>
-            ))}
+            );})
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={8} className="text-right">Total:</TableCell>
+              <TableCell colSpan={9} className="text-right">Total:</TableCell>
               <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
-              <TableCell></TableCell>
               {showInvoice && <TableCell></TableCell>}
             </TableRow>
           </TableBody>
@@ -140,7 +141,7 @@ export default function CommissionsPage() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold tracking-tight">Brokerage & Commissions</h1><p className="text-muted-foreground">Track your brokerage earnings across all trades</p></div>
+      <div><h1 className="text-3xl font-bold tracking-tight">Brokerage Invoices</h1><p className="text-muted-foreground">Track your brokerage earnings across all trades</p></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Commission</CardTitle><DollarSign className="h-4 w-4 text-primary" /></CardHeader><CardContent><div className="text-2xl font-bold">{fmt(stats.total)}</div></CardContent></Card>

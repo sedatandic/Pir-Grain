@@ -288,7 +288,7 @@ export default function TradeDetailPage() {
       loadPortId: trade.loadingPortId || trade.basePortId || '',
       dischargePortId: trade.dischargePortId || '',
       sellerSurveyor: trade.sellerSurveyor || '',
-      buyerSurveyor: trade.buyerSurveyor || '',
+      buyerSurveyor: trade.buyerSurveyor || 'N/A',
       dischargeQuantity: trade.dischargeQuantity != null ? String(trade.dischargeQuantity) : '',
       disportAgent: trade.disportAgent || '',
     });
@@ -864,14 +864,15 @@ export default function TradeDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>Buyer Surveyor</Label>
-                <Select value={blForm.buyerSurveyor || '_custom'} onValueChange={(v) => setBlForm({...blForm, buyerSurveyor: v === '_custom' ? '' : v})}>
+                <Select value={blForm.buyerSurveyor || 'N/A'} onValueChange={(v) => setBlForm({...blForm, buyerSurveyor: v === '_custom' ? '' : v})}>
                   <SelectTrigger><SelectValue placeholder="Select surveyor" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="_custom">Custom...</SelectItem>
+                    <SelectItem value="N/A">N/A</SelectItem>
                     {surveyors.sort((a, b) => a.name.localeCompare(b.name)).map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                    <SelectItem value="_custom">Custom...</SelectItem>
                   </SelectContent>
                 </Select>
-                {(!blForm.buyerSurveyor || !surveyors.some(s => s.name === blForm.buyerSurveyor)) && (
+                {(blForm.buyerSurveyor && blForm.buyerSurveyor !== 'N/A' && !surveyors.some(s => s.name === blForm.buyerSurveyor)) && (
                   <Input value={blForm.buyerSurveyor || ''} onChange={(e) => setBlForm({...blForm, buyerSurveyor: e.target.value})} placeholder="Type surveyor name" />
                 )}
               </div>

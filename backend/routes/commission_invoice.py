@@ -9,10 +9,19 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image, HRFlowable
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from num2words import num2words
 import os
 
 from database import trades_col, partners_col
+
+# Register FreeSans fonts (supports Turkish characters: ş, ı, ö, ü, ç, ğ, İ, Ş, Ö, Ü, Ç, Ğ)
+pdfmetrics.registerFont(TTFont('FreeSans', '/usr/share/fonts/truetype/freefont/FreeSans.ttf'))
+pdfmetrics.registerFont(TTFont('FreeSansBold', '/usr/share/fonts/truetype/freefont/FreeSansBold.ttf'))
+pdfmetrics.registerFont(TTFont('FreeSansOblique', '/usr/share/fonts/truetype/freefont/FreeSansOblique.ttf'))
+pdfmetrics.registerFont(TTFont('FreeSansBoldOblique', '/usr/share/fonts/truetype/freefont/FreeSansBoldOblique.ttf'))
+pdfmetrics.registerFontFamily('FreeSans', normal='FreeSans', bold='FreeSansBold', italic='FreeSansOblique', boldItalic='FreeSansBoldOblique')
 from auth import get_current_user
 
 router = APIRouter(prefix="/api/commission-invoice", tags=["commission-invoice"])
@@ -61,24 +70,29 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements = []
     W = 170*mm
 
-    # --- Styles ---
-    s_header = ParagraphStyle('Header', fontSize=18, fontName='Helvetica-Bold', textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=1*mm)
-    s_sub = ParagraphStyle('Sub', fontSize=8, textColor=GREY_TEXT, alignment=TA_CENTER)
-    s_section = ParagraphStyle('Section', fontSize=10, fontName='Helvetica-Bold', textColor=PIR_GREEN, spaceBefore=2*mm)
-    s_label = ParagraphStyle('Lbl', fontSize=8, fontName='Helvetica-Bold', textColor=GREY_TEXT)
-    s_val = ParagraphStyle('Val', fontSize=9, textColor=DARK_TEXT)
-    s_val_b = ParagraphStyle('ValB', fontSize=9, fontName='Helvetica-Bold', textColor=DARK_TEXT)
-    s_small = ParagraphStyle('Sm', fontSize=7.5, textColor=GREY_TEXT)
-    s_right = ParagraphStyle('R', fontSize=9, alignment=TA_RIGHT)
-    s_right_b = ParagraphStyle('RB', fontSize=12, fontName='Helvetica-Bold', alignment=TA_RIGHT, textColor=PIR_GREEN)
-    s_th = ParagraphStyle('TH', fontSize=7.5, fontName='Helvetica-Bold', textColor=colors.white, alignment=TA_CENTER)
-    s_td = ParagraphStyle('TD', fontSize=8, alignment=TA_CENTER, textColor=DARK_TEXT)
-    s_td_l = ParagraphStyle('TDL', fontSize=8, textColor=DARK_TEXT)
-    s_td_r = ParagraphStyle('TDR', fontSize=8, alignment=TA_RIGHT, textColor=DARK_TEXT)
-    s_footer = ParagraphStyle('Footer', fontSize=7, textColor=GREY_TEXT, alignment=TA_CENTER)
+    # --- Styles (FreeSans for Turkish character support) ---
+    FONT = 'FreeSans'
+    FONT_B = 'FreeSansBold'
+    FONT_I = 'FreeSansOblique'
+    FONT_BI = 'FreeSansBoldOblique'
+
+    s_header = ParagraphStyle('Header', fontSize=18, fontName=FONT_B, textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=1*mm)
+    s_sub = ParagraphStyle('Sub', fontSize=8, fontName=FONT, textColor=GREY_TEXT, alignment=TA_CENTER)
+    s_section = ParagraphStyle('Section', fontSize=10, fontName=FONT_B, textColor=PIR_GREEN, spaceBefore=2*mm)
+    s_label = ParagraphStyle('Lbl', fontSize=8, fontName=FONT_B, textColor=GREY_TEXT)
+    s_val = ParagraphStyle('Val', fontSize=9, fontName=FONT, textColor=DARK_TEXT)
+    s_val_b = ParagraphStyle('ValB', fontSize=9, fontName=FONT_B, textColor=DARK_TEXT)
+    s_small = ParagraphStyle('Sm', fontSize=7.5, fontName=FONT, textColor=GREY_TEXT)
+    s_right = ParagraphStyle('R', fontSize=9, fontName=FONT, alignment=TA_RIGHT)
+    s_right_b = ParagraphStyle('RB', fontSize=12, fontName=FONT_B, alignment=TA_RIGHT, textColor=PIR_GREEN)
+    s_th = ParagraphStyle('TH', fontSize=7.5, fontName=FONT_B, textColor=colors.white, alignment=TA_CENTER)
+    s_td = ParagraphStyle('TD', fontSize=8, fontName=FONT, alignment=TA_CENTER, textColor=DARK_TEXT)
+    s_td_l = ParagraphStyle('TDL', fontSize=8, fontName=FONT, textColor=DARK_TEXT)
+    s_td_r = ParagraphStyle('TDR', fontSize=8, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)
+    s_footer = ParagraphStyle('Footer', fontSize=7, fontName=FONT, textColor=GREY_TEXT, alignment=TA_CENTER)
 
     # ===== HEADER SECTION =====
-    # Logo + Company info side by side
+    # Logo top-left + COMMISSION INVOICE top-right
     header_left = []
     if os.path.exists(LOGO_PATH):
         header_left.append(Image(LOGO_PATH, width=40*mm, height=18*mm))
@@ -86,10 +100,10 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         header_left.append(Paragraph(PIR_COMPANY['name'], s_section))
 
     header_right = [
-        Paragraph("<b>COMMISSION INVOICE</b>", ParagraphStyle('IT', fontSize=16, fontName='Helvetica-Bold', textColor=PIR_GREEN, alignment=TA_RIGHT)),
+        Paragraph("<b>COMMISSION INVOICE</b>", ParagraphStyle('IT', fontSize=16, fontName=FONT_B, textColor=PIR_GREEN, alignment=TA_RIGHT)),
         Spacer(1, 2*mm),
-        Paragraph(f"Invoice No: <b>{invoice_number}</b>", ParagraphStyle('IN', fontSize=9, alignment=TA_RIGHT, textColor=DARK_TEXT)),
-        Paragraph(f"Date: <b>{invoice_date}</b>", ParagraphStyle('ID', fontSize=9, alignment=TA_RIGHT, textColor=DARK_TEXT)),
+        Paragraph(f"Invoice No: <b>{invoice_number}</b>", ParagraphStyle('IN', fontSize=9, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)),
+        Paragraph(f"Date: <b>{invoice_date}</b>", ParagraphStyle('ID', fontSize=9, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)),
     ]
 
     h_tbl = Table([[header_left, header_right]], colWidths=[W*0.45, W*0.55])
@@ -110,8 +124,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     from_content = f"<b>{PIR_COMPANY['name']}</b><br/>{PIR_COMPANY['address']}<br/>ID No: {PIR_COMPANY['id_no']}"
 
     parties_data = [[
-        [Paragraph("BILL TO", ParagraphStyle('BT', fontSize=8, fontName='Helvetica-Bold', textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(to_content, s_val)],
-        [Paragraph("FROM", ParagraphStyle('FR', fontSize=8, fontName='Helvetica-Bold', textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(from_content, s_val)],
+        [Paragraph("BILL TO", ParagraphStyle('BT', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(to_content, s_val)],
+        [Paragraph("FROM", ParagraphStyle('FR', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(from_content, s_val)],
     ]]
     p_tbl = Table(parties_data, colWidths=[W*0.5, W*0.5])
     p_tbl.setStyle(TableStyle([
@@ -218,8 +232,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
     # ===== TOTAL BOX =====
     total_data = [
-        ["", Paragraph("<b>TOTAL AMOUNT:</b>", ParagraphStyle('TL', fontSize=10, fontName='Helvetica-Bold', alignment=TA_RIGHT, textColor=DARK_TEXT)),
-         Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", ParagraphStyle('TV', fontSize=13, fontName='Helvetica-Bold', alignment=TA_RIGHT, textColor=PIR_GREEN))],
+        ["", Paragraph("<b>TOTAL AMOUNT:</b>", ParagraphStyle('TL', fontSize=10, fontName=FONT_B, alignment=TA_RIGHT, textColor=DARK_TEXT)),
+         Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", ParagraphStyle('TV', fontSize=13, fontName=FONT_B, alignment=TA_RIGHT, textColor=PIR_GREEN))],
     ]
     t_tbl = Table(total_data, colWidths=[W*0.35, W*0.30, W*0.35])
     t_tbl.setStyle(TableStyle([

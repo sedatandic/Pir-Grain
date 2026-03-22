@@ -125,7 +125,8 @@ export default function CommissionsPage() {
                   </Button>
                 </TableCell>}
               </TableRow>
-            );})
+            );
+            })}
             <TableRow className="bg-muted/30 font-semibold">
               <TableCell colSpan={9} className="text-right">Total:</TableCell>
               <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>

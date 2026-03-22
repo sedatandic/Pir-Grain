@@ -59,13 +59,15 @@ export default function AccountingPage() {
   const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
-  const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '' });
+  const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: '' });
+  const [bankAccounts, setBankAccounts] = useState([]);
 
   const fetchData = async () => {
     try {
-      const [invRes, stmtRes] = await Promise.all([api.get('/api/invoices'), api.get('/api/bank-statements')]);
+      const [invRes, stmtRes, bankRes] = await Promise.all([api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts')]);
       setInvoices(invRes.data);
       setBankStatements(stmtRes.data);
+      setBankAccounts(bankRes.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
@@ -169,33 +171,73 @@ export default function AccountingPage() {
         </TabsContent>
 
         <TabsContent value="bank-statements">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Monthly Bank Statements</h3>
-                <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '' }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
-              </div>
-              <div className="overflow-x-auto border rounded-lg">
-                <Table>
-                  <TableHeader><TableRow className="bg-muted/50">
-                    <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
-                  </TableRow></TableHeader>
-                  <TableBody>
-                    {bankStatements.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No bank statements uploaded yet</TableCell></TableRow> :
-                    bankStatements.map(s => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
-                        <TableCell>{s.description || '-'}</TableCell>
-                        <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                        <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          {bankAccounts.length === 0 ? (
+            <Card><CardContent className="pt-6 text-center text-muted-foreground py-12">No bank accounts configured. Add bank accounts in Settings.</CardContent></Card>
+          ) : (
+            <div className="space-y-4">
+              {bankAccounts.map(bank => {
+                const stmts = bankStatements.filter(s => s.bankAccountId === bank.id);
+                return (
+                  <Card key={bank.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="font-semibold">{bank.accountName || bank.beneficiary}</h3>
+                          <p className="text-xs text-muted-foreground">{bank.bankName} {bank.currency ? `(${bank.currency})` : ''} — {bank.iban}</p>
+                        </div>
+                        <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: bank.id }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
+                      </div>
+                      <div className="overflow-x-auto border rounded-lg">
+                        <Table>
+                          <TableHeader><TableRow className="bg-muted/50">
+                            <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {stmts.length === 0 ? <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-sm">No statements for this account yet</TableCell></TableRow> :
+                            stmts.map(s => (
+                              <TableRow key={s.id}>
+                                <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
+                                <TableCell>{s.description || '-'}</TableCell>
+                                <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
+                                <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+              {/* Unassigned statements */}
+              {bankStatements.filter(s => !s.bankAccountId).length > 0 && (
+                <Card>
+                  <CardContent className="pt-6">
+                    <h3 className="font-semibold mb-4 text-muted-foreground">Unassigned Statements</h3>
+                    <div className="overflow-x-auto border rounded-lg">
+                      <Table>
+                        <TableHeader><TableRow className="bg-muted/50">
+                          <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
+                        </TableRow></TableHeader>
+                        <TableBody>
+                          {bankStatements.filter(s => !s.bankAccountId).map(s => (
+                            <TableRow key={s.id}>
+                              <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
+                              <TableCell>{s.description || '-'}</TableCell>
+                              <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
+                              <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

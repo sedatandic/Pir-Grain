@@ -104,7 +104,7 @@ export default function NewTradePage() {
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '', tolerance: '', cropYear: new Date().getFullYear().toString(),
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
-    paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
+    paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
@@ -156,7 +156,8 @@ export default function NewTradePage() {
             currency: t.currency || 'USD',
             paymentTerms: t.paymentTerms || '',
             incoterms: t.incoterms || '',
-            basePortId: t.basePortId || t.loadingPortId || '',
+            basePortId: t.basePortId || '',
+            loadingPortId: t.loadingPortId || '',
             dischargePortId: t.dischargePortId || '',
             shipmentWindowStart: convertDate(t.shipmentWindowStart),
             shipmentWindowEnd: convertDate(t.shipmentWindowEnd),
@@ -215,6 +216,7 @@ export default function NewTradePage() {
   const buyers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('buyer'); }), [partners]);
   const coBrokers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('co-broker'); }), [partners]);
   const dischPorts = useMemo(() => ports.filter(p => p.type === 'discharge'), [ports]);
+  const loadPorts = useMemo(() => ports.filter(p => p.type === 'loading'), [ports]);
 
   const selectedCommodity = useMemo(() => commodities.find(c => c.id === form.commodityId), [commodities, form.commodityId]);
   const sellerPartner = useMemo(() => partners.find(p => p.id === form.sellerId), [partners, form.sellerId]);
@@ -248,7 +250,7 @@ export default function NewTradePage() {
         sellerContractNumber: form.sellerContractNumber || 'N/A',
         brokerId: form.brokerId === 'na' ? '' : form.brokerId,
         coBrokerId: form.coBrokerId === 'na' ? '' : form.coBrokerId,
-        loadingPortId: form.basePortId,
+        loadingPortId: form.loadingPortId || '',
         quantity: form.quantity ? parseFloat(form.quantity) : 0,
         pricePerMT: form.pricePerMT ? parseFloat(form.pricePerMT) : 0,
         brokeragePerMT: form.brokeragePerMT ? parseFloat(form.brokeragePerMT) : 0,
@@ -257,6 +259,7 @@ export default function NewTradePage() {
         portVariations: form.portVariations.filter(pv => pv.portId).map(pv => ({
           portId: pv.portId,
           portName: pv.portName || '',
+          portCountry: pv.portCountry || '',
           difference: pv.difference ? parseFloat(pv.difference) : 0,
         })),
       };
@@ -490,12 +493,19 @@ export default function NewTradePage() {
       <Card>
         <CardHeader><CardTitle>Shipping Terms</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Base Port</Label>
               <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Loading Port</Label>
+              <Select value={form.loadingPortId} onValueChange={(v) => set('loadingPortId', v)}>
+                <SelectTrigger data-testid="loading-port-select"><SelectValue placeholder="Select loading port" /></SelectTrigger>
+                <SelectContent>{loadPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -536,7 +546,7 @@ export default function NewTradePage() {
                   <Select value={pv.portId} onValueChange={(v) => {
                     const updated = [...form.portVariations];
                     const port = dischPorts.find(p => p.id === v);
-                    updated[idx] = { ...updated[idx], portId: v, portName: port?.name || '' };
+                    updated[idx] = { ...updated[idx], portId: v, portName: port?.name || '', portCountry: port?.country || '' };
                     set('portVariations', updated);
                   }}>
                     <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>

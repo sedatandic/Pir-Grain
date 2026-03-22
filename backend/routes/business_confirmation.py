@@ -11,7 +11,8 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import os, re
+import os
+import re
 
 from database import trades_col, partners_col
 from auth import get_current_user
@@ -114,7 +115,6 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     shipment_end = fmt_date_dot(trade.get("shipmentWindowEnd"))
     discharge_port = trade.get("dischargePortName") or "-"
     discharge_country = trade.get("dischargePortCountry") or ""
-    discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     gafta = trade.get("gaftaContractNo") or "48"
 
     broker_text = partner_text(broker) if broker else "PIR Grain and Pulses Ltd.\nBlv. Tsarigradsko Shose No:73\nPlovdiv / Bulgaria, ZIP: 4000"
@@ -158,16 +158,29 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
 
     # Build price lines with base port + port variations
     base_port = trade.get("basePortName") or discharge_port
+    base_port_country = trade.get("basePortCountry") or ""
+    base_port_full = f"{base_port}, {base_port_country}" if base_port_country else base_port
     port_variations = trade.get("portVariations") or []
     dt = delivery_term
     # Avoid duplication if base port name already contains delivery term
-    base_label = f"{dt} {base_port}" if not base_port.upper().startswith(dt.upper()) else base_port
+    base_label = f"{dt} {base_port_full}" if not base_port.upper().startswith(dt.upper()) else base_port_full
     price_lines = [f"{currency} {price:,.2f}/MT {base_label}"]
     for pv in port_variations:
         pv_name = pv.get("portName", "")
         pv_diff = pv.get("difference", 0)
         pv_price = price + pv_diff
-        price_lines.append(f"{currency} {pv_price:,.2f}/MT {dt} {pv_name}")
+        # Look up port country for this variation
+        pv_country = pv.get("portCountry", "")
+        if not pv_country and pv.get("portId"):
+            try:
+                from database import ports_col as pc
+                pv_doc = pc.find_one({"_id": ObjectId(pv["portId"])})
+                if pv_doc:
+                    pv_country = pv_doc.get("country", "")
+            except Exception:
+                pass
+        pv_full = f"{pv_name}, {pv_country}" if pv_country else pv_name
+        price_lines.append(f"{currency} {pv_price:,.2f}/MT {dt} {pv_full}")
     price_text = "<br/>".join(price_lines)
 
     # Build documents list from commodity

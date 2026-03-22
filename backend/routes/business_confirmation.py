@@ -232,14 +232,6 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     story.append(Paragraph(f"Date: {contract_date}  |  Contract No: {contract_no}", s_date))
     story.append(Spacer(1, 2 * mm))
 
-    story.append(Paragraph(
-        "Good day,<br/><br/>"
-        "Dear Sirs, Madams,<br/>"
-        "Please find below the business confirmation for the transaction agreed as follows:",
-        s_greeting
-    ))
-    story.append(Spacer(1, 2 * mm))
-
     story.append(tbl)
     story.append(Spacer(1, 3 * mm))
 

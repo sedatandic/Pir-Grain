@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound, X, DollarSign } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Settings, Users, Map, Anchor, Wheat, Globe, ChevronRight, Ship, KeyRound, X, DollarSign, Landmark } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/auth';
 
@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [users, setUsers] = useState([]);
   const [disportAgents, setDisportAgents] = useState([]);
   const [vendors, setVendors] = useState([]);
+  const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
   const [pwdUserId, setPwdUserId] = useState(null);
@@ -33,10 +34,10 @@ export default function SettingsPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [co, or, po, su, us, da, ve] = await Promise.all([
-        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'), api.get('/api/vendors'),
+      const [co, or, po, su, us, da, ve, ba] = await Promise.all([
+        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'), api.get('/api/vendors'), api.get('/api/bank-accounts'),
       ]);
-      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data); setVendors(ve.data);
+      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data); setVendors(ve.data); setBankAccounts(ba.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, []);
 
@@ -126,6 +127,7 @@ export default function SettingsPage() {
               <TabsTrigger value="surveyors"><Map className="h-3.5 w-3.5 mr-1" />Surveyors</TabsTrigger>
               <TabsTrigger value="disport-agents"><Anchor className="h-3.5 w-3.5 mr-1" />Disport Agents</TabsTrigger>
               <TabsTrigger value="vendors"><DollarSign className="h-3.5 w-3.5 mr-1" />Vendors</TabsTrigger>
+              <TabsTrigger value="bank-accounts"><Landmark className="h-3.5 w-3.5 mr-1" />Bank Accounts</TabsTrigger>
               <TabsTrigger value="users"><Users className="h-3.5 w-3.5 mr-1" />Users</TabsTrigger>
             </TabsList>
 
@@ -180,6 +182,13 @@ export default function SettingsPage() {
               </TableBody></Table></div>
             </TabsContent>
 
+            <TabsContent value="bank-accounts">
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Bank Accounts ({bankAccounts.length})</h3><Button size="sm" data-testid="add-bank-account-btn" onClick={() => openAdd('bank-accounts', { accountName: '', bankName: '', currency: 'USD', iban: '', bic: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Bank Account</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Account Name</TableHead><TableHead>Bank Name</TableHead><TableHead>Currency</TableHead><TableHead>IBAN</TableHead><TableHead>BIC/SWIFT</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {bankAccounts.map(b => <TableRow key={b.id}><TableCell className="font-medium">{b.accountName || '-'}</TableCell><TableCell>{b.bankName || '-'}</TableCell><TableCell><Badge variant="secondary">{b.currency || '-'}</Badge></TableCell><TableCell className="font-mono text-xs">{b.iban || '-'}</TableCell><TableCell className="font-mono text-xs">{b.bic || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" data-testid={`edit-bank-account-${b.id}`} onClick={() => { setDialogType('bank-accounts'); setDialogForm({ accountName: b.accountName || '', bankName: b.bankName || '', currency: b.currency || 'USD', iban: b.iban || '', bic: b.bic || '', address: b.address || '', _editId: b.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" data-testid={`delete-bank-account-${b.id}`} onClick={() => handleDelete('bank-accounts', b.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              </TableBody></Table></div>
+            </TabsContent>
+
             <TabsContent value="users">
               <div className="flex justify-between mb-4"><h3 className="font-semibold">Users ({users.length})</h3><Button size="sm" onClick={() => openAdd('users', { name: '', username: '', email: '', whatsapp: '', password: '', role: 'user' })}><Plus className="h-3.5 w-3.5 mr-1" />Add User</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Name</TableHead><TableHead>Username</TableHead><TableHead>Email</TableHead><TableHead>WhatsApp</TableHead><TableHead>Role</TableHead><TableHead>Status</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
@@ -192,15 +201,22 @@ export default function SettingsPage() {
 
       {/* Generic Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewDocInput(''); }}>
-        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
-          <DialogHeader className="text-center"><DialogTitle className="text-center">{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType === 'commodities' ? 'Commodity' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription className="text-center">Fill in the details.</DialogDescription></DialogHeader>
+        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' || dialogType === 'bank-accounts' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
+          <DialogHeader className="text-center"><DialogTitle className="text-center">{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType === 'commodities' ? 'Commodity' : dialogType === 'bank-accounts' ? 'Bank Account' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription className="text-center">Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
             {Object.entries(dialogForm).filter(([key]) => key !== '_editId' && key !== 'documents').map(([key, val]) => (
-              key === 'type' ? (
+              key === 'type' && (dialogType === 'ports' || dialogType === 'loading-ports' || dialogType === 'discharge-ports') ? (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{key}</Label>
                   <select className="w-full rounded-md border p-2 text-sm" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
                     <option value="loading">Loading</option><option value="discharge">Discharge</option>
+                  </select>
+                </div>
+              ) : key === 'currency' && dialogType === 'bank-accounts' ? (
+                <div key={key} className="space-y-2">
+                  <Label>Currency</Label>
+                  <select className="w-full rounded-md border p-2 text-sm" data-testid="bank-account-currency-select" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
+                    <option value="USD">USD - US Dollar</option><option value="EUR">EUR - Euro</option><option value="GBP">GBP - British Pound</option><option value="TRY">TRY - Turkish Lira</option><option value="CHF">CHF - Swiss Franc</option><option value="AED">AED - UAE Dirham</option><option value="UAH">UAH - Ukrainian Hryvnia</option>
                   </select>
                 </div>
               ) : key === 'role' ? (
@@ -222,8 +238,8 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div key={key} className="space-y-2">
-                  <Label className="capitalize">{dialogType === 'vendors' ? (key === 'name' ? 'Vendor Name' : key === 'type' ? 'Vendor Type' : key.replace(/([A-Z])/g, ' $1')) : key.replace(/([A-Z])/g, ' $1')}</Label>
-                  <Input type={key === 'password' ? 'password' : 'text'} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder={dialogType === 'vendors' ? (key === 'name' ? 'Enter vendor name' : key === 'type' ? 'e.g. Logistics, Insurance, Surveyor' : key) : key} />
+                  <Label className="capitalize">{dialogType === 'vendors' ? (key === 'name' ? 'Vendor Name' : key === 'type' ? 'Vendor Type' : key.replace(/([A-Z])/g, ' $1')) : dialogType === 'bank-accounts' ? (key === 'accountName' ? 'Account Name' : key === 'bankName' ? 'Bank Name' : key === 'iban' ? 'IBAN' : key === 'bic' ? 'BIC / SWIFT' : key.replace(/([A-Z])/g, ' $1')) : key.replace(/([A-Z])/g, ' $1')}</Label>
+                  <Input type={key === 'password' ? 'password' : 'text'} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder={dialogType === 'vendors' ? (key === 'name' ? 'Enter vendor name' : key === 'type' ? 'e.g. Logistics, Insurance, Surveyor' : key) : dialogType === 'bank-accounts' ? (key === 'accountName' ? 'e.g. PIR Main Account' : key === 'bankName' ? 'e.g. Deutsche Bank' : key === 'iban' ? 'e.g. TR00 0000 0000 0000 0000 00' : key === 'bic' ? 'e.g. DEUTDEFF' : key) : key} />
                 </div>
               )
             ))}

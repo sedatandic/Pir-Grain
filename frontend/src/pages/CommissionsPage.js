@@ -133,7 +133,7 @@ export default function CommissionsPage() {
           <TableBody>
             {filtered.map(t => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
-              const invDate = t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-';
+              const invDate = t.buyerPaymentDate ? t.buyerPaymentDate : (t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-');
               const invNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
               return (
               <TableRow key={t.id}>

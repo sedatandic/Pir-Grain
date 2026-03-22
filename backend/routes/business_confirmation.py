@@ -120,15 +120,15 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     broker_text = partner_text(broker) if broker else "PIR Grain and Pulses Ltd.\nBlv. Tsarigradsko Shose No:73\nPlovdiv / Bulgaria, ZIP: 4000"
 
     # Styles
-    s_label = ParagraphStyle('Label', fontName='FreeSansBold', fontSize=8, textColor=PIR_GREEN, leading=10)
-    s_val = ParagraphStyle('Val', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=11)
-    s_val_bold = ParagraphStyle('ValBold', fontName='FreeSansBold', fontSize=8.5, textColor=DARK_TEXT, leading=11)
-    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=14, textColor=PIR_GREEN, alignment=TA_CENTER)
-    s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=9, textColor=DARK_TEXT, alignment=TA_CENTER)
-    s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=12)
-    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=11)
-    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=9, textColor=PIR_GREEN, leading=12)
-    s_small = ParagraphStyle('Small', fontName='FreeSans', fontSize=7.5, textColor=DARK_TEXT, leading=10)
+    s_label = ParagraphStyle('Label', fontName='FreeSansBold', fontSize=7.5, textColor=PIR_GREEN, leading=9)
+    s_val = ParagraphStyle('Val', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10)
+    s_val_bold = ParagraphStyle('ValBold', fontName='FreeSansBold', fontSize=8, textColor=DARK_TEXT, leading=10)
+    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=13, textColor=PIR_GREEN, alignment=TA_CENTER)
+    s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, alignment=TA_CENTER)
+    s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=11)
+    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10)
+    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=8.5, textColor=PIR_GREEN, leading=11)
+    s_small = ParagraphStyle('Small', fontName='FreeSans', fontSize=7, textColor=DARK_TEXT, leading=9)
 
     page_w = A4[0]
     margin = 18 * mm
@@ -155,24 +155,52 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     if aflatoxin:
         specs_lines += f"<br/>Aflatoxin: {aflatoxin}"
     data.append([Paragraph("SPECIFICATIONS", s_label), Paragraph(specs_lines, s_val)])
+
+    # Build price lines with base port + port variations
+    base_port = trade.get("basePortName") or discharge_port
+    port_variations = trade.get("portVariations") or []
+    dt = delivery_term
+    # Avoid duplication if base port name already contains delivery term
+    base_label = f"{dt} {base_port}" if not base_port.upper().startswith(dt.upper()) else base_port
+    price_lines = [f"{currency} {price:,.2f}/MT {base_label}"]
+    for pv in port_variations:
+        pv_name = pv.get("portName", "")
+        pv_diff = pv.get("difference", 0)
+        pv_price = price + pv_diff
+        price_lines.append(f"{currency} {pv_price:,.2f}/MT {dt} {pv_name}")
+    price_text = "<br/>".join(price_lines)
+
+    # Build documents list from commodity
+    doc_list = []
+    commodity_id = trade.get("commodityId")
+    if commodity_id:
+        from database import commodities_col
+        comm = commodities_col.find_one({"_id": ObjectId(commodity_id)})
+        if comm and comm.get("documents"):
+            doc_list = comm["documents"]
+    additional_docs = trade.get("additionalDocuments") or []
+    all_docs = doc_list + [d for d in additional_docs if d not in doc_list]
+    docs_text = "<br/>".join([f"- {d}" for d in all_docs]) if all_docs else "-"
+
     data += [
         row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
         row("SHIPMENT", f"{shipment_start} - {shipment_end}, both dates included, at Seller's option"),
-        row("PRICE", f"{currency} {price:,.2f}/MT {delivery_term} {discharge_full}", s_val_bold),
+        [Paragraph("PRICE", s_label), Paragraph(price_text, s_val_bold)],
         row("DISCH. RATE", f"{discharge_rate} MT SSHEX EIU, Half dispatch" if discharge_rate != "-" else "-"),
         row("PAYMENT", payment_terms, s_small),
         row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
+        [Paragraph("DOCUMENTS", s_label), Paragraph(docs_text, s_val)],
         row("CONTRACT", f"GAFTA No. {gafta}, Arbitration Clause 125, London"),
     ]
 
     tbl = Table(data, colWidths=[col_label, col_val])
     tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ('LEFTPADDING', (0, 0), (0, -1), 6),
-        ('LEFTPADDING', (1, 0), (1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (0, -1), 5),
+        ('LEFTPADDING', (1, 0), (1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
         ('BACKGROUND', (0, 0), (0, -1), LIGHT_GREEN),
     ]))
@@ -183,15 +211,15 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
 
     # Logo (smaller)
     if os.path.exists(LOGO_PATH):
-        logo = Image(LOGO_PATH, width=30 * mm, height=30 * mm)
+        logo = Image(LOGO_PATH, width=25 * mm, height=25 * mm)
         logo.hAlign = 'CENTER'
         story.append(logo)
-        story.append(Spacer(1, 2 * mm))
+        story.append(Spacer(1, 1 * mm))
 
     story.append(Paragraph("BUSINESS CONFIRMATION", s_title))
     story.append(Spacer(1, 1 * mm))
     story.append(Paragraph(f"Date: {contract_date}  |  Contract No: {contract_no}", s_date))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     story.append(Paragraph(
         "Good day,<br/><br/>"
@@ -199,13 +227,13 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         "Please find below the business confirmation for the transaction agreed as follows:",
         s_greeting
     ))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     story.append(tbl)
-    story.append(Spacer(1, 4 * mm))
+    story.append(Spacer(1, 3 * mm))
 
     story.append(Paragraph("A draft contract will be shared shortly. Thank you for the business.", s_closing))
-    story.append(Spacer(1, 4 * mm))
+    story.append(Spacer(1, 3 * mm))
     story.append(Paragraph("Best Regards,", s_closing))
     story.append(Spacer(1, 1 * mm))
     story.append(Paragraph("PIR Grain &amp; Pulses Ltd.", s_sign))

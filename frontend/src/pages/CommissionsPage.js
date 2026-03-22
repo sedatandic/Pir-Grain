@@ -53,7 +53,7 @@ export default function CommissionsPage() {
     };
   }, [trades, categorized]);
 
-  const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+  const fmt = (n) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)} USD`;
   const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
   const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
 
@@ -123,7 +123,7 @@ export default function CommissionsPage() {
                   <hr className="my-0.5 border-muted-foreground/20"/>
                   <div>{t.dischargePortName ? `${t.dischargePortName}${t.dischargePortCountry ? ', ' + t.dischargePortCountry : ''}` : '-'}</div>
                 </TableCell>
-                <TableCell className="text-sm">${t.brokeragePerMT||0}</TableCell>
+                <TableCell className="text-sm">{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</TableCell>
                 <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>

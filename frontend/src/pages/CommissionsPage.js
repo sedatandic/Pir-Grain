@@ -8,7 +8,9 @@ import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Checkbox } from '../components/ui/checkbox';
 import { TRADE_STATUS_CONFIG } from '../lib/constants';
-import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2 } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil } from 'lucide-react';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -18,8 +20,28 @@ export default function CommissionsPage() {
   const [search, setSearch] = useState('');
   const [bankAccounts, setBankAccounts] = useState([]);
   const [selectedBankIds, setSelectedBankIds] = useState([]);
+  const [editDialog, setEditDialog] = useState({ open: false, trade: null });
+  const [editForm, setEditForm] = useState({ brokeragePerMT: 0, brokerageCurrency: 'USD' });
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
   const [pendingInvoice, setPendingInvoice] = useState(null);
+
+  const openEdit = (t) => {
+    setEditForm({ brokeragePerMT: t.brokeragePerMT || 0, brokerageCurrency: t.brokerageCurrency || 'USD' });
+    setEditDialog({ open: true, trade: t });
+  };
+
+  const saveEdit = async () => {
+    if (!editDialog.trade) return;
+    try {
+      const res = await api.put(`/api/trades/${editDialog.trade.id}`, {
+        brokeragePerMT: parseFloat(editForm.brokeragePerMT) || 0,
+        brokerageCurrency: editForm.brokerageCurrency,
+      });
+      setTrades(prev => prev.map(t => t.id === editDialog.trade.id ? { ...t, ...res.data } : t));
+      toast.success('Brokerage updated');
+      setEditDialog({ open: false, trade: null });
+    } catch { toast.error('Failed to update'); }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -113,7 +135,10 @@ export default function CommissionsPage() {
               <TableRow key={t.id}>
                 <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
                 <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
-                <TableCell className="text-sm max-w-[180px]">{t.commodityDisplayName || t.commodityName||'-'}</TableCell>
+                <TableCell className="text-sm max-w-[180px]">
+                  <div>{t.commodityName||'-'}</div>
+                  {t.cropYear && <div className="text-xs text-muted-foreground">Crop {t.cropYear}</div>}
+                </TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
@@ -123,7 +148,7 @@ export default function CommissionsPage() {
                   <hr className="my-0.5 border-muted-foreground/20"/>
                   <div>{t.dischargePortName ? `${t.dischargePortName}${t.dischargePortCountry ? ', ' + t.dischargePortCountry : ''}` : '-'}</div>
                 </TableCell>
-                <TableCell className="text-sm">{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</TableCell>
+                <TableCell className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => openEdit(t)} data-testid={`edit-rate-${t.id}`}>{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</TableCell>
                 <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
@@ -188,6 +213,36 @@ export default function CommissionsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setBankDialogOpen(false)}>Cancel</Button>
             <Button onClick={downloadInvoice} data-testid="confirm-download-invoice"><FileDown className="h-4 w-4 mr-1" />Download PDF</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Brokerage Dialog */}
+      <Dialog open={editDialog.open} onOpenChange={(o) => !o && setEditDialog({ open: false, trade: null })}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" />Edit Brokerage</DialogTitle>
+          </DialogHeader>
+          {editDialog.trade && <p className="text-sm text-muted-foreground">{editDialog.trade.pirContractNumber || editDialog.trade.referenceNumber}</p>}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Rate per MT</Label>
+              <Input type="number" step="0.01" value={editForm.brokeragePerMT} onChange={(e) => setEditForm(f => ({ ...f, brokeragePerMT: e.target.value }))} data-testid="edit-brokerage-rate" />
+            </div>
+            <div className="space-y-2">
+              <Label>Currency</Label>
+              <Select value={editForm.brokerageCurrency} onValueChange={(v) => setEditForm(f => ({ ...f, brokerageCurrency: v }))}>
+                <SelectTrigger data-testid="edit-brokerage-currency"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialog({ open: false, trade: null })}>Cancel</Button>
+            <Button onClick={saveEdit} data-testid="save-brokerage-btn">Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

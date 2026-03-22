@@ -100,8 +100,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     header_tbl = Table([[logo_cell, meta_block]], colWidths=[W*0.50, W*0.50])
     header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
     elements.append(header_tbl)
-    elements.append(Spacer(1, 2*mm))
-    elements.append(Paragraph("COMMISSION INVOICE", ParagraphStyle('InvTitle', fontName=FB, fontSize=16, textColor=GREEN, alignment=TA_CENTER, leading=20)))
+    elements.append(Spacer(1, 6*mm))
+    elements.append(Paragraph("Commission Invoice", ParagraphStyle('InvTitle', fontName=FB, fontSize=16, textColor=GREEN, alignment=TA_CENTER, leading=20)))
     elements.append(Spacer(1, 1.5*mm))
     elements.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=3*mm))
 
@@ -332,7 +332,12 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
 
     sig_tbl = Table(sig_rows, colWidths=[W*0.55, W*0.45])
-    sig_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('ALIGN', (1, 0), (1, -1), 'CENTER')]))
+    sig_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
     elements.append(sig_tbl)
     elements.append(Spacer(1, 3*mm))
 

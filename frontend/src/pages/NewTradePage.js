@@ -106,7 +106,7 @@ export default function NewTradePage() {
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
-    surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', contractDate: '', contractNumber: '',
+    surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
     dischargeRate: '', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
@@ -163,6 +163,7 @@ export default function NewTradePage() {
             surveyorId: t.surveyorId || '',
             brokeragePerMT: t.brokeragePerMT != null ? String(t.brokeragePerMT) : '',
             brokerageAccount: t.brokerageAccount || 'seller',
+            brokerageCurrency: t.brokerageCurrency || 'USD',
             contractDate: convertDate(t.contractDate),
             contractNumber: t.contractNumber || '',
             specialConditions: t.specialConditions || '',
@@ -451,6 +452,16 @@ export default function NewTradePage() {
           <div className="space-y-2">
             <Label>Brokerage (per MT)</Label>
             <Input type="number" value={form.brokeragePerMT} onChange={(e) => set('brokeragePerMT', e.target.value)} placeholder="0.00" />
+          </div>
+          <div className="space-y-2">
+            <Label>Brokerage Currency</Label>
+            <Select value={form.brokerageCurrency} onValueChange={(v) => set('brokerageCurrency', v)}>
+              <SelectTrigger data-testid="brokerage-currency-select"><SelectValue placeholder="Currency" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD</SelectItem>
+                <SelectItem value="EUR">EUR</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Brokerage Payment</Label>

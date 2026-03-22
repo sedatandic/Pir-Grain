@@ -159,7 +159,7 @@ export default function CommissionsPage() {
       <div className="relative max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
 
       <div className="space-y-4">
-        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices')}</CardContent></Card>
+        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices', true)}</CardContent></Card>
         <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid ({categorized.paid.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid, 'No paid invoices', true)}</CardContent></Card>
       </div>
 

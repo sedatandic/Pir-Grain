@@ -2,9 +2,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, Globe
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
+import { useI18n } from '../../lib/i18n';
 import { cn } from '../../lib/utils';
 
 const PIR_GREEN = '#1B7A3D';
@@ -31,6 +32,18 @@ export default function Sidebar() {
   });
   const location = useLocation();
   const { user } = useAuth();
+  const { lang, setLang, t } = useI18n();
+
+  const navItems = [
+    { title: t('nav.dashboard'), href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'user'] },
+    { title: t('nav.trades'), href: '/trades', icon: FileText, roles: ['admin', 'user'] },
+    { title: t('nav.brokerageInv'), href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
+    { title: t('nav.shipmentDocs'), href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
+    { title: t('nav.calendar'), href: '/calendar', icon: CalendarDays, roles: ['admin', 'user'] },
+    { title: t('nav.accounting'), href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
+    { title: t('nav.reports'), href: '/reports', icon: BarChart3, roles: ['admin', 'user'] },
+    { title: t('nav.vessels'), href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
+  ];
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -108,7 +121,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        {mainNavItems.filter(item => !item.roles || item.roles.includes(userRole)).map((item) => (
+        {navItems.filter(item => !item.roles || item.roles.includes(userRole)).map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
@@ -138,8 +151,8 @@ export default function Sidebar() {
             )}
           >
             <Users className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>Counterparties</span>}
-            {collapsed && <span className="md:hidden">Counterparties</span>}
+            {!collapsed && <span>{t('nav.counterparties')}</span>}
+            {collapsed && <span className="md:hidden">{t('nav.counterparties')}</span>}
           </NavLink>
         )}
       </nav>
@@ -156,18 +169,27 @@ export default function Sidebar() {
             )}
           >
             <Settings className="w-4 h-4" />
-            {!collapsed && <span>Settings</span>}
-            {collapsed && <span className="md:hidden">Settings</span>}
+            {!collapsed && <span>{t('nav.settings')}</span>}
+            {collapsed && <span className="md:hidden">{t('nav.settings')}</span>}
           </NavLink>
         )}
+        <button
+          onClick={() => { setLang(lang === 'en' ? 'tr' : 'en'); }}
+          data-testid="sidebar-lang-toggle"
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full transition-colors"
+        >
+          <Globe className="w-4 h-4" />
+          {!collapsed && <span>{lang === 'en' ? 'Turkce' : 'English'}</span>}
+          {collapsed && <span className="md:hidden">{lang === 'en' ? 'Turkce' : 'English'}</span>}
+        </button>
         <button
           onClick={() => { toggleDarkMode(); setMobileOpen(false); }}
           data-testid="sidebar-theme-toggle"
           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted w-full transition-colors"
         >
           {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
-          {collapsed && <span className="md:hidden">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+          {!collapsed && <span>{darkMode ? t('nav.lightMode') : t('nav.darkMode')}</span>}
+          {collapsed && <span className="md:hidden">{darkMode ? t('nav.lightMode') : t('nav.darkMode')}</span>}
         </button>
       </div>
     </aside>

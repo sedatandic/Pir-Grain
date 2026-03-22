@@ -11,8 +11,11 @@ import { Plus, ChevronLeft, ChevronRight, CalendarDays, Loader2, Pencil, Trash2 
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isToday, parseISO } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
+import { getHolidaysForDate } from '../lib/holidays';
+import { useI18n } from '../lib/i18n';
 
 export default function CalendarPage() {
+  const { t } = useI18n();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -112,6 +115,7 @@ export default function CalendarPage() {
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d} className="bg-muted/50 p-2 text-center text-xs font-medium text-muted-foreground">{d}</div>)}
                 {calendarDays.map(({ date, isCurrentMonth }, i) => {
                   const dayEvents = getEventsForDate(date);
+                  const dayHolidays = getHolidaysForDate(date.getFullYear(), date.getMonth(), date.getDate());
                   const selected = selectedDate && isSameDay(date, selectedDate);
                   return (
                     <div
@@ -119,13 +123,19 @@ export default function CalendarPage() {
                       onClick={() => setSelectedDate(date)}
                       className={`bg-card p-2 min-h-[80px] cursor-pointer hover:bg-muted/30 transition-colors ${
                         !isCurrentMonth ? 'opacity-40' : ''
-                      } ${selected ? 'ring-2 ring-primary ring-inset' : ''} ${isToday(date) ? 'bg-primary/5' : ''}`}
+                      } ${selected ? 'ring-2 ring-primary ring-inset' : ''} ${isToday(date) ? 'bg-primary/5' : ''} ${dayHolidays.length > 0 ? 'bg-red-50/50' : ''}`}
                     >
-                      <div className={`text-sm font-medium mb-1 ${isToday(date) ? 'text-primary font-bold' : ''}`}>{format(date, 'd')}</div>
-                      {dayEvents.slice(0, 2).map((ev, j) => (
+                      <div className={`text-sm font-medium mb-1 ${isToday(date) ? 'text-primary font-bold' : ''}`}>
+                        {format(date, 'd')}
+                        {dayHolidays.length > 0 && <span className="ml-1 text-[9px]">{dayHolidays.map(h => h.flag).join('')}</span>}
+                      </div>
+                      {dayHolidays.slice(0, 1).map((h, j) => (
+                        <div key={`h-${j}`} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate border ${h.colorClass}`}>{h.flag} {h.title}</div>
+                      ))}
+                      {dayEvents.slice(0, dayHolidays.length > 0 ? 1 : 2).map((ev, j) => (
                         <div key={j} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate ${EVENT_TYPES[ev.type]?.color || 'bg-muted text-muted-foreground'}`}>{ev.title}</div>
                       ))}
-                      {dayEvents.length > 2 && <div className="text-[10px] text-muted-foreground">+{dayEvents.length - 2} more</div>}
+                      {(dayEvents.length + dayHolidays.length) > 2 && <div className="text-[10px] text-muted-foreground">+{dayEvents.length + dayHolidays.length - 2} more</div>}
                     </div>
                   );
                 })}
@@ -136,13 +146,19 @@ export default function CalendarPage() {
 
         <div className="lg:col-span-4 space-y-4">
           <Card>
-            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : t('calendar.selectDate')}</CardTitle></CardHeader>
             <CardContent>
-              {selectedDate ? (
-                selectedDateEvents.length === 0 ? (
-                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">No events on this day</p></div>
-                ) : (
+              {selectedDate ? (() => {
+                const holidays = getHolidaysForDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                const hasContent = selectedDateEvents.length > 0 || holidays.length > 0;
+                return hasContent ? (
                   <div className="space-y-3">
+                    {holidays.map((h, i) => (
+                      <div key={`hol-${i}`} className={`p-3 rounded-lg border ${h.colorClass}`}>
+                        <p className="font-medium text-sm">{h.flag} {h.title}</p>
+                        <p className="text-xs mt-1 opacity-70">{t('calendar.holidays')} ({h.country})</p>
+                      </div>
+                    ))}
                     {selectedDateEvents.map(ev => (
                       <div key={ev.id} className={`p-3 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
                         <div className="flex items-start justify-between gap-2">
@@ -163,8 +179,10 @@ export default function CalendarPage() {
                       </div>
                     ))}
                   </div>
-                )
-              ) : <p className="text-sm text-muted-foreground">Click on a day to see events</p>}
+                ) : (
+                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">{t('calendar.noEvents')}</p></div>
+                );
+              })() : <p className="text-sm text-muted-foreground">{t('calendar.clickDay')}</p>}
             </CardContent>
           </Card>
 

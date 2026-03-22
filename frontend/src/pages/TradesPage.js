@@ -274,9 +274,9 @@ export default function TradesPage() {
                 </TableCell>
                 <TableCell className="text-center text-sm">{formatDate(trade.contractDate || trade.createdAt)}</TableCell>
                 <TableCell className="text-center">
-                  <button onClick={(e) => { e.stopPropagation(); setSelectedTrade(trade); setModalOpen(true); }} className="font-medium text-primary hover:underline cursor-pointer text-sm">
+                  <Link to={`/trades/${trade.id}`} className="font-medium text-primary hover:underline cursor-pointer text-sm">
                     {trade.pirContractNumber || trade.contractNumber || trade.referenceNumber}
-                  </button>
+                  </Link>
                   {trade.sellerContractNumber && trade.sellerContractNumber !== 'N/A' && (
                     <div className="text-xs text-muted-foreground">{trade.sellerContractNumber}</div>
                   )}

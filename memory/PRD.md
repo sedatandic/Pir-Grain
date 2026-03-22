@@ -1,90 +1,78 @@
-# PIR Grain & Pulses - Trading Dashboard
+# PIR Grain & Pulses - Commodity Trading Dashboard
 
 ## Original Problem Statement
-Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with feature requests, UI adjustments, and large-scale data seeding based on user feedback from `Pir App Eklenecekler.docx`.
+Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The project includes detailed data management for trades and counterparties, UI/UX customizations, role-based access control, notification system, business card scanning, reporting, and PDF document generation.
 
-## Tech Stack
-- **Backend**: FastAPI (Python), MongoDB
-- **Frontend**: React, TailwindCSS, shadcn/ui, Zustand (auth)
-- **Auth**: JWT-based
-- **AI**: emergentintegrations (GPT-4o Vision for OCR)
+## Core Architecture
+- **Frontend**: React + Shadcn UI (port 3000)
+- **Backend**: FastAPI (port 8001, prefix /api)
+- **Database**: MongoDB
+- **Auth**: JWT-based authentication
 
-## Core Features Implemented
-- JWT authentication with role-based access (admin, user, accountant)
-- Dashboard with KPI cards
-- Collapsible sidebar + header with user menu and notifications
-- Light/Dark mode theming
-- **Trades**: Excel-like table with 16 statuses, filtering, row-click detail view, clickable seller/buyer/broker names
-- **Trade Creation**: New Trade page with party selection (Seller, Buyer, Broker, Co-Broker)
-- **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents)
-- **Counterparties**: Partner list with business card detail view
-- **Vessels**: 194 vessels seeded
-- **Accounting**: Invoices and Bank Statements tabs (RBAC: admin/accountant only), dynamic vendor/seller dropdowns
-- **Calendar**: Event management with redesigned right panel (Upcoming Payments, Meetings, Holidays)
-- **Commissions**: Port display with countries, multi-bank PDF invoice generation
-- **Settings**: Commodities, Ports, Origins, Surveyors, Disport Agents, Vendors, Bank Accounts, Users management
-- **Business Cards**: AI-powered OCR scanning using GPT-4o Vision
-- **Reports**: Multi-tab reporting with KPIs, Top 10 charts, drill-downs
-- **Notifications**: Bell icon (admin only) with recent activities
-- **Admin Password Change**: Admins can change any user's password
-- **Server-Side RBAC**: Accountant restricted to Accounting; admin has full access
+## User Personas
+- **Admin** (salih.karagoz / salih123): Full access
+- **User**: Trade management access
+- **Accountant** (pir.accounts / pir123): Financial views
 
-## Data Seeded
-- Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
-- Partners: 175 total (95 buyers, 78 sellers, 2 co-brokers)
-- Sample trades (10), Events (3)
+## What's Been Implemented
 
-## Credentials
-- Admin: salih.karagoz / salih123
-- Accountant: pir.accounts / pir123
+### Core Features
+- JWT Authentication with role-based access
+- Trade CRUD with complex data model (commodityDisplayName, cropYear, originAdjective)
+- Counterparties/Partners management
+- Commodities, Origins, Ports, Surveyors, Disport Agents reference data
+- Vessels management
+- Calendar/Events
+- Notifications system
+- Dashboard with trade statistics
 
-## Architecture
-```
-/app/backend/
-├── server.py          - FastAPI app orchestrator
-├── config.py          - Config constants
-├── database.py        - MongoDB connection, collections
-├── auth.py            - JWT auth, password hashing
-├── models.py          - All Pydantic models
-├── seed.py            - Database seeding
-├── vessel_data.py     - Vessel seed data
-├── routes/
-│   ├── auth_routes.py    - Login, /me
-│   ├── trades.py         - Trades CRUD + stats
-│   ├── partners.py       - Partners CRUD
-│   ├── vessels.py        - Vessels CRUD
-│   ├── documents.py      - Document upload/delete
-│   ├── reference_data.py - Commodities, Origins, Ports, Surveyors
-│   ├── events.py         - Calendar events
-│   ├── accounting.py     - Invoices, Bank Statements
-│   ├── notifications.py  - Notifications
-│   ├── users.py          - User management
-│   ├── commission_invoice.py - PDF generation
-│   ├── business_cards.py - OCR + CRUD
-│   ├── vendors.py        - Vendor CRUD
-│   └── bank_accounts.py  - Bank Account CRUD
-└── tests/
+### Trade Features
+- New/Edit Trade form with all fields (parties, commodity, pricing, shipping, contacts)
+- **Loading Port** as separate field from Base Port (fixed 2026-03-22)
+- Port Variations with country names stored
+- Trade Detail page with tabs (Summary, Shipment B/L, Documents)
+- B/L Details dialog with Load Port, Discharge Port, Surveyors, Disport Agent
+- Document checklist and bulk upload with drag-and-drop assignment
+- Year-based filtering on Trades page
 
-/app/frontend/src/
-├── pages/             - Page components
-├── components/        - Layout + UI components
-└── lib/               - Auth, API client, constants
-```
+### PDF Generation
+- **Business Confirmation PDF** - includes port countries in PRICE section (fixed 2026-03-22)
+- **Shipment Appropriation PDF** - with port countries
+- Authenticated download via blob URLs
 
-## Completed (March 22, 2026)
-- **Bank Accounts Management UI**: Added "Bank Accounts" tab in Settings with full CRUD (add, edit, delete). Currency dropdown with USD/EUR/GBP/TRY/CHF/AED/UAH. Address textarea. 100% test pass rate.
-- **Trades Year Filter**: Added year-based filter dropdown (2026, 2025, 2024) to Trades page. Defaults to current year (2026). For current year, also shows incomplete trades from previous years (not completed/cancelled/washout). 100% test pass rate.
-- **Reports Page Filters**: Added Year, Seller, Buyer, Commodity, Origin filters to Reports page. All combinable. KPIs, charts, status distribution, and drill-downs all reflect filtered data. 100% test pass rate.
+### Other Features
+- Business Cards with GPT-4o Vision OCR
+- Reports page with dynamic filters (Year, Seller, Buyer, Commodity, Origin)
+- Brokerage Invoices with PENDING/PAID workflow
+- Bank Accounts management in Settings
+- Vendors management in Settings
+- Commission auto-generation on trade completion
 
-## Backlog (Prioritized)
+## Recent Fixes (2026-03-22)
+1. **Load Port not saving (P0)**: Fixed `NewTradePage.js` - was setting `loadingPortId: form.basePortId`. Now uses separate `loadingPortId` field with dedicated Loading Port dropdown showing only loading-type ports.
+2. **PDF country in ports (P1)**: Fixed `business_confirmation.py` PRICE section to append country names to base port and port variations (e.g., "CIF Marmara Ports, Turkiye").
+
+## Prioritized Backlog
+
+### P0 - Blocked
+- Business Confirmation Email Integration (BLOCKED on Resend API key)
+
 ### P1
-- Full Server-Side RBAC: Protect all API routes based on roles (admin, user, accountant)
+- Full Server-Side RBAC (protect all API routes by role)
 
 ### P2
-- Refactor large frontend pages: TradesPage.js (~500 lines), TradeDetailPage.js (~620 lines), NewTradePage.js (~500 lines), PartnersPage.js (~430 lines)
-- Counterparty Departments CRUD (UI for adding/editing/deleting departments & contacts)
-- Document Templates page
+- **Frontend Refactoring (CRITICAL)**: TradeDetailPage.js (880+ lines), NewTradePage.js (630+ lines) need component decomposition
+- Counterparty Departments CRUD
+- Document Templates Page
+- Refactor PartnersPage.js (~430 lines)
 
 ### P3
-- Export Business Cards to CSV or create Counterparty from card
-- File Uploads for Bank Statements & DI Documents
+- Export Business Cards to CSV
+- Create Counterparty from scanned business card
+
+## Key Technical Notes
+- Ports have `type` field: "loading" or "discharge"
+- Trade stores: loadingPortId/Name/Country, basePortId/Name/Country, dischargePortId/Name/Country
+- Port variations store: portId, portName, portCountry, difference
+- PDF generation uses `reportlab` with FreeSans fonts
+- Authenticated PDF download uses blob + objectURL pattern

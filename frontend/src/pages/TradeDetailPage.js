@@ -490,9 +490,9 @@ export default function TradeDetailPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{trade.loadingPortName || trade.basePortName || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{trade.loadingPortName ? `${trade.loadingPortName}${trade.loadingPortCountry ? ', ' + trade.loadingPortCountry : ''}` : (trade.basePortName || '-')}</span></div>
               <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{trade.dischargePortName || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{trade.dischargePortName ? `${trade.dischargePortName}${trade.dischargePortCountry ? ', ' + trade.dischargePortCountry : ''}` : '-'}</span></div>
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
               <Separator />

@@ -342,10 +342,10 @@ export default function TradesPage() {
       </Card>
 
       {/* Pending */}
-      <Card id="trades-pending" className="border-l-4 border-l-blue-500 bg-blue-50/50">
+      <Card id="trades-pending" className="border-l-4 border-l-amber-400 bg-amber-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-blue-600" /><CardTitle className="text-blue-800">Pending Trades</CardTitle><Badge variant="secondary" className="bg-blue-100 text-blue-800">{filtered.pending.length}</Badge></div>
-          <CardDescription className="text-blue-700">Waiting for vessel nomination</CardDescription>
+          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Pending Trades</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.pending.length}</Badge></div>
+          <CardDescription className="text-amber-700">Waiting for vessel nomination</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.pending, 'No pending contracts')}</CardContent>
       </Card>

@@ -26,6 +26,7 @@ router = APIRouter(prefix="/api/business-confirmation", tags=["business-confirma
 
 PIR_GREEN = colors.HexColor("#1B7A3D")
 DARK_TEXT = colors.HexColor("#1A1A1A")
+GREY_TEXT = colors.HexColor("#666666")
 LIGHT_GREEN = colors.HexColor("#E8F5E9")
 BORDER_COLOR = colors.HexColor("#C8E6C9")
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
@@ -127,7 +128,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     s_label = ParagraphStyle('Label', fontName='FreeSansBold', fontSize=7.5, textColor=PIR_GREEN, leading=9)
     s_val = ParagraphStyle('Val', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10)
     s_val_bold = ParagraphStyle('ValBold', fontName='FreeSansBold', fontSize=8, textColor=DARK_TEXT, leading=10)
-    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=13, textColor=PIR_GREEN, alignment=TA_CENTER)
+    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=16, textColor=PIR_GREEN, alignment=TA_CENTER, leading=20)
     s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, alignment=TA_CENTER)
     s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=11)
     s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10, leftIndent=5)
@@ -241,10 +242,40 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     story.append(Spacer(1, 3 * mm))
 
     story.append(Paragraph("A draft contract will be shared shortly. Thank you for the business.", s_closing))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
     story.append(Paragraph("Best Regards,", s_closing))
-    story.append(Spacer(1, 1 * mm))
-    story.append(Paragraph("PIR Grain &amp; Pulses Ltd.", s_sign))
+    story.append(Spacer(1, 3 * mm))
+
+    # Stamp + Signature (matching Commission Invoice & Shipment Appropriation)
+    STAMP_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-stamp-signature.png")
+    sig_line = ParagraphStyle('SigLine', fontName='FreeSans', fontSize=8, alignment=TA_CENTER, textColor=GREY_TEXT)
+    sig_name = ParagraphStyle('SigName', fontName='FreeSansBold', fontSize=7, alignment=TA_CENTER, textColor=DARK_TEXT, leading=10)
+
+    sig_rows = []
+    if os.path.exists(STAMP_PATH):
+        sig_rows.append(["", Image(STAMP_PATH, width=28 * mm, height=28 * mm)])
+    sig_rows.append(["", Paragraph("_______________________________", sig_line)])
+    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
+
+    sig_tbl = Table(sig_rows, colWidths=[table_w * 0.55, table_w * 0.45])
+    style_cmds = [
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]
+    if os.path.exists(STAMP_PATH):
+        style_cmds.append(('BOTTOMPADDING', (1, 0), (1, 0), -4))
+    sig_tbl.setStyle(TableStyle(style_cmds))
+    story.append(sig_tbl)
+    story.append(Spacer(1, 3 * mm))
+
+    # Footer
+    story.append(HRFlowable(width="100%", thickness=1, color=PIR_GREEN, spaceAfter=2 * mm))
+    story.append(Paragraph(
+        "PIR Grain &amp; Pulses Ltd.",
+        ParagraphStyle('Foot', fontName='FreeSans', fontSize=7, textColor=GREY_TEXT, alignment=TA_CENTER)
+    ))
 
     doc.build(story)
     buf.seek(0)

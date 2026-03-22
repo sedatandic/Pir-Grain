@@ -208,6 +208,19 @@ export default function TradeDetailPage() {
     finally { setSendingSA(false); }
   };
 
+  const reverseShipmentAppropriation = async () => {
+    setSendingSA(true);
+    try {
+      await api.put(`/api/trades/${tradeId}`, {
+        shipmentAppropriationSentBy: null,
+        shipmentAppropriationSentAt: null,
+      });
+      setTrade(prev => ({ ...prev, shipmentAppropriationSentBy: null, shipmentAppropriationSentAt: null }));
+      toast.success('Shipment Appropriation reversed');
+    } catch { toast.error('Failed to reverse'); }
+    finally { setSendingSA(false); }
+  };
+
   const addAdditionalDoc = () => {
     const name = newDocInput.trim();
     if (!name) return;
@@ -496,9 +509,14 @@ export default function TradeDetailPage() {
                         <p className="text-xs text-green-600">{(() => { try { const d = new Date(trade.shipmentAppropriationSentAt); return `${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`; } catch { return trade.shipmentAppropriationSentAt; } })()}</p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="resend-sa-btn">
-                      {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="resend-sa-btn">
+                        {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={reverseShipmentAppropriation} disabled={sendingSA} data-testid="reverse-sa-btn">
+                        <X className="h-4 w-4 mr-1" />Reverse
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <Button onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="send-sa-btn">

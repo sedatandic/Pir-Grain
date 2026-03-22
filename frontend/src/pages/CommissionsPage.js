@@ -109,7 +109,7 @@ export default function CommissionsPage() {
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</TableCell>
-                <TableCell className="text-sm">
+                <TableCell className="text-sm whitespace-nowrap">
                   <div>{t.loadingPortName ? `${t.loadingPortName}${t.loadingPortCountry ? ', ' + t.loadingPortCountry : ''}` : '-'}</div>
                   <hr className="my-0.5 border-muted-foreground/20"/>
                   <div>{t.dischargePortName ? `${t.dischargePortName}${t.dischargePortCountry ? ', ' + t.dischargePortCountry : ''}` : '-'}</div>

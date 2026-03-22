@@ -117,7 +117,17 @@ export default function CommissionsPage() {
   };
 
   const renderTable = (list, empty, showInvoice = false) => {
-    const filtered = applySearch(list);
+    const filtered = applySearch(list).sort((a, b) => {
+      const dateA = a.buyerPaymentDate || '';
+      const dateB = b.buyerPaymentDate || '';
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+      // Parse dd/MM/yyyy for comparison
+      const [dA, mA, yA] = dateA.split('/');
+      const [dB, mB, yB] = dateB.split('/');
+      return (yB + mB + dB).localeCompare(yA + mA + dA);
+    });
     if (filtered.length === 0) return <div className="text-center py-6 text-muted-foreground text-sm">{empty}</div>;
     return (
       <div className="overflow-x-auto border rounded-lg">
@@ -127,7 +137,7 @@ export default function CommissionsPage() {
             <TableHead className="text-center">Seller<hr className="my-0.5 border-muted-foreground/30"/>Buyer</TableHead>
             <TableHead className="text-center">Vessel<hr className="my-0.5 border-muted-foreground/30"/>B/L Qty</TableHead>
             <TableHead className="text-center">Loading Port<hr className="my-0.5 border-muted-foreground/30"/>Discharge Port</TableHead>
-            <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead>
+            <TableHead>Rate/MT<hr className="my-0.5 border-muted-foreground/30"/>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
@@ -159,8 +169,11 @@ export default function CommissionsPage() {
                   <hr className="my-0.5 border-muted-foreground/20"/>
                   <div>{t.dischargePortName ? `${t.dischargePortName}${t.dischargePortCountry ? ', ' + t.dischargePortCountry : ''}` : '-'}</div>
                 </TableCell>
-                <TableCell className="text-sm cursor-pointer hover:text-primary hover:underline" onClick={() => openEdit(t)} data-testid={`edit-rate-${t.id}`}>{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</TableCell>
-                <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
+                <TableCell className="text-sm">
+                  <div className="cursor-pointer hover:text-primary hover:underline" onClick={() => openEdit(t)} data-testid={`edit-rate-${t.id}`}>{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</div>
+                  <hr className="my-0.5 border-muted-foreground/20"/>
+                  <div className="font-medium">{fmt(getBlCommission(t))}</div>
+                </TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
                     <FileDown className="h-3.5 w-3.5 mr-1" />PDF
@@ -170,7 +183,7 @@ export default function CommissionsPage() {
             );
             })}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={9} className="text-right">Total:</TableCell>
+              <TableCell colSpan={8} className="text-right">Total:</TableCell>
               <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
               {showInvoice && <TableCell></TableCell>}
             </TableRow>

@@ -85,14 +85,14 @@ export default function Sidebar() {
         )}
       >
       {/* Logo + Collapse Toggle */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-border">
+      <div className="flex items-center justify-center px-2 py-3 border-b border-border">
         {collapsed ? (
           <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity max-md:hidden" data-testid="sidebar-expand-button">
             <PanelLeft className="w-5 h-5 text-muted-foreground" />
           </button>
         ) : null}
-        <div className={cn('flex items-center justify-center', collapsed && 'max-md:flex md:hidden')}>
-          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-10 w-auto object-contain" />
+        <div className={cn('flex-1 flex justify-center', collapsed && 'max-md:flex md:hidden')}>
+          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-16 w-auto object-contain" />
         </div>
         {/* Desktop: collapse toggle */}
         {!collapsed && (

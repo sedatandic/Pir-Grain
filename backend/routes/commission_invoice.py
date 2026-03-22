@@ -70,76 +70,76 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements = []
     W = 170*mm
 
-    # --- Styles (FreeSans for Turkish character support) ---
-    FONT = 'FreeSans'
-    FONT_B = 'FreeSansBold'
-    FONT_I = 'FreeSansOblique'
-    FONT_BI = 'FreeSansBoldOblique'
+    # --- Fonts ---
+    F = 'FreeSans'
+    FB = 'FreeSansBold'
+    FI = 'FreeSansOblique'
 
-    s_header = ParagraphStyle('Header', fontSize=18, fontName=FONT_B, textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=1*mm)
-    s_sub = ParagraphStyle('Sub', fontSize=8, fontName=FONT, textColor=GREY_TEXT, alignment=TA_CENTER)
-    s_section = ParagraphStyle('Section', fontSize=10, fontName=FONT_B, textColor=PIR_GREEN, spaceBefore=2*mm)
-    s_label = ParagraphStyle('Lbl', fontSize=8, fontName=FONT_B, textColor=GREY_TEXT)
-    s_val = ParagraphStyle('Val', fontSize=9, fontName=FONT, textColor=DARK_TEXT)
-    s_val_b = ParagraphStyle('ValB', fontSize=9, fontName=FONT_B, textColor=DARK_TEXT)
-    s_small = ParagraphStyle('Sm', fontSize=7.5, fontName=FONT, textColor=GREY_TEXT)
-    s_right = ParagraphStyle('R', fontSize=9, fontName=FONT, alignment=TA_RIGHT)
-    s_right_b = ParagraphStyle('RB', fontSize=12, fontName=FONT_B, alignment=TA_RIGHT, textColor=PIR_GREEN)
-    s_th = ParagraphStyle('TH', fontSize=7.5, fontName=FONT_B, textColor=colors.white, alignment=TA_CENTER)
-    s_td = ParagraphStyle('TD', fontSize=8, fontName=FONT, alignment=TA_CENTER, textColor=DARK_TEXT)
-    s_td_l = ParagraphStyle('TDL', fontSize=8, fontName=FONT, textColor=DARK_TEXT)
-    s_td_r = ParagraphStyle('TDR', fontSize=8, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)
-    s_footer = ParagraphStyle('Footer', fontSize=7, fontName=FONT, textColor=GREY_TEXT, alignment=TA_CENTER)
+    # --- Colors ---
+    GREEN = PIR_GREEN
+    BG_LIGHT = PIR_GREEN_LIGHT
+    BG_MED = PIR_GREEN_MED
+    DARK = DARK_TEXT
+    GREY = GREY_TEXT
+    BORDER = colors.HexColor("#E0E0E0")
 
-    # ===== HEADER SECTION =====
-    # Logo top-left + COMMISSION INVOICE top-right
-    header_left = []
+    # =====================================================
+    # HEADER: Logo left + Invoice title/number right
+    # =====================================================
+    logo_cell = []
     if os.path.exists(LOGO_PATH):
-        header_left.append(Image(LOGO_PATH, width=40*mm, height=18*mm))
+        logo_cell.append(Image(LOGO_PATH, width=38*mm, height=17*mm))
     else:
-        header_left.append(Paragraph("PIR Grain &amp; Pulses", s_section))
+        logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FallbackLogo', fontName=FB, fontSize=14, textColor=GREEN)))
 
-    header_right = [
-        Paragraph("<b>COMMISSION INVOICE</b>", ParagraphStyle('IT', fontSize=16, fontName=FONT_B, textColor=PIR_GREEN, alignment=TA_RIGHT)),
-        Spacer(1, 2*mm),
-        Paragraph(f"Invoice No: <b>{invoice_number}</b>", ParagraphStyle('IN', fontSize=9, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)),
-        Paragraph(f"Date: <b>{invoice_date}</b>", ParagraphStyle('ID', fontSize=9, fontName=FONT, alignment=TA_RIGHT, textColor=DARK_TEXT)),
+    title_block = [
+        Paragraph("COMMISSION INVOICE", ParagraphStyle('InvTitle', fontName=FB, fontSize=18, textColor=GREEN, alignment=TA_RIGHT, leading=22)),
+        Spacer(1, 3*mm),
+        Paragraph(f"<b>No:</b> {invoice_number}", ParagraphStyle('InvNo', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
+        Paragraph(f"<b>Date:</b> {invoice_date}", ParagraphStyle('InvDt', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
     ]
 
-    h_tbl = Table([[header_left, header_right]], colWidths=[W*0.45, W*0.55])
-    h_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    elements.append(h_tbl)
-    elements.append(Spacer(1, 2*mm))
-    elements.append(HRFlowable(width="100%", thickness=2, color=PIR_GREEN, spaceAfter=4*mm))
+    header_tbl = Table([[logo_cell, title_block]], colWidths=[W*0.40, W*0.60])
+    header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(header_tbl)
+    elements.append(Spacer(1, 1*mm))
+    elements.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=5*mm))
 
-    # ===== INVOICE TO =====
-    to_content = f"<b>{issued_to_name}</b>"
+    # =====================================================
+    # INVOICE TO: Clean card
+    # =====================================================
+    to_lines = f"<b>{issued_to_name}</b>"
     if issued_to_address:
-        to_content += f"<br/>{issued_to_address}"
+        to_lines += f"<br/>{issued_to_address}"
     if issued_to_tax_id:
-        to_content += f"<br/>Tax ID: {issued_to_tax_id}"
+        to_lines += f"<br/>Tax ID: {issued_to_tax_id}"
 
-    inv_to_data = [[
-        Paragraph("INVOICE TO:", ParagraphStyle('BT', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)),
-        Spacer(1, 1*mm),
-        Paragraph(to_content, s_val),
-    ]]
-    inv_to_tbl = Table(inv_to_data, colWidths=[W])
-    inv_to_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('ROUNDEDCORNERS', [3, 3, 3, 3]),
+    s_card_label = ParagraphStyle('CardLbl', fontName=FB, fontSize=7.5, textColor=GREEN, leading=10)
+    s_card_val = ParagraphStyle('CardVal', fontName=F, fontSize=9, textColor=DARK, leading=13)
+
+    inv_to_card = Table(
+        [[Paragraph("INVOICE TO:", s_card_label)], [Paragraph(to_lines, s_card_val)]],
+        colWidths=[W * 0.55]
+    )
+    inv_to_card.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), BG_LIGHT),
+        ('TOPPADDING', (0, 0), (-1, 0), 6),
+        ('TOPPADDING', (0, 1), (-1, 1), 2),
+        ('BOTTOMPADDING', (0, -1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+        ('ROUNDEDCORNERS', [4, 4, 4, 4]),
+        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BG_MED),
     ]))
-    elements.append(inv_to_tbl)
-    elements.append(Spacer(1, 5*mm))
+    # Wrap in outer table to left-align the card
+    wrap = Table([[inv_to_card, ""]], colWidths=[W*0.55, W*0.45])
+    wrap.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(wrap)
+    elements.append(Spacer(1, 6*mm))
 
-    # ===== TRADE DETAILS SECTION =====
+    # =====================================================
+    # TRADE DETAILS: Compact 2-column key-value grid
+    # =====================================================
     contract_num = trade.get("pirContractNumber") or trade.get("referenceNumber") or "-"
     vessel_name = trade.get("vesselName") or "-"
     bl_qty = trade.get("blQuantity") or trade.get("quantity") or 0
@@ -151,9 +151,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     commodity_name = trade.get("commodityName") or "-"
     crop_year = trade.get("cropYear") or ""
-    commodity_display = commodity_name
-    if crop_year:
-        commodity_display = f"{commodity_name}<br/>Crop {crop_year}"
+    commodity_display = f"{commodity_name}<br/>Crop {crop_year}" if crop_year else commodity_name
     brokerage_per_mt = trade.get("brokeragePerMT") or 0
     brokerage_currency = trade.get("brokerageCurrency") or "USD"
     currency = brokerage_currency
@@ -166,104 +164,122 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     shipment_to = trade.get("shipmentWindowEnd") or trade.get("shipmentTo") or ""
     shipment_period = f"{shipment_from} - {shipment_to}" if shipment_from and shipment_to else "-"
 
-    elements.append(Paragraph("TRADE DETAILS", s_section))
-    elements.append(Spacer(1, 2*mm))
+    elements.append(Paragraph("TRADE DETAILS", ParagraphStyle('SecTitle', fontName=FB, fontSize=10, textColor=GREEN, spaceBefore=0, spaceAfter=2*mm)))
 
-    # Trade info grid - 2 columns of key-value pairs
-    s_val_wrap = ParagraphStyle('ValWrap', fontSize=9, fontName=FONT, textColor=DARK_TEXT, leading=12)
+    s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7.5, textColor=GREY, leading=10)
+    s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8.5, textColor=DARK, leading=12)
+
     detail_pairs = [
-        ("Contract No:", str(contract_num), "Commodity:", commodity_display),
-        ("Seller:", str(seller_name), "Buyer:", str(buyer_name)),
-        ("Origin:", str(origin), "Delivery Term:", str(delivery_term)),
-        ("Vessel:", str(vessel_name), "Shipment Period:", str(shipment_period)),
-        ("Load Port:", str(loading_full), "Discharge Port:", str(discharge_full)),
+        ("Contract No", contract_num, "Commodity", commodity_display),
+        ("Seller", seller_name, "Buyer", buyer_name),
+        ("Origin", origin, "Delivery Term", delivery_term),
+        ("Vessel", vessel_name, "Shipment", shipment_period),
+        ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 
     detail_rows = []
     for lbl1, val1, lbl2, val2 in detail_pairs:
         detail_rows.append([
-            Paragraph(f"<b>{lbl1}</b>", s_label),
-            Paragraph(val1, s_val_wrap),
-            Paragraph(f"<b>{lbl2}</b>", s_label),
-            Paragraph(val2, s_val_wrap),
+            Paragraph(lbl1, s_lbl), Paragraph(str(val1), s_dval),
+            Paragraph(lbl2, s_lbl), Paragraph(str(val2), s_dval),
         ])
 
-    d_tbl = Table(detail_rows, colWidths=[24*mm, W*0.5 - 24*mm, 28*mm, W*0.5 - 28*mm])
+    lbl_w = 22*mm
+    val_w = (W - 2*lbl_w) / 2
+    d_tbl = Table(detail_rows, colWidths=[lbl_w, val_w, lbl_w, val_w])
     d_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LINEBELOW', (0, 0), (-1, -2), 0.5, colors.HexColor('#EEEEEE')),
-        ('LINEBELOW', (0, -1), (-1, -1), 0.5, colors.HexColor('#EEEEEE')),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 3.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3.5),
         ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.4, BORDER),
+        ('BACKGROUND', (0, 0), (0, -1), BG_LIGHT),
+        ('BACKGROUND', (2, 0), (2, -1), BG_LIGHT),
     ]))
     elements.append(d_tbl)
     elements.append(Spacer(1, 6*mm))
 
-    # ===== COMMISSION TABLE =====
-    elements.append(Spacer(1, 2*mm))
-
+    # =====================================================
+    # COMMISSION TABLE: Green header, clean rows
+    # =====================================================
     curr_symbol = "$" if currency == "USD" else currency + " "
 
+    s_th = ParagraphStyle('TH', fontName=FB, fontSize=8, textColor=colors.white, alignment=TA_CENTER, leading=11)
+    s_th_l = ParagraphStyle('THL', fontName=FB, fontSize=8, textColor=colors.white, alignment=TA_LEFT, leading=11)
+    s_td_l = ParagraphStyle('TDL', fontName=F, fontSize=8.5, textColor=DARK, leading=12)
+    s_td_r = ParagraphStyle('TDR', fontName=F, fontSize=8.5, textColor=DARK, alignment=TA_RIGHT, leading=12)
+    s_td_rb = ParagraphStyle('TDRB', fontName=FB, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=12)
+
     calc_header = [
-        Paragraph("DESCRIPTION", s_th),
-        Paragraph("B/L QUANTITY (Mts)", s_th),
+        Paragraph("DESCRIPTION", s_th_l),
+        Paragraph("B/L QTY (Mts)", s_th),
         Paragraph(f"RATE ({currency}/MT)", s_th),
         Paragraph(f"AMOUNT ({currency})", s_th),
     ]
+    desc_text = f"Brokerage commission for mv {vessel_name}<br/><font size=7.5 color='#666666'>{commodity_name} ({seller_name} / {buyer_name})</font>"
     calc_row = [
-        Paragraph(f"Brokerage commission for mv {vessel_name}<br/>{commodity_name} ({seller_name} / {buyer_name})", s_td_l),
+        Paragraph(desc_text, s_td_l),
         Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_r),
         Paragraph(f"{brokerage_per_mt:,.2f}", s_td_r),
-        Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", s_td_r),
+        Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_td_rb),
     ]
 
-    calc_cw = [72*mm, 30*mm, 30*mm, 38*mm]
+    calc_cw = [W*0.42, W*0.18, W*0.18, W*0.22]
     calc_tbl = Table([calc_header, calc_row], colWidths=calc_cw)
     calc_tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), PIR_GREEN),
+        ('BACKGROUND', (0, 0), (-1, 0), GREEN),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, 0), 0.5, PIR_GREEN),
-        ('GRID', (0, 1), (-1, -1), 0.5, LIGHT_BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 1), (-1, -1), 0.5, BORDER),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, GREEN),
     ]))
     elements.append(calc_tbl)
     elements.append(Spacer(1, 4*mm))
 
-    # ===== TOTAL BOX =====
-    total_data = [
-        ["", Paragraph("<b>TOTAL AMOUNT:</b>", ParagraphStyle('TL', fontSize=10, fontName=FONT_B, alignment=TA_RIGHT, textColor=DARK_TEXT)),
-         Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", ParagraphStyle('TV', fontSize=13, fontName=FONT_B, alignment=TA_RIGHT, textColor=PIR_GREEN))],
-    ]
-    t_tbl = Table(total_data, colWidths=[W*0.35, W*0.30, W*0.35])
-    t_tbl.setStyle(TableStyle([
-        ('BACKGROUND', (1, 0), (-1, 0), PIR_GREEN_LIGHT),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (-1, 0), (-1, 0), 8),
+    # =====================================================
+    # TOTAL AMOUNT: Highlighted green box, right-aligned
+    # =====================================================
+    s_total_lbl = ParagraphStyle('TotLbl', fontName=FB, fontSize=10, textColor=DARK, alignment=TA_RIGHT, leading=14)
+    s_total_val = ParagraphStyle('TotVal', fontName=FB, fontSize=14, textColor=GREEN, alignment=TA_RIGHT, leading=18)
+
+    total_row = Table(
+        [[Paragraph("TOTAL AMOUNT:", s_total_lbl), Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_total_val)]],
+        colWidths=[W*0.60, W*0.40]
+    )
+    total_row.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('ROUNDEDCORNERS', [0, 3, 3, 0]),
+        ('BACKGROUND', (1, 0), (1, 0), BG_LIGHT),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (1, 0), (1, 0), 10),
+        ('ROUNDEDCORNERS', [0, 4, 4, 0]),
+        ('BOX', (1, 0), (1, 0), 0.5, BG_MED),
     ]))
-    elements.append(t_tbl)
+    elements.append(total_row)
     elements.append(Spacer(1, 2*mm))
 
     # Amount in words
     words = amount_in_words(total_amount, currency)
-    elements.append(Paragraph(f"<b>Amount in words:</b> <i>{words}</i>", ParagraphStyle('AW', fontSize=8, textColor=GREY_TEXT)))
+    elements.append(Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7.5, textColor=GREY, alignment=TA_RIGHT)))
     elements.append(Spacer(1, 8*mm))
 
-    # ===== BANK DETAILS =====
-    elements.append(HRFlowable(width="100%", thickness=0.5, color=LIGHT_BORDER, spaceAfter=3*mm))
-    elements.append(Paragraph("BANK DETAILS", s_section))
-    elements.append(Spacer(1, 2*mm))
+    # =====================================================
+    # BANK DETAILS: Card style
+    # =====================================================
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=4*mm))
+    elements.append(Paragraph("BANK DETAILS", ParagraphStyle('BankSec', fontName=FB, fontSize=10, textColor=GREEN, spaceAfter=3*mm)))
 
-    # Use provided bank accounts or fall back to default
     accounts_to_show = bank_accounts if bank_accounts else [PIR_BANK]
+    s_bk_lbl = ParagraphStyle('BkL', fontName=FB, fontSize=7.5, textColor=GREY, leading=10)
+    s_bk_val = ParagraphStyle('BkV', fontName=F, fontSize=8.5, textColor=DARK, leading=12)
+    s_bk_val_b = ParagraphStyle('BkVB', fontName=FB, fontSize=8.5, textColor=DARK, leading=12)
 
     for idx, acct in enumerate(accounts_to_show):
         if idx > 0:
@@ -275,44 +291,56 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         bic = acct.get("bic", acct.get("swift", ""))
         currency_label = acct.get("currency", "")
 
-        bank_rows = [
-            [Paragraph("<b>Beneficiary:</b>", s_small), Paragraph(beneficiary, s_val)],
-            [Paragraph("<b>Bank:</b>", s_small), Paragraph(bank_name, s_val)],
-            [Paragraph("<b>Address:</b>", s_small), Paragraph(address, s_val)],
-            [Paragraph("<b>IBAN:</b>", s_small), Paragraph(f"<b>{iban}</b>", s_val_b)],
-            [Paragraph("<b>BIC/SWIFT:</b>", s_small), Paragraph(bic, s_val)],
-        ]
+        bank_rows = []
         if currency_label:
-            bank_rows.insert(0, [Paragraph("<b>Currency:</b>", s_small), Paragraph(f"<b>{currency_label}</b>", s_val_b)])
+            bank_rows.append([Paragraph("Currency", s_bk_lbl), Paragraph(f"<b>{currency_label}</b>", s_bk_val_b)])
+        bank_rows += [
+            [Paragraph("Beneficiary", s_bk_lbl), Paragraph(beneficiary, s_bk_val_b)],
+            [Paragraph("Bank", s_bk_lbl), Paragraph(bank_name, s_bk_val)],
+            [Paragraph("Address", s_bk_lbl), Paragraph(address, s_bk_val)],
+            [Paragraph("IBAN", s_bk_lbl), Paragraph(f"<b>{iban}</b>", s_bk_val_b)],
+            [Paragraph("BIC/SWIFT", s_bk_lbl), Paragraph(bic, s_bk_val)],
+        ]
 
-        b_tbl = Table(bank_rows, colWidths=[25*mm, W - 25*mm])
+        b_tbl = Table(bank_rows, colWidths=[22*mm, W - 22*mm])
         b_tbl.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-            ('LEFTPADDING', (0, 0), (0, -1), 4),
-            ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
-            ('ROUNDEDCORNERS', [3, 3, 3, 3]),
+            ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('BACKGROUND', (0, 0), (0, -1), BG_LIGHT),
+            ('BACKGROUND', (1, 0), (1, -1), colors.HexColor("#FAFAFA")),
+            ('LINEBELOW', (0, 0), (-1, -2), 0.3, BORDER),
+            ('ROUNDEDCORNERS', [4, 4, 4, 4]),
+            ('BOX', (0, 0), (-1, -1), 0.5, BORDER),
         ]))
         elements.append(b_tbl)
 
-    elements.append(Spacer(1, 14*mm))
+    elements.append(Spacer(1, 12*mm))
 
-    # ===== SIGNATURE =====
-    sig_data = [[
-        "",
-        Paragraph("_______________________________", ParagraphStyle('SL', fontSize=9, alignment=TA_CENTER, textColor=GREY_TEXT)),
-    ], [
-        "",
-        Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", ParagraphStyle('SN', fontSize=7.5, alignment=TA_CENTER, textColor=GREY_TEXT)),
-    ]]
+    # =====================================================
+    # SIGNATURE
+    # =====================================================
+    sig_line = ParagraphStyle('SigLine', fontName=F, fontSize=9, alignment=TA_CENTER, textColor=GREY)
+    sig_name = ParagraphStyle('SigName', fontName=FB, fontSize=8, alignment=TA_CENTER, textColor=DARK, leading=11)
+    sig_data = [
+        ["", Paragraph("_______________________________", sig_line)],
+        ["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)],
+    ]
     sig_tbl = Table(sig_data, colWidths=[W*0.55, W*0.45])
+    sig_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
     elements.append(sig_tbl)
-    elements.append(Spacer(1, 8*mm))
+    elements.append(Spacer(1, 6*mm))
 
-    # ===== FOOTER =====
-    elements.append(HRFlowable(width="100%", thickness=1, color=PIR_GREEN, spaceAfter=2*mm))
-    elements.append(Paragraph("Please mention the invoice number in the payment details. Thank you for your business!", s_footer))
+    # =====================================================
+    # FOOTER
+    # =====================================================
+    elements.append(HRFlowable(width="100%", thickness=1, color=GREEN, spaceAfter=2*mm))
+    elements.append(Paragraph(
+        "Please mention the invoice number in the payment details. Thank you for your business!",
+        ParagraphStyle('Foot', fontName=F, fontSize=7, textColor=GREY, alignment=TA_CENTER)
+    ))
 
     doc.build(elements)
     buffer.seek(0)

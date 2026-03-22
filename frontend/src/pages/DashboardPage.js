@@ -120,8 +120,8 @@ export default function DashboardPage() {
         {/* Upcoming Payments & Events - 4th card */}
         <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/calendar')}>
           <CardHeader className="pb-1 pt-1">
-            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Upcoming Payments & Events</CardTitle>
-            <CardDescription className="text-xs">Due invoices, meetings, and conferences</CardDescription>
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground text-center">Upcoming Payments & Events</CardTitle>
+            <CardDescription className="text-xs text-center">Due invoices, meetings, and conferences</CardDescription>
           </CardHeader>
           <CardContent>
             {upcomingItems.length === 0 ? (

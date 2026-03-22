@@ -11,11 +11,14 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical, Send } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical, Send, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
 import { format, parseISO } from 'date-fns';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { cn } from '../lib/utils';
 
 const DEFAULT_DOCS = [
   "Bill of Ladings", "Commercial Invoice", "Phytosanitary Certificate",
@@ -799,7 +802,17 @@ export default function TradeDetailPage() {
               </div>
               <div className="space-y-2">
                 <Label>B/L Date</Label>
-                <Input data-testid="bl-date-input" value={blForm.blDate || ''} onChange={(e) => setBlForm({...blForm, blDate: e.target.value})} placeholder="dd/mm/yyyy" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button data-testid="bl-date-input" variant="outline" className={cn('w-full justify-start text-left font-normal', !blForm.blDate && 'text-muted-foreground')}>
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {blForm.blDate ? (() => { try { const d = new Date(blForm.blDate + (blForm.blDate.includes('T') ? '' : 'T00:00:00')); return !isNaN(d) ? format(d, 'dd/MM/yyyy') : blForm.blDate; } catch { return blForm.blDate; } })() : 'dd/mm/yyyy'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={blForm.blDate ? (() => { try { const d = new Date(blForm.blDate + (blForm.blDate.includes('T') ? '' : 'T00:00:00')); return !isNaN(d) ? d : undefined; } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setBlForm({...blForm, blDate: format(d, 'dd/MM/yyyy')}); }} initialFocus />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

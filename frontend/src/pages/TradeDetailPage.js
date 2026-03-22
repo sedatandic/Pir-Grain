@@ -243,6 +243,24 @@ export default function TradeDetailPage() {
               <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Incoterm</span><span className="font-medium">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</span></div>
                 <Separator />
+                {trade.portVariations && trade.portVariations.length > 0 && (
+                  <>
+                    <div>
+                      <span className="text-muted-foreground">Port Variations</span>
+                      <div className="mt-2 space-y-1.5">
+                        {trade.portVariations.map((pv, i) => (
+                          <div key={i} className="flex items-center justify-between rounded-md border px-3 py-1.5 bg-muted/30">
+                            <span className="font-medium">{pv.portName || pv.portId}</span>
+                            <span className={`font-mono text-sm ${Number(pv.difference) < 0 ? 'text-red-600' : Number(pv.difference) > 0 ? 'text-green-600' : ''}`}>
+                              {Number(pv.difference) > 0 ? '+' : ''}{Number(pv.difference).toLocaleString()} USD
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <Separator />
+                  </>
+                )}
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span className="font-medium">{trade.paymentTerms || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{trade.originName || '-'}</span></div>

@@ -101,7 +101,7 @@ export default function AccountingPage() {
       setTrades(tradesRes.data);
       setBankStatements(stmtRes.data);
       setBankAccounts(bankRes.data);
-      setSellers((partnersRes.data || []).filter(p => p.type === 'seller' || p.type === 'both').map(p => p.companyName).filter(Boolean));
+      setSellers((partnersRes.data || []).map(p => p.companyName).filter(Boolean).sort());
       setVendors((vendorsRes.data || []).map(v => v.name).filter(Boolean));
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };

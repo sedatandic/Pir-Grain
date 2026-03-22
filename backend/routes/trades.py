@@ -130,6 +130,8 @@ def get_trade(trade_id: str, user=Depends(non_accountant)):
 
 @router.put("/{trade_id}")
 def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
+    # Separate null fields (to unset) from non-null fields (to set)
+    fields_to_unset = {k: "" for k, v in body.items() if v is None}
     data = {k: v for k, v in body.items() if v is not None}
     data["updatedAt"] = datetime.utcnow()
     for field, col, name_field, code_field in [
@@ -181,7 +183,10 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         data["totalCommission"] = round(qty * brok, 2)
     old_trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     old_status = old_trade.get("status") if old_trade else None
-    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": data})
+    update_ops = {"$set": data}
+    if fields_to_unset:
+        update_ops["$unset"] = fields_to_unset
+    trades_col.update_one({"_id": ObjectId(trade_id)}, update_ops)
     updated = trades_col.find_one({"_id": ObjectId(trade_id)})
     create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"))
 

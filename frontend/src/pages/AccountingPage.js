@@ -23,14 +23,14 @@ const STATUS_CONFIG = {
   overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
-function InvoiceTable({ invoices, search, onEdit, onDelete }) {
+function InvoiceTable({ invoices, search, onEdit, onDelete, direction }) {
   const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
-  const fmt = (n, cur) => new Intl.NumberFormat('en-US', { style: 'currency', currency: cur || 'USD', minimumFractionDigits: 0 }).format(n);
+  const fmtAmt = (n, cur) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0)} ${cur || 'USD'}`;
   return (
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice #</TableHead><TableHead>Vendor</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]"></TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice #</TableHead><TableHead>{direction === 'incoming' ? 'Seller' : 'Vendor'}</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
           {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
@@ -40,7 +40,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete }) {
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
               <TableCell>{inv.vendorName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
-              <TableCell className="text-right font-mono font-medium">{fmt(inv.amount, inv.currency)}</TableCell>
+              <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
               <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
             </TableRow>
@@ -161,7 +161,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} />
+              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -173,7 +173,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search outgoing..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
-              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} />
+              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" />
             </CardContent>
           </Card>
         </TabsContent>

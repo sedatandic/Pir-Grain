@@ -97,7 +97,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     if os.path.exists(LOGO_PATH):
         header_left.append(Image(LOGO_PATH, width=40*mm, height=18*mm))
     else:
-        header_left.append(Paragraph(PIR_COMPANY['name'], s_section))
+        header_left.append(Paragraph("PIR Grain &amp; Pulses", s_section))
 
     header_right = [
         Paragraph("<b>COMMISSION INVOICE</b>", ParagraphStyle('IT', fontSize=16, fontName=FONT_B, textColor=PIR_GREEN, alignment=TA_RIGHT)),
@@ -114,31 +114,29 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(Spacer(1, 2*mm))
     elements.append(HRFlowable(width="100%", thickness=2, color=PIR_GREEN, spaceAfter=4*mm))
 
-    # ===== BILL TO / FROM =====
+    # ===== INVOICE TO =====
     to_content = f"<b>{issued_to_name}</b>"
     if issued_to_address:
         to_content += f"<br/>{issued_to_address}"
     if issued_to_tax_id:
         to_content += f"<br/>Tax ID: {issued_to_tax_id}"
 
-    from_content = f"<b>{PIR_COMPANY['name']}</b><br/>{PIR_COMPANY['address']}<br/>ID No: {PIR_COMPANY['id_no']}"
-
-    parties_data = [[
-        [Paragraph("BILL TO", ParagraphStyle('BT', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(to_content, s_val)],
-        [Paragraph("FROM", ParagraphStyle('FR', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)), Spacer(1, 1*mm), Paragraph(from_content, s_val)],
+    inv_to_data = [[
+        Paragraph("INVOICE TO:", ParagraphStyle('BT', fontSize=8, fontName=FONT_B, textColor=PIR_GREEN)),
+        Spacer(1, 1*mm),
+        Paragraph(to_content, s_val),
     ]]
-    p_tbl = Table(parties_data, colWidths=[W*0.5, W*0.5])
-    p_tbl.setStyle(TableStyle([
+    inv_to_tbl = Table(inv_to_data, colWidths=[W])
+    inv_to_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BACKGROUND', (0, 0), (0, 0), PIR_GREEN_LIGHT),
-        ('BACKGROUND', (1, 0), (1, 0), PIR_GREEN_LIGHT),
+        ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ('LEFTPADDING', (0, 0), (-1, -1), 8),
         ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         ('ROUNDEDCORNERS', [3, 3, 3, 3]),
     ]))
-    elements.append(p_tbl)
+    elements.append(inv_to_tbl)
     elements.append(Spacer(1, 5*mm))
 
     # ===== TRADE DETAILS SECTION =====
@@ -146,38 +144,48 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     vessel_name = trade.get("vesselName") or "-"
     bl_qty = trade.get("blQuantity") or trade.get("quantity") or 0
     loading_port = trade.get("loadingPortName") or trade.get("basePortName") or "-"
+    loading_country = trade.get("loadingPortCountry") or ""
+    loading_full = f"{loading_port}, {loading_country}" if loading_country else loading_port
     discharge_port = trade.get("dischargePortName") or "-"
+    discharge_country = trade.get("dischargePortCountry") or ""
+    discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     commodity_name = trade.get("commodityName") or "-"
+    crop_year = trade.get("cropYear") or ""
+    commodity_display = commodity_name
+    if crop_year:
+        commodity_display = f"{commodity_name}<br/>Crop {crop_year}"
     brokerage_per_mt = trade.get("brokeragePerMT") or 0
-    currency = trade.get("currency") or "USD"
+    brokerage_currency = trade.get("brokerageCurrency") or "USD"
+    currency = brokerage_currency
     total_amount = round(bl_qty * brokerage_per_mt, 2)
     seller_name = trade.get("sellerName") or "-"
     buyer_name = trade.get("buyerName") or "-"
     origin = trade.get("originName") or "-"
     delivery_term = trade.get("deliveryTerm") or "-"
-    shipment_from = trade.get("shipmentFrom") or ""
-    shipment_to = trade.get("shipmentTo") or ""
+    shipment_from = trade.get("shipmentWindowStart") or trade.get("shipmentFrom") or ""
+    shipment_to = trade.get("shipmentWindowEnd") or trade.get("shipmentTo") or ""
     shipment_period = f"{shipment_from} - {shipment_to}" if shipment_from and shipment_to else "-"
 
     elements.append(Paragraph("TRADE DETAILS", s_section))
     elements.append(Spacer(1, 2*mm))
 
     # Trade info grid - 2 columns of key-value pairs
+    s_val_wrap = ParagraphStyle('ValWrap', fontSize=9, fontName=FONT, textColor=DARK_TEXT, leading=12)
     detail_pairs = [
-        ("Contract No:", str(contract_num), "Commodity:", str(commodity_name)),
+        ("Contract No:", str(contract_num), "Commodity:", commodity_display),
         ("Seller:", str(seller_name), "Buyer:", str(buyer_name)),
         ("Origin:", str(origin), "Delivery Term:", str(delivery_term)),
         ("Vessel:", str(vessel_name), "Shipment Period:", str(shipment_period)),
-        ("Load Port:", str(loading_port), "Discharge Port:", str(discharge_port)),
+        ("Load Port:", str(loading_full), "Discharge Port:", str(discharge_full)),
     ]
 
     detail_rows = []
     for lbl1, val1, lbl2, val2 in detail_pairs:
         detail_rows.append([
             Paragraph(f"<b>{lbl1}</b>", s_label),
-            Paragraph(val1, s_val),
+            Paragraph(val1, s_val_wrap),
             Paragraph(f"<b>{lbl2}</b>", s_label),
-            Paragraph(val2, s_val),
+            Paragraph(val2, s_val_wrap),
         ])
 
     d_tbl = Table(detail_rows, colWidths=[24*mm, W*0.5 - 24*mm, 28*mm, W*0.5 - 28*mm])
@@ -192,28 +200,25 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(d_tbl)
     elements.append(Spacer(1, 6*mm))
 
-    # ===== COMMISSION CALCULATION TABLE =====
-    elements.append(Paragraph("COMMISSION CALCULATION", s_section))
+    # ===== COMMISSION TABLE =====
     elements.append(Spacer(1, 2*mm))
 
     curr_symbol = "$" if currency == "USD" else currency + " "
 
     calc_header = [
-        Paragraph("#", s_th),
         Paragraph("DESCRIPTION", s_th),
         Paragraph("B/L QUANTITY (Mts)", s_th),
         Paragraph(f"RATE ({currency}/MT)", s_th),
         Paragraph(f"AMOUNT ({currency})", s_th),
     ]
     calc_row = [
-        Paragraph("1", s_td),
         Paragraph(f"Brokerage commission for mv {vessel_name}<br/>{commodity_name} ({seller_name} / {buyer_name})", s_td_l),
         Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_r),
         Paragraph(f"{brokerage_per_mt:,.2f}", s_td_r),
         Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", s_td_r),
     ]
 
-    calc_cw = [10*mm, 68*mm, 28*mm, 28*mm, 36*mm]
+    calc_cw = [72*mm, 30*mm, 30*mm, 38*mm]
     calc_tbl = Table([calc_header, calc_row], colWidths=calc_cw)
     calc_tbl.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), PIR_GREEN),
@@ -224,8 +229,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('GRID', (0, 1), (-1, -1), 0.5, LIGHT_BORDER),
         ('TOPPADDING', (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
     ]))
     elements.append(calc_tbl)
     elements.append(Spacer(1, 4*mm))

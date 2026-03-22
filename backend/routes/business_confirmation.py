@@ -144,7 +144,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         [Paragraph("SELLERS", s_label), Paragraph(partner_text(seller).replace("\n", "<br/>"), s_val)],
         [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
         [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
-        row("COMMODITY", f"{origin} {commodity}"),
+        row("COMMODITY", trade.get("commodityDisplayName") or f"{origin} {commodity}"),
         row("SPECS", f"{quality}" + (f"  |  Aflatoxin: {aflatoxin}" if aflatoxin else "")),
         row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
         row("SHIPMENT", f"{shipment_start} - {shipment_end}, both dates included, at Seller's option"),

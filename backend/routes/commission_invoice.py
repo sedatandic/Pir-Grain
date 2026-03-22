@@ -6,7 +6,7 @@ from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph, Image, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
 from num2words import num2words
@@ -18,14 +18,12 @@ from auth import get_current_user
 router = APIRouter(prefix="/api/commission-invoice", tags=["commission-invoice"])
 
 PIR_GREEN = colors.HexColor("#1B7A3D")
+PIR_GREEN_LIGHT = colors.HexColor("#E8F5E9")
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "pir-logo.jpeg")
 
-# PIR company details
 PIR_COMPANY = {
     "name": "PIR GRAIN AND PULSES LTD",
-    "address1": "Blv. Tsarigradsko Shosse",
-    "address2": "No:73",
-    "address3": "Plovdiv/BULGARIA",
+    "address": "Blv. Tsarigradsko Shosse No:73, Plovdiv/BULGARIA",
     "id_no": "206597892",
 }
 
@@ -43,84 +41,90 @@ def amount_in_words(amount, currency="USD"):
         integer_part = int(amount)
         decimal_part = round((amount - integer_part) * 100)
         words = num2words(integer_part, lang='en').upper()
-        curr_word = "DOLLARS" if currency == "USD" else currency
+        curr_word = "US DOLLARS" if currency == "USD" else currency
         if decimal_part > 0:
             cents_words = num2words(decimal_part, lang='en').upper()
-            return f"{words} AND {cents_words} CENTS {curr_word}"
-        return f"{words} {curr_word}"
+            return f"{words} AND {cents_words}/100 {curr_word}"
+        return f"{words} {curr_word} ONLY"
     except Exception:
         return str(amount)
 
 
 def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, issued_to_address, issued_to_tax_id):
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=20*mm, rightMargin=20*mm, topMargin=15*mm, bottomMargin=15*mm)
-
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=18*mm, rightMargin=18*mm, topMargin=12*mm, bottomMargin=12*mm)
+    
     styles = getSampleStyleSheet()
     elements = []
+    W = 174*mm  # usable width
 
-    # Custom styles
-    title_style = ParagraphStyle('InvoiceTitle', parent=styles['Heading1'], fontSize=22, textColor=colors.black, alignment=TA_CENTER, spaceAfter=5)
-    label_style = ParagraphStyle('Label', parent=styles['Normal'], fontSize=9, textColor=colors.black, fontName='Helvetica-Bold')
-    value_style = ParagraphStyle('Value', parent=styles['Normal'], fontSize=9, textColor=colors.black)
-    small_style = ParagraphStyle('Small', parent=styles['Normal'], fontSize=8, textColor=colors.grey)
-    bold_style = ParagraphStyle('Bold', parent=styles['Normal'], fontSize=10, textColor=colors.black, fontName='Helvetica-Bold')
-    right_bold = ParagraphStyle('RightBold', parent=styles['Normal'], fontSize=14, textColor=colors.black, fontName='Helvetica-Bold', alignment=TA_RIGHT)
-    center_style = ParagraphStyle('Center', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER)
+    # Styles
+    s_title = ParagraphStyle('Title', fontSize=20, fontName='Helvetica-Bold', textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=2*mm)
+    s_subtitle = ParagraphStyle('Sub', fontSize=9, textColor=colors.grey, alignment=TA_CENTER)
+    s_label = ParagraphStyle('Lbl', fontSize=8, fontName='Helvetica-Bold', textColor=colors.HexColor('#555555'))
+    s_value = ParagraphStyle('Val', fontSize=9, textColor=colors.black)
+    s_value_bold = ParagraphStyle('ValB', fontSize=9, fontName='Helvetica-Bold', textColor=colors.black)
+    s_small = ParagraphStyle('Sm', fontSize=7.5, textColor=colors.grey)
+    s_right = ParagraphStyle('R', fontSize=9, alignment=TA_RIGHT)
+    s_right_bold = ParagraphStyle('RB', fontSize=11, fontName='Helvetica-Bold', alignment=TA_RIGHT, textColor=PIR_GREEN)
+    s_center = ParagraphStyle('C', fontSize=9, alignment=TA_CENTER)
+    s_th = ParagraphStyle('TH', fontSize=8, fontName='Helvetica-Bold', textColor=colors.white, alignment=TA_CENTER)
+    s_td = ParagraphStyle('TD', fontSize=8.5, alignment=TA_CENTER)
+    s_td_l = ParagraphStyle('TDL', fontSize=8.5)
+    s_td_r = ParagraphStyle('TDR', fontSize=8.5, alignment=TA_RIGHT)
 
-    # ---- HEADER ----
-    # Logo on left, company name + INVOICE on right
-    logo = None
+    # ===== HEADER: Logo centered + green line =====
     if os.path.exists(LOGO_PATH):
-        logo = Image(LOGO_PATH, width=55*mm, height=25*mm)
+        logo = Image(LOGO_PATH, width=50*mm, height=22*mm)
+        logo.hAlign = 'CENTER'
+        elements.append(logo)
+    elements.append(Spacer(1, 2*mm))
+    elements.append(HRFlowable(width="100%", thickness=2, color=PIR_GREEN, spaceAfter=3*mm))
 
-    header_data = [
-        [
-            logo or Paragraph("PIR GRAIN AND PULSES", bold_style),
-            Paragraph("<b>PIR GRAIN AND PULSES</b>", ParagraphStyle('RHeader', parent=styles['Normal'], fontSize=11, fontName='Helvetica-Bold', alignment=TA_RIGHT))
-        ]
-    ]
-    header_table = Table(header_data, colWidths=[90*mm, 80*mm])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    # ===== INVOICE TITLE =====
+    elements.append(Paragraph("COMMISSION INVOICE", s_title))
+    elements.append(Spacer(1, 4*mm))
+
+    # ===== INVOICE INFO BAR (No, Date) =====
+    info_data = [[
+        Paragraph(f"<b>Invoice No:</b> {invoice_number}", s_value),
+        Paragraph(f"<b>Date:</b> {invoice_date}", ParagraphStyle('DR', fontSize=9, alignment=TA_RIGHT)),
+    ]]
+    info_tbl = Table(info_data, colWidths=[W/2, W/2])
+    info_tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
+        ('ROUNDEDCORNERS', [3, 3, 3, 3]),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
     ]))
-    elements.append(header_table)
+    elements.append(info_tbl)
     elements.append(Spacer(1, 5*mm))
 
-    # ---- INVOICE TITLE + NUMBER/DATE ----
-    elements.append(Paragraph("INVOICE", title_style))
-    elements.append(Spacer(1, 3*mm))
-
-    inv_info = Table([
-        [Paragraph("<b>NO:</b>", label_style), Paragraph(str(invoice_number), value_style),
-         Paragraph("<b>DATE:</b>", label_style), Paragraph(invoice_date, value_style)]
-    ], colWidths=[15*mm, 55*mm, 18*mm, 55*mm])
-    inv_info.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
-    elements.append(inv_info)
-    elements.append(Spacer(1, 5*mm))
-
-    # ---- ISSUED TO / ISSUED BY ----
-    issued_to_lines = f"<b>ISSUED TO:</b><br/>{issued_to_name}<br/>"
+    # ===== ISSUED TO / ISSUED BY =====
+    to_lines = f"<b>{issued_to_name}</b>"
     if issued_to_address:
-        issued_to_lines += f"{issued_to_address}<br/>"
+        to_lines += f"<br/>{issued_to_address}"
     if issued_to_tax_id:
-        issued_to_lines += f"<b>TAX ID NO:</b> {issued_to_tax_id}"
+        to_lines += f"<br/>Tax ID: {issued_to_tax_id}"
 
-    issued_by_lines = f"<b>ISSUED BY:</b><br/>{PIR_COMPANY['name']}<br/>{PIR_COMPANY['address1']}<br/>{PIR_COMPANY['address2']}<br/>{PIR_COMPANY['address3']}<br/><b>ID NO:</b> {PIR_COMPANY['id_no']}"
+    by_lines = f"<b>{PIR_COMPANY['name']}</b><br/>{PIR_COMPANY['address']}<br/>ID No: {PIR_COMPANY['id_no']}"
 
-    parties_table = Table([
-        [Paragraph(issued_to_lines, value_style), Paragraph(issued_by_lines, value_style)]
-    ], colWidths=[90*mm, 80*mm])
-    parties_table.setStyle(TableStyle([
+    parties = [[
+        [Paragraph("<font color='#1B7A3D'><b>BILL TO:</b></font>", s_label), Spacer(1, 1*mm), Paragraph(to_lines, s_value)],
+        [Paragraph("<font color='#1B7A3D'><b>FROM:</b></font>", s_label), Spacer(1, 1*mm), Paragraph(by_lines, s_value)],
+    ]]
+    p_tbl = Table(parties, colWidths=[W/2, W/2])
+    p_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    elements.append(parties_table)
-    elements.append(Spacer(1, 8*mm))
+    elements.append(p_tbl)
+    elements.append(Spacer(1, 6*mm))
 
-    # ---- TRADE DETAILS (New section) ----
+    # ===== TRADE DETAILS TABLE =====
     contract_num = trade.get("pirContractNumber") or trade.get("referenceNumber") or "-"
     vessel_name = trade.get("vesselName") or "-"
     bl_qty = trade.get("blQuantity") or trade.get("quantity") or 0
@@ -129,98 +133,112 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     commodity_name = trade.get("commodityName") or "-"
     brokerage_per_mt = trade.get("brokeragePerMT") or 0
     currency = trade.get("currency") or "USD"
-    brokerage_account = trade.get("brokerageAccount") or "seller"
-
-    # ---- MAIN TABLE ----
-    th_style = ParagraphStyle('TH', parent=styles['Normal'], fontSize=9, fontName='Helvetica-Bold', textColor=colors.white, alignment=TA_CENTER)
-    td_style = ParagraphStyle('TD', parent=styles['Normal'], fontSize=9, alignment=TA_CENTER)
-    td_left = ParagraphStyle('TDLeft', parent=styles['Normal'], fontSize=9, alignment=TA_LEFT)
-    td_right = ParagraphStyle('TDRight', parent=styles['Normal'], fontSize=9, alignment=TA_RIGHT)
-
     total_amount = round(bl_qty * brokerage_per_mt, 2)
+    seller_name = trade.get("sellerName") or "-"
+    buyer_name = trade.get("buyerName") or "-"
 
-    description_text = f"Brokerage Commission for<br/>mv {vessel_name}, {commodity_name}"
+    desc = f"Brokerage Commission<br/>mv {vessel_name}<br/>{commodity_name}<br/>{seller_name} / {buyer_name}"
 
-    table_data = [
-        [
-            Paragraph("#", th_style),
-            Paragraph("DESCRIPTION", th_style),
-            Paragraph("CONTRACT", th_style),
-            Paragraph("VESSEL", th_style),
-            Paragraph("PORT LOAD", th_style),
-            Paragraph("PORT DISCH", th_style),
-            Paragraph("QTY B/L<br/>(MT)", th_style),
-            Paragraph("Brokerage<br/>PMT", th_style),
-        ],
-        [
-            Paragraph("1", td_style),
-            Paragraph(description_text, td_left),
-            Paragraph(str(contract_num), td_style),
-            Paragraph(str(vessel_name), td_style),
-            Paragraph(str(loading_port), td_style),
-            Paragraph(str(discharge_port), td_style),
-            Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", td_right),
-            Paragraph(f"{brokerage_per_mt:.2f} {currency}", td_right),
-        ]
+    # Column widths: #, Desc, Contract, Vessel, Load, Disch, BL Qty, Rate
+    cw = [8*mm, 38*mm, 20*mm, 22*mm, 20*mm, 20*mm, 22*mm, 24*mm]
+
+    t_header = [
+        Paragraph("#", s_th),
+        Paragraph("DESCRIPTION", s_th),
+        Paragraph("CONTRACT", s_th),
+        Paragraph("VESSEL", s_th),
+        Paragraph("LOAD PORT", s_th),
+        Paragraph("DISCH PORT", s_th),
+        Paragraph("B/L QTY<br/>(MT)", s_th),
+        Paragraph(f"RATE<br/>({currency}/MT)", s_th),
     ]
 
-    main_table = Table(table_data, colWidths=[8*mm, 35*mm, 22*mm, 22*mm, 22*mm, 22*mm, 20*mm, 22*mm])
-    main_table.setStyle(TableStyle([
+    t_row = [
+        Paragraph("1", s_td),
+        Paragraph(desc, s_td_l),
+        Paragraph(str(contract_num), s_td),
+        Paragraph(str(vessel_name), s_td),
+        Paragraph(str(loading_port), s_td),
+        Paragraph(str(discharge_port), s_td),
+        Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_r),
+        Paragraph(f"{brokerage_per_mt:,.2f}", s_td_r),
+    ]
+
+    main_tbl = Table([t_header, t_row], colWidths=cw)
+    main_tbl.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), PIR_GREEN),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
         ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F8F8F8')]),
+        ('GRID', (0, 0), (-1, 0), 0.5, PIR_GREEN),
+        ('GRID', (0, 1), (-1, -1), 0.5, colors.HexColor('#E0E0E0')),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
     ]))
-    elements.append(main_table)
-    elements.append(Spacer(1, 8*mm))
-
-    # ---- TOTAL AMOUNT ----
-    total_data = [
-        [Paragraph("<b>TOTAL AMOUNT:</b>", bold_style), Paragraph(f"<b>${total_amount:,.2f}</b>", right_bold)],
-    ]
-    total_table = Table(total_data, colWidths=[90*mm, 80*mm])
-    total_table.setStyle(TableStyle([
-        ('LINEABOVE', (0, 0), (-1, 0), 1, PIR_GREEN),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-    ]))
-    elements.append(total_table)
-    elements.append(Spacer(1, 3*mm))
-
-    # ---- AMOUNT IN WORDS ----
-    words = amount_in_words(total_amount, currency)
-    elements.append(Paragraph(f"<b>AMOUNT IN WORDS:</b> {words}", value_style))
-    elements.append(Spacer(1, 2*mm))
-    elements.append(Paragraph(f"<b>CURRENCY:</b> {currency}", value_style))
+    elements.append(main_tbl)
     elements.append(Spacer(1, 6*mm))
 
-    # ---- BANK DETAILS ----
-    bank_text = f"""<b>BANK DETAILS:</b><br/>
-<b>BENEFICIARY:</b> {PIR_BANK['beneficiary']}<br/>
-<b>BANK:</b> {PIR_BANK['bank']}<br/>
-<b>ADDRESS:</b> {PIR_BANK['address']}<br/>
-<b>IBAN:</b> {PIR_BANK['iban']}<br/>
-<b>BIC:</b> {PIR_BANK['bic']}"""
-    elements.append(Paragraph(bank_text, value_style))
-    elements.append(Spacer(1, 10*mm))
-
-    # ---- SIGNATURE ----
-    sig_data = [
-        [Paragraph("", value_style), Paragraph("<b>SIGNATURE</b>", ParagraphStyle('Sig', parent=styles['Normal'], fontSize=10, fontName='Helvetica-Bold', alignment=TA_RIGHT))],
-        [Paragraph("", value_style), Paragraph("SALIH KARAGOZ", ParagraphStyle('SigName', parent=styles['Normal'], fontSize=9, alignment=TA_RIGHT))],
+    # ===== TOTAL BOX =====
+    curr_symbol = "$" if currency == "USD" else currency + " "
+    total_data = [
+        [Paragraph("", s_value), Paragraph("<b>TOTAL AMOUNT</b>", ParagraphStyle('T', fontSize=10, fontName='Helvetica-Bold', alignment=TA_RIGHT)),
+         Paragraph(f"<b>{curr_symbol}{total_amount:,.2f}</b>", ParagraphStyle('TA', fontSize=14, fontName='Helvetica-Bold', textColor=PIR_GREEN, alignment=TA_RIGHT))],
     ]
-    sig_table = Table(sig_data, colWidths=[100*mm, 70*mm])
-    elements.append(sig_table)
+    total_tbl = Table(total_data, colWidths=[W*0.4, W*0.3, W*0.3])
+    total_tbl.setStyle(TableStyle([
+        ('LINEABOVE', (1, 0), (-1, 0), 1.5, PIR_GREEN),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    elements.append(total_tbl)
+    elements.append(Spacer(1, 3*mm))
+
+    # ===== AMOUNT IN WORDS =====
+    words = amount_in_words(total_amount, currency)
+    elements.append(Paragraph(f"<b>Amount in words:</b> <i>{words}</i>", s_value))
     elements.append(Spacer(1, 8*mm))
 
-    # ---- FOOTER ----
-    elements.append(Paragraph("<i>Please mention the invoice number in the details of the payment.</i>", small_style))
-    elements.append(Paragraph("<i>Thank you for your cooperation!</i>", small_style))
+    # ===== BANK DETAILS (boxed) =====
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#E0E0E0'), spaceAfter=3*mm))
+    elements.append(Paragraph("<font color='#1B7A3D'><b>BANK DETAILS</b></font>", s_label))
+    elements.append(Spacer(1, 2*mm))
+
+    bank_rows = [
+        [Paragraph("<b>Beneficiary:</b>", s_small), Paragraph(PIR_BANK['beneficiary'], s_value)],
+        [Paragraph("<b>Bank:</b>", s_small), Paragraph(PIR_BANK['bank'], s_value)],
+        [Paragraph("<b>Address:</b>", s_small), Paragraph(PIR_BANK['address'], s_value)],
+        [Paragraph("<b>IBAN:</b>", s_small), Paragraph(f"<b>{PIR_BANK['iban']}</b>", s_value_bold)],
+        [Paragraph("<b>BIC/SWIFT:</b>", s_small), Paragraph(PIR_BANK['bic'], s_value)],
+    ]
+    bank_tbl = Table(bank_rows, colWidths=[25*mm, W - 25*mm])
+    bank_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (0, -1), 2),
+    ]))
+    elements.append(bank_tbl)
+    elements.append(Spacer(1, 12*mm))
+
+    # ===== SIGNATURE =====
+    sig_data = [[
+        Paragraph("", s_value),
+        Paragraph("_______________________________", ParagraphStyle('SigLine', fontSize=9, alignment=TA_CENTER, textColor=colors.grey)),
+    ], [
+        Paragraph("", s_value),
+        Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ", ParagraphStyle('SigName', fontSize=8, alignment=TA_CENTER, textColor=colors.grey)),
+    ]]
+    sig_tbl = Table(sig_data, colWidths=[W*0.55, W*0.45])
+    elements.append(sig_tbl)
+    elements.append(Spacer(1, 8*mm))
+
+    # ===== FOOTER =====
+    elements.append(HRFlowable(width="100%", thickness=0.5, color=PIR_GREEN, spaceAfter=2*mm))
+    elements.append(Paragraph("Please mention the invoice number in the details of the payment. Thank you for your cooperation!", 
+                              ParagraphStyle('Footer', fontSize=7.5, textColor=colors.grey, alignment=TA_CENTER)))
 
     doc.build(elements)
     buffer.seek(0)
@@ -234,9 +252,8 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", user=Depe
         raise HTTPException(status_code=404, detail="Trade not found")
 
     contract_num = trade.get("pirContractNumber") or trade.get("referenceNumber") or trade_id
-
-    # Determine "ISSUED TO" based on brokerage account
     brokerage_account = account or trade.get("brokerageAccount") or "seller"
+    
     if brokerage_account == "buyer":
         partner_id = trade.get("buyerId")
     else:
@@ -260,7 +277,6 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", user=Depe
     if not issued_to_name:
         issued_to_name = trade.get("buyerName" if brokerage_account == "buyer" else "sellerName", "-")
 
-    # Invoice number and date
     invoice_number = f"COMM-{contract_num}"
     invoice_date = datetime.utcnow().strftime("%d.%m.%Y")
 

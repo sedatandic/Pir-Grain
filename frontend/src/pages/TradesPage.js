@@ -209,7 +209,6 @@ export default function TradesPage() {
               <TableHead className="text-center">Origin</TableHead>
               <TableHead className="text-center">Quantity<br/><span className="text-xs font-normal text-muted-foreground">(Mts)</span></TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
-              <TableHead className="text-center whitespace-nowrap">Port Options</TableHead>
               <TableHead className="text-center whitespace-nowrap">Unit Price</TableHead>
               <TableHead className="text-center">Shipment Period</TableHead>
               <TableHead className="text-center">Vessel</TableHead>
@@ -253,17 +252,39 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
-                <TableCell className="text-center text-sm whitespace-nowrap">{(() => { const port = trade.basePortName || trade.loadingPortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</TableCell>
-                <TableCell className="text-center text-sm">{trade.portVariations && trade.portVariations.length > 0 ? (
-                  <div className="flex flex-col items-center gap-0.5">
-                    {trade.portVariations.map((pv, i) => (
-                      <span key={i} className="whitespace-nowrap">
-                        {pv.portName} <span className={`font-mono text-xs ${Number(pv.difference) < 0 ? 'text-red-600' : Number(pv.difference) > 0 ? 'text-green-600' : ''}`}>{Number(pv.difference) > 0 ? '+' : ''}{pv.difference}</span>
-                      </span>
-                    ))}
-                  </div>
-                ) : '-'}</TableCell>
-                <TableCell className="text-center font-mono text-sm whitespace-nowrap">{trade.pricePerMT ? `${trade.pricePerMT.toLocaleString()} ${trade.currency || 'USD'}` : '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{(() => {
+                  const port = trade.basePortName || trade.loadingPortName || '';
+                  const term = trade.deliveryTerm || '';
+                  const baseTerm = port && port.toLowerCase().startsWith(term.toLowerCase()) ? port : [term, port].filter(Boolean).join(' ') || '-';
+                  const pvs = trade.portVariations || [];
+                  if (pvs.length === 0) return baseTerm;
+                  return (
+                    <div className="flex flex-col items-center">
+                      <span>{baseTerm}</span>
+                      {pvs.map((pv, i) => (
+                        <span key={i}><hr className="w-full border-t border-border my-0.5" /><span className="text-muted-foreground">{term} {pv.portName}</span></span>
+                      ))}
+                    </div>
+                  );
+                })()}</TableCell>
+                <TableCell className="text-center font-mono text-sm whitespace-nowrap">{(() => {
+                  const basePrice = trade.pricePerMT;
+                  const currency = trade.currency || 'USD';
+                  if (!basePrice) return '-';
+                  const pvs = trade.portVariations || [];
+                  if (pvs.length === 0) return `${basePrice.toLocaleString()} ${currency}`;
+                  return (
+                    <div className="flex flex-col items-center">
+                      <span>{basePrice.toLocaleString()} {currency}</span>
+                      {pvs.map((pv, i) => {
+                        const adjusted = basePrice + Number(pv.difference || 0);
+                        return (
+                          <span key={i}><hr className="w-full border-t border-border my-0.5" /><span className="text-muted-foreground">{adjusted.toLocaleString()} {currency}</span></span>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}</TableCell>
                 <TableCell className="text-center text-sm">{trade.shipmentWindowStart || trade.shipmentWindowEnd ? <div>{formatShipmentDate(trade.shipmentWindowStart) && <div>{formatShipmentDate(trade.shipmentWindowStart)}</div>}{formatShipmentDate(trade.shipmentWindowEnd) && <div>{formatShipmentDate(trade.shipmentWindowEnd)}</div>}</div> : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap"><VesselPicker trade={trade} /></TableCell>
               </TableRow>

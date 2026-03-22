@@ -14,7 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 import os
 import re
 
-from database import trades_col, partners_col
+from database import trades_col, partners_col, commodities_col
 from auth import get_current_user
 
 pdfmetrics.registerFont(TTFont('FreeSans', '/usr/share/fonts/truetype/freefont/FreeSans.ttf'))
@@ -105,7 +105,17 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     delivery_term = trade.get("deliveryTerm") or "-"
     discharge_rate = trade.get("dischargeRate") or "-"
     payment_terms = trade.get("paymentTerms") or "-"
-    quality = trade.get("commoditySpecs") or trade.get("quality") or "-"
+    quality = trade.get("commoditySpecs") or ""
+    if not quality:
+        commodity_id = trade.get("commodityId")
+        if commodity_id:
+            try:
+                comm = commodities_col.find_one({"_id": ObjectId(commodity_id)})
+                if comm:
+                    quality = comm.get("specs", "")
+            except Exception:
+                pass
+    quality = quality or "-"
     aflatoxin = trade.get("aflatoxin") or ""
     more_less = trade.get("moreLess") or "10"
     more_less_option = trade.get("moreLessOption") or "Seller's option"
@@ -197,7 +207,6 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     doc_list = []
     commodity_id = trade.get("commodityId")
     if commodity_id:
-        from database import commodities_col
         comm = commodities_col.find_one({"_id": ObjectId(commodity_id)})
         if comm and comm.get("documents"):
             doc_list = comm["documents"]

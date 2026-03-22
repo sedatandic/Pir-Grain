@@ -14,7 +14,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from num2words import num2words
 import os
 
-from database import trades_col, partners_col
+from database import trades_col, partners_col, bank_accounts_col
 
 # Register FreeSans fonts (supports Turkish characters: ş, ı, ö, ü, ç, ğ, İ, Ş, Ö, Ü, Ç, Ğ)
 pdfmetrics.registerFont(TTFont('FreeSans', '/usr/share/fonts/truetype/freefont/FreeSans.ttf'))
@@ -63,7 +63,7 @@ def amount_in_words(amount, currency="USD"):
         return str(amount)
 
 
-def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, issued_to_address, issued_to_tax_id):
+def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, issued_to_address, issued_to_tax_id, bank_accounts=None):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=20*mm, rightMargin=20*mm, topMargin=15*mm, bottomMargin=15*mm)
 
@@ -257,23 +257,40 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(Paragraph("BANK DETAILS", s_section))
     elements.append(Spacer(1, 2*mm))
 
-    bank_rows = [
-        [Paragraph("<b>Beneficiary:</b>", s_small), Paragraph(PIR_BANK['beneficiary'], s_val)],
-        [Paragraph("<b>Bank:</b>", s_small), Paragraph(PIR_BANK['bank'], s_val)],
-        [Paragraph("<b>Address:</b>", s_small), Paragraph(PIR_BANK['address'], s_val)],
-        [Paragraph("<b>IBAN:</b>", s_small), Paragraph(f"<b>{PIR_BANK['iban']}</b>", s_val_b)],
-        [Paragraph("<b>BIC/SWIFT:</b>", s_small), Paragraph(PIR_BANK['bic'], s_val)],
-    ]
-    b_tbl = Table(bank_rows, colWidths=[25*mm, W - 25*mm])
-    b_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('TOPPADDING', (0, 0), (-1, -1), 1.5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
-        ('LEFTPADDING', (0, 0), (0, -1), 4),
-        ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
-        ('ROUNDEDCORNERS', [3, 3, 3, 3]),
-    ]))
-    elements.append(b_tbl)
+    # Use provided bank accounts or fall back to default
+    accounts_to_show = bank_accounts if bank_accounts else [PIR_BANK]
+
+    for idx, acct in enumerate(accounts_to_show):
+        if idx > 0:
+            elements.append(Spacer(1, 3*mm))
+        beneficiary = acct.get("beneficiary", acct.get("accountName", ""))
+        bank_name = acct.get("bank", acct.get("bankName", ""))
+        address = acct.get("address", acct.get("bankAddress", ""))
+        iban = acct.get("iban", "")
+        bic = acct.get("bic", acct.get("swift", ""))
+        currency_label = acct.get("currency", "")
+
+        bank_rows = [
+            [Paragraph("<b>Beneficiary:</b>", s_small), Paragraph(beneficiary, s_val)],
+            [Paragraph("<b>Bank:</b>", s_small), Paragraph(bank_name, s_val)],
+            [Paragraph("<b>Address:</b>", s_small), Paragraph(address, s_val)],
+            [Paragraph("<b>IBAN:</b>", s_small), Paragraph(f"<b>{iban}</b>", s_val_b)],
+            [Paragraph("<b>BIC/SWIFT:</b>", s_small), Paragraph(bic, s_val)],
+        ]
+        if currency_label:
+            bank_rows.insert(0, [Paragraph("<b>Currency:</b>", s_small), Paragraph(f"<b>{currency_label}</b>", s_val_b)])
+
+        b_tbl = Table(bank_rows, colWidths=[25*mm, W - 25*mm])
+        b_tbl.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 1.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
+            ('LEFTPADDING', (0, 0), (0, -1), 4),
+            ('BACKGROUND', (0, 0), (-1, -1), PIR_GREEN_LIGHT),
+            ('ROUNDEDCORNERS', [3, 3, 3, 3]),
+        ]))
+        elements.append(b_tbl)
+
     elements.append(Spacer(1, 14*mm))
 
     # ===== SIGNATURE =====
@@ -298,7 +315,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
 
 @router.get("/{trade_id}")
-def get_commission_invoice_pdf(trade_id: str, account: str = "seller", user=Depends(get_current_user)):
+def get_commission_invoice_pdf(trade_id: str, account: str = "seller", bankIds: str = "", user=Depends(get_current_user)):
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
@@ -329,6 +346,20 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", user=Depe
     if not issued_to_name:
         issued_to_name = trade.get("buyerName" if brokerage_account == "buyer" else "sellerName", "-")
 
+    # Fetch selected bank accounts
+    selected_banks = []
+    if bankIds:
+        for bid in bankIds.split(","):
+            bid = bid.strip()
+            if bid:
+                try:
+                    bank = bank_accounts_col.find_one({"_id": ObjectId(bid)})
+                    if bank:
+                        bank.pop("_id", None)
+                        selected_banks.append(bank)
+                except Exception:
+                    pass
+
     invoice_number = f"COMM-{contract_num}"
     invoice_date = datetime.utcnow().strftime("%d.%m.%Y")
 
@@ -339,6 +370,7 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", user=Depe
         issued_to_name=issued_to_name,
         issued_to_address=issued_to_address,
         issued_to_tax_id=issued_to_tax_id,
+        bank_accounts=selected_banks if selected_banks else None,
     )
 
     filename = f"Commission_Invoice_{contract_num}.pdf"

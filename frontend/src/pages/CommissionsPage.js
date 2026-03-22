@@ -5,8 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Checkbox } from '../components/ui/checkbox';
 import { TRADE_STATUS_CONFIG, PENDING_STATUSES, ONGOING_STATUSES, COMPLETED_STATUSES } from '../lib/constants';
-import { DollarSign, TrendingUp, Clock, CheckCircle, Search, Loader2, FileDown } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, CheckCircle, Search, Loader2, FileDown, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -14,10 +16,19 @@ export default function CommissionsPage() {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [selectedBankIds, setSelectedBankIds] = useState([]);
+  const [bankDialogOpen, setBankDialogOpen] = useState(false);
+  const [pendingInvoice, setPendingInvoice] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
-      try { const res = await api.get('/api/trades'); setTrades(res.data); } catch (err) { console.error(err); } finally { setLoading(false); }
+      try {
+        const [tradesRes, banksRes] = await Promise.all([api.get('/api/trades'), api.get('/api/bank-accounts')]);
+        setTrades(tradesRes.data);
+        setBankAccounts(banksRes.data);
+        if (banksRes.data.length > 0) setSelectedBankIds(banksRes.data.map(b => b.id));
+      } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetch();
   }, []);
@@ -48,9 +59,21 @@ export default function CommissionsPage() {
   const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
   const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
 
-  const downloadInvoice = async (tradeId, account) => {
+  const openInvoiceDialog = (tradeId, account) => {
+    setPendingInvoice({ tradeId, account: account || 'seller' });
+    setBankDialogOpen(true);
+  };
+
+  const toggleBankId = (id) => {
+    setSelectedBankIds(prev => prev.includes(id) ? prev.filter(b => b !== id) : [...prev, id]);
+  };
+
+  const downloadInvoice = async () => {
+    if (!pendingInvoice) return;
+    const { tradeId, account } = pendingInvoice;
     try {
-      const res = await api.get(`/api/commission-invoice/${tradeId}?account=${account || 'seller'}`, { responseType: 'blob' });
+      const bankParam = selectedBankIds.length > 0 ? `&bankIds=${selectedBankIds.join(',')}` : '';
+      const res = await api.get(`/api/commission-invoice/${tradeId}?account=${account}${bankParam}`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const a = document.createElement('a');
       a.href = url;
@@ -61,6 +84,8 @@ export default function CommissionsPage() {
     } catch (err) {
       toast.error('Failed to generate invoice');
     }
+    setBankDialogOpen(false);
+    setPendingInvoice(null);
   };
 
   const renderTable = (list, empty, showInvoice = false) => {
@@ -71,7 +96,7 @@ export default function CommissionsPage() {
         <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
             <TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
-            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead>Load / Disch Port</TableHead>
+            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead className="text-center">Load Port<hr className="my-0.5 border-muted-foreground/30"/>Disch. Port</TableHead>
             <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead><TableHead>Status</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
@@ -84,12 +109,16 @@ export default function CommissionsPage() {
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</TableCell>
-                <TableCell className="text-sm">{(t.loadingPortName || t.basePortName || '-')} / {(t.dischargePortName || '-')}</TableCell>
+                <TableCell className="text-sm">
+                  <div>{t.loadingPortName ? `${t.loadingPortName}${t.loadingPortCountry ? ', ' + t.loadingPortCountry : ''}` : '-'}</div>
+                  <hr className="my-0.5 border-muted-foreground/20"/>
+                  <div>{t.dischargePortName ? `${t.dischargePortName}${t.dischargePortCountry ? ', ' + t.dischargePortCountry : ''}` : '-'}</div>
+                </TableCell>
                 <TableCell className="text-sm">${t.brokeragePerMT||0}</TableCell>
                 <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
                 <TableCell><Badge className={TRADE_STATUS_CONFIG[t.status]?.color||'bg-muted'}>{TRADE_STATUS_CONFIG[t.status]?.label||t.status}</Badge></TableCell>
                 {showInvoice && <TableCell className="text-center">
-                  <Button variant="outline" size="sm" onClick={() => downloadInvoice(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
+                  <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
                     <FileDown className="h-3.5 w-3.5 mr-1" />PDF
                   </Button>
                 </TableCell>}
@@ -127,6 +156,35 @@ export default function CommissionsPage() {
         <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending trades')}</CardContent></Card>
         <Card className="border-l-4 border-l-slate-400"><CardHeader className="pb-3"><CardTitle className="text-lg text-slate-700">Completed ({categorized.completed.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.completed, 'No completed trades', true)}</CardContent></Card>
       </div>
+
+      {/* Bank Account Selection Dialog */}
+      <Dialog open={bankDialogOpen} onOpenChange={setBankDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Select Bank Accounts</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Choose which bank account(s) to include in the invoice:</p>
+          <div className="space-y-3 max-h-[300px] overflow-y-auto">
+            {bankAccounts.map(bank => (
+              <label key={bank.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors" data-testid={`bank-select-${bank.id}`}>
+                <Checkbox checked={selectedBankIds.includes(bank.id)} onCheckedChange={() => toggleBankId(bank.id)} className="mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">{bank.accountName || bank.beneficiary}</div>
+                  <div className="text-xs text-muted-foreground">{bank.bankName} {bank.currency ? `(${bank.currency})` : ''}</div>
+                  <div className="text-xs text-muted-foreground font-mono">{bank.iban}</div>
+                </div>
+              </label>
+            ))}
+            {bankAccounts.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">No bank accounts found. Default will be used.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBankDialogOpen(false)}>Cancel</Button>
+            <Button onClick={downloadInvoice} data-testid="confirm-download-invoice"><FileDown className="h-4 w-4 mr-1" />Download PDF</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

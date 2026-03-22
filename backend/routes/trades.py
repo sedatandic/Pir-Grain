@@ -69,6 +69,9 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
                     data[name_field] = doc.get("companyName", doc.get("name", ""))
                     if code_field:
                         data[code_field] = doc.get("companyCode", "")
+                    # Store port country
+                    if "Port" in name_field and doc.get("country"):
+                        data[name_field.replace("Name", "Country")] = doc.get("country", "")
             except Exception:
                 pass
     qty = data.get("quantity") or 0
@@ -130,6 +133,9 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
                     data[name_field] = doc.get("companyName", doc.get("name", ""))
                     if code_field:
                         data[code_field] = doc.get("companyCode", "")
+                    # Store port country
+                    if "Port" in name_field and doc.get("country"):
+                        data[name_field.replace("Name", "Country")] = doc.get("country", "")
             except Exception:
                 pass
     if "quantity" in data or "brokeragePerMT" in data:

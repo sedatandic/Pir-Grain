@@ -92,10 +92,7 @@ export default function Sidebar() {
           </button>
         ) : null}
         <div className={cn('flex items-center justify-center', collapsed && 'max-md:flex md:hidden')}>
-          <div className="flex items-center gap-2">
-            <span className="text-3xl font-black tracking-tight" style={{ color: PIR_GREEN }}>PIR</span>
-            <span className="text-3xl font-light tracking-tight text-muted-foreground">APP</span>
-          </div>
+          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-10 w-auto object-contain" />
         </div>
         {/* Desktop: collapse toggle */}
         {!collapsed && (

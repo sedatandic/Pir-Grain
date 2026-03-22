@@ -403,7 +403,7 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{trade.buyerName || getName(partners, trade.buyerId)}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{trade.brokerName || getName(partners, trade.brokerId) || '-'}</span></div>
-                {(trade.coBrokerName || trade.coBrokerId) && (
+                {trade.coBrokerId && (
                   <div className="flex justify-between"><span className="text-muted-foreground text-orange-600">Co-Broker</span><span className="font-medium text-orange-600">{trade.coBrokerName || getName(partners, trade.coBrokerId) || '-'}</span></div>
                 )}
                 <Separator />

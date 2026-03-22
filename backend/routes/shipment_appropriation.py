@@ -6,12 +6,12 @@ from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, HRFlowable, Table, TableStyle
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-import os
+import os, re
 
 from database import trades_col, partners_col
 from auth import get_current_user
@@ -23,10 +23,17 @@ pdfmetrics.registerFontFamily('FreeSans', normal='FreeSans', bold='FreeSansBold'
 
 router = APIRouter(prefix="/api/shipment-appropriation", tags=["shipment-appropriation"])
 
-PIR_GREEN = colors.HexColor("#1B7A3D")
-DARK_TEXT = colors.HexColor("#1A1A1A")
-GREY_TEXT = colors.HexColor("#666666")
+F = 'FreeSans'
+FB = 'FreeSansBold'
+FI = 'FreeSansOblique'
+GREEN = colors.HexColor("#1B7A3D")
+GREEN_LIGHT = colors.HexColor("#F0F7F2")
+GREEN_MED = colors.HexColor("#D4E8DA")
+DARK = colors.HexColor("#1A1A1A")
+GREY = colors.HexColor("#666666")
+BORDER = colors.HexColor("#E0E0E0")
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
+STAMP_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-stamp-signature.png")
 
 
 def fmt_num(v):
@@ -38,38 +45,36 @@ def fmt_num(v):
         return str(v)
 
 
-def fmt_date_slash(d):
-    """Convert dd/MM/yyyy or ISO to dd.MM.yyyy"""
+def parse_date(d):
+    """Parse various date formats to datetime object"""
     if not d:
-        return "-"
-    import re
-    m = re.match(r'^(\d{2})/(\d{2})/(\d{4})$', str(d))
-    if m:
-        return f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
-    try:
-        dt = datetime.fromisoformat(str(d).replace('Z', '+00:00'))
-        return dt.strftime('%d.%m.%Y')
-    except Exception:
-        return str(d)
-
-
-def fmt_date_long(d):
-    """Convert to dd-MMM-yyyy format"""
-    if not d:
-        return "-"
-    import re
+        return None
     m = re.match(r'^(\d{2})/(\d{2})/(\d{4})$', str(d))
     if m:
         try:
-            dt = datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)))
-            return dt.strftime('%d-%b-%Y').upper()
+            return datetime(int(m.group(3)), int(m.group(2)), int(m.group(1)))
         except Exception:
-            return str(d)
+            pass
     try:
-        dt = datetime.fromisoformat(str(d).replace('Z', '+00:00'))
-        return dt.strftime('%d-%b-%Y').upper()
+        return datetime.fromisoformat(str(d).replace('Z', '+00:00'))
     except Exception:
-        return str(d)
+        return None
+
+
+def fmt_date_nice(d):
+    """Format as '15 May 2025'"""
+    dt = parse_date(d)
+    if not dt:
+        return str(d) if d else "-"
+    return dt.strftime('%-d %B %Y')
+
+
+def fmt_date_dot(d):
+    """Format as dd.MM.yyyy"""
+    dt = parse_date(d)
+    if not dt:
+        return str(d) if d else "-"
+    return dt.strftime('%d.%m.%Y')
 
 
 @router.get("/{trade_id}/pdf")
@@ -78,30 +83,35 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
 
-    # Get buyer partner details
     buyer = None
     if trade.get("buyerId"):
         buyer = partners_col.find_one({"_id": ObjectId(trade["buyerId"])})
 
     buyer_name = trade.get("buyerName") or (buyer.get("companyName") if buyer else "-")
-    buyer_address_parts = []
+    # Address: "Merkez / Çorum - Türkiye"
+    buyer_addr_line = ""
     if buyer:
+        parts = []
         if buyer.get("address"):
-            buyer_address_parts.append(buyer["address"])
-        city_country = ", ".join(filter(None, [buyer.get("city"), buyer.get("country")]))
-        if city_country:
-            buyer_address_parts.append(city_country)
-    buyer_address = "<br/>".join(buyer_address_parts) if buyer_address_parts else ""
+            parts.append(buyer["address"])
+        city = buyer.get("city", "")
+        country = buyer.get("country", "")
+        if city and country:
+            parts.append(f"{city} - {country}")
+        elif city:
+            parts.append(city)
+        elif country:
+            parts.append(country)
+        buyer_addr_line = " / ".join(parts) if parts else ""
 
     contract_no = trade.get("pirContractNumber") or trade.get("contractNumber") or "-"
-    contract_date = fmt_date_slash(trade.get("contractDate"))
-    contract_date_long = fmt_date_long(trade.get("contractDate"))
+    contract_date = fmt_date_dot(trade.get("contractDate"))
     quantity = trade.get("quantity") or 0
     commodity = trade.get("commodityName") or "-"
-    origin = trade.get("originName") or "-"
+    commodity_display = trade.get("commodityDisplayName") or commodity
+    origin_adj = trade.get("originAdjective") or trade.get("originName") or "-"
     bl_number = trade.get("blNumber") or "-"
-    bl_date = fmt_date_slash(trade.get("blDate"))
-    bl_date_long = fmt_date_long(trade.get("blDate"))
+    bl_date = fmt_date_dot(trade.get("blDate"))
     bl_quantity = trade.get("blQuantity") or quantity
     vessel = trade.get("vesselName") or "-"
     load_port = trade.get("loadingPortName") or trade.get("basePortName") or "-"
@@ -110,99 +120,168 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
     discharge_country = trade.get("dischargePortCountry") or ""
     price = trade.get("pricePerMT") or 0
     currency = trade.get("currency") or "USD"
+    sa_date = fmt_date_nice(trade.get("blDate") or trade.get("contractDate"))
 
     load_port_full = f"{load_port}, {load_country}" if load_country else load_port
     discharge_port_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     invoice_value = bl_quantity * price if bl_quantity and price else quantity * price
 
-    # Styles
-    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=16, textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=4)
-    s_normal = ParagraphStyle('Normal', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=14, spaceAfter=6)
-    s_bold = ParagraphStyle('Bold', fontName='FreeSansBold', fontSize=10, textColor=DARK_TEXT, leading=14, spaceAfter=6)
-    s_label = ParagraphStyle('Label', fontName='FreeSansBold', fontSize=10, textColor=DARK_TEXT, leading=14)
-    s_body = ParagraphStyle('Body', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=16, spaceAfter=10)
-    s_bullet = ParagraphStyle('Bullet', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=15, leftIndent=20, spaceAfter=4)
-    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=14, spaceAfter=2)
-    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=10, textColor=PIR_GREEN, leading=14)
-
     buf = BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=20 * mm, bottomMargin=20 * mm, leftMargin=25 * mm, rightMargin=25 * mm)
+    W_page = A4[0]
+    margin = 18 * mm
+    W = W_page - 2 * margin
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=12 * mm, bottomMargin=12 * mm, leftMargin=margin, rightMargin=margin)
     story = []
 
-    # Logo
+    # ========== HEADER: Logo left + meta right ==========
+    logo_cell = []
     if os.path.exists(LOGO_PATH):
-        logo = Image(LOGO_PATH, width=50 * mm, height=50 * mm)
-        logo.hAlign = 'CENTER'
-        story.append(logo)
-        story.append(Spacer(1, 4 * mm))
+        logo_cell.append(Image(LOGO_PATH, width=38 * mm, height=17 * mm))
+    else:
+        logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FL', fontName=FB, fontSize=14, textColor=GREEN)))
+
+    header_tbl = Table([[logo_cell, ""]], colWidths=[W * 0.50, W * 0.50])
+    header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
+    story.append(header_tbl)
+    story.append(Spacer(1, 4 * mm))
 
     # Title
-    story.append(Paragraph("SHIPMENT APPROPRIATION", s_title))
-    story.append(Spacer(1, 2 * mm))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=PIR_GREEN, spaceAfter=6))
+    story.append(Paragraph("Shipment Appropriation", ParagraphStyle('Title', fontName=FB, fontSize=16, textColor=GREEN, alignment=TA_CENTER, leading=20)))
+    story.append(Spacer(1, 1.5 * mm))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=4 * mm))
+
+    # ========== TO + DATE on same row ==========
+    s_lbl = ParagraphStyle('Lbl', fontName=FB, fontSize=9, textColor=DARK, leading=13)
+    s_val = ParagraphStyle('Val', fontName=F, fontSize=9, textColor=DARK, leading=13)
+
+    to_text = f"<b>To:</b> {buyer_name}"
+    if buyer_addr_line:
+        to_text += f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{buyer_addr_line}"
+
+    to_date_tbl = Table([
+        [Paragraph(to_text, s_val), Paragraph(f"<b>Date:</b> {sa_date}", ParagraphStyle('DtR', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13))],
+    ], colWidths=[W * 0.65, W * 0.35])
+    to_date_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    story.append(to_date_tbl)
     story.append(Spacer(1, 4 * mm))
 
-    # TO and DATE
-    to_text = f"<b>TO:</b> {buyer_name}"
-    if buyer_address:
-        to_text += f"<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{buyer_address}"
-    story.append(Paragraph(to_text, s_body))
-    story.append(Paragraph(f"<b>DATE:</b> {bl_date_long}", s_body))
-    story.append(Spacer(1, 4 * mm))
-
-    # REF paragraph
+    # ========== REF ==========
+    s_body = ParagraphStyle('Body', fontName=F, fontSize=9, textColor=DARK, leading=14, spaceAfter=4)
     ref_text = (
-        f"<b>REF:</b> Appropriation of Contract No. <b>{contract_no}</b> "
+        f"<b>Ref:</b> Appropriation of Contract No. <b>{contract_no}</b> "
         f"dated <b>{contract_date}</b> covering <b>{fmt_num(quantity)} MT</b> "
-        f"of <b>{commodity}</b>."
+        f"of <b>{commodity_display}</b>."
     )
     story.append(Paragraph(ref_text, s_body))
     story.append(Spacer(1, 2 * mm))
 
-    # Main body paragraph
+    # ========== BODY ==========
     body1 = (
         f"We hereby appropriate on behalf of Seller, under the usual reserves, "
         f"in full fulfilment of the above-mentioned Contract No. <b>{contract_no}</b> "
         f"dated <b>{contract_date}</b> the quantity of "
-        f"<b>{fmt_num(bl_quantity)} MT GROSS/NETT</b>."
+        f"<b>{fmt_num(bl_quantity)} MT Gross/Nett</b>."
     )
     story.append(Paragraph(body1, s_body))
 
     body2 = (
-        f"<b>{origin}</b> origin <b>{commodity}</b>, in bulk, "
-        f"shipped as per <b>M/V \"{vessel}\"</b> under the following details:"
+        f"<b>{origin_adj}</b> origin <b>{commodity_display}</b>, in bulk, "
+        f'shipped as per <b>"{vessel}"</b> under the following details:'
     )
     story.append(Paragraph(body2, s_body))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Spacer(1, 3 * mm))
 
-    # Bullet details
-    bullets = [
-        f"<b>B/L No.:</b> {bl_number}",
-        f"<b>B/L Date:</b> {bl_date}",
-        f"<b>Quantity:</b> {fmt_num(bl_quantity)} MT GROSS/NETT",
-        f"<b>Port of Loading:</b> {load_port_full}",
-        f"<b>Port of Discharge:</b> {discharge_port_full}",
+    # ========== DETAILS TABLE (framed) ==========
+    s_det_lbl = ParagraphStyle('DetL', fontName=FB, fontSize=8, textColor=GREY, leading=11)
+    s_det_val = ParagraphStyle('DetV', fontName=F, fontSize=9, textColor=DARK, leading=12)
+    s_det_val_b = ParagraphStyle('DetVB', fontName=FB, fontSize=9, textColor=DARK, leading=12)
+
+    details_data = [
+        [Paragraph("B/L No.", s_det_lbl), Paragraph(f"<b>{bl_number}</b>", s_det_val_b),
+         Paragraph("B/L Date", s_det_lbl), Paragraph(f"<b>{bl_date}</b>", s_det_val_b)],
+        [Paragraph("B/L Quantity", s_det_lbl), Paragraph(f"<b>{fmt_num(bl_quantity)} MT Gross/Nett</b>", s_det_val_b),
+         Paragraph("Vessel", s_det_lbl), Paragraph(f"<b>{vessel}</b>", s_det_val_b)],
+        [Paragraph("Port of Loading", s_det_lbl), Paragraph(f"<b>{load_port_full}</b>", s_det_val_b),
+         Paragraph("Port of Discharge", s_det_lbl), Paragraph(f"<b>{discharge_port_full}</b>", s_det_val_b)],
     ]
-    for b in bullets:
-        story.append(Paragraph(f"&bull;&nbsp;&nbsp;{b}", s_bullet))
 
+    lbl_w = 24 * mm
+    val_w = (W - 2 * lbl_w) / 2
+    det_tbl = Table(details_data, colWidths=[lbl_w, val_w, lbl_w, val_w])
+    det_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ('BACKGROUND', (0, 0), (0, -1), GREEN_LIGHT),
+        ('BACKGROUND', (2, 0), (2, -1), GREEN_LIGHT),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.4, BORDER),
+        ('BOX', (0, 0), (-1, -1), 0.8, GREEN),
+        ('ROUNDEDCORNERS', [3, 3, 3, 3]),
+    ]))
+    story.append(det_tbl)
     story.append(Spacer(1, 4 * mm))
 
-    # Invoice value
-    inv_text = f"<b>Invoice Value:</b> {currency} {invoice_value:,.2f}"
-    story.append(Paragraph(inv_text, s_body))
-    story.append(Spacer(1, 4 * mm))
+    # ========== INVOICE VALUE (highlighted) ==========
+    inv_tbl = Table([
+        [Paragraph("Invoice Value:", ParagraphStyle('IVL', fontName=FB, fontSize=10, textColor=DARK, alignment=TA_RIGHT, leading=13)),
+         Paragraph(f"<b>{currency} {invoice_value:,.2f}</b>", ParagraphStyle('IVV', fontName=FB, fontSize=12, textColor=GREEN, alignment=TA_RIGHT, leading=15))],
+    ], colWidths=[W * 0.55, W * 0.45])
+    inv_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (1, 0), (1, 0), GREEN_LIGHT),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (1, 0), (1, 0), 8),
+        ('BOX', (1, 0), (1, 0), 0.5, GREEN_MED),
+        ('ROUNDEDCORNERS', [0, 3, 3, 0]),
+    ]))
+    story.append(inv_tbl)
+    story.append(Spacer(1, 5 * mm))
 
-    # Closing
+    # ========== CLOSING ==========
+    s_close = ParagraphStyle('Close', fontName=F, fontSize=9, textColor=DARK, leading=14, spaceAfter=3)
     story.append(Paragraph(
         "Please find attached the set of B/Ls. We will revert with the balance documents as soon as possible.",
-        s_body
+        s_close
     ))
-    story.append(Spacer(1, 6 * mm))
+    story.append(Spacer(1, 3 * mm))
+    story.append(Paragraph("Best regards,", s_close))
 
-    story.append(Paragraph("Best regards,", s_closing))
-    story.append(Spacer(1, 2 * mm))
-    story.append(Paragraph("PIR GRAIN &amp; PULSES LTD.", s_sign))
+    # ========== SIGNATURE with stamp ==========
+    sig_line = ParagraphStyle('SigLine', fontName=F, fontSize=8, alignment=TA_CENTER, textColor=GREY)
+    sig_name = ParagraphStyle('SigName', fontName=FB, fontSize=7, alignment=TA_CENTER, textColor=DARK, leading=10)
+
+    sig_rows = []
+    if os.path.exists(STAMP_PATH):
+        sig_rows.append(["", Image(STAMP_PATH, width=28 * mm, height=28 * mm)])
+    sig_rows.append(["", Paragraph("_______________________________", sig_line)])
+    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
+
+    sig_tbl = Table(sig_rows, colWidths=[W * 0.55, W * 0.45])
+    style_cmds = [
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]
+    if os.path.exists(STAMP_PATH):
+        style_cmds.append(('BOTTOMPADDING', (1, 0), (1, 0), -4))
+    sig_tbl.setStyle(TableStyle(style_cmds))
+    story.append(sig_tbl)
+    story.append(Spacer(1, 3 * mm))
+
+    # ========== FOOTER ==========
+    story.append(HRFlowable(width="100%", thickness=1, color=GREEN, spaceAfter=2 * mm))
+    story.append(Paragraph(
+        "PIR Grain &amp; Pulses Ltd.",
+        ParagraphStyle('Foot', fontName=F, fontSize=7, textColor=GREY, alignment=TA_CENTER)
+    ))
 
     doc.build(story)
     buf.seek(0)

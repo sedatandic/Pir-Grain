@@ -115,7 +115,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     shipment_end = fmt_date_dot(trade.get("shipmentWindowEnd"))
     discharge_port = trade.get("dischargePortName") or "-"
     discharge_country = trade.get("dischargePortCountry") or ""
-    gafta = trade.get("gaftaContractNo") or "48"
+    gafta_term = trade.get("gaftaTerm") or "GAFTA No. 48, Arbitration Clause 125, London"
 
     broker_text = partner_text(broker) if broker else "PIR Grain and Pulses Ltd.\nBlv. Tsarigradsko Shose No:73\nPlovdiv / Bulgaria, ZIP: 4000"
 
@@ -183,7 +183,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         price_lines.append(f"{currency} {pv_price:,.2f}/MT {dt} {pv_full}")
     price_text = "<br/>".join(price_lines)
 
-    # Build documents list from commodity
+    # Build documents list from commodity only (exclude additional docs)
     doc_list = []
     commodity_id = trade.get("commodityId")
     if commodity_id:
@@ -191,9 +191,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         comm = commodities_col.find_one({"_id": ObjectId(commodity_id)})
         if comm and comm.get("documents"):
             doc_list = comm["documents"]
-    additional_docs = trade.get("additionalDocuments") or []
-    all_docs = doc_list + [d for d in additional_docs if d not in doc_list]
-    docs_text = "<br/>".join([f"- {d}" for d in all_docs]) if all_docs else "-"
+    docs_text = "<br/>".join([f"- {d}" for d in doc_list]) if doc_list else "-"
 
     data += [
         row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
@@ -203,7 +201,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         row("PAYMENT", payment_terms, s_small),
         row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
         [Paragraph("DOCUMENTS", s_label), Paragraph(docs_text, s_val)],
-        row("CONTRACT", f"GAFTA No. {gafta}, Arbitration Clause 125, London"),
+        row("CONTRACT", gafta_term),
     ]
 
     tbl = Table(data, colWidths=[col_label, col_val])

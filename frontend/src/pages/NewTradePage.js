@@ -110,6 +110,7 @@ export default function NewTradePage() {
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
     dischargeRate: '', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
+    gaftaTerm: 'GAFTA No. 48, Arbitration Clause 125, London',
     excludedDisports: [], excludedSurveyors: [],
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
@@ -174,6 +175,7 @@ export default function NewTradePage() {
             commoditySpecs: t.commoditySpecs || '',
             pirContractNumber: t.pirContractNumber || '',
             sellerContractNumber: t.sellerContractNumber || 'N/A',
+            gaftaTerm: t.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London',
             excludedDisports: t.excludedDisports || [],
             excludedSurveyors: t.excludedSurveyors || [],
             dischargeRate: t.dischargeRate != null ? String(t.dischargeRate) : '',
@@ -613,6 +615,10 @@ export default function NewTradePage() {
       <Card>
         <CardHeader><CardTitle>Additional Info</CardTitle></CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>GAFTA Term</Label>
+            <Input value={form.gaftaTerm} onChange={(e) => set('gaftaTerm', e.target.value)} placeholder="GAFTA No. 48, Arbitration Clause 125, London" data-testid="gafta-term-input" />
+          </div>
           <div className="space-y-2">
             <Label>Notes</Label>
             <Textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Additional notes..." rows={3} />

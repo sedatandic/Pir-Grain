@@ -462,6 +462,8 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Execution Handled By</span><span className="font-medium">{trade.executionHandledBy || '-'}</span></div>
                 <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">GAFTA Term</span><span className="font-medium text-right max-w-[60%]">{trade.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London'}</span></div>
+                <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge></div>
               </CardContent>
             </Card>

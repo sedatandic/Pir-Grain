@@ -300,7 +300,7 @@ export default function NewTradePage() {
             <DatePicker value={form.contractDate} onChange={(v) => set('contractDate', v)} />
           </div>
           <div className="space-y-2">
-            <Label>Pir Grain Contract Number</Label>
+            <Label>Pir Grain Ref. No</Label>
             <Input value={form.pirContractNumber} onChange={(e) => set('pirContractNumber', e.target.value)} placeholder="Auto-generated if empty" />
           </div>
           <div className="space-y-2">

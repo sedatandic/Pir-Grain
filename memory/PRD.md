@@ -36,8 +36,10 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Year-based filtering on Trades page
 
 ### PDF Generation
-- **Business Confirmation PDF** - includes port countries in PRICE section (fixed 2026-03-22)
-- **Shipment Appropriation PDF** - with port countries
+- **Business Confirmation PDF** - includes port countries in PRICE section
+- **Shipment Appropriation PDF** - with port countries, framed layout
+- **Commission Invoice PDF** - single-page professional layout
+- All three PDFs share consistent corporate design (PIR logo, stamp, footer)
 - Authenticated download via blob URLs
 
 ### Other Features
@@ -48,9 +50,12 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Vendors management in Settings
 - Commission auto-generation on trade completion
 
-## Recent Fixes (2026-03-22)
-1. **Load Port not saving (P0)**: Fixed `NewTradePage.js` - was setting `loadingPortId: form.basePortId`. Now uses separate `loadingPortId` field with dedicated Loading Port dropdown showing only loading-type ports.
-2. **PDF country in ports (P1)**: Fixed `business_confirmation.py` PRICE section to append country names to base port and port variations (e.g., "CIF Marmara Ports, Turkiye").
+### UI/UX Updates (2026-03-22)
+- Commissions page: merged columns, inline editing for brokerage rates
+- Accounting page: "Invoice To" header, "Commodity" column added
+- Removed crop year from commodity display names in table views
+- "Pir Grain Contract Number" renamed to "Pir Grain Ref. No" on New/Edit Trade page
+- Conditional "Prod. YYYY" vs "Crop YYYY" for processed commodities
 
 ## Prioritized Backlog
 
@@ -76,3 +81,5 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Port variations store: portId, portName, portCountry, difference
 - PDF generation uses `reportlab` with FreeSans fonts
 - Authenticated PDF download uses blob + objectURL pattern
+- Backend `null` handling uses MongoDB `$unset` for clearing fields
+- `poppler-utils` installed for PDF text extraction testing

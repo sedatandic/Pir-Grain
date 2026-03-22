@@ -419,13 +419,11 @@ export default function TradeDetailPage() {
                 )}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{trade.commodityDisplayName || commodityName}</span></div>
-                {trade.commoditySpecs && (<>
                 <Separator />
                 <div className="flex justify-between gap-4">
                   <span className="text-muted-foreground shrink-0">Specifications</span>
-                  <span className="font-medium text-right whitespace-pre-line">{trade.commoditySpecs}</span>
+                  <span className="font-medium text-right whitespace-pre-line">{trade.commoditySpecs || commodity?.specs || '-'}</span>
                 </div>
-                </>)}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />

@@ -130,8 +130,8 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=13, textColor=PIR_GREEN, alignment=TA_CENTER)
     s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, alignment=TA_CENTER)
     s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=11)
-    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10)
-    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=8.5, textColor=PIR_GREEN, leading=11)
+    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8, textColor=DARK_TEXT, leading=10, leftIndent=5)
+    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=8.5, textColor=PIR_GREEN, leading=11, leftIndent=5)
     s_small = ParagraphStyle('Small', fontName='FreeSans', fontSize=7, textColor=DARK_TEXT, leading=9)
 
     page_w = A4[0]

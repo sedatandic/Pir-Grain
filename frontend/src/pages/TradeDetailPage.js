@@ -58,6 +58,7 @@ export default function TradeDetailPage() {
   const [draggedFile, setDraggedFile] = useState(null);
   const [dropTarget, setDropTarget] = useState(null);
   const [sendingSA, setSendingSA] = useState(false);
+  const [sendingBC, setSendingBC] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -224,6 +225,39 @@ export default function TradeDetailPage() {
       toast.success('Shipment Appropriation reversed');
     } catch { toast.error('Failed to reverse'); }
     finally { setSendingSA(false); }
+  };
+
+  const sendBusinessConfirmation = async () => {
+    setSendingBC(true);
+    try {
+      const res = await api.get(`/api/business-confirmation/${tradeId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+      await api.put(`/api/trades/${tradeId}`, {
+        businessConfirmationSentBy: trade.executionHandledBy || 'Admin',
+        businessConfirmationSentAt: new Date().toISOString(),
+      });
+      setTrade(prev => ({
+        ...prev,
+        businessConfirmationSentBy: prev.executionHandledBy || 'Admin',
+        businessConfirmationSentAt: new Date().toISOString(),
+      }));
+      toast.success('Business Confirmation generated');
+    } catch { toast.error('Failed to generate'); }
+    finally { setSendingBC(false); }
+  };
+
+  const reverseBusinessConfirmation = async () => {
+    setSendingBC(true);
+    try {
+      await api.put(`/api/trades/${tradeId}`, {
+        businessConfirmationSentBy: null,
+        businessConfirmationSentAt: null,
+      });
+      setTrade(prev => ({ ...prev, businessConfirmationSentBy: null, businessConfirmationSentAt: null }));
+      toast.success('Business Confirmation reversed');
+    } catch { toast.error('Failed to reverse'); }
+    finally { setSendingBC(false); }
   };
 
   const addAdditionalDoc = () => {
@@ -531,6 +565,37 @@ export default function TradeDetailPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Business Confirmation */}
+          <Card className="mt-4">
+            <CardHeader className="pb-3"><CardTitle className="text-base">Business Confirmation to Seller &amp; Buyer</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              {trade.businessConfirmationSentAt ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 p-3 rounded-lg border bg-green-50 border-green-200">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-green-800">Sent</p>
+                      <p className="text-xs text-green-600">By {trade.businessConfirmationSentBy || '-'}</p>
+                      <p className="text-xs text-green-600">{(() => { try { const d = new Date(trade.businessConfirmationSentAt); return `${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`; } catch { return trade.businessConfirmationSentAt; } })()}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={sendBusinessConfirmation} disabled={sendingBC} data-testid="resend-bc-btn">
+                      {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={reverseBusinessConfirmation} disabled={sendingBC} data-testid="reverse-bc-btn">
+                      <X className="h-4 w-4 mr-1" />Reverse
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button onClick={sendBusinessConfirmation} disabled={sendingBC} data-testid="send-bc-btn">
+                  {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
 

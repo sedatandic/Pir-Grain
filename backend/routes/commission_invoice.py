@@ -320,16 +320,20 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(Spacer(1, 12*mm))
 
     # =====================================================
-    # SIGNATURE
+    # SIGNATURE with stamp image
     # =====================================================
+    STAMP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-stamp-signature.png")
     sig_line = ParagraphStyle('SigLine', fontName=F, fontSize=9, alignment=TA_CENTER, textColor=GREY)
     sig_name = ParagraphStyle('SigName', fontName=FB, fontSize=8, alignment=TA_CENTER, textColor=DARK, leading=11)
-    sig_data = [
-        ["", Paragraph("_______________________________", sig_line)],
-        ["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)],
-    ]
-    sig_tbl = Table(sig_data, colWidths=[W*0.55, W*0.45])
-    sig_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+
+    sig_rows = []
+    if os.path.exists(STAMP_PATH):
+        sig_rows.append(["", Image(STAMP_PATH, width=35*mm, height=35*mm)])
+    sig_rows.append(["", Paragraph("_______________________________", sig_line)])
+    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
+
+    sig_tbl = Table(sig_rows, colWidths=[W*0.55, W*0.45])
+    sig_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('ALIGN', (1, 0), (1, -1), 'CENTER')]))
     elements.append(sig_tbl)
     elements.append(Spacer(1, 6*mm))
 

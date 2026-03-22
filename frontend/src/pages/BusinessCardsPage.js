@@ -8,8 +8,9 @@ import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Search, Loader2, Trash2, Pencil, Camera, Upload, User, Building2, Mail, Phone, Globe, MapPin, Tag, StickyNote, X } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 
+import { Plus, Search, Loader2, Trash2, Pencil, Camera, Upload, User, Building2, Mail, Phone, Globe, MapPin, Tag, StickyNote, X } from 'lucide-react';
 export default function BusinessCardsPage() {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +120,7 @@ export default function BusinessCardsPage() {
       <div className="relative max-w-sm"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by name, company, keywords..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="search-cards" /></div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Cards grid */}
+        {/* Cards table */}
         <div className="lg:col-span-2">
           {filtered.length === 0 ? (
             <Card><CardContent className="py-12 text-center text-muted-foreground">
@@ -127,31 +128,45 @@ export default function BusinessCardsPage() {
               <p>No business cards yet. Scan or add one to get started.</p>
             </CardContent></Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filtered.map(card => (
-                <Card key={card.id} className={`cursor-pointer hover:shadow-md transition-shadow ${detailCard?.id === card.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setDetailCard(card)} data-testid={`card-${card.id}`}>
-                  <CardContent className="pt-4 pb-3">
-                    <div className="flex items-start gap-3">
-                      {card.imageUrl ? (
-                        <img src={`${process.env.REACT_APP_BACKEND_URL}${card.imageUrl}`} alt="" className="w-14 h-14 rounded-lg object-cover border flex-shrink-0" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center flex-shrink-0"><User className="h-6 w-6 text-muted-foreground" /></div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate">{card.name || 'Unknown'}</p>
-                        {card.title && <p className="text-xs text-muted-foreground truncate">{card.title}</p>}
-                        {card.company && <p className="text-xs text-primary truncate">{card.company}</p>}
-                      </div>
-                    </div>
-                    {card.keywords?.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {card.keywords.slice(0, 3).map((k, i) => <Badge key={i} variant="secondary" className="text-xs py-0">{k}</Badge>)}
-                        {card.keywords.length > 3 && <Badge variant="outline" className="text-xs py-0">+{card.keywords.length - 3}</Badge>}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="overflow-x-auto border rounded-lg">
+              <Table className="trade-table">
+                <TableHeader><TableRow className="bg-muted/50">
+                  <TableHead></TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead className="w-[80px]">Actions</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {filtered.map(card => (
+                    <TableRow key={card.id} className={`cursor-pointer hover:bg-muted/30 ${detailCard?.id === card.id ? 'bg-primary/5' : ''}`} onClick={() => setDetailCard(card)} data-testid={`card-${card.id}`}>
+                      <TableCell className="w-[50px]">
+                        {card.imageUrl ? (
+                          <img src={`${process.env.REACT_APP_BACKEND_URL}${card.imageUrl}`} alt="" className="w-10 h-10 rounded object-cover border" />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><User className="h-4 w-4 text-muted-foreground" /></div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium text-sm">{card.name || 'Unknown'}</div>
+                        {card.title && <div className="text-xs text-muted-foreground">{card.title}</div>}
+                      </TableCell>
+                      <TableCell className="text-sm">{card.company || '-'}</TableCell>
+                      <TableCell className="text-sm text-primary">{card.email || '-'}</TableCell>
+                      <TableCell className="text-sm whitespace-nowrap">{card.phone || card.mobile || '-'}</TableCell>
+                      <TableCell className="text-sm">{[card.city, card.country].filter(Boolean).join(', ') || '-'}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(card)}><Pencil className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(card.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>

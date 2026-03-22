@@ -174,18 +174,18 @@ export default function DashboardPage() {
         {/* Upcoming Payments & Events - Right */}
         <div className="w-full md:w-96">
           <Card data-testid="upcoming-payments-events" className="h-full">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 pt-6 px-6">
               <div>
-                <CardTitle className="text-base md:whitespace-nowrap">Upcoming Payments & Events</CardTitle>
-                <CardDescription className="md:whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
+                <CardTitle className="text-lg font-bold md:whitespace-nowrap">Upcoming Payments & Events</CardTitle>
+                <CardDescription className="text-sm md:whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-6">
               {upcomingItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <Button variant="outline" size="sm" className="mb-4" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
-                  <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No upcoming items</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <Button variant="outline" size="lg" className="mb-8 px-8 rounded-full" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
+                  <CalendarDays className="h-14 w-14 text-muted-foreground/30 mb-4" />
+                  <p className="text-base text-muted-foreground">No upcoming items</p>
                 </div>
               ) : (
                 <div className="space-y-2">

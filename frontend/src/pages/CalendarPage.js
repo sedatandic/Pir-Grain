@@ -7,9 +7,9 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Plus, ChevronLeft, ChevronRight, CalendarDays, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, CalendarDays, Loader2, Pencil, Trash2, DollarSign, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameDay, isToday, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, addDays, isSameDay, isToday, parseISO, isAfter, isBefore } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
 import { getHolidaysForDate } from '../lib/holidays';
 
@@ -143,61 +143,89 @@ export default function CalendarPage() {
         </div>
 
         <div className="lg:col-span-4 space-y-4">
+          {/* Selected Date */}
+          {selectedDate && (
+            <Card>
+              <CardHeader className="pb-2"><CardTitle className="text-base">{format(selectedDate, 'EEEE, MMMM d')}</CardTitle></CardHeader>
+              <CardContent>
+                {(() => {
+                  const holidays = getHolidaysForDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+                  const hasContent = selectedDateEvents.length > 0 || holidays.length > 0;
+                  return hasContent ? (
+                    <div className="space-y-2">
+                      {holidays.map((h, i) => (
+                        <div key={`hol-${i}`} className={`p-2 rounded-lg border text-sm ${h.colorClass}`}>{h.flag} {h.title}</div>
+                      ))}
+                      {selectedDateEvents.map(ev => (
+                        <div key={ev.id} className={`p-2 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{ev.title}</p>{ev.description && <p className="text-xs mt-0.5 opacity-60 truncate">{ev.description}</p>}</div>
+                            <div className="flex gap-0.5 shrink-0">
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(ev)}><Pencil className="h-3 w-3" /></Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3 w-3" /></Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : <p className="text-sm text-muted-foreground">No events on this day</p>;
+                })()}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Upcoming Payments */}
           <Card>
-            <CardHeader><CardTitle className="text-lg">{selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a date'}</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4 text-green-600" />Upcoming Payments</CardTitle></CardHeader>
             <CardContent>
-              {selectedDate ? (() => {
-                const holidays = getHolidaysForDate(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-                const hasContent = selectedDateEvents.length > 0 || holidays.length > 0;
-                return hasContent ? (
-                  <div className="space-y-3">
-                    {holidays.map((h, i) => (
-                      <div key={`hol-${i}`} className={`p-3 rounded-lg border ${h.colorClass}`}>
-                        <p className="font-medium text-sm">{h.flag} {h.title}</p>
-                        <p className="text-xs mt-1 opacity-70">Holiday ({h.country})</p>
+              {(() => {
+                const now = new Date();
+                const twoWeeks = addDays(now, 14);
+                const upcoming = events.filter(e => {
+                  if (e.type !== 'payment') return false;
+                  try { const d = parseISO(e.date); return (isAfter(d, addDays(now, -1)) && isBefore(d, addDays(twoWeeks, 1))); } catch { return false; }
+                }).sort((a, b) => { try { return parseISO(a.date) - parseISO(b.date); } catch { return 0; } });
+                return upcoming.length === 0 ? <p className="text-sm text-muted-foreground py-2">No upcoming payments</p> : (
+                  <div className="space-y-2">
+                    {upcoming.map(ev => (
+                      <div key={ev.id} className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/50 cursor-pointer border border-green-100 bg-green-50/30" onClick={() => openEditDialog(ev)}>
+                        <div className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{ev.title}</p>{ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}</div>
+                        <span className="text-xs font-medium text-muted-foreground shrink-0">{(() => { try { return format(parseISO(ev.date), 'dd MMM'); } catch { return ''; } })()}</span>
                       </div>
                     ))}
-                    {selectedDateEvents.map(ev => (
-                      <div key={ev.id} className={`p-3 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm">{ev.title}</p>
-                            <p className="text-xs mt-1 capitalize opacity-70">{ev.type}</p>
-                            {ev.description && <p className="text-xs mt-1 opacity-60">{ev.description}</p>}
-                          </div>
-                          <div className="flex gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(ev)} data-testid={`edit-event-${ev.id}`}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => handleDelete(ev.id)} data-testid={`delete-event-${ev.id}`}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Meetings */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4 text-purple-600" />Upcoming Meetings</CardTitle></CardHeader>
+            <CardContent>
+              {(() => {
+                const now = new Date();
+                const twoWeeks = addDays(now, 14);
+                const upcoming = events.filter(e => {
+                  if (e.type !== 'meeting' && e.type !== 'conference') return false;
+                  try { const d = parseISO(e.date); return (isAfter(d, addDays(now, -1)) && isBefore(d, addDays(twoWeeks, 1))); } catch { return false; }
+                }).sort((a, b) => { try { return parseISO(a.date) - parseISO(b.date); } catch { return 0; } });
+                return upcoming.length === 0 ? <p className="text-sm text-muted-foreground py-2">No upcoming meetings</p> : (
+                  <div className="space-y-2">
+                    {upcoming.map(ev => (
+                      <div key={ev.id} className="flex items-center gap-3 py-1.5 px-2 rounded-lg hover:bg-muted/50 cursor-pointer border border-purple-100 bg-purple-50/30" onClick={() => openEditDialog(ev)}>
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${ev.type === 'conference' ? 'bg-amber-500' : 'bg-purple-500'}`} />
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{ev.title}</p>{ev.description && <p className="text-xs text-muted-foreground truncate">{ev.description}</p>}</div>
+                        <div className="text-right shrink-0">
+                          <span className="text-xs font-medium text-muted-foreground">{(() => { try { return format(parseISO(ev.date), 'dd MMM'); } catch { return ''; } })()}</span>
+                          <p className="text-[10px] text-muted-foreground capitalize">{ev.type}</p>
                         </div>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground"><CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-40" /><p className="text-sm">No events on this day</p></div>
                 );
-              })() : <p className="text-sm text-muted-foreground">Click on a day to see events</p>}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-lg">All Events</CardTitle></CardHeader>
-            <CardContent>
-              {events.length === 0 ? <p className="text-sm text-muted-foreground">No events scheduled</p> : (
-                <div className="space-y-2">
-                  {events.slice(0, 8).map(ev => (
-                    <div key={ev.id} className="flex items-center gap-3 py-1.5 cursor-pointer hover:bg-muted/50 rounded px-1 -mx-1" onClick={() => openEditDialog(ev)}>
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${ev.type === 'payment' ? 'bg-green-500' : ev.type === 'meeting' ? 'bg-purple-500' : ev.type === 'conference' ? 'bg-amber-500' : 'bg-slate-400'}`} />
-                      <div className="flex-1 min-w-0"><p className="text-sm truncate">{ev.title}</p></div>
-                      <span className="text-xs text-muted-foreground shrink-0">{(() => { try { return format(parseISO(ev.date), 'MMM d'); } catch { return ''; } })()}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              })()}
             </CardContent>
           </Card>
         </div>

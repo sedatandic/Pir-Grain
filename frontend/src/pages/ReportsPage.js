@@ -28,9 +28,10 @@ function KpiCard({ label, value, icon: Icon, color = 'text-primary' }) {
 function TopChart({ title, description, data, dataKey, nameKey = 'name', fill = GREEN, formatter, icon: Icon }) {
   const CustomTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
     return (
       <div className="bg-background border rounded-lg p-2 shadow-lg text-sm">
-        <p className="font-medium">{payload[0].payload[nameKey]}</p>
+        <p className="font-medium">{d.fullName || d[nameKey]}</p>
         <p className="text-muted-foreground">{formatter ? formatter(payload[0].value) : payload[0].value.toLocaleString()}</p>
       </div>
     );
@@ -58,12 +59,20 @@ function TopChart({ title, description, data, dataKey, nameKey = 'name', fill = 
   );
 }
 
-function buildTop10(trades, field, valueField = 'quantity', valueFn = null) {
+// Map name fields to their code counterparts
+const CODE_MAP = {
+  sellerName: 'sellerCode', buyerName: 'buyerCode', brokerName: 'brokerCode',
+  coBrokerName: 'coBrokerCode', commodityName: 'commodityCode',
+};
+
+function buildTop10(trades, field, valueField = 'quantity') {
+  const codeField = CODE_MAP[field];
   const agg = {};
   trades.forEach(t => {
     const key = t[field] || 'Unknown';
     if (key === 'Unknown') return;
-    if (!agg[key]) agg[key] = { name: key, quantity: 0, value: 0, commission: 0, count: 0 };
+    const label = (codeField && t[codeField]) ? t[codeField] : key;
+    if (!agg[key]) agg[key] = { name: label, fullName: key, quantity: 0, value: 0, commission: 0, count: 0 };
     const qty = t.blQuantity || t.quantity || 0;
     agg[key].quantity += qty;
     agg[key].value += qty * (t.pricePerMT || 0);
@@ -71,8 +80,7 @@ function buildTop10(trades, field, valueField = 'quantity', valueFn = null) {
     agg[key].count += 1;
   });
   const arr = Object.values(agg);
-  const sortKey = valueFn ? valueFn : valueField;
-  arr.sort((a, b) => b[sortKey] - a[sortKey]);
+  arr.sort((a, b) => b[valueField] - a[valueField]);
   return arr.slice(0, 10);
 }
 

@@ -151,7 +151,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     commodity_name = trade.get("commodityName") or "-"
     crop_year = trade.get("cropYear") or ""
-    commodity_display = f"{commodity_name}<br/>Crop {crop_year}" if crop_year else commodity_name
+    commodity_display = f"{commodity_name}, Crop {crop_year}" if crop_year else commodity_name
     brokerage_per_mt = trade.get("brokeragePerMT") or 0
     brokerage_currency = trade.get("brokerageCurrency") or "USD"
     currency = brokerage_currency

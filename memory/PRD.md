@@ -63,7 +63,13 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 └── lib/               - Auth, API client, constants
 ```
 
-## Recent Changes (March 21, 2026)
+## Recent Changes (March 22, 2026)
+- Updated Accounting page payment categories: removed freight, port_charges, surveyor, insurance, fumigation
+- Renamed broker_commission to "Commission Payment", added Salary Payment, Pension Payment, Accountant Payment, Other Payments
+- Set "Commission Payment" as default category for new invoices
+- Updated backend auto-generated commission invoices to use "Commission Payment" category
+
+## Changes (March 21, 2026)
 - Added Edit button (pencil icon) to each commodity row in Settings → Commodities tab
 - Edit dialog now includes a "Specifications" textarea for managing commodity specs
 - Add Commodity dialog also includes the Specifications field

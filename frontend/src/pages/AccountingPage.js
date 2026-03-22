@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
-const CATEGORIES = ['freight', 'port_charges', 'surveyor', 'broker_commission', 'insurance', 'fumigation', 'other'];
+const CATEGORIES = ['Commission Payment', 'Salary Payment', 'Pension Payment', 'Accountant Payment', 'Other Payments'];
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'bg-amber-100 text-amber-800' },
   paid: { label: 'Paid', color: 'bg-green-100 text-green-800' },
@@ -36,7 +36,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete }) {
             <TableRow key={inv.id}>
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
               <TableCell>{inv.vendorName}</TableCell>
-              <TableCell><Badge variant="secondary" className="capitalize">{(inv.category||'other').replace('_', ' ')}</Badge></TableCell>
+              <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-mono font-medium">{fmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
               <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status}</Badge></TableCell>
@@ -56,7 +56,7 @@ export default function AccountingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending', direction: 'outgoing' });
+  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '' });
@@ -85,12 +85,12 @@ export default function AccountingPage() {
 
   const openCreate = (direction) => {
     setEditingInvoice(null);
-    setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'other', description: '', status: 'pending', direction });
+    setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction });
     setDialogOpen(true);
   };
   const openEdit = (inv) => {
     setEditingInvoice(inv);
-    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'other', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
+    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
     setDialogOpen(true);
   };
 
@@ -239,7 +239,7 @@ export default function AccountingPage() {
               }}
             /></div>
             <div className="space-y-2"><Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c.replace('_',' ')}</SelectItem>)}</SelectContent></Select>
+              <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="overdue">Overdue</SelectItem></SelectContent></Select>

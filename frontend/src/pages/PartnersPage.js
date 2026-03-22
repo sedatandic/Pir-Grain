@@ -266,7 +266,7 @@ export default function PartnersPage({ filterType }) {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto items-center">
           <DialogHeader className="text-center"><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
@@ -302,7 +302,6 @@ export default function PartnersPage({ filterType }) {
               <div className="col-span-2 space-y-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} /></div>
               <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} /></div>
               <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} /></div>
-              <div className="col-span-2 space-y-2"><Label>Origins</Label><Input value={form.origins} onChange={(e) => setForm({...form, origins: e.target.value})} placeholder="e.g. Russia, Ukraine" /></div>
 
               <div className="col-span-2"><Separator className="my-1" /></div>
 

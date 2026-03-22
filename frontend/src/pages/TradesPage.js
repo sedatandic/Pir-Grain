@@ -164,7 +164,7 @@ export default function TradesPage() {
   };
 
   const formatDate = (d) => { if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return '-'; } };
-  const formatShipmentDate = (d) => { if (!d) return ''; const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) { try { return format(new Date(m[3], m[2] - 1, m[1]), 'dd MMM yyyy'); } catch { return d; } } try { return format(parseISO(d), 'dd MMM yyyy'); } catch { return d; } };
+  const formatShipmentDate = (d) => { if (!d) return ''; const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return d; try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return d; } };
   const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
 
   const handleVesselUpdate = async (tradeId, vesselName) => {

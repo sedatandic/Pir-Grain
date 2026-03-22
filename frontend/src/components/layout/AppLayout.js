@@ -172,6 +172,10 @@ export default function AppLayout() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <div className="px-3 py-2 border-b">
+                <p className="text-sm font-medium">{user?.fullName || `${firstName} ${lastName}`.trim()}</p>
+                <p className="text-xs text-muted-foreground">{user?.username}</p>
+              </div>
               <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600 cursor-pointer" data-testid="header-logout-button">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout

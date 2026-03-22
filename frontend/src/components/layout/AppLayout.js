@@ -32,13 +32,15 @@ export default function AppLayout() {
     return () => window.removeEventListener('sidebar-collapse', handler);
   }, []);
 
+  const isAdmin = user?.role === 'admin';
+
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isAdmin) {
       fetchNotifications();
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, fetchNotifications]);
+  }, [isAuthenticated, isAdmin, fetchNotifications]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -103,8 +105,8 @@ export default function AppLayout() {
           </Button>
           <div className="flex-1" />
 
-          {/* Notifications Bell */}
-          <DropdownMenu>
+          {/* Notifications Bell - Admin only */}
+          {isAdmin && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative" data-testid="header-notifications-button">
                 <Bell className="h-5 w-5 text-muted-foreground" />
@@ -151,7 +153,7 @@ export default function AppLayout() {
                 )}
               </ScrollArea>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
 
           <Separator orientation="vertical" className="mx-2 h-6" />
 

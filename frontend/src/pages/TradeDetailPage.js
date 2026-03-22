@@ -322,7 +322,7 @@ export default function TradeDetailPage() {
       };
       const res = await api.put(`/api/trades/${tradeId}`, data);
       setTrade(res.data);
-      toast.success('B/L Details saved');
+      toast.success('Shipment (B/L) Details saved');
       setBlDialogOpen(false);
     } catch { toast.error('Failed to save B/L details'); }
     finally { setBlSaving(false); }
@@ -374,7 +374,7 @@ export default function TradeDetailPage() {
         </div>
         {activeTab !== 'documents' && (
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit B/L Details' : 'Edit Trade'}
+          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit Shipment (B/L) Details' : 'Edit Trade'}
         </Button>
         )}
       </div>
@@ -382,7 +382,7 @@ export default function TradeDetailPage() {
       <Tabs defaultValue="summary" onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
           <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Trade Summary</TabsTrigger>
-          <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />B/L Details</TabsTrigger>
+          <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />Shipment (B/L) Details</TabsTrigger>
           <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
         </TabsList>
 
@@ -468,7 +468,7 @@ export default function TradeDetailPage() {
           </div>
         </TabsContent>
 
-        {/* B/L Details Tab */}
+        {/* Shipment (B/L) Details Tab */}
         <TabsContent value="shipment">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Bill of Lading Details</CardTitle></CardHeader>
@@ -788,7 +788,7 @@ export default function TradeDetailPage() {
       {/* B/L Edit Dialog */}
       <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Edit B/L Details</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Edit Shipment (B/L) Details</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -877,7 +877,7 @@ export default function TradeDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBlDialogOpen(false)}>Cancel</Button>
-            <Button onClick={saveBlDetails} disabled={blSaving}>{blSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save B/L Details</Button>
+            <Button onClick={saveBlDetails} disabled={blSaving}>{blSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Shipment (B/L) Details</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 import { TRADE_STATUS_CONFIG, STATUS_OPTIONS, COMPLETED_STATUSES, WASHOUT_STATUSES, CANCELLED_STATUSES } from '../lib/constants';
@@ -178,12 +179,26 @@ export default function TradesPage() {
   const VesselPicker = ({ trade }) => {
     const [open, setOpen] = useState(false);
     const [q, setQ] = useState('');
-    const ref = useRef(null);
+    const wrapperRef = useRef(null);
+    const dropdownRef = useRef(null);
+    const inputRef = useRef(null);
+    const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
 
     useEffect(() => {
-      const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      const handler = (e) => {
+        if (wrapperRef.current && wrapperRef.current.contains(e.target)) return;
+        if (dropdownRef.current && dropdownRef.current.contains(e.target)) return;
+        setOpen(false);
+      };
       if (open) document.addEventListener('mousedown', handler);
       return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    useEffect(() => {
+      if (open && inputRef.current) {
+        const rect = inputRef.current.getBoundingClientRect();
+        setPos({ top: rect.bottom + 4, left: rect.left, width: Math.max(rect.width, 192) });
+      }
     }, [open]);
 
     const sorted = useMemo(() => {
@@ -205,8 +220,9 @@ export default function TradesPage() {
     }
 
     return (
-      <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+      <div ref={wrapperRef} className="relative" onClick={(e) => e.stopPropagation()}>
         <Input
+          ref={inputRef}
           autoFocus
           data-testid={`vessel-search-${trade.id}`}
           className="h-7 text-xs"
@@ -214,23 +230,31 @@ export default function TradesPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <div className="absolute z-50 mt-1 w-48 max-h-40 overflow-y-auto rounded-md border bg-popover shadow-md text-sm">
-          {trade.vesselName && (
-            <button className="w-full text-left px-3 py-1.5 hover:bg-muted text-destructive text-xs" onClick={() => { handleVesselUpdate(trade.id, ''); setOpen(false); }}>
-              Clear vessel
-            </button>
-          )}
-          {sorted.length === 0 && <div className="px-3 py-2 text-muted-foreground text-xs">No vessels found</div>}
-          {sorted.map(name => (
-            <button
-              key={name}
-              className={`w-full text-left px-3 py-1.5 hover:bg-muted text-xs uppercase ${name === trade.vesselName ? 'bg-muted font-medium' : ''}`}
-              onClick={() => { handleVesselUpdate(trade.id, name); setOpen(false); }}
-            >
-              {name}
-            </button>
-          ))}
-        </div>
+        {createPortal(
+          <div
+            ref={dropdownRef}
+            style={{ position: 'fixed', top: pos.top, left: pos.left, width: pos.width, zIndex: 9999 }}
+            className="max-h-48 overflow-y-auto rounded-md border bg-popover shadow-lg text-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {trade.vesselName && (
+              <button className="w-full text-left px-3 py-1.5 hover:bg-muted text-destructive text-xs" onClick={() => { handleVesselUpdate(trade.id, ''); setOpen(false); }}>
+                Clear vessel
+              </button>
+            )}
+            {sorted.length === 0 && <div className="px-3 py-2 text-muted-foreground text-xs">No vessels found</div>}
+            {sorted.map(name => (
+              <button
+                key={name}
+                className={`w-full text-left px-3 py-1.5 hover:bg-muted text-xs uppercase ${name === trade.vesselName ? 'bg-muted font-medium' : ''}`}
+                onClick={() => { handleVesselUpdate(trade.id, name); setOpen(false); }}
+              >
+                {name}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
       </div>
     );
   };

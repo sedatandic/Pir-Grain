@@ -119,11 +119,12 @@ export default function CalendarPage() {
                   return (
                     <div
                       key={i}
-                      onClick={() => setSelectedDate(date)}
-                      className={`bg-card p-2 min-h-[80px] cursor-pointer hover:bg-muted/30 transition-colors ${
-                        !isCurrentMonth ? 'opacity-40' : ''
-                      } ${selected ? 'ring-2 ring-primary ring-inset' : ''} ${isToday(date) ? 'bg-primary/5' : ''} ${dayHolidays.length > 0 ? 'bg-red-50/50' : ''}`}
+                      onClick={() => isCurrentMonth && setSelectedDate(date)}
+                      className={`p-2 min-h-[80px] transition-colors ${
+                        !isCurrentMonth ? 'bg-background' : 'bg-card cursor-pointer hover:bg-muted/30'
+                      } ${selected && isCurrentMonth ? 'ring-2 ring-primary ring-inset' : ''} ${isToday(date) ? 'bg-primary/5' : ''} ${dayHolidays.length > 0 && isCurrentMonth ? 'bg-red-50/50' : ''}`}
                     >
+                      {isCurrentMonth && (<>
                       <div className={`text-sm font-medium mb-1 ${isToday(date) ? 'text-primary font-bold' : ''}`}>
                         {format(date, 'd')}
                         {dayHolidays.length > 0 && <span className="ml-1 text-[9px]">{dayHolidays.map(h => h.flag).join('')}</span>}
@@ -135,6 +136,7 @@ export default function CalendarPage() {
                         <div key={j} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate ${EVENT_TYPES[ev.type]?.color || 'bg-muted text-muted-foreground'}`}>{ev.title}</div>
                       ))}
                       {(dayEvents.length + dayHolidays.length) > 2 && <div className="text-[10px] text-muted-foreground">+{dayEvents.length + dayHolidays.length - 2} more</div>}
+                      </>)}
                     </div>
                   );
                 })}

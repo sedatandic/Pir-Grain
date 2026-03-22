@@ -123,25 +123,37 @@ export default function CommissionsPage() {
       <div className="overflow-x-auto border rounded-lg">
         <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
-            <TableHead>Status</TableHead><TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
-            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead className="text-center">Loading Port<hr className="my-0.5 border-muted-foreground/30"/>Discharge Port</TableHead>
+            <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>Contract No</TableHead><TableHead>Commodity</TableHead>
+            <TableHead className="text-center">Seller<hr className="my-0.5 border-muted-foreground/30"/>Buyer</TableHead>
+            <TableHead className="text-center">Vessel<hr className="my-0.5 border-muted-foreground/30"/>B/L Qty</TableHead>
+            <TableHead className="text-center">Loading Port<hr className="my-0.5 border-muted-foreground/30"/>Discharge Port</TableHead>
             <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
             {filtered.map(t => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
+              const invDate = t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-';
+              const invNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
               return (
               <TableRow key={t.id}>
                 <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{invDate}</TableCell>
+                <TableCell className="text-sm font-mono whitespace-nowrap">{invNo}</TableCell>
                 <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
                 <TableCell className="text-sm max-w-[160px]">
                   <div>{t.commodityName||'-'}</div>
                 </TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</TableCell>
+                <TableCell className="text-sm">
+                  <div>{t.sellerCode||t.sellerName||'-'}</div>
+                  <hr className="my-0.5 border-muted-foreground/20"/>
+                  <div>{t.buyerCode||t.buyerName||'-'}</div>
+                </TableCell>
+                <TableCell className="text-sm">
+                  <div>{t.vesselName||'-'}</div>
+                  <hr className="my-0.5 border-muted-foreground/20"/>
+                  <div>{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</div>
+                </TableCell>
                 <TableCell className="text-sm whitespace-nowrap">
                   <div>{t.loadingPortName ? `${t.loadingPortName}${t.loadingPortCountry ? ', ' + t.loadingPortCountry : ''}` : '-'}</div>
                   <hr className="my-0.5 border-muted-foreground/20"/>

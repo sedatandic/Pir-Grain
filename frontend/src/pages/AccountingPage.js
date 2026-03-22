@@ -46,7 +46,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
               <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status?.toUpperCase()}</Badge></TableCell>
               <TableCell className="text-sm">{invoiceDate}</TableCell>
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
-              <TableCell>{inv.vendorName}</TableCell>
+              <TableCell>{inv.vendorCode || inv.vendorName}</TableCell>
               <TableCell className="text-sm max-w-[150px]">{commodityName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>

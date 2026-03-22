@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { TRADE_STATUS_CONFIG } from '../lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
@@ -82,6 +83,80 @@ function buildTop10(trades, field, valueField = 'quantity') {
   const arr = Object.values(agg);
   arr.sort((a, b) => b[valueField] - a[valueField]);
   return arr.slice(0, 10);
+}
+
+function DetailBreakdown({ trades, filterField, codeField, label, breakdowns }) {
+  const [selected, setSelected] = useState('');
+  const uniqueItems = useMemo(() => {
+    const seen = {};
+    trades.forEach(t => {
+      const val = t[filterField];
+      if (val && !seen[val]) {
+        seen[val] = (codeField && t[codeField]) ? t[codeField] : val;
+      }
+    });
+    return Object.entries(seen).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [trades, filterField, codeField]);
+
+  const filtered = useMemo(() => selected ? trades.filter(t => t[filterField] === selected) : [], [trades, selected, filterField]);
+
+  const totalQty = filtered.reduce((s, t) => s + (t.blQuantity || t.quantity || 0), 0);
+  const totalVal = filtered.reduce((s, t) => s + ((t.blQuantity || t.quantity || 0) * (t.pricePerMT || 0)), 0);
+  const totalComm = filtered.reduce((s, t) => s + (t.totalCommission || 0), 0);
+
+  return (
+    <div className="space-y-4 mt-6">
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-sm font-semibold">Detailed report for:</span>
+        <Select value={selected} onValueChange={setSelected}>
+          <SelectTrigger className="w-[260px]"><SelectValue placeholder={`Select ${label}`} /></SelectTrigger>
+          <SelectContent>{uniqueItems.map(([val, code]) => <SelectItem key={val} value={val}>{code}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      {selected && filtered.length > 0 && (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <KpiCard label="Quantity" value={`${fmt(totalQty)} Mts`} icon={Ship} color="text-blue-600" />
+            <KpiCard label="Trade Value" value={fmtUsd(totalVal)} icon={DollarSign} color="text-green-600" />
+            <KpiCard label="Commission" value={fmtUsd(totalComm)} icon={TrendingUp} color="text-amber-600" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {breakdowns.map(({ title, field, fill, icon }) => (
+              <TopChart key={title} title={title} description="Quantity (Mts)" data={buildTop10(filtered, field, 'quantity')} dataKey="quantity" fill={fill} formatter={fmt} icon={icon} />
+            ))}
+          </div>
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-semibold">Trade List</CardTitle></CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto border rounded-lg">
+                <Table>
+                  <TableHeader><TableRow className="bg-muted/50">
+                    <TableHead>Contract</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
+                    <TableHead>Origin</TableHead><TableHead>Destination</TableHead><TableHead className="text-right">Qty (Mts)</TableHead><TableHead className="text-right">Value ($)</TableHead>
+                  </TableRow></TableHeader>
+                  <TableBody>
+                    {filtered.map(t => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium text-xs">{t.pirContractNumber || t.referenceNumber}</TableCell>
+                        <TableCell className="text-xs">{t.commodityName || '-'}</TableCell>
+                        <TableCell className="text-xs">{t.sellerCode || t.sellerName || '-'}</TableCell>
+                        <TableCell className="text-xs">{t.buyerCode || t.buyerName || '-'}</TableCell>
+                        <TableCell className="text-xs">{t.originName || '-'}</TableCell>
+                        <TableCell className="text-xs">{t.dischargePortName || '-'}</TableCell>
+                        <TableCell className="text-right text-xs">{fmt(t.blQuantity || t.quantity || 0)}</TableCell>
+                        <TableCell className="text-right text-xs">{fmtUsd((t.blQuantity || t.quantity || 0) * (t.pricePerMT || 0))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+      {selected && filtered.length === 0 && <p className="text-muted-foreground text-sm py-4">No trades found.</p>}
+    </div>
+  );
 }
 
 export default function ReportsPage() {
@@ -185,6 +260,12 @@ export default function ReportsPage() {
             <TopChart title="Top 10 Sellers by Commission" description="USD" data={buildTop10(trades, 'sellerName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
             <TopChart title="Top 10 Sellers by Trade Count" description="Trades" data={buildTop10(trades, 'sellerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
+          <DetailBreakdown trades={trades} filterField="sellerName" codeField="sellerCode" label="Seller" breakdowns={[
+            { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
+            { title: 'By Origin', field: 'originName', fill: '#2563EB', icon: Globe },
+            { title: 'By Discharge Port', field: 'dischargePortName', fill: GOLD, icon: Anchor },
+            { title: 'By Buyer', field: 'buyerName', fill: '#DC2626', icon: Users },
+          ]} />
         </TabsContent>
 
         <TabsContent value="buyers">
@@ -194,6 +275,12 @@ export default function ReportsPage() {
             <TopChart title="Top 10 Buyers by Commission" description="USD" data={buildTop10(trades, 'buyerName', 'commission')} dataKey="commission" fill="#DC2626" formatter={fmtUsd} icon={TrendingUp} />
             <TopChart title="Top 10 Buyers by Trade Count" description="Trades" data={buildTop10(trades, 'buyerName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
+          <DetailBreakdown trades={trades} filterField="buyerName" codeField="buyerCode" label="Buyer" breakdowns={[
+            { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
+            { title: 'By Origin', field: 'originName', fill: '#2563EB', icon: Globe },
+            { title: 'By Load Port', field: 'loadingPortName', fill: GOLD, icon: Anchor },
+            { title: 'By Seller', field: 'sellerName', fill: '#DC2626', icon: Users },
+          ]} />
         </TabsContent>
 
         <TabsContent value="commodities">
@@ -221,6 +308,12 @@ export default function ReportsPage() {
             <TopChart title="Top 10 Origins by Commission" description="USD" data={buildTop10(trades, 'originName', 'commission')} dataKey="commission" fill={GOLD} formatter={fmtUsd} icon={TrendingUp} />
             <TopChart title="Top 10 Origins by Trade Count" description="Trades" data={buildTop10(trades, 'originName', 'count')} dataKey="count" fill="#7C3AED" formatter={fmt} icon={BarChart3} />
           </div>
+          <DetailBreakdown trades={trades} filterField="originName" codeField={null} label="Origin" breakdowns={[
+            { title: 'By Seller', field: 'sellerName', fill: '#2563EB', icon: Users },
+            { title: 'By Buyer', field: 'buyerName', fill: GOLD, icon: Users },
+            { title: 'By Commodity', field: 'commodityName', fill: GREEN, icon: Wheat },
+            { title: 'By Discharge Port', field: 'dischargePortName', fill: '#DC2626', icon: Anchor },
+          ]} />
         </TabsContent>
 
         <TabsContent value="ports">

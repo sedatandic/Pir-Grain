@@ -172,7 +172,7 @@ export default function NewTradePage() {
             specialConditions: t.specialConditions || '',
             notes: t.notes || '',
             status: t.status || 'confirmation',
-            commoditySpecs: t.commoditySpecs || '',
+            commoditySpecs: t.commoditySpecs || (() => { const comm = co.data.find(c => c.id === t.commodityId); return comm?.specs || ''; })(),
             pirContractNumber: t.pirContractNumber || '',
             sellerContractNumber: t.sellerContractNumber || 'N/A',
             gaftaTerm: t.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London',

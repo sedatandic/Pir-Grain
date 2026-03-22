@@ -513,7 +513,7 @@ export default function NewTradePage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Discharge Rate (Mts)</Label>
+              <Label>Discharge Rate (Mts/Day)</Label>
               <Input type="number" value={form.dischargeRate || ''} onChange={(e) => set('dischargeRate', e.target.value)} placeholder="e.g. 5000" />
             </div>
             <div className="space-y-2">

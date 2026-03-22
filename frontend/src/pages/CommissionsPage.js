@@ -8,11 +8,15 @@ import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Checkbox } from '../components/ui/checkbox';
 import { TRADE_STATUS_CONFIG } from '../lib/constants';
-import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays } from 'lucide-react';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { cn } from '../lib/utils';
+import { format } from 'date-fns';
 
 export default function CommissionsPage() {
   const [trades, setTrades] = useState([]);
@@ -87,6 +91,14 @@ export default function CommissionsPage() {
     } catch { toast.error('Failed to update status'); }
   };
 
+  const savePaymentDate = async (tradeId, dateStr) => {
+    try {
+      await api.put(`/api/trades/${tradeId}`, { buyerPaymentDate: dateStr });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, buyerPaymentDate: dateStr } : t));
+      toast.success('Payment date saved');
+    } catch { toast.error('Failed to save payment date'); }
+  };
+
   const openInvoiceDialog = (tradeId, account) => {
     setPendingInvoice({ tradeId, account: account || 'seller' });
     setBankDialogOpen(true);
@@ -139,6 +151,7 @@ export default function CommissionsPage() {
             <TableHead className="text-center">Loading Port<hr className="my-0.5 border-muted-foreground/30"/>Discharge Port</TableHead>
             <TableHead>Rate/MT<hr className="my-0.5 border-muted-foreground/30"/>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
+            <TableHead className="text-center">Payment Date</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {filtered.map((t, idx) => {
@@ -179,13 +192,25 @@ export default function CommissionsPage() {
                     <FileDown className="h-3.5 w-3.5 mr-1" />PDF
                   </Button>
                 </TableCell>}
+                <TableCell className="text-center">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className={cn('text-xs whitespace-nowrap', !t.buyerPaymentDate && 'text-muted-foreground')}>
+                        <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                        {t.buyerPaymentDate || 'Set date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar mode="single" selected={t.buyerPaymentDate ? (() => { try { const [dd,mm,yyyy] = t.buyerPaymentDate.split('/'); return new Date(yyyy, mm-1, dd); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) savePaymentDate(t.id, format(d, 'dd/MM/yyyy')); }} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </TableCell>
               </TableRow>
             );
             })}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={8} className="text-right">Total:</TableCell>
+              <TableCell colSpan={showInvoice ? 10 : 9} className="text-right">Total:</TableCell>
               <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
-              {showInvoice && <TableCell></TableCell>}
             </TableRow>
           </TableBody>
         </Table>

@@ -495,19 +495,12 @@ export default function NewTradePage() {
       <Card>
         <CardHeader><CardTitle>Shipping Terms</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Base Port</Label>
               <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Loading Port</Label>
-              <Select value={form.loadingPortId} onValueChange={(v) => set('loadingPortId', v)}>
-                <SelectTrigger data-testid="loading-port-select"><SelectValue placeholder="Select loading port" /></SelectTrigger>
-                <SelectContent>{loadPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">

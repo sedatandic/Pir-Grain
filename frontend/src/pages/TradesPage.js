@@ -29,6 +29,7 @@ export default function TradesPage() {
   const [filterVessel, setFilterVessel] = useState('all');
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCoBroker, setFilterCoBroker] = useState('all');
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -67,12 +68,17 @@ export default function TradesPage() {
     }
   }, [location.state, loading]);
 
-  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all';
-  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); };
+  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all';
+  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); };
 
   const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
   const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
   const uniqueVessels = useMemo(() => [...new Set(trades.filter(t => t.vesselName).map(t => t.vesselName))].sort(), [trades]);
+  const uniqueCoBrokers = useMemo(() => {
+    const map = new Map();
+    trades.forEach(t => { if (t.coBrokerId && t.coBrokerName) map.set(t.coBrokerId, t.coBrokerName); });
+    return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [trades]);
 
   const applyFilters = useCallback((list) => {
     let result = list;
@@ -82,6 +88,7 @@ export default function TradesPage() {
     if (filterVessel !== 'all') result = result.filter(t => t.vesselName === filterVessel);
     if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
     if (filterStatus !== 'all') result = result.filter(t => t.status === filterStatus);
+    if (filterCoBroker !== 'all') result = result.filter(t => t.coBrokerId === filterCoBroker);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -93,7 +100,7 @@ export default function TradesPage() {
       );
     }
     return result;
-  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, search]);
+  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, search]);
 
   const categorized = useMemo(() => ({
     ongoing: trades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
@@ -340,6 +347,13 @@ export default function TradesPage() {
               <SelectContent>
                 <SelectItem value="all">All Buyers</SelectItem>
                 {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterCoBroker} onValueChange={setFilterCoBroker}>
+              <SelectTrigger className="w-[140px] shrink-0"><SelectValue placeholder="Co-Broker" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Co-Brokers</SelectItem>
+                {uniqueCoBrokers.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterVessel} onValueChange={setFilterVessel}>

@@ -9,10 +9,13 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { cn } from '../lib/utils';
 
 const CATEGORIES = ['Commission Payment', 'Salary Payment', 'Pension Payment', 'Accountant Payment', 'Other Payments'];
 const INCOMING_CATEGORIES = ['Commission Payment', 'Other Payments'];
@@ -23,17 +26,17 @@ const STATUS_CONFIG = {
   overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
-function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap }) {
+function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap, onPaymentDate }) {
   const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
   const fmtAmt = (n, cur) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0)} ${cur || 'USD'}`;
   return (
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {filtered.length === 0 ? <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
+          {filtered.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
           filtered.map(inv => {
             const trade = tradeMap?.[inv.tradeId];
             const commodityName = trade?.commodityName || '-';
@@ -48,6 +51,22 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap 
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
+              <TableCell className="text-sm">
+                <div className="flex items-center gap-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className={cn('text-xs whitespace-nowrap', !inv.paymentDate && 'text-muted-foreground')}>
+                        <CalendarDays className="h-3.5 w-3.5 mr-1" />
+                        {inv.paymentDate || 'Set date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar mode="single" selected={inv.paymentDate ? (() => { try { const [dd,mm,yyyy] = inv.paymentDate.split('/'); return new Date(yyyy, mm-1, dd); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) onPaymentDate(inv.id, format(d, 'dd/MM/yyyy')); }} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                  {inv.paymentDate && <button className="text-destructive hover:text-destructive/80 text-xs p-0.5" onClick={() => onPaymentDate(inv.id, '')} title="Clear date">&times;</button>}
+                </div>
+              </TableCell>
               <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(inv)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => onDelete(inv.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
             </TableRow>
           );})}
@@ -133,6 +152,14 @@ export default function AccountingPage() {
     try { await api.delete(`/api/invoices/${id}`); toast.success('Deleted'); fetchData(); } catch (err) { toast.error('Failed'); }
   };
 
+  const handlePaymentDate = async (invoiceId, dateStr) => {
+    try {
+      await api.patch(`/api/invoices/${invoiceId}/payment-date`, { paymentDate: dateStr });
+      toast.success(dateStr ? 'Payment date saved' : 'Payment date cleared');
+      fetchData();
+    } catch { toast.error('Failed to update payment date'); }
+  };
+
   const handleSaveStmt = async () => {
     setSaving(true);
     try { await api.post('/api/bank-statements', stmtForm); toast.success('Bank statement added'); setStmtDialogOpen(false); fetchData(); }
@@ -175,7 +202,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} />
+              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -187,7 +214,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search outgoing..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
-              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} />
+              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
             </CardContent>
           </Card>
         </TabsContent>

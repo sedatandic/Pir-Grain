@@ -116,7 +116,7 @@ export default function NewTradePage() {
     buyerTradeContact: null, buyerExecutionContact: null,
     brokerTradeContact: null, brokerExecutionContact: null,
     coBrokerTradeContact: null, coBrokerExecutionContact: null,
-    executionHandledBy: '',
+    executionHandledBy: 'Alena Karagoz',
   });
 
   useEffect(() => {

@@ -79,7 +79,7 @@ export default function CommissionsPage() {
             {filtered.map(t => (
               <TableRow key={t.id}>
                 <TableCell className="font-medium text-primary whitespace-nowrap"><Link to={`/trades/${t.id}`}>{t.pirContractNumber || t.referenceNumber}</Link></TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.commodityName||'-'}</TableCell>
+                <TableCell className="text-sm max-w-[180px]">{t.commodityName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>

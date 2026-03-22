@@ -11,7 +11,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X } from 'lucide-react';
+import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { STATUS_OPTIONS, TRADE_STATUS_CONFIG } from '../lib/constants';
@@ -52,6 +52,8 @@ export default function TradeDetailPage() {
   const [blSaving, setBlSaving] = useState(false);
   const [disportAgents, setDisportAgents] = useState([]);
   const [diUploading, setDiUploading] = useState(false);
+  const [docFiles, setDocFiles] = useState({});
+  const [uploadingDoc, setUploadingDoc] = useState(null);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -74,6 +76,16 @@ export default function TradeDetailPage() {
         setDisportAgents(daRes.data);
         setDocChecks(tradeRes.data.docChecks || {});
         setAdditionalDocs(tradeRes.data.additionalDocuments || []);
+        // Fetch uploaded document files for this trade
+        const filesRes = await api.get(`/api/documents?tradeId=${tradeId}`);
+        const fileMap = {};
+        (filesRes.data || []).forEach(f => {
+          if (f.docName) {
+            if (!fileMap[f.docName]) fileMap[f.docName] = [];
+            fileMap[f.docName].push(f);
+          }
+        });
+        setDocFiles(fileMap);
       } catch (err) {
         toast.error('Failed to load trade');
       } finally {
@@ -95,6 +107,37 @@ export default function TradeDetailPage() {
       toast.success('Document checklist saved');
     } catch { toast.error('Failed to save'); }
     finally { setSaving(false); }
+  };
+
+  const uploadDocFile = async (docName, file) => {
+    if (!file) return;
+    setUploadingDoc(docName);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('tradeId', tradeId);
+      formData.append('tradeRef', trade?.referenceNumber || '');
+      formData.append('docType', 'checklist');
+      formData.append('docName', docName);
+      const res = await api.post('/api/documents', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setDocFiles(prev => ({
+        ...prev,
+        [docName]: [...(prev[docName] || []), res.data]
+      }));
+      toast.success(`File uploaded for ${docName}`);
+    } catch { toast.error('Upload failed'); }
+    finally { setUploadingDoc(null); }
+  };
+
+  const deleteDocFile = async (docName, fileId) => {
+    try {
+      await api.delete(`/api/documents/${fileId}`);
+      setDocFiles(prev => ({
+        ...prev,
+        [docName]: (prev[docName] || []).filter(f => f.id !== fileId)
+      }));
+      toast.success('File removed');
+    } catch { toast.error('Delete failed'); }
   };
 
   const addAdditionalDoc = () => {
@@ -391,17 +434,34 @@ export default function TradeDetailPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {docList.map((doc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => toggleDoc(doc)}
-                  >
-                    {docChecks[doc] ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  <div key={i} className="p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3 cursor-pointer" onClick={() => toggleDoc(doc)}>
+                      {docChecks[doc] ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className={docChecks[doc] ? 'line-through text-muted-foreground flex-1' : 'text-sm flex-1'}>{doc}</span>
+                      <label
+                        className="cursor-pointer text-muted-foreground hover:text-primary transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                        data-testid={`upload-doc-${i}`}
+                      >
+                        {uploadingDoc === doc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                        <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { uploadDocFile(doc, e.target.files[0]); e.target.value = ''; }} />
+                      </label>
+                    </div>
+                    {docFiles[doc] && docFiles[doc].length > 0 && (
+                      <div className="mt-2 ml-8 space-y-1">
+                        {docFiles[doc].map(f => (
+                          <div key={f.id} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1">
+                            <FileText className="h-3 w-3 text-primary flex-shrink-0" />
+                            <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1" data-testid={`doc-file-link-${f.id}`}>{f.fileName}</a>
+                            <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600 flex-shrink-0" data-testid={`delete-doc-file-${f.id}`}><Trash2 className="h-3 w-3" /></button>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                    <span className={docChecks[doc] ? 'line-through text-muted-foreground' : 'text-sm'}>{doc}</span>
                   </div>
                 ))}
               </div>
@@ -428,23 +488,44 @@ export default function TradeDetailPage() {
                     {additionalDocs.map((doc, i) => (
                       <div
                         key={`add-${i}`}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 transition-colors group"
+                        className="p-3 rounded-lg border border-dashed border-orange-300 bg-orange-50/50 hover:bg-orange-50 transition-colors group"
                       >
-                        <div className="cursor-pointer flex-1 flex items-center gap-3" onClick={() => toggleDoc(doc)}>
-                          {docChecks[doc] ? (
-                            <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <Circle className="h-5 w-5 text-orange-400 flex-shrink-0" />
-                          )}
-                          <span className={docChecks[doc] ? 'line-through text-muted-foreground text-sm' : 'text-sm'}>{doc}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="cursor-pointer flex-1 flex items-center gap-3" onClick={() => toggleDoc(doc)}>
+                            {docChecks[doc] ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
+                            ) : (
+                              <Circle className="h-5 w-5 text-orange-400 flex-shrink-0" />
+                            )}
+                            <span className={docChecks[doc] ? 'line-through text-muted-foreground text-sm' : 'text-sm'}>{doc}</span>
+                          </div>
+                          <label
+                            className="cursor-pointer text-muted-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            data-testid={`upload-additional-doc-${i}`}
+                          >
+                            {uploadingDoc === doc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                            <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { uploadDocFile(doc, e.target.files[0]); e.target.value = ''; }} />
+                          </label>
+                          <button
+                            data-testid={`remove-additional-doc-${i}`}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
+                            onClick={() => removeAdditionalDoc(doc)}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button
-                          data-testid={`remove-additional-doc-${i}`}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700"
-                          onClick={() => removeAdditionalDoc(doc)}
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        {docFiles[doc] && docFiles[doc].length > 0 && (
+                          <div className="mt-2 ml-8 space-y-1">
+                            {docFiles[doc].map(f => (
+                              <div key={f.id} className="flex items-center gap-2 text-xs bg-white/70 rounded px-2 py-1">
+                                <FileText className="h-3 w-3 text-primary flex-shrink-0" />
+                                <a href={`${process.env.REACT_APP_BACKEND_URL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate flex-1">{f.fileName}</a>
+                                <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="h-3 w-3" /></button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

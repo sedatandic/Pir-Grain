@@ -14,6 +14,8 @@ non_accountant = require_roles("admin", "user")
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
+ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'}
+
 
 @router.get("")
 def list_documents(tradeId: Optional[str] = None, user=Depends(non_accountant)):
@@ -24,7 +26,7 @@ def list_documents(tradeId: Optional[str] = None, user=Depends(non_accountant)):
 
 
 @router.post("")
-async def upload_document(file: UploadFile = File(...), tradeId: str = Form(""), tradeRef: str = Form(""), docType: str = Form("other"), user=Depends(non_accountant)):
+async def upload_document(file: UploadFile = File(...), tradeId: str = Form(""), tradeRef: str = Form(""), docType: str = Form("other"), docName: str = Form(""), user=Depends(non_accountant)):
     file_id = str(uuid.uuid4())
     ext = os.path.splitext(file.filename)[1] if file.filename else ""
     saved_name = f"{file_id}{ext}"
@@ -34,7 +36,7 @@ async def upload_document(file: UploadFile = File(...), tradeId: str = Form(""),
         f.write(content)
     doc = {
         "fileName": file.filename, "savedName": saved_name, "fileUrl": f"/api/uploads/{saved_name}",
-        "fileSize": len(content), "docType": docType, "tradeId": tradeId, "tradeRef": tradeRef,
+        "fileSize": len(content), "docType": docType, "docName": docName, "tradeId": tradeId, "tradeRef": tradeRef,
         "uploadedBy": user.get("username", ""), "createdAt": datetime.utcnow()
     }
     result = documents_col.insert_one(doc)

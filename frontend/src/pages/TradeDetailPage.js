@@ -609,7 +609,7 @@ export default function TradeDetailPage() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Last Payment Date from Buyer</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Payment Date from Buyer</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <Popover>
                   <PopoverTrigger asChild>

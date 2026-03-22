@@ -193,7 +193,25 @@ export default function CalendarPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} data-testid="event-title-input" /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Date *</Label><Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} data-testid="event-date-input" /></div>
+              <div className="space-y-2"><Label>Date *</Label><Input 
+                placeholder="dd/mm/yyyy" 
+                value={form.date ? (() => { const [y,m,d] = form.date.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.date; })() : ''} 
+                onChange={(e) => {
+                  let v = e.target.value.replace(/[^\d/]/g, '');
+                  // Auto-add slashes
+                  if (v.length === 2 && !v.includes('/')) v += '/';
+                  if (v.length === 5 && v.split('/').length === 2) v += '/';
+                  if (v.length > 10) v = v.slice(0, 10);
+                  // Try to parse dd/mm/yyyy to yyyy-mm-dd
+                  const parts = v.split('/');
+                  if (parts.length === 3 && parts[2].length === 4) {
+                    setForm({...form, date: `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`});
+                  } else {
+                    setForm({...form, date: v});
+                  }
+                }}
+                data-testid="event-date-input" 
+              /></div>
               <div className="space-y-2"><Label>Type</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
                   <SelectTrigger data-testid="event-type-select"><SelectValue /></SelectTrigger>

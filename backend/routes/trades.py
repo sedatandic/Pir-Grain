@@ -85,8 +85,11 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
     adj = data.get("originAdjective") or ""
     cname = data.get("commodityName") or ""
     cyear = data.get("cropYear") or ""
+    # Production commodities use "Prod." instead of "Crop"
+    prod_keywords = ["pellet", "husk", "bran", "meal", "pulp"]
+    year_prefix = "Prod." if any(kw in cname.lower() for kw in prod_keywords) else "Crop"
     if adj and cname and cyear:
-        data["commodityDisplayName"] = f"{adj} {cname}, Crop {cyear}"
+        data["commodityDisplayName"] = f"{adj} {cname}, {year_prefix} {cyear}"
     elif adj and cname:
         data["commodityDisplayName"] = f"{adj} {cname}"
     else:
@@ -170,8 +173,10 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         adj = data.get("originAdjective") or existing_t.get("originAdjective") or ""
         cname = data.get("commodityName") or existing_t.get("commodityName") or ""
         cyear = data.get("cropYear") or existing_t.get("cropYear") or ""
+        prod_keywords = ["pellet", "husk", "bran", "meal", "pulp"]
+        year_prefix = "Prod." if any(kw in cname.lower() for kw in prod_keywords) else "Crop"
         if adj and cname and cyear:
-            data["commodityDisplayName"] = f"{adj} {cname}, Crop {cyear}"
+            data["commodityDisplayName"] = f"{adj} {cname}, {year_prefix} {cyear}"
         elif adj and cname:
             data["commodityDisplayName"] = f"{adj} {cname}"
         else:

@@ -7,8 +7,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Checkbox } from '../components/ui/checkbox';
-import { TRADE_STATUS_CONFIG, PENDING_STATUSES, ONGOING_STATUSES, COMPLETED_STATUSES } from '../lib/constants';
-import { DollarSign, TrendingUp, Clock, CheckCircle, Search, Loader2, FileDown, Building2 } from 'lucide-react';
+import { TRADE_STATUS_CONFIG } from '../lib/constants';
+import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -34,9 +34,8 @@ export default function CommissionsPage() {
   }, []);
 
   const categorized = useMemo(() => ({
-    ongoing: trades.filter(t => ONGOING_STATUSES.includes(t.status)),
-    pending: trades.filter(t => PENDING_STATUSES.includes(t.status)),
-    completed: trades.filter(t => COMPLETED_STATUSES.includes(t.status) || t.status === 'cancelled' || t.status === 'washout' || t.status === 'wash-out'),
+    pending: trades.filter(t => !t.invoicePaid),
+    paid: trades.filter(t => t.invoicePaid),
   }), [trades]);
 
   const applySearch = (list) => {
@@ -49,15 +48,22 @@ export default function CommissionsPage() {
     const calcComm = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
     return {
       total: trades.reduce((s, t) => s + calcComm(t), 0),
-      ongoing: categorized.ongoing.reduce((s, t) => s + calcComm(t), 0),
       pending: categorized.pending.reduce((s, t) => s + calcComm(t), 0),
-      completed: categorized.completed.reduce((s, t) => s + calcComm(t), 0),
+      paid: categorized.paid.reduce((s, t) => s + calcComm(t), 0),
     };
   }, [trades, categorized]);
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
   const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
   const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
+
+  const toggleInvoiceStatus = async (tradeId, currentPaid) => {
+    try {
+      await api.put(`/api/trades/${tradeId}`, { invoicePaid: !currentPaid });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, invoicePaid: !currentPaid } : t));
+      toast.success(!currentPaid ? 'Marked as PAID' : 'Marked as PENDING');
+    } catch { toast.error('Failed to update status'); }
+  };
 
   const openInvoiceDialog = (tradeId, account) => {
     setPendingInvoice({ tradeId, account: account || 'seller' });
@@ -105,7 +111,7 @@ export default function CommissionsPage() {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
               return (
               <TableRow key={t.id}>
-                <TableCell><Badge className={invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-amber-100 text-amber-800 border-amber-200'}>{invoiceStatus}</Badge></TableCell>
+                <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
                 <TableCell className="font-medium text-primary"><Link to={`/trades/${t.id}`}>{(() => { const cn = t.pirContractNumber || t.referenceNumber || ''; return cn.length > 10 ? <>{cn.substring(0, cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') : Math.ceil(cn.length/2))}<br/>{cn.substring(cn.lastIndexOf(' ') > 0 ? cn.lastIndexOf(' ') + 1 : Math.ceil(cn.length/2))}</> : cn; })()}</Link></TableCell>
                 <TableCell className="text-sm max-w-[180px]">{t.commodityName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
@@ -144,19 +150,17 @@ export default function CommissionsPage() {
     <div className="space-y-6">
       <div><h1 className="text-3xl font-bold tracking-tight">Brokerage Invoices</h1><p className="text-muted-foreground">Track your brokerage earnings across all trades</p></div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Commission</CardTitle><DollarSign className="h-4 w-4 text-primary" /></CardHeader><CardContent><div className="text-2xl font-bold">{fmt(stats.total)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Ongoing</CardTitle><TrendingUp className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.ongoing)}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle><Clock className="h-4 w-4 text-amber-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{fmt(stats.pending)}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle><CheckCircle className="h-4 w-4 text-slate-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-slate-600">{fmt(stats.completed)}</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.paid)}</div></CardContent></Card>
       </div>
 
       <div className="relative max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
 
       <div className="space-y-4">
-        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Ongoing ({categorized.ongoing.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.ongoing, 'No ongoing trades')}</CardContent></Card>
-        <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending trades')}</CardContent></Card>
-        <Card className="border-l-4 border-l-slate-400"><CardHeader className="pb-3"><CardTitle className="text-lg text-slate-700">Completed ({categorized.completed.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.completed, 'No completed trades', true)}</CardContent></Card>
+        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices')}</CardContent></Card>
+        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid ({categorized.paid.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid, 'No paid invoices', true)}</CardContent></Card>
       </div>
 
       {/* Bank Account Selection Dialog */}

@@ -15,6 +15,7 @@ import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
 const CATEGORIES = ['Commission Payment', 'Salary Payment', 'Pension Payment', 'Accountant Payment', 'Other Payments'];
+const INCOMING_CATEGORIES = ['Commission Payment', 'Other Payments'];
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'bg-amber-100 text-amber-800' },
   paid: { label: 'Paid', color: 'bg-green-100 text-green-800' },
@@ -294,7 +295,7 @@ export default function AccountingPage() {
               }}
             /></div>
             <div className="space-y-2"><Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+              <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{(form.direction === 'incoming' ? INCOMING_CATEGORIES : CATEGORIES).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="pending">Pending</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="overdue">Overdue</SelectItem></SelectContent></Select>

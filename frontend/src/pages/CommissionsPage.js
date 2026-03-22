@@ -45,7 +45,7 @@ export default function CommissionsPage() {
   }, [trades, categorized]);
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
-  const fmtQty = (q) => `${(q||0).toLocaleString()} MT`;
+  const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
   const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
 
   const downloadInvoice = async (tradeId, account) => {
@@ -71,8 +71,8 @@ export default function CommissionsPage() {
         <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
             <TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
-            <TableHead>Vessel</TableHead><TableHead className="text-right">B/L Qty</TableHead><TableHead>Load Port</TableHead><TableHead>Disch Port</TableHead>
-            <TableHead className="text-right">Rate/MT</TableHead><TableHead className="text-right">Commission</TableHead><TableHead>Status</TableHead>
+            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead>Load / Disch Port</TableHead>
+            <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead><TableHead>Status</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
@@ -83,11 +83,10 @@ export default function CommissionsPage() {
                 <TableCell className="text-sm whitespace-nowrap">{t.sellerCode||t.sellerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.buyerCode||t.buyerName||'-'}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{t.vesselName||'-'}</TableCell>
-                <TableCell className="text-center text-sm">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} MT` : fmtQty(t.quantity)}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.loadingPortName || t.basePortName || '-'}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{t.dischargePortName || '-'}</TableCell>
-                <TableCell className="text-right font-mono text-sm">${t.brokeragePerMT||0}</TableCell>
-                <TableCell className="text-right font-mono text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</TableCell>
+                <TableCell className="text-sm">{(t.loadingPortName || t.basePortName || '-')} / {(t.dischargePortName || '-')}</TableCell>
+                <TableCell className="text-sm">${t.brokeragePerMT||0}</TableCell>
+                <TableCell className="text-sm font-medium">{fmt(getBlCommission(t))}</TableCell>
                 <TableCell><Badge className={TRADE_STATUS_CONFIG[t.status]?.color||'bg-muted'}>{TRADE_STATUS_CONFIG[t.status]?.label||t.status}</Badge></TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => downloadInvoice(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
@@ -97,7 +96,7 @@ export default function CommissionsPage() {
               </TableRow>
             ))}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={9} className="text-right">Total:</TableCell>
+              <TableCell colSpan={8} className="text-right">Total:</TableCell>
               <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
               <TableCell></TableCell>
               {showInvoice && <TableCell></TableCell>}

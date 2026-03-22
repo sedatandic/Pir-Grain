@@ -6,7 +6,7 @@ from datetime import datetime
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, HRFlowable
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph, Image, Table, TableStyle
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER
 from reportlab.pdfbase import pdfmetrics
@@ -25,6 +25,8 @@ router = APIRouter(prefix="/api/business-confirmation", tags=["business-confirma
 
 PIR_GREEN = colors.HexColor("#1B7A3D")
 DARK_TEXT = colors.HexColor("#1A1A1A")
+LIGHT_GREEN = colors.HexColor("#E8F5E9")
+BORDER_COLOR = colors.HexColor("#C8E6C9")
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
 
 
@@ -61,10 +63,10 @@ def fmt_num(v):
         return str(v) if v else "-"
 
 
-def get_partner_block(partner):
+def partner_text(partner):
     if not partner:
         return "-"
-    lines = [f"<b>{partner.get('companyName', '-')}</b>"]
+    lines = [partner.get('companyName', '-')]
     if partner.get('address'):
         lines.append(partner['address'])
     parts = []
@@ -78,7 +80,7 @@ def get_partner_block(partner):
         lines.append(f"V.D. {partner['taxOffice']} V.N. {partner['taxId']}")
     elif partner.get('taxId'):
         lines.append(f"Tax ID: {partner['taxId']}")
-    return "<br/>".join(lines)
+    return "\n".join(lines)
 
 
 @router.get("/{trade_id}/pdf")
@@ -99,9 +101,9 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     price = trade.get("pricePerMT") or 0
     currency = trade.get("currency") or "USD"
     delivery_term = trade.get("deliveryTerm") or "-"
-    discharge_rate = trade.get("dischargeRate")
+    discharge_rate = trade.get("dischargeRate") or "-"
     payment_terms = trade.get("paymentTerms") or "-"
-    quality = trade.get("quality") or ""
+    quality = trade.get("quality") or "-"
     aflatoxin = trade.get("aflatoxin") or ""
     more_less = trade.get("moreLess") or "10"
     more_less_option = trade.get("moreLessOption") or "Seller's option"
@@ -110,142 +112,92 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     brokerage_account = trade.get("brokerageAccount") or "seller"
     shipment_start = fmt_date_dot(trade.get("shipmentWindowStart"))
     shipment_end = fmt_date_dot(trade.get("shipmentWindowEnd"))
-    base_port = trade.get("basePortName") or trade.get("loadingPortName") or "-"
     discharge_port = trade.get("dischargePortName") or "-"
     discharge_country = trade.get("dischargePortCountry") or ""
+    discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
+    gafta = trade.get("gaftaContractNo") or "48"
+
+    broker_text = partner_text(broker) if broker else "PIR Grain and Pulses Ltd.\nBlv. Tsarigradsko Shose No:73\nPlovdiv / Bulgaria, ZIP: 4000"
 
     # Styles
-    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=18, textColor=PIR_GREEN, alignment=TA_CENTER, spaceAfter=4)
-    s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, alignment=TA_CENTER, spaceAfter=6)
-    s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=14, spaceAfter=10)
-    s_section = ParagraphStyle('Section', fontName='FreeSansBold', fontSize=11, textColor=PIR_GREEN, leading=16, spaceBefore=10, spaceAfter=4)
-    s_body = ParagraphStyle('Body', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=15, spaceAfter=6)
-    s_body_indent = ParagraphStyle('BodyIndent', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=15, leftIndent=10, spaceAfter=6)
-    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=10, textColor=DARK_TEXT, leading=14, spaceAfter=2)
-    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=10, textColor=PIR_GREEN, leading=14)
+    s_label = ParagraphStyle('Label', fontName='FreeSansBold', fontSize=8, textColor=PIR_GREEN, leading=10)
+    s_val = ParagraphStyle('Val', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=11)
+    s_val_bold = ParagraphStyle('ValBold', fontName='FreeSansBold', fontSize=8.5, textColor=DARK_TEXT, leading=11)
+    s_title = ParagraphStyle('Title', fontName='FreeSansBold', fontSize=14, textColor=PIR_GREEN, alignment=TA_CENTER)
+    s_date = ParagraphStyle('Date', fontName='FreeSans', fontSize=9, textColor=DARK_TEXT, alignment=TA_CENTER)
+    s_greeting = ParagraphStyle('Greeting', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=12)
+    s_closing = ParagraphStyle('Closing', fontName='FreeSans', fontSize=8.5, textColor=DARK_TEXT, leading=11)
+    s_sign = ParagraphStyle('Sign', fontName='FreeSansBold', fontSize=9, textColor=PIR_GREEN, leading=12)
+    s_small = ParagraphStyle('Small', fontName='FreeSans', fontSize=7.5, textColor=DARK_TEXT, leading=10)
+
+    page_w = A4[0]
+    margin = 18 * mm
+    table_w = page_w - 2 * margin
+    col_label = 32 * mm
+    col_val = table_w - col_label
+
+    def row(label, value, style=s_val):
+        return [Paragraph(label, s_label), Paragraph(str(value), style)]
+
+    # Build data rows
+    data = [
+        [Paragraph("SELLERS", s_label), Paragraph(partner_text(seller).replace("\n", "<br/>"), s_val)],
+        [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
+        [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
+        row("COMMODITY", f"{origin} {commodity}"),
+        row("QUALITY", f"{quality}" + (f"  |  Aflatoxin: {aflatoxin}" if aflatoxin else "")),
+        row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
+        row("SHIPMENT", f"{shipment_start} - {shipment_end}, both dates included, at Seller's option"),
+        row("PRICE", f"{currency} {price:,.2f}/MT {delivery_term} {discharge_full}", s_val_bold),
+        row("DISCH. RATE", f"{discharge_rate} MT SSHEX EIU, Half dispatch" if discharge_rate != "-" else "-"),
+        row("PAYMENT", payment_terms, s_small),
+        row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
+        row("CONTRACT", f"GAFTA No. {gafta}, Arbitration Clause 125, London"),
+    ]
+
+    tbl = Table(data, colWidths=[col_label, col_val])
+    tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LEFTPADDING', (0, 0), (0, -1), 6),
+        ('LEFTPADDING', (1, 0), (1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('GRID', (0, 0), (-1, -1), 0.5, BORDER_COLOR),
+        ('BACKGROUND', (0, 0), (0, -1), LIGHT_GREEN),
+    ]))
 
     buf = BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=15 * mm, bottomMargin=15 * mm, leftMargin=22 * mm, rightMargin=22 * mm)
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=12 * mm, bottomMargin=12 * mm, leftMargin=margin, rightMargin=margin)
     story = []
 
-    # Logo
+    # Logo (smaller)
     if os.path.exists(LOGO_PATH):
-        logo = Image(LOGO_PATH, width=45 * mm, height=45 * mm)
+        logo = Image(LOGO_PATH, width=30 * mm, height=30 * mm)
         logo.hAlign = 'CENTER'
         story.append(logo)
-        story.append(Spacer(1, 3 * mm))
+        story.append(Spacer(1, 2 * mm))
 
-    # Title
     story.append(Paragraph("BUSINESS CONFIRMATION", s_title))
     story.append(Spacer(1, 1 * mm))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=PIR_GREEN, spaceAfter=4))
-    story.append(Paragraph(f"<b>Date:</b> {contract_date}", s_date))
+    story.append(Paragraph(f"Date: {contract_date}  |  Contract No: {contract_no}", s_date))
     story.append(Spacer(1, 3 * mm))
 
-    # Greeting
-    story.append(Paragraph("Good day,", s_greeting))
     story.append(Paragraph(
-        "Dear Sirs, Madams,<br/><br/>"
+        "Good day,<br/><br/>"
+        "Dear Sirs, Madams,<br/>"
         "Please find below the business confirmation for the transaction agreed as follows:",
         s_greeting
     ))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Spacer(1, 3 * mm))
 
-    # SELLERS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("SELLERS", s_section))
-    story.append(Paragraph(get_partner_block(seller), s_body_indent))
+    story.append(tbl)
+    story.append(Spacer(1, 4 * mm))
 
-    # BUYERS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("BUYERS", s_section))
-    story.append(Paragraph(get_partner_block(buyer), s_body_indent))
-
-    # BROKERS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("BROKERS", s_section))
-    broker_block = get_partner_block(broker) if broker else "<b>PIR Grain and Pulses Ltd.</b><br/>Blv. Tsarigradsko Shose No:73<br/>Plovdiv / Bulgaria<br/>ZIP: 4000"
-    story.append(Paragraph(broker_block, s_body_indent))
-
-    # GOODS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("GOODS", s_section))
-    goods_lines = [f"<b>Commodity:</b> {origin} {commodity}"]
-    if quality:
-        goods_lines.append(f"<b>Quality:</b> {quality}")
-    if aflatoxin:
-        goods_lines.append(f"<b>Aflatoxin:</b> {aflatoxin}")
-    story.append(Paragraph("<br/>".join(goods_lines), s_body_indent))
-
-    # QUANTITY
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("QUANTITY", s_section))
-    story.append(Paragraph(
-        f"<b>{fmt_num(quantity)} MT</b><br/>"
-        f"With <b>{more_less}% more or less</b> at {more_less_option}.",
-        s_body_indent
-    ))
-
-    # SHIPMENT PERIOD
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("SHIPMENT PERIOD", s_section))
-    story.append(Paragraph(
-        f"<b>{shipment_start} - {shipment_end}</b><br/>Both dates included, at Seller's option.",
-        s_body_indent
-    ))
-
-    # PRICE
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("PRICE", s_section))
-    price_display = f"{currency} {price:,.2f}/MT" if price else "-"
-    discharge_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
-    story.append(Paragraph(
-        f"<b>{price_display} {delivery_term} {discharge_full}</b>",
-        s_body_indent
-    ))
-
-    # DISCHARGE RATE
-    if discharge_rate:
-        story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-        story.append(Paragraph("DISCHARGE RATE", s_section))
-        story.append(Paragraph(
-            f"<b>{fmt_num(discharge_rate)} MT SSHEX EIU</b><br/>Half dispatch",
-            s_body_indent
-        ))
-
-    # PAYMENT TERMS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("PAYMENT TERMS", s_section))
-    story.append(Paragraph(payment_terms, s_body_indent))
-
-    # BROKERAGE
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("BROKERAGE", s_section))
-    story.append(Paragraph(
-        f"<b>{brokerage_currency} {brokerage_per_mt:.2f} per MT</b>, payable by the <b>{brokerage_account.capitalize()}</b>.",
-        s_body_indent
-    ))
-
-    # CONTRACT TERMS
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=2))
-    story.append(Paragraph("CONTRACT TERMS", s_section))
-    gafta = trade.get("gaftaContractNo") or "48"
-    story.append(Paragraph(
-        f"All terms and conditions not in conflict with the above shall be governed by "
-        f"<b>GAFTA Contract No. {gafta}</b>, including <b>GAFTA Arbitration Clause 125</b>, "
-        f"with arbitration in <b>London</b>, which all parties acknowledge and accept.",
-        s_body_indent
-    ))
-
-    story.append(Spacer(1, 6 * mm))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"), spaceAfter=6))
-
-    story.append(Paragraph("A draft contract will be shared shortly.", s_body))
-    story.append(Paragraph("Thank you for the business.", s_body))
-    story.append(Spacer(1, 6 * mm))
-
+    story.append(Paragraph("A draft contract will be shared shortly. Thank you for the business.", s_closing))
+    story.append(Spacer(1, 4 * mm))
     story.append(Paragraph("Best Regards,", s_closing))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Spacer(1, 1 * mm))
     story.append(Paragraph("PIR Grain &amp; Pulses Ltd.", s_sign))
 
     doc.build(story)

@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, addDays, isSameDay, isToday, parseISO, isAfter, isBefore } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
 import { getHolidaysForDate } from '../lib/holidays';
+import { CalendarDays as CalIcon } from 'lucide-react';
 
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
@@ -221,6 +222,33 @@ export default function CalendarPage() {
                           <span className="text-xs font-medium text-muted-foreground">{(() => { try { return format(parseISO(ev.date), 'dd MMM'); } catch { return ''; } })()}</span>
                           <p className="text-[10px] text-muted-foreground capitalize">{ev.type}</p>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Holidays */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2"><CalendarDays className="h-4 w-4 text-red-500" />Upcoming Holidays</CardTitle></CardHeader>
+            <CardContent>
+              {(() => {
+                const now = new Date();
+                const holidays = [];
+                for (let i = 0; i <= 7; i++) {
+                  const d = addDays(now, i);
+                  const dayHols = getHolidaysForDate(d.getFullYear(), d.getMonth(), d.getDate());
+                  dayHols.forEach(h => holidays.push({ ...h, dateObj: d }));
+                }
+                return holidays.length === 0 ? <p className="text-sm text-muted-foreground py-2">No holidays in the next 7 days</p> : (
+                  <div className="space-y-2">
+                    {holidays.map((h, i) => (
+                      <div key={i} className={`flex items-center gap-3 py-1.5 px-2 rounded-lg border ${h.colorClass || 'bg-muted/50'}`}>
+                        <span className="text-lg shrink-0">{h.flag}</span>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{h.title}</p><p className="text-xs text-muted-foreground">{h.country}</p></div>
+                        <span className="text-xs font-medium text-muted-foreground shrink-0">{format(h.dateObj, 'dd MMM')}</span>
                       </div>
                     ))}
                   </div>

@@ -102,7 +102,7 @@ export default function CommissionsPage() {
         <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
             <TableHead>Status</TableHead><TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
-            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead className="text-center">Load Port<hr className="my-0.5 border-muted-foreground/30"/>Disch. Port</TableHead>
+            <TableHead>Vessel</TableHead><TableHead>B/L Qty</TableHead><TableHead className="text-center">Loading Port<hr className="my-0.5 border-muted-foreground/30"/>Discharge Port</TableHead>
             <TableHead>Rate/MT</TableHead><TableHead>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>

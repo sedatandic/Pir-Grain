@@ -543,7 +543,7 @@ export default function TradeDetailPage() {
 
       {/* B/L Edit Dialog */}
       <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit B/L Details</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">

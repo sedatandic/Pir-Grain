@@ -266,7 +266,7 @@ export default function PartnersPage({ filterType }) {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col mx-auto items-center">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
           <DialogHeader className="text-center"><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
@@ -329,7 +329,7 @@ export default function PartnersPage({ filterType }) {
 
       {/* Business Card / Detail Dialog */}
       <Dialog open={!!detailPartner} onOpenChange={() => setDetailPartner(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto flex flex-col">
           {detailPartner && (
             <>
               <DialogHeader>

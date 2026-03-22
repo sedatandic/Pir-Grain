@@ -209,7 +209,7 @@ export default function TradesPage() {
               <TableHead className="text-center">Origin</TableHead>
               <TableHead className="text-center">Quantity<br/><span className="text-xs font-normal text-muted-foreground">(Mts)</span></TableHead>
               <TableHead className="text-center">Delivery Term</TableHead>
-              <TableHead className="text-center">Unit Price</TableHead>
+              <TableHead className="text-center whitespace-nowrap">Unit Price</TableHead>
               <TableHead className="text-center">Shipment Period</TableHead>
               <TableHead className="text-center">Vessel</TableHead>
             </TableRow>

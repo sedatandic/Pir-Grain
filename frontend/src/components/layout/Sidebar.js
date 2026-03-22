@@ -94,7 +94,7 @@ export default function Sidebar() {
         <div className={cn('flex items-center gap-2 min-w-0', collapsed && 'max-md:flex md:hidden')}>
           <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-9 w-auto object-contain flex-shrink-0" />
           <div className="min-w-0">
-            <h1 className="text-[10px] font-bold tracking-wide leading-tight truncate" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+            <h1 className="text-[9px] font-bold tracking-wide leading-tight whitespace-nowrap" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
             <p className="text-[8px] text-muted-foreground tracking-wider leading-tight">TRADING DASHBOARD</p>
           </div>
         </div>

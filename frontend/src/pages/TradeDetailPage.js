@@ -500,7 +500,7 @@ export default function TradeDetailPage() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Shipment Appropriation</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Shipment Appropriation to Buyer</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 {trade.shipmentAppropriationSentAt ? (
                   <div className="space-y-3">

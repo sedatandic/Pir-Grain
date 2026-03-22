@@ -78,8 +78,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6" data-testid="dashboard-page">
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* KPI Cards + Upcoming Events as 4th card */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-ongoing-trades">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
@@ -88,8 +88,8 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.activeTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>In transit</span></div>
+            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.activeTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
           </CardContent>
         </Card>
         <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-pending-trades">
@@ -100,8 +100,8 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.pendingTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-muted-foreground"><AlertCircle className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>Awaiting confirmation</span></div>
+            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.pendingTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting confirmation</span></div>
           </CardContent>
         </Card>
         <Card className="relative overflow-hidden p-2 md:p-4" data-testid="kpi-completed-trades">
@@ -112,17 +112,55 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl md:text-6xl font-bold mt-2 md:mt-4">{stats?.completedTrades || 0}</div>
-            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3 md:h-3.5 md:w-3.5" /><span>Increased from last month</span></div>
+            <div className="text-4xl md:text-5xl font-bold mt-2 md:mt-4">{stats?.completedTrades || 0}</div>
+            <div className="mt-2 md:mt-4 flex items-center gap-1 text-xs md:text-sm text-secondary"><TrendingUp className="h-3 w-3" /><span>Increased from last month</span></div>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Payments & Events - 4th card */}
+        <Card data-testid="upcoming-payments-events" className="relative overflow-hidden p-2 md:p-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm md:text-base font-semibold text-muted-foreground">Upcoming Payments & Events</CardTitle>
+            <CardDescription className="text-xs">Due invoices, meetings, and conferences</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {upcomingItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-4 text-center">
+                <Button variant="outline" size="sm" className="mb-4 rounded-full" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-1 h-3 w-3" /></Button>
+                <CalendarDays className="h-10 w-10 text-muted-foreground/30 mb-2" />
+                <p className="text-sm text-muted-foreground">No upcoming items</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {upcomingItems.slice(0, 3).map((item) => (
+                  <div key={`${item.type}-${item.id}`} className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                      item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' :
+                      item.icon === 'meeting' ? 'bg-blue-100' :
+                      item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
+                    }`}>
+                      {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-3.5 w-3.5 text-green-600" /> :
+                       item.icon === 'meeting' ? <Users className="h-3.5 w-3.5 text-blue-600" /> :
+                       item.icon === 'conference' ? <Building className="h-3.5 w-3.5 text-purple-600" /> :
+                       <CalendarDays className="h-3.5 w-3.5 text-gray-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{item.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'MMM d, yyyy'); } catch { return ''; }})()}</p>
+                    </div>
+                  </div>
+                ))}
+                {upcomingItems.length > 3 && (
+                  <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate('/calendar')}>+{upcomingItems.length - 3} more</Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Upcoming Payments & Events - Right Side Summary */}
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Trade Progress - Left */}
-        <div className="flex-1 min-w-0">
-          <Card data-testid="trade-progress">
+      {/* Trade Progress - Full Width */}
+      <Card data-testid="trade-progress">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -144,9 +182,9 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2"><div className="h-3 w-3 rounded-full bg-amber-400" /><span className="text-sm text-muted-foreground">Pending</span></div>
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {recentTrades.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="col-span-full flex flex-col items-center justify-center py-8 text-center">
                 <Box className="mb-3 h-10 w-10 text-muted-foreground/50" />
                 <p className="text-sm text-muted-foreground">No trades yet</p>
               </div>
@@ -169,54 +207,6 @@ export default function DashboardPage() {
           </div>
         </CardContent>
       </Card>
-        </div>
-
-        {/* Upcoming Payments & Events - Right */}
-        <div className="w-full md:w-96">
-          <Card data-testid="upcoming-payments-events" className="h-full">
-            <CardHeader className="pb-2 pt-6 px-6">
-              <div>
-                <CardTitle className="text-lg font-bold md:whitespace-nowrap">Upcoming Payments & Events</CardTitle>
-                <CardDescription className="text-sm md:whitespace-nowrap">Due invoices, meetings, and conferences</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="px-6">
-              {upcomingItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <Button variant="outline" size="lg" className="mb-8 px-8 rounded-full" onClick={() => navigate('/calendar')}>View Calendar <ArrowUpRight className="ml-2 h-4 w-4" /></Button>
-                  <CalendarDays className="h-14 w-14 text-muted-foreground/30 mb-4" />
-                  <p className="text-base text-muted-foreground">No upcoming items</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {upcomingItems.map((item) => (
-                    <div key={`${item.type}-${item.id}`} className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/30">
-                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                        item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' :
-                        item.icon === 'meeting' ? 'bg-blue-100' :
-                        item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'
-                      }`}>
-                        {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-4 w-4 text-green-600" /> :
-                         item.icon === 'meeting' ? <Users className="h-4 w-4 text-blue-600" /> :
-                         item.icon === 'conference' ? <Building className="h-4 w-4 text-purple-600" /> :
-                         <CalendarDays className="h-4 w-4 text-gray-600" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.title}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{item.type === 'invoice' ? 'Payment' : item.subtitle}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs font-medium">{(() => { try { return format(parseISO(item.date), 'MMM d'); } catch { return ''; }})()}</p>
-                        <p className="text-[10px] text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'yyyy'); } catch { return ''; }})()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }

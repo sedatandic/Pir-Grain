@@ -356,20 +356,6 @@ export default function TradesPage() {
                 {uniqueCoBrokers.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterVessel} onValueChange={setFilterVessel}>
-              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Vessel" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Vessels</SelectItem>
-                {uniqueVessels.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[150px] shrink-0"><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                {STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
             <div className="ml-auto shrink-0">
               <Button onClick={() => navigate('/trades/new')} data-testid="trades-new-trade-button"><Plus className="mr-2 h-4 w-4" />New Trade</Button>
             </div>

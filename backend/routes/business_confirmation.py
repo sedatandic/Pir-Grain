@@ -145,7 +145,17 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
         [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
         row("COMMODITY", trade.get("commodityDisplayName") or f"{origin} {commodity}"),
-        row("SPECS", f"{quality}" + (f"  |  Aflatoxin: {aflatoxin}" if aflatoxin else "")),
+    ]
+    # Build specifications from commoditySpecs (multi-line) or individual fields
+    specs_text = quality
+    if specs_text and specs_text != "-":
+        specs_lines = specs_text.replace("\n", "<br/>")
+    else:
+        specs_lines = "-"
+    if aflatoxin:
+        specs_lines += f"<br/>Aflatoxin: {aflatoxin}"
+    data.append([Paragraph("SPECIFICATIONS", s_label), Paragraph(specs_lines, s_val)])
+    data += [
         row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
         row("SHIPMENT", f"{shipment_start} - {shipment_end}, both dates included, at Seller's option"),
         row("PRICE", f"{currency} {price:,.2f}/MT {delivery_term} {discharge_full}", s_val_bold),

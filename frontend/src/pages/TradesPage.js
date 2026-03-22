@@ -199,7 +199,7 @@ export default function TradesPage() {
         <Table className="trade-table">
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="text-center min-w-[150px]">Status</TableHead>
+              <TableHead className="text-center">Status</TableHead>
               <TableHead className="text-center">Contract Date</TableHead>
               <TableHead className="text-center">Contract No</TableHead>
               <TableHead className="text-center">Seller</TableHead>

@@ -349,8 +349,6 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
-                <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Execution Handled By</span><span className="font-medium">{trade.executionHandledBy || '-'}</span></div>
               </CardContent>
             </Card>
             <Card>
@@ -391,6 +389,8 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Brokerage (per MT)</span><span className="font-medium">{trade.brokeragePerMT != null && trade.brokeragePerMT !== 0 ? `${trade.brokeragePerMT} ${trade.brokerageCurrency || 'USD'}` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Brokerage Payment</span><span className="font-medium capitalize">{trade.brokerageAccount ? `${trade.brokerageAccount} Account` : '-'}</span></div>
+                <Separator />
+                <div className="flex justify-between"><span className="text-muted-foreground">Execution Handled By</span><span className="font-medium">{trade.executionHandledBy || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge></div>
               </CardContent>

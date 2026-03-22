@@ -370,7 +370,7 @@ export default function TradeDetailPage() {
             <h1 className="text-2xl font-bold">{trade.pirContractNumber || trade.referenceNumber || trade.contractNumber || 'Trade Detail'}</h1>
             <Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge>
           </div>
-          <p className="text-muted-foreground text-sm">Contract #{trade.pirContractNumber || trade.contractNumber || '-'}</p>
+          <p className="text-muted-foreground text-sm">Contract #{trade.sellerContractNumber || trade.pirContractNumber || trade.contractNumber || '-'}</p>
         </div>
         {activeTab !== 'documents' && (
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
@@ -394,7 +394,7 @@ export default function TradeDetailPage() {
               <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Pir Grain Ref. No</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.sellerContractNumber || trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Contract Date</span><span className="font-medium">{(() => { const d = trade.contractDate; if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { const m = d.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[3]}/${m[2]}/${m[1]}`; return d; } catch { return d; } })()}</span></div>
                 <Separator />

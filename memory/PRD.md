@@ -7,23 +7,27 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - **Backend**: FastAPI (Python), MongoDB
 - **Frontend**: React, TailwindCSS, shadcn/ui, Zustand (auth)
 - **Auth**: JWT-based
+- **AI**: emergentintegrations (GPT-4o Vision for OCR)
 
 ## Core Features Implemented
 - JWT authentication with role-based access (admin, user, accountant)
 - Dashboard with KPI cards
 - Collapsible sidebar + header with user menu and notifications
 - Light/Dark mode theming
-- **Trades**: Excel-like table with 16 statuses, filtering, row-click detail view
-- **Trade Creation**: New Trade page with party selection (Seller, Buyer, Broker, Co-Broker). When a party is selected, their Trade Contacts and Execution Contacts appear as dropdowns for selection. Contacts are saved on the trade.
-- **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents). Parties tab shows selected Trade/Execution contacts per party with name, email, phone.
-- **Counterparties**: Partner list with business card detail view. Types: Seller, Buyer, Co-Broker. Origins field for sellers. Multiple Trade Contacts and Execution Contacts per counterparty.
+- **Trades**: Excel-like table with 16 statuses, filtering, row-click detail view, clickable seller/buyer/broker names
+- **Trade Creation**: New Trade page with party selection (Seller, Buyer, Broker, Co-Broker)
+- **Trade Detail**: Multi-tab page (Confirmation, Shipment, Parties, Documents)
+- **Counterparties**: Partner list with business card detail view
 - **Vessels**: 194 vessels seeded
-- **Accounting**: Invoices and Bank Statements tabs (RBAC: admin/accountant only)
-- **Calendar**: Event management
-- **Settings**: Commodities, Ports, Origins, Surveyors, Users management
-- **Notifications**: Bell icon with recent activities dropdown
+- **Accounting**: Invoices and Bank Statements tabs (RBAC: admin/accountant only), dynamic vendor/seller dropdowns
+- **Calendar**: Event management with redesigned right panel (Upcoming Payments, Meetings, Holidays)
+- **Commissions**: Port display with countries, multi-bank PDF invoice generation
+- **Settings**: Commodities, Ports, Origins, Surveyors, Disport Agents, Vendors, Bank Accounts, Users management
+- **Business Cards**: AI-powered OCR scanning using GPT-4o Vision
+- **Reports**: Multi-tab reporting with KPIs, Top 10 charts, drill-downs
+- **Notifications**: Bell icon (admin only) with recent activities
 - **Admin Password Change**: Admins can change any user's password
-- **Server-Side RBAC**: Accountant role restricted to Accounting endpoints only; admin has full access; user role has access to all except Accounting and user management
+- **Server-Side RBAC**: Accountant restricted to Accounting; admin has full access
 
 ## Data Seeded
 - Commodities (20), Ports (34), Origins (7), Surveyors (14), Vessels (194)
@@ -34,27 +38,31 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 - Admin: salih.karagoz / salih123
 - Accountant: pir.accounts / pir123
 
-## Architecture (Refactored Feb 2026)
+## Architecture
 ```
 /app/backend/
-├── server.py          - FastAPI app orchestrator (imports routers)
-├── config.py          - Config constants (DB, JWT, paths)
-├── database.py        - MongoDB connection, collections, helpers
-├── auth.py            - JWT auth, password hashing, get_current_user
+├── server.py          - FastAPI app orchestrator
+├── config.py          - Config constants
+├── database.py        - MongoDB connection, collections
+├── auth.py            - JWT auth, password hashing
 ├── models.py          - All Pydantic models
-├── seed.py            - Database seeding logic
+├── seed.py            - Database seeding
 ├── vessel_data.py     - Vessel seed data
 ├── routes/
 │   ├── auth_routes.py    - Login, /me
 │   ├── trades.py         - Trades CRUD + stats
-│   ├── partners.py       - Partners/Counterparties CRUD
+│   ├── partners.py       - Partners CRUD
 │   ├── vessels.py        - Vessels CRUD
 │   ├── documents.py      - Document upload/delete
 │   ├── reference_data.py - Commodities, Origins, Ports, Surveyors
 │   ├── events.py         - Calendar events
 │   ├── accounting.py     - Invoices, Bank Statements
-│   ├── notifications.py  - Notifications read/delete
-│   └── users.py          - User management + trade-statuses
+│   ├── notifications.py  - Notifications
+│   ├── users.py          - User management
+│   ├── commission_invoice.py - PDF generation
+│   ├── business_cards.py - OCR + CRUD
+│   ├── vendors.py        - Vendor CRUD
+│   └── bank_accounts.py  - Bank Account CRUD
 └── tests/
 
 /app/frontend/src/
@@ -63,41 +71,18 @@ Clone a commodity trading dashboard for PIR Grain & Pulses. The app evolved with
 └── lib/               - Auth, API client, constants
 ```
 
-## Recent Changes (March 22, 2026)
-- Updated Accounting page payment categories: removed freight, port_charges, surveyor, insurance, fumigation
-- Renamed broker_commission to "Commission Payment", added Salary Payment, Pension Payment, Accountant Payment, Other Payments
-- Set "Commission Payment" as default category for new invoices
-- Updated backend auto-generated commission invoices to use "Commission Payment" category
-
-## Changes (March 21, 2026)
-- Added Edit button (pencil icon) to each commodity row in Settings → Commodities tab
-- Edit dialog now includes a "Specifications" textarea for managing commodity specs
-- Add Commodity dialog also includes the Specifications field
-- Renamed "Commodity Specs" to "Commodity Specs." on the New Trade page
-- Seeded 9 trades from user's spreadsheet (MC010525, S-48-SFMP, RC0107, BEK446, RB050925, MW101025, MW2611, BAH55, RC1712)
-- Updated Contract No column to show pirContractNumber as primary display
-- Fixed date formatting to handle dd/MM/yyyy format in addition to ISO format
-- Moved tolerance display (+/- %) from per-row to Quantity column header
-- Implemented Edit Trade feature: route /trades/:tradeId/edit reuses NewTradePage in edit mode, pre-fills all fields, uses PUT to update
-- Added Edit Trade button on TradeDetailPage and in trade detail modal
-- Updated Quantity column header to "Quantity (+/- 10%)" with compact row format
-- Implemented commodity-specific shipment document templates stored in DB
-- Wheat: 13 base docs, Corn: +3 extras (Non-Dioxin, Non-GMO, Aflatoxin), WBP: +1 extra (Non-Dioxin)
-- Settings commodity edit dialog now shows Shipment Documents section with add/remove per commodity
-- TradeDetailPage Documents tab dynamically loads docs from the commodity's DB record
+## Completed (March 22, 2026)
+- **Bank Accounts Management UI**: Added "Bank Accounts" tab in Settings with full CRUD (add, edit, delete). Currency dropdown with USD/EUR/GBP/TRY/CHF/AED/UAH. Address textarea. 100% test pass rate.
 
 ## Backlog (Prioritized)
 ### P1
-- Full Server-Side RBAC: Protect all API routes based on roles (admin, user), not just UI hiding
+- Full Server-Side RBAC: Protect all API routes based on roles (admin, user, accountant)
 
 ### P2
-- Refactor NewTradePage.js (~500 lines) into smaller components
+- Refactor large frontend pages: TradesPage.js (~500 lines), TradeDetailPage.js (~620 lines), NewTradePage.js (~500 lines), PartnersPage.js (~430 lines)
 - Counterparty Departments CRUD (UI for adding/editing/deleting departments & contacts)
 - Document Templates page
 
 ### P3
+- Export Business Cards to CSV or create Counterparty from card
 - File Uploads for Bank Statements & DI Documents
-
-### Refactoring
-- Extract NewTradePage.js into smaller components (TradePartiesSection, CommodityDetailsSection, ShippingTermsSection)
-- Extract PartnersPage.js into smaller components (400+ lines)

@@ -116,6 +116,10 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     discharge_port = trade.get("dischargePortName") or "-"
     discharge_country = trade.get("dischargePortCountry") or ""
     gafta_term = trade.get("gaftaTerm") or "GAFTA No. 48, Arbitration Clause 125, London"
+    # Strip leading "GAFTA " from value since the label is now "GAFTA"
+    gafta_display = gafta_term
+    if gafta_display.upper().startswith("GAFTA "):
+        gafta_display = gafta_display[6:]
 
     broker_text = partner_text(broker) if broker else "PIR Grain and Pulses Ltd.\nBlv. Tsarigradsko Shose No:73\nPlovdiv / Bulgaria, ZIP: 4000"
 
@@ -201,7 +205,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         row("PAYMENT", payment_terms, s_small),
         row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
         [Paragraph("DOCUMENTS", s_label), Paragraph(docs_text, s_val)],
-        row("CONTRACT", gafta_term),
+        row("GAFTA", gafta_display),
     ]
 
     tbl = Table(data, colWidths=[col_label, col_val])

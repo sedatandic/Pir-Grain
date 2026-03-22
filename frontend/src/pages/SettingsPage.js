@@ -174,9 +174,9 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="vendors">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Vendors ({vendors.length})</h3><Button size="sm" onClick={() => openAdd('vendors', { name: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Vendor</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Vendor Name</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {vendors.map(v => <TableRow key={v.id}><TableCell className="font-medium">{v.name}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('vendors'); setDialogForm({ name: v.name || '', _editId: v.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('vendors', v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Vendors ({vendors.length})</h3><Button size="sm" onClick={() => openAdd('vendors', { name: '', type: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Vendor</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Vendor Name</TableHead><TableHead>Vendor Type</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {vendors.map(v => <TableRow key={v.id}><TableCell className="font-medium">{v.name}</TableCell><TableCell className="text-sm text-muted-foreground">{v.type || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('vendors'); setDialogForm({ name: v.name || '', type: v.type || '', _editId: v.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('vendors', v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
@@ -222,8 +222,8 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <div key={key} className="space-y-2">
-                  <Label className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</Label>
-                  <Input type={key === 'password' ? 'password' : 'text'} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder={key} />
+                  <Label className="capitalize">{dialogType === 'vendors' ? (key === 'name' ? 'Vendor Name' : key === 'type' ? 'Vendor Type' : key.replace(/([A-Z])/g, ' $1')) : key.replace(/([A-Z])/g, ' $1')}</Label>
+                  <Input type={key === 'password' ? 'password' : 'text'} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder={dialogType === 'vendors' ? (key === 'name' ? 'Enter vendor name' : key === 'type' ? 'e.g. Logistics, Insurance, Surveyor' : key) : key} />
                 </div>
               )
             ))}

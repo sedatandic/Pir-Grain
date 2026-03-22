@@ -141,12 +141,12 @@ export default function CommissionsPage() {
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
           </TableRow></TableHeader>
           <TableBody>
-            {filtered.map(t => {
+            {filtered.map((t, idx) => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
               const invDate = t.buyerPaymentDate ? t.buyerPaymentDate : (t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-');
               const invNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
               return (
-              <TableRow key={t.id}>
+              <TableRow key={t.id} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
                 <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{invDate}</TableCell>
                 <TableCell className="text-sm font-mono whitespace-nowrap">{invNo}</TableCell>

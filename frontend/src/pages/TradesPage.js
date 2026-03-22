@@ -256,7 +256,7 @@ export default function TradesPage() {
                     </div>
                   ) : (trade.brokerCode || trade.brokerName)
                 ) : '-'}</TableCell>
-                <TableCell className="text-center text-sm whitespace-nowrap">{trade.commodityName || '-'}</TableCell>
+                <TableCell className="text-center text-sm max-w-[180px]">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{(() => {

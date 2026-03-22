@@ -392,7 +392,7 @@ export default function TradeDetailPage() {
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Contract Information</CardTitle></CardHeader>
               <CardContent className="space-y-4 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Pir Grain Ref. No</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
                 <Separator />

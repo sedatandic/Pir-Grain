@@ -467,7 +467,7 @@ export default function TradesPage() {
                 <div className="border rounded-lg p-6 space-y-4">
                   <h4 className="font-semibold text-base">Contract Information</h4>
                   <div className="space-y-5 text-base">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Reference Number</span><span className="font-medium">{selectedTrade.referenceNumber || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Pir Grain Ref. No</span><span className="font-medium">{selectedTrade.referenceNumber || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{selectedTrade.pirContractNumber || selectedTrade.contractNumber || '-'}</span></div>
                     <hr />

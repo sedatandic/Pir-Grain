@@ -85,27 +85,27 @@ export default function Sidebar() {
         )}
       >
       {/* Logo + Collapse Toggle */}
-      <div className="flex items-center justify-between px-3 py-3 border-b border-border">
+      <div className="flex items-center justify-between px-2 py-2 border-b border-border">
         {collapsed ? (
           <button onClick={toggleCollapse} className="mx-auto hover:opacity-80 transition-opacity max-md:hidden" data-testid="sidebar-expand-button">
             <PanelLeft className="w-5 h-5 text-muted-foreground" />
           </button>
         ) : null}
-        <div className={cn('flex items-end gap-2.5', collapsed && 'max-md:flex md:hidden')}>
-          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-12 w-auto object-contain flex-shrink-0" />
-          <div>
-            <h1 className="text-[11px] font-bold tracking-wide leading-tight whitespace-nowrap" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
-            <p className="text-[9px] text-muted-foreground tracking-wider leading-tight text-center">TRADING DASHBOARD</p>
+        <div className={cn('flex items-center gap-2 min-w-0', collapsed && 'max-md:flex md:hidden')}>
+          <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-9 w-auto object-contain flex-shrink-0" />
+          <div className="min-w-0">
+            <h1 className="text-[10px] font-bold tracking-wide leading-tight truncate" style={{ color: PIR_GREEN }}>PIR GRAIN & PULSES</h1>
+            <p className="text-[8px] text-muted-foreground tracking-wider leading-tight">TRADING DASHBOARD</p>
           </div>
         </div>
         {/* Desktop: collapse toggle */}
         {!collapsed && (
-          <button onClick={toggleCollapse} className="hover:bg-muted rounded-md p-1 transition-colors hidden md:block" data-testid="sidebar-collapse-button">
+          <button onClick={toggleCollapse} className="hover:bg-muted rounded-md p-1 transition-colors hidden md:flex flex-shrink-0" data-testid="sidebar-collapse-button">
             <PanelLeftClose className="w-4 h-4 text-muted-foreground" />
           </button>
         )}
         {/* Mobile: close button */}
-        <button onClick={() => setMobileOpen(false)} className="hover:bg-muted rounded-md p-1.5 transition-colors md:hidden" data-testid="sidebar-close-button">
+        <button onClick={() => setMobileOpen(false)} className="hover:bg-muted rounded-md p-1.5 transition-colors md:hidden flex-shrink-0" data-testid="sidebar-close-button">
           <X className="w-5 h-5 text-muted-foreground" />
         </button>
       </div>

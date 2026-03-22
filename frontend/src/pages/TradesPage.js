@@ -240,7 +240,15 @@ export default function TradesPage() {
                 </TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.sellerCode || trade.sellerName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.buyerCode || trade.buyerName || '-'}</TableCell>
-                <TableCell className="text-center text-sm whitespace-nowrap">{trade.brokerCode || trade.brokerName ? (trade.coBrokerName ? `${trade.brokerCode || trade.brokerName} / ${trade.coBrokerName}` : (trade.brokerCode || trade.brokerName)) : '-'}</TableCell>
+                <TableCell className="text-center text-sm whitespace-nowrap">{(trade.brokerCode || trade.brokerName) ? (
+                  trade.coBrokerName ? (
+                    <div className="flex flex-col items-center">
+                      <span>{trade.brokerCode || trade.brokerName}</span>
+                      <hr className="w-full border-t border-border my-0.5" />
+                      <span className="text-orange-600">{trade.coBrokerCode || trade.coBrokerName}</span>
+                    </div>
+                  ) : (trade.brokerCode || trade.brokerName)
+                ) : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>
                 <TableCell className="text-center font-mono text-sm">{trade.quantity ? trade.quantity.toLocaleString() : '-'}</TableCell>

@@ -9,7 +9,7 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil } from 'lucide-react';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 
@@ -30,6 +30,7 @@ export default function TradesPage() {
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCoBroker, setFilterCoBroker] = useState('all');
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [entityFilter, setEntityFilter] = useState(null); // { type: 'seller'|'buyer'|'broker', name: '...', code: '...' }
@@ -69,8 +70,32 @@ export default function TradesPage() {
     }
   }, [location.state, loading]);
 
-  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all';
-  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); };
+  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterYear !== new Date().getFullYear().toString();
+  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterYear(new Date().getFullYear().toString()); };
+
+  const getTradeYear = useCallback((trade) => {
+    const d = trade.contractDate || trade.createdAt || '';
+    const slashMatch = d.match(/^\d{2}\/\d{2}\/(\d{4})$/);
+    if (slashMatch) return slashMatch[1];
+    if (d.length >= 4) return d.substring(0, 4);
+    return '';
+  }, []);
+
+  const currentYear = new Date().getFullYear().toString();
+  const yearFilteredTrades = useMemo(() => {
+    return trades.filter(t => {
+      const tradeYear = getTradeYear(t);
+      if (tradeYear === filterYear) return true;
+      // When viewing current year, also include older trades that are NOT yet completed/cancelled/washout
+      if (filterYear === currentYear) {
+        const isIncomplete = !COMPLETED_STATUSES.includes(t.status) &&
+                             !CANCELLED_STATUSES.includes(t.status) &&
+                             !WASHOUT_STATUSES.includes(t.status);
+        return isIncomplete;
+      }
+      return false;
+    });
+  }, [trades, filterYear, currentYear, getTradeYear]);
 
   const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
   const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
@@ -114,12 +139,12 @@ export default function TradesPage() {
   }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, search]);
 
   const categorized = useMemo(() => ({
-    ongoing: trades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
-    pending: trades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && !t.vesselName),
-    completed: trades.filter(t => COMPLETED_STATUSES.includes(t.status)),
-    washout: trades.filter(t => WASHOUT_STATUSES.includes(t.status)),
-    cancelled: trades.filter(t => CANCELLED_STATUSES.includes(t.status)),
-  }), [trades]);
+    ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
+    pending: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && !t.vesselName),
+    completed: yearFilteredTrades.filter(t => COMPLETED_STATUSES.includes(t.status)),
+    washout: yearFilteredTrades.filter(t => WASHOUT_STATUSES.includes(t.status)),
+    cancelled: yearFilteredTrades.filter(t => CANCELLED_STATUSES.includes(t.status)),
+  }), [yearFilteredTrades]);
 
   const filtered = useMemo(() => ({
     ongoing: applyFilters(categorized.ongoing),
@@ -331,6 +356,14 @@ export default function TradesPage() {
               <Input data-testid="trades-search-input" placeholder="Search trades..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 w-[200px]" />
             </div>
             {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="trades-clear-filter"><X className="h-4 w-4 mr-1" />Clear Filter</Button>}
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger className="w-[100px] shrink-0" data-testid="trades-year-filter"><CalendarDays className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue placeholder="Year" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2026">2026</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="flex items-center gap-2 text-sm text-muted-foreground shrink-0"><Filter className="h-4 w-4" /><span>Filters:</span></div>
             <Select value={filterCommodity} onValueChange={setFilterCommodity}>
               <SelectTrigger className="w-[160px] shrink-0"><SelectValue placeholder="Commodity" /></SelectTrigger>

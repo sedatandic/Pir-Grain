@@ -316,7 +316,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ]))
         elements.append(b_tbl)
 
-    elements.append(Spacer(1, 5*mm))
+    elements.append(Spacer(1, 3*mm))
 
     # =====================================================
     # SIGNATURE with stamp image
@@ -331,13 +331,16 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     sig_rows.append(["", Paragraph("_______________________________", sig_line)])
     sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
 
-    sig_tbl = Table(sig_rows, colWidths=[W*0.55, W*0.45])
-    sig_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    sig_tbl = Table(sig_rows, colWidths=[W*0.55, W*0.45], rowHeights=None)
+    style_cmds = [
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
         ('ALIGN', (1, 0), (1, -1), 'CENTER'),
         ('TOPPADDING', (0, 0), (-1, -1), 0),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
+    ]
+    if os.path.exists(STAMP_PATH):
+        style_cmds.append(('BOTTOMPADDING', (1, 0), (1, 0), -4))
+    sig_tbl.setStyle(TableStyle(style_cmds))
     elements.append(sig_tbl)
     elements.append(Spacer(1, 3*mm))
 

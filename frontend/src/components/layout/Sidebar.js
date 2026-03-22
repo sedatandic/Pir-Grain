@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
@@ -18,6 +18,7 @@ const mainNavItems = [
   { title: 'Accounting', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
   { title: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'user'] },
   { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
+  { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
 ];
 
 export default function Sidebar() {
@@ -41,6 +42,7 @@ export default function Sidebar() {
     { title: 'Accounting', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
     { title: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'user'] },
     { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
+    { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
   ];
 
   // Close mobile sidebar on route change

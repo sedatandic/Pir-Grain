@@ -14,6 +14,7 @@ import AccountingPage from './pages/AccountingPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import TradeDetailPage from './pages/TradeDetailPage';
+import BusinessCardsPage from './pages/BusinessCardsPage';
 import './App.css';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/commissions" element={<CommissionsPage />} />
             <Route path="/omega" element={<AccountingPage />} />
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/business-cards" element={<BusinessCardsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

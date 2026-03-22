@@ -214,8 +214,8 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     tbl = Table(data, colWidths=[col_label, col_val])
     tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('LEFTPADDING', (0, 0), (0, -1), 5),
         ('LEFTPADDING', (1, 0), (1, -1), 6),
         ('RIGHTPADDING', (0, 0), (-1, -1), 5),
@@ -224,7 +224,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     ]))
 
     buf = BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=12 * mm, bottomMargin=12 * mm, leftMargin=margin, rightMargin=margin)
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=10 * mm, bottomMargin=10 * mm, leftMargin=margin, rightMargin=margin)
     story = []
 
     # Logo top-left
@@ -232,19 +232,19 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         logo = Image(LOGO_PATH, width=38 * mm, height=17 * mm)
         logo.hAlign = 'LEFT'
         story.append(logo)
-        story.append(Spacer(1, 4 * mm))
+        story.append(Spacer(1, 2 * mm))
 
     story.append(Paragraph("Business Confirmation", s_title))
     story.append(Spacer(1, 1.5 * mm))
-    story.append(HRFlowable(width="100%", thickness=1.5, color=PIR_GREEN, spaceAfter=4 * mm))
+    story.append(HRFlowable(width="100%", thickness=1.5, color=PIR_GREEN, spaceAfter=2 * mm))
 
     story.append(tbl)
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     story.append(Paragraph("A draft contract will be shared shortly. Thank you for the business.", s_closing))
-    story.append(Spacer(1, 2 * mm))
+    story.append(Spacer(1, 1 * mm))
     story.append(Paragraph("Best Regards,", s_closing))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     # Stamp + Signature (matching Commission Invoice & Shipment Appropriation)
     STAMP_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-stamp-signature.png")
@@ -253,7 +253,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
 
     sig_rows = []
     if os.path.exists(STAMP_PATH):
-        sig_rows.append(["", Image(STAMP_PATH, width=28 * mm, height=28 * mm)])
+        sig_rows.append(["", Image(STAMP_PATH, width=24 * mm, height=24 * mm)])
     sig_rows.append(["", Paragraph("_______________________________", sig_line)])
     sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
 
@@ -268,10 +268,10 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
         style_cmds.append(('BOTTOMPADDING', (1, 0), (1, 0), -4))
     sig_tbl.setStyle(TableStyle(style_cmds))
     story.append(sig_tbl)
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 1 * mm))
 
     # Footer
-    story.append(HRFlowable(width="100%", thickness=1, color=PIR_GREEN, spaceAfter=2 * mm))
+    story.append(HRFlowable(width="100%", thickness=1, color=PIR_GREEN, spaceAfter=1 * mm))
     story.append(Paragraph(
         "PIR Grain &amp; Pulses Ltd.",
         ParagraphStyle('Foot', fontName='FreeSans', fontSize=7, textColor=GREY_TEXT, alignment=TA_CENTER)

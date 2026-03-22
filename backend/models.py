@@ -94,6 +94,7 @@ class DisportAgentCreate(BaseModel):
     name: str
     port: Optional[str] = None
     contact: Optional[str] = None
+    address: Optional[str] = None
 
 
 class CommodityCreate(BaseModel):

@@ -49,12 +49,18 @@ export default function SettingsPage() {
 
   const openAdd = (type, defaults = {}) => { setDialogType(type); setDialogForm(defaults); setDialogOpen(true); };
 
+  const toTitleCase = (str) => str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const editId = dialogForm._editId;
       const formData = { ...dialogForm };
       delete formData._editId;
+      // Apply Title Case for disport-agents name field
+      if (dialogType === 'disport-agents' && formData.name) {
+        formData.name = toTitleCase(formData.name);
+      }
       const endpoint = `/api/${dialogType}`;
       if (editId) {
         await api.put(`${endpoint}/${editId}`, formData);
@@ -159,9 +165,9 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="disport-agents">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Agent</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Disport-Agent</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell><p className="text-xs whitespace-pre-line">{a.address || '-'}</p></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', address: a.address || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
@@ -177,8 +183,8 @@ export default function SettingsPage() {
 
       {/* Generic Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewDocInput(''); }}>
-        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
-          <DialogHeader><DialogTitle>{dialogForm._editId ? 'Edit' : 'Add'} {dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
+        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
+          <DialogHeader><DialogTitle>{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription>Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
             {Object.entries(dialogForm).filter(([key]) => key !== '_editId' && key !== 'documents').map(([key, val]) => (
               key === 'type' ? (
@@ -199,6 +205,11 @@ export default function SettingsPage() {
                 <div key={key} className="space-y-2">
                   <Label>Specifications</Label>
                   <Textarea data-testid="commodity-specs-textarea" rows={6} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="Enter commodity specifications (e.g. moisture, protein, etc.)" />
+                </div>
+              ) : key === 'address' ? (
+                <div key={key} className="space-y-2">
+                  <Label>Address</Label>
+                  <Textarea data-testid="disport-agent-address-textarea" rows={8} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="Paste full address with contact details..." className="font-mono text-sm" />
                 </div>
               ) : (
                 <div key={key} className="space-y-2">

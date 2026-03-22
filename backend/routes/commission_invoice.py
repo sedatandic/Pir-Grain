@@ -84,7 +84,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     BORDER = colors.HexColor("#E0E0E0")
 
     # =====================================================
-    # HEADER: Logo left + Invoice title/number right
+    # HEADER: Logo left + Invoice No/Date right
     # =====================================================
     logo_cell = []
     if os.path.exists(LOGO_PATH):
@@ -92,17 +92,17 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     else:
         logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FallbackLogo', fontName=FB, fontSize=14, textColor=GREEN)))
 
-    title_block = [
-        Paragraph("COMMISSION INVOICE", ParagraphStyle('InvTitle', fontName=FB, fontSize=18, textColor=GREEN, alignment=TA_RIGHT, leading=22)),
-        Spacer(1, 3*mm),
+    meta_block = [
         Paragraph(f"<b>No:</b> {invoice_number}", ParagraphStyle('InvNo', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
         Paragraph(f"<b>Date:</b> {invoice_date}", ParagraphStyle('InvDt', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
     ]
 
-    header_tbl = Table([[logo_cell, title_block]], colWidths=[W*0.40, W*0.60])
-    header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    header_tbl = Table([[logo_cell, meta_block]], colWidths=[W*0.50, W*0.50])
+    header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
     elements.append(header_tbl)
-    elements.append(Spacer(1, 1*mm))
+    elements.append(Spacer(1, 4*mm))
+    elements.append(Paragraph("COMMISSION INVOICE", ParagraphStyle('InvTitle', fontName=FB, fontSize=18, textColor=GREEN, alignment=TA_CENTER, leading=22)))
+    elements.append(Spacer(1, 3*mm))
     elements.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=5*mm))
 
     # =====================================================

@@ -194,6 +194,9 @@ export default function TradeDetailPage() {
   const sendShipmentAppropriation = async () => {
     setSendingSA(true);
     try {
+      // Open PDF in new tab
+      window.open(`${process.env.REACT_APP_BACKEND_URL}/api/shipment-appropriation/${tradeId}/pdf`, '_blank');
+      // Record the send
       await api.put(`/api/trades/${tradeId}`, {
         shipmentAppropriationSentBy: trade.executionHandledBy || 'Admin',
         shipmentAppropriationSentAt: new Date().toISOString(),
@@ -203,8 +206,8 @@ export default function TradeDetailPage() {
         shipmentAppropriationSentBy: prev.executionHandledBy || 'Admin',
         shipmentAppropriationSentAt: new Date().toISOString(),
       }));
-      toast.success('Shipment Appropriation sent');
-    } catch { toast.error('Failed to send'); }
+      toast.success('Shipment Appropriation generated');
+    } catch { toast.error('Failed to generate'); }
     finally { setSendingSA(false); }
   };
 

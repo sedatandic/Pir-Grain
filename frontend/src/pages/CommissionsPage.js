@@ -68,7 +68,7 @@ export default function CommissionsPage() {
     if (filtered.length === 0) return <div className="text-center py-6 text-muted-foreground text-sm">{empty}</div>;
     return (
       <div className="overflow-x-auto border rounded-lg">
-        <Table>
+        <Table className="trade-table">
           <TableHeader><TableRow className="bg-muted/50">
             <TableHead>Contract No</TableHead><TableHead>Commodity</TableHead><TableHead>Seller</TableHead><TableHead>Buyer</TableHead>
             <TableHead>Vessel</TableHead><TableHead className="text-right">B/L Qty</TableHead><TableHead>Load Port</TableHead><TableHead>Disch Port</TableHead>

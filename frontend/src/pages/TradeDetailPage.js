@@ -410,15 +410,15 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Commodity</span><span className="font-medium">{trade.commodityDisplayName || commodityName}</span></div>
                 {trade.commoditySpecs && (<>
                 <Separator />
-                <div>
-                  <span className="text-muted-foreground text-xs">Commodity Specs.</span>
-                  <pre className="whitespace-pre-wrap text-xs font-mono bg-muted/30 rounded-md p-2 mt-1">{trade.commoditySpecs}</pre>
+                <div className="flex justify-between gap-4">
+                  <span className="text-muted-foreground shrink-0">Specifications</span>
+                  <span className="font-medium text-right whitespace-pre-line">{trade.commoditySpecs}</span>
                 </div>
                 </>)}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Unit Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
               </CardContent>
             </Card>
             <Card>
@@ -448,7 +448,7 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Origin</span><span className="font-medium">{trade.originName || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Shipment Window</span><span className="font-medium">{trade.shipmentWindowStart && trade.shipmentWindowEnd ? `${(() => { try { const m = trade.shipmentWindowStart.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return trade.shipmentWindowStart; return format(parseISO(trade.shipmentWindowStart), 'dd/MM/yyyy'); } catch { return trade.shipmentWindowStart; }})() } - ${(() => { try { const m = trade.shipmentWindowEnd.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return trade.shipmentWindowEnd; return format(parseISO(trade.shipmentWindowEnd), 'dd/MM/yyyy'); } catch { return trade.shipmentWindowEnd; }})()}` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Shipment Period</span><span className="font-medium text-right">{trade.shipmentWindowStart && trade.shipmentWindowEnd ? <>{(() => { try { const m = trade.shipmentWindowStart.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return trade.shipmentWindowStart; return format(parseISO(trade.shipmentWindowStart), 'dd/MM/yyyy'); } catch { return trade.shipmentWindowStart; }})()}<br />{(() => { try { const m = trade.shipmentWindowEnd.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return trade.shipmentWindowEnd; return format(parseISO(trade.shipmentWindowEnd), 'dd/MM/yyyy'); } catch { return trade.shipmentWindowEnd; }})()}</> : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Vessel</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
                 <Separator />

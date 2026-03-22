@@ -96,7 +96,7 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     broker = partners_col.find_one({"_id": ObjectId(trade["brokerId"])}) if trade.get("brokerId") else None
 
     contract_date = fmt_date_slash(trade.get("contractDate"))
-    contract_no = trade.get("pirContractNumber") or trade.get("contractNumber") or "-"
+    contract_no = trade.get("pirContractNumber") or trade.get("contractNumber") or trade.get("referenceNumber") or "-"
     commodity = trade.get("commodityName") or "-"
     origin = trade.get("originName") or "-"
     quantity = trade.get("quantity") or 0

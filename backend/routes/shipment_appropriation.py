@@ -104,7 +104,7 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
             parts.append(country)
         buyer_addr_line = " / ".join(parts) if parts else ""
 
-    contract_no = trade.get("pirContractNumber") or trade.get("contractNumber") or "-"
+    contract_no = trade.get("pirContractNumber") or trade.get("contractNumber") or trade.get("referenceNumber") or "-"
     contract_date = fmt_date_dot(trade.get("contractDate"))
     quantity = trade.get("quantity") or 0
     commodity = trade.get("commodityName") or "-"

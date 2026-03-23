@@ -169,9 +169,9 @@ export default function SettingsPage() {
             </TabsContent>
 
             <TabsContent value="disport-agents">
-              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Disport-Agent</Button></div>
-              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
-                {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell><p className="text-xs whitespace-pre-line">{a.address || '-'}</p></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', address: a.address || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '', email: '', tel: '', whatsapp: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Disport-Agent</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead>Email</TableHead><TableHead>Tel</TableHead><TableHead>WhatsApp</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {disportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell>{a.email ? <a href={`mailto:${a.email}`} className="text-blue-600 hover:underline text-xs">{a.email}</a> : '-'}</TableCell><TableCell className="text-xs">{a.tel || '-'}</TableCell><TableCell className="text-xs">{a.whatsapp || '-'}</TableCell><TableCell><p className="text-xs whitespace-pre-line">{a.address || '-'}</p></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('disport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', email: a.email || '', tel: a.tel || '', whatsapp: a.whatsapp || '', address: a.address || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('disport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
               </TableBody></Table></div>
             </TabsContent>
 
@@ -234,7 +234,22 @@ export default function SettingsPage() {
               ) : key === 'address' ? (
                 <div key={key} className="space-y-2">
                   <Label>Address</Label>
-                  <Textarea data-testid="disport-agent-address-textarea" rows={8} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="Paste full address with contact details..." className="font-mono text-sm" />
+                  <Textarea data-testid="disport-agent-address-textarea" rows={4} value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="Full address..." className="text-sm" />
+                </div>
+              ) : key === 'email' ? (
+                <div key={key} className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="e.g. info@company.com" />
+                </div>
+              ) : key === 'tel' ? (
+                <div key={key} className="space-y-2">
+                  <Label>Tel</Label>
+                  <Input value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="e.g. +90 312 000 0000" />
+                </div>
+              ) : key === 'whatsapp' ? (
+                <div key={key} className="space-y-2">
+                  <Label>WhatsApp</Label>
+                  <Input value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="e.g. +90 530 000 0000" />
                 </div>
               ) : (
                 <div key={key} className="space-y-2">

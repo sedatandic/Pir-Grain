@@ -285,7 +285,7 @@ export default function PartnersPage({ filterType }) {
                           const cur = Array.isArray(form.type) ? [...form.type] : [form.type];
                           if (checked) {
                             const next = cur.filter(t => t !== key);
-                            setForm({...form, type: next.length > 0 ? next : cur});
+                            setForm({...form, type: next});
                           } else {
                             setForm({...form, type: [...cur, key]});
                           }

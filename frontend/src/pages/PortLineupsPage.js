@@ -339,8 +339,8 @@ export default function PortLineupsPage() {
                               <td className="px-3 py-2 text-right font-mono text-muted-foreground whitespace-nowrap">
                                 {v.blTonnage != null ? v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '-'}
                               </td>
-                              <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.buyer}>{v.buyer || '-'}</td>
-                              <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.seller}>{v.seller || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground" title={v.seller}>{v.seller || '-'}</td>
                             </tr>
                           );
                         });

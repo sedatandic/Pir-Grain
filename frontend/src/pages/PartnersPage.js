@@ -229,6 +229,7 @@ export default function PartnersPage({ filterType }) {
                   <TableRow className="bg-muted/50">
                     <TableHead>Company</TableHead>
                     <TableHead>Company Code</TableHead>
+                    <TableHead>Address</TableHead>
                     <TableHead>City</TableHead>
                     <TableHead>Country</TableHead>
                     <TableHead>Type</TableHead>
@@ -237,13 +238,14 @@ export default function PartnersPage({ filterType }) {
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
                   ) : filtered.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
                         <div className="font-medium">{p.companyName}</div>
                       </TableCell>
                       <TableCell className="text-sm">{p.companyCode || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.address || '-'}</TableCell>
                       <TableCell className="text-sm">{p.city || '-'}</TableCell>
                       <TableCell className="text-sm">{p.country || '-'}</TableCell>
                       <TableCell><div className="flex flex-wrap gap-1">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>

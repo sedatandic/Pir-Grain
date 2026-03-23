@@ -195,20 +195,74 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         closing = "A draft contract will be shared shortly. Thank you for the business."
 
     elif doc_name == "Shipment Appropriation":
-        rows = "".join([
-            row_html("CONTRACT NO", contract_label),
-            row_html("PIR GRAIN REF. NO", ref),
-            row_html("SELLER", seller),
-            row_html("BUYER", buyer),
-            row_html("COMMODITY", commodity_display),
-            row_html("B/L QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
-            row_html("VESSEL", vessel),
-            row_html("B/L NUMBER", trade.get("blNumber") or "-"),
-            row_html("B/L DATE", bl_date),
-            row_html("LOADING PORT", load_port_full),
-            row_html("DISCHARGE PORT", discharge_port_full),
+        # Get buyer address for "To:" line
+        buyer_doc = None
+        if trade.get("buyerId"):
+            try:
+                buyer_doc = partners_col.find_one({"_id": ObjectId(trade["buyerId"])})
+            except:
+                pass
+        buyer_addr_parts = []
+        if buyer_doc:
+            if buyer_doc.get("address"): buyer_addr_parts.append(buyer_doc["address"])
+            city_c = buyer_doc.get("city", "")
+            country_c = buyer_doc.get("country", "")
+            if city_c and country_c: buyer_addr_parts.append(f"{city_c} - {country_c}")
+            elif city_c: buyer_addr_parts.append(city_c)
+            elif country_c: buyer_addr_parts.append(country_c)
+        buyer_addr = " / ".join(buyer_addr_parts) if buyer_addr_parts else ""
+        
+        sa_date_str = bl_date if bl_date != "-" else formatted_date
+        invoice_value = (bl_quantity or quantity or 0) * (float(price) if price else 0)
+        bl_number = trade.get("blNumber") or "-"
+        
+        # Build SA email matching PDF layout
+        sa_rows = "".join([
+            f'<tr><td style="padding:8px 12px;background:#E8F5E9;font-weight:600;width:160px;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">B/L No.</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{bl_number}</td>'
+            f'<td style="padding:8px 12px;background:#E8F5E9;font-weight:600;width:160px;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">B/L Date</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{sa_date_str}</td></tr>',
+            f'<tr><td style="padding:8px 12px;background:#E8F5E9;font-weight:600;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">B/L Quantity</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{fmt_qty(bl_quantity)} MT Gross/Nett</td>'
+            f'<td style="padding:8px 12px;background:#E8F5E9;font-weight:600;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">Vessel</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{vessel}</td></tr>',
+            f'<tr><td style="padding:8px 12px;background:#E8F5E9;font-weight:600;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">Port of Loading</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{load_port_full}</td>'
+            f'<td style="padding:8px 12px;background:#E8F5E9;font-weight:600;color:#1B7A3D;border:1px solid #e0e0e0;font-size:13px;">Port of Discharge</td><td style="padding:8px 12px;border:1px solid #e0e0e0;font-weight:700;font-size:13px;">{discharge_port_full}</td></tr>',
         ])
-        closing = "Please find the shipment details above for your reference."
+        
+        # Custom SA body matching PDF
+        return f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
+        <div style="background-color: #1B7A3D; padding: 20px; text-align: center;">
+            {logo_html if logo_html else '<h1 style="color: #ffffff; margin: 0; font-size: 22px;">PIR Grain &amp; Pulses Ltd</h1>'}
+        </div>
+        <div style="padding: 30px 28px; background-color: #fafaf8;">
+            <h2 style="text-align:center;color:#1B7A3D;font-size:18px;margin:0 0 16px 0;border-bottom:2px solid #1B7A3D;padding-bottom:8px;">Shipment Appropriation</h2>
+            
+            <table style="width:100%;margin-bottom:16px;font-size:14px;"><tr>
+                <td style="color:#333;"><strong>To:</strong> {buyer}<br/>{f'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{buyer_addr}' if buyer_addr else ''}</td>
+                <td style="text-align:right;color:#333;"><strong>Date:</strong> {sa_date_str}</td>
+            </tr></table>
+            
+            <p style="font-size:14px;color:#333;"><strong>Ref:</strong> Appropriation of Contract No. <strong>{contract_label}</strong> dated <strong>{formatted_date}</strong> covering <strong>{fmt_qty(quantity)} MT</strong> of <strong>{commodity_display}</strong>.</p>
+            
+            <p style="font-size:14px;color:#333;">We hereby appropriate on behalf of Seller, under the usual reserves, in full fulfilment of the above-mentioned Contract No. <strong>{contract_label}</strong> dated <strong>{formatted_date}</strong> the quantity of <strong>{fmt_qty(bl_quantity)} MT Gross/Nett</strong>.</p>
+            
+            <p style="font-size:14px;color:#333;"><strong>{commodity_display}</strong>, in bulk, shipped as per <strong>"{vessel}"</strong> under the following details:</p>
+            
+            <table style="width:100%;border-collapse:collapse;margin:16px 0;border:1px solid #1B7A3D;border-radius:4px;">
+                {sa_rows}
+            </table>
+            
+            <table style="width:100%;margin:16px 0;"><tr>
+                <td style="text-align:right;font-size:14px;color:#333;font-weight:600;">Invoice Value:</td>
+                <td style="text-align:right;width:200px;font-size:16px;font-weight:700;color:#1B7A3D;background:#E8F5E9;padding:8px 12px;border:1px solid #D4E8DA;border-radius:4px;">{currency} {invoice_value:,.2f}</td>
+            </tr></table>
+            
+            <p style="font-size:14px;color:#555;">Please find attached the set of B/Ls. We will revert with the balance documents as soon as possible.</p>
+            <p style="font-size:14px;color:#333;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
+        </div>
+        <div style="background-color: #1B7A3D; padding: 12px; text-align: center;">
+            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
+        </div>
+    </div>
+    """
 
     elif doc_name == "Commission Invoice":
         commission_total = brokerage_per_mt * (bl_quantity or quantity or 0)

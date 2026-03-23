@@ -27,6 +27,37 @@ function calcDaysSince(arrivalDateStr, reportDateStr) {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+const OP_MAP = { 'TAHLİYE': 'DISCHARGE', 'TAHLIYE': 'DISCHARGE', 'YÜKLEME': 'LOADING', 'YUKLEME': 'LOADING' };
+
+const CARGO_MAP = [
+  { keys: ['AYÇİÇEK TOHUMU KÜSPESİ', 'AYÇEKİRDEĞİ KÜSPESİ', 'AYCICEK TOHUMU KUSPESI', 'AYCEKIRDEGI KUSPESI'], en: 'SUNFLOWER MEAL PELLETS' },
+  { keys: ['BUĞDAY KEPEĞİ', 'BUGDAY KEPEGI', 'BUGDAY KEPEĞİ'], en: 'WHEAT BRAN PELLETS' },
+  { keys: ['SOYA FASÜLYESİ KÜSPESİ', 'SOYA FASULYESI KUSPESI'], en: 'SOYBEAN MEAL' },
+  { keys: ['SOYA FASÜLYESİ', 'SOYA FASULYESI'], en: 'SOYBEANS' },
+  { keys: ['MISIR GLUTENI', 'MISIR GLUTENİ'], en: 'CORN GLUTEN MEAL' },
+  { keys: ['AYÇİÇEK TOHUMU', 'AYCICEK TOHUMU', 'AYÇEKİRDEĞİ TOHUMU'], en: 'SUNFLOWER SEEDS' },
+  { keys: ['MELAS (ŞEKER PEKMEZİ)', 'MELAS'], en: 'MOLASSES' },
+  { keys: ['AYÇİÇEK YAĞI', 'AYCICEK YAGI'], en: 'SUNFLOWER OIL' },
+  { keys: ['KOLZA TOHUMU KÜSPESİ', 'KOLZA TOHUMU KUSPESI'], en: 'CANOLA MEAL' },
+  { keys: ['PRİNÇ KEPEĞİ', 'PRINC KEPEGI'], en: 'RICE BRAN' },
+  { keys: ['BUĞDAY', 'BUGDAY'], en: 'WHEAT' },
+  { keys: ['MISIR'], en: 'CORN' },
+];
+
+function translateOp(op) {
+  if (!op) return '-';
+  return OP_MAP[op.toUpperCase()] || op;
+}
+
+function translateCargo(cargo) {
+  if (!cargo) return '-';
+  const upper = cargo.toUpperCase().trim();
+  for (const entry of CARGO_MAP) {
+    if (entry.keys.some(k => k.toUpperCase() === upper)) return entry.en;
+  }
+  return cargo;
+}
+
 export default function PortLineupsPage() {
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
@@ -345,10 +376,10 @@ export default function PortLineupsPage() {
                                   </span>
                                 ) : '-'}
                               </td>
-                              <td className="px-3 py-2 text-muted-foreground text-xs">{v.operation || '-'}</td>
-                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.cargo || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground text-xs">{translateOp(v.operation)}</td>
+                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</td>
                               <td className="px-3 py-2 text-right font-mono text-muted-foreground whitespace-nowrap">
-                                {v.blTonnage != null ? v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '-'}
+                                {v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}
                               </td>
                               <td className="px-3 py-2 text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</td>
                               <td className="px-3 py-2 text-muted-foreground" title={v.seller}>{v.seller || '-'}</td>
@@ -364,7 +395,7 @@ export default function PortLineupsPage() {
               {filteredVessels.length > 0 && (
                 <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground" data-testid="table-footer-stats">
                   <span>{filteredVessels.length} records ({vesselSummary.length} unique vessels)</span>
-                  <span>Total B/L: {filteredVessels.reduce((sum, v) => sum + (v.blTonnage || 0), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} MT</span>
+                  <span>Total B/L: {filteredVessels.reduce((sum, v) => sum + (v.blTonnage || 0), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS</span>
                 </div>
               )}
             </div>

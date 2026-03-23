@@ -304,7 +304,7 @@ export default function PortLineupsPage() {
           {/* Vessel table */}
           {!loading && currentPortData && (
             <div className="overflow-x-auto border rounded-lg" data-testid="vessel-table-container">
-              <Table data-testid="vessel-table">
+              <Table className="trade-table" data-testid="vessel-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="text-center">Vessel</TableHead>

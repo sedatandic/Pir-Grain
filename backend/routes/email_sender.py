@@ -18,7 +18,11 @@ router = APIRouter(prefix="/api", tags=["email"])
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
 SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <onboarding@resend.dev>")
-CC_EMAILS = ["melisa.karagoz@pirgrain.com", "salih.karagoz@pirgrain.com"]
+def get_cc_emails():
+    """Load CC emails from admin users in the database."""
+    from database import db
+    users = db.users.find({"role": {"$in": ["admin"]}})
+    return [u["email"] for u in users if u.get("email")]
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
 LOGO_B64 = ""
@@ -407,7 +411,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Send to seller (separate email - no buyer info in CC)
     if seller_email:
         seller_body = build_email_body(trade, doc_name, seller_name, "seller")
-        seller_cc = [e for e in CC_EMAILS if e != seller_email]
+        cc_emails = get_cc_emails()
+        seller_cc = [e for e in cc_emails if e != seller_email]
         try:
             params = {
                 "from": SENDER_EMAIL,
@@ -426,7 +431,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Send to buyer (separate email - no seller info in CC)
     if buyer_email:
         buyer_body = build_email_body(trade, doc_name, buyer_name, "buyer")
-        buyer_cc = [e for e in CC_EMAILS if e != buyer_email]
+        cc_emails = get_cc_emails()
+        buyer_cc = [e for e in cc_emails if e != buyer_email]
         try:
             params = {
                 "from": SENDER_EMAIL,
@@ -448,14 +454,14 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
         try:
             params = {
                 "from": SENDER_EMAIL,
-                "to": CC_EMAILS,
+                "to": get_cc_emails(),
                 "subject": subject,
                 "html": body,
             }
             if attachment:
                 params["attachments"] = [attachment]
             await asyncio.to_thread(resend.Emails.send, params)
-            sent_to.append(f"Internal: {', '.join(CC_EMAILS)}")
+            sent_to.append(f"Internal: {', '.join(get_cc_emails())}")
         except Exception as e:
             errors.append(f"Internal: {str(e)}")
 

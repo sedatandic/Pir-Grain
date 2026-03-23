@@ -240,6 +240,19 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         vessel_flag = (vessel_doc or {}).get("flag") or trade.get("vesselFlag") or "-"
         vessel_built = (vessel_doc or {}).get("builtYear") or trade.get("vesselBuilt") or "-"
         surveyor_name = trade.get("surveyorName") or "-"
+        # Look up load port agent full details
+        lpa_name = trade.get("loadportAgent") or ""
+        lpa_details = "-"
+        if lpa_name:
+            lpa_doc = db.loadport_agents.find_one({"name": lpa_name})
+            if lpa_doc:
+                parts = [f"<strong>{lpa_doc.get('name', '')}</strong>"]
+                if lpa_doc.get('tel'): parts.append(f"Tel: {lpa_doc['tel']}")
+                if lpa_doc.get('email'): parts.append(f"Email: {lpa_doc['email']}")
+                if lpa_doc.get('address'): parts.append(lpa_doc['address'])
+                lpa_details = "<br/>".join(parts)
+            else:
+                lpa_details = lpa_name
         rows = "".join([
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
@@ -250,7 +263,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("FLAG", str(vessel_flag)),
             row_html("BUILT", str(vessel_built)),
             row_html("LOADING PORT", load_port_full),
-            row_html("LOAD PORT AGENT", trade.get("loadportAgent") or "-"),
+            row_html("LOAD PORT AGENT", lpa_details),
             row_html("SELLER SURVEY", surveyor_name),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),

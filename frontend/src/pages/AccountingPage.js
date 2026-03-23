@@ -92,7 +92,7 @@ export default function AccountingPage() {
   const [sellers, setSellers] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
-  const [filterMonth, setFilterMonth] = useState('all');
+  const [filterMonth, setFilterMonth] = useState(String(new Date().getMonth() + 1));
 
   const fetchData = async () => {
     try {
@@ -144,7 +144,7 @@ export default function AccountingPage() {
   }, [bankStatements, filterYear, filterMonth]);
 
   const availableYears = useMemo(() => {
-    const years = new Set();
+    const years = new Set(['2024', '2025', '2026']);
     invoices.forEach(i => { const y = getInvoiceYM(i).y; if (y) years.add(y); });
     bankStatements.forEach(s => { if (s.year) years.add(String(s.year)); });
     return Array.from(years).sort().reverse();
@@ -152,8 +152,9 @@ export default function AccountingPage() {
 
   const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  const hasActiveTimeFilter = filterYear !== new Date().getFullYear().toString() || filterMonth !== 'all';
-  const clearTimeFilters = () => { setFilterYear(new Date().getFullYear().toString()); setFilterMonth('all'); };
+  const currentMonth = String(new Date().getMonth() + 1);
+  const hasActiveTimeFilter = filterYear !== new Date().getFullYear().toString() || filterMonth !== currentMonth;
+  const clearTimeFilters = () => { setFilterYear(new Date().getFullYear().toString()); setFilterMonth(currentMonth); };
 
   const stats = {
     inTotal: filteredIncoming.reduce((s, i) => s + (i.amount || 0), 0),

@@ -198,14 +198,15 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         rows = "".join([
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
+            row_html("SELLER", seller),
+            row_html("BUYER", buyer),
             row_html("COMMODITY", commodity_display),
-            row_html("QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
+            row_html("B/L QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
             row_html("VESSEL", vessel),
+            row_html("B/L NUMBER", trade.get("blNumber") or "-"),
             row_html("B/L DATE", bl_date),
             row_html("LOADING PORT", load_port_full),
             row_html("DISCHARGE PORT", discharge_port_full),
-            row_html("SELLER", seller),
-            row_html("BUYER", buyer),
         ])
         closing = "Please find the shipment details above for your reference."
 
@@ -215,9 +216,9 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("INVOICE NO", f"COMM-{contract_label}"),
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
-            row_html("COMMODITY", commodity_display),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),
+            row_html("COMMODITY", commodity_display),
             row_html("B/L QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
             row_html("BROKERAGE RATE", f"{brokerage_per_mt} {brokerage_currency}/MT"),
             row_html("COMMISSION AMOUNT", f"<strong>{fmt_price(commission_total, brokerage_currency)}</strong>"),
@@ -260,6 +261,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         rows = "".join([
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
+            row_html("SELLER", seller),
+            row_html("BUYER", buyer),
             row_html("COMMODITY", commodity_with_crop),
             row_html("QUANTITY", f"{fmt_qty(quantity)} MT"),
             row_html("VESSEL NAME", f"<strong>{vessel}</strong>"),
@@ -269,8 +272,6 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("LOADING PORT", load_port_full),
             row_html("LOAD PORT AGENT", lpa_details),
             row_html("SELLER SURVEY", surveyor_name),
-            row_html("SELLER", seller),
-            row_html("BUYER", buyer),
         ])
         closing = "Please confirm acceptance of the above vessel nomination."
 

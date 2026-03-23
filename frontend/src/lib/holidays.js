@@ -1,5 +1,5 @@
-// Public holidays for Turkey, Russia, Ukraine
-// Format: { date: 'MM-DD', title, country: 'TR'|'RU'|'UA' }
+// Public holidays for Turkey, Russia, Ukraine, USA
+// Format: { date: 'MM-DD', title, country: 'TR'|'RU'|'UA'|'US' }
 
 const HOLIDAYS = [
   // TURKEY (TR)
@@ -55,13 +55,33 @@ const HOLIDAYS = [
   { date: '08-24', title: 'Independence Day', country: 'UA' },
   { date: '10-14', title: 'Defenders Day', country: 'UA' },
   { date: '12-25', title: 'Christmas Day', country: 'UA' },
+
+  // USA (US)
+  { date: '01-01', title: 'New Year\'s Day', country: 'US' },
+  { date: '01-20', title: 'Martin Luther King Jr. Day', country: 'US', year: 2025 },
+  { date: '01-19', title: 'Martin Luther King Jr. Day', country: 'US', year: 2026 },
+  { date: '02-17', title: 'Presidents\' Day', country: 'US', year: 2025 },
+  { date: '02-16', title: 'Presidents\' Day', country: 'US', year: 2026 },
+  { date: '05-26', title: 'Memorial Day', country: 'US', year: 2025 },
+  { date: '05-25', title: 'Memorial Day', country: 'US', year: 2026 },
+  { date: '06-19', title: 'Juneteenth', country: 'US' },
+  { date: '07-04', title: 'Independence Day', country: 'US' },
+  { date: '09-01', title: 'Labor Day', country: 'US', year: 2025 },
+  { date: '09-07', title: 'Labor Day', country: 'US', year: 2026 },
+  { date: '10-13', title: 'Columbus Day', country: 'US', year: 2025 },
+  { date: '10-12', title: 'Columbus Day', country: 'US', year: 2026 },
+  { date: '11-11', title: 'Veterans Day', country: 'US' },
+  { date: '11-27', title: 'Thanksgiving Day', country: 'US', year: 2025 },
+  { date: '11-26', title: 'Thanksgiving Day', country: 'US', year: 2026 },
+  { date: '12-25', title: 'Christmas Day', country: 'US' },
 ];
 
-const COUNTRY_FLAGS = { TR: '🇹🇷', RU: '🇷🇺', UA: '🇺🇦' };
+const COUNTRY_FLAGS = { TR: '\u{1F1F9}\u{1F1F7}', RU: '\u{1F1F7}\u{1F1FA}', UA: '\u{1F1FA}\u{1F1E6}', US: '\u{1F1FA}\u{1F1F8}' };
 const COUNTRY_COLORS = { 
   TR: 'bg-red-50 text-red-700 border-red-200', 
   RU: 'bg-blue-50 text-blue-700 border-blue-200', 
-  UA: 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+  UA: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  US: 'bg-indigo-50 text-indigo-700 border-indigo-200',
 };
 
 export function getHolidaysForMonth(year, month) {

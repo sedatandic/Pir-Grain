@@ -560,10 +560,10 @@ export default function TradeDetailPage() {
                   </div>
                 ) : (
                   <Button onClick={sendBusinessConfirmation} disabled={sendingBC} data-testid="send-bc-btn">
-                    {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Generate Business Confirmation
+                    {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}Generate Business Confirmation
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openEmailDialog('business_confirmation', 'Business Confirmation')} data-testid="email-bc-btn">
+                <Button variant="outline" onClick={() => openEmailDialog('business_confirmation', 'Business Confirmation')} data-testid="email-bc-btn">
                   <Send className="h-4 w-4 mr-1" />Email Business Confirmation
                 </Button>
               </CardContent>

@@ -213,7 +213,7 @@ export default function TradesPage() {
     }, [open]);
 
     const sorted = useMemo(() => {
-      const list = vessels.map(v => v.name).filter(Boolean).sort((a, b) => a.localeCompare(b, 'tr'));
+      const list = [...new Set(vessels.map(v => v.name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'tr'));
       if (!q) return list;
       return list.filter(n => n.toLowerCase().includes(q.toLowerCase()));
     }, [q]);

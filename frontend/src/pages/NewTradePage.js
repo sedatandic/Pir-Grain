@@ -103,7 +103,7 @@ export default function NewTradePage() {
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '5000', tolerance: '10', cropYear: new Date().getFullYear().toString(),
-    deliveryTerm: '', pricePerMT: '', currency: 'USD',
+    deliveryTerm: 'CIF', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',

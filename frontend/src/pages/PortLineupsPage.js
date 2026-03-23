@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { normalizeTR } from '../lib/utils-tr';
 import api from '../lib/api';
 
 const STATUS_COLORS = {
@@ -156,15 +157,15 @@ export default function PortLineupsPage() {
 
   const filteredVessels = useMemo(() => {
     if (!currentPortData) return [];
-    const term = searchTerm.toLowerCase();
+    const term = normalizeTR(searchTerm);
     let result = currentPortData.vessels;
     if (term) {
       result = result.filter(v =>
-        v.vesselName?.toLowerCase().includes(term) ||
-        v.loadingPort?.toLowerCase().includes(term) ||
-        v.cargo?.toLowerCase().includes(term) ||
-        v.buyer?.toLowerCase().includes(term) ||
-        v.seller?.toLowerCase().includes(term)
+        normalizeTR(v.vesselName).includes(term) ||
+        normalizeTR(v.loadingPort).includes(term) ||
+        normalizeTR(v.cargo).includes(term) ||
+        normalizeTR(v.buyer).includes(term) ||
+        normalizeTR(v.seller).includes(term)
       );
     }
     if (filterLoadPort !== 'all') result = result.filter(v => v.loadingPort?.trim() === filterLoadPort);

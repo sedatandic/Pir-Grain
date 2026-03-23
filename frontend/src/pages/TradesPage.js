@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 import { TRADE_STATUS_CONFIG, STATUS_OPTIONS, COMPLETED_STATUSES, WASHOUT_STATUSES, CANCELLED_STATUSES } from '../lib/constants';
+import { normalizeTR } from '../lib/utils-tr';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -137,13 +138,13 @@ export default function TradesPage() {
     if (filterCoBroker !== 'all') result = result.filter(t => t.coBrokerId === filterCoBroker);
     if (filterCountry !== 'all') result = result.filter(t => t.loadingPortCountry === filterCountry || t.dischargePortCountry === filterCountry);
     if (search) {
-      const q = search.toLowerCase();
+      const q = normalizeTR(search);
       result = result.filter(t =>
-        (t.referenceNumber || '').toLowerCase().includes(q) ||
-        (t.sellerName || '').toLowerCase().includes(q) ||
-        (t.buyerName || '').toLowerCase().includes(q) ||
-        (t.commodityName || '').toLowerCase().includes(q) ||
-        (t.vesselName || '').toLowerCase().includes(q)
+        normalizeTR(t.referenceNumber).includes(q) ||
+        normalizeTR(t.sellerName).includes(q) ||
+        normalizeTR(t.buyerName).includes(q) ||
+        normalizeTR(t.commodityName).includes(q) ||
+        normalizeTR(t.vesselName).includes(q)
       );
     }
     return result;

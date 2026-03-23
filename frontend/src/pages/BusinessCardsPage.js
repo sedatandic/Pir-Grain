@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import api from '../lib/api';
+import { normalizeTR } from '../lib/utils-tr';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -29,14 +30,14 @@ export default function BusinessCardsPage() {
   useEffect(() => { fetchCards(); }, []);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = normalizeTR(search);
     if (!q) return cards;
     return cards.filter(c =>
-      (c.name||'').toLowerCase().includes(q) || (c.company||'').toLowerCase().includes(q) ||
-      (c.email||'').toLowerCase().includes(q) || (c.keywords||[]).some(k => k.toLowerCase().includes(q)) ||
-      (c.country||'').toLowerCase().includes(q) || (c.city||'').toLowerCase().includes(q) ||
-      (c.title||'').toLowerCase().includes(q) || (c.mobile||'').toLowerCase().includes(q) ||
-      (c.website||'').toLowerCase().includes(q) || (c.notes||'').toLowerCase().includes(q)
+      normalizeTR(c.name).includes(q) || normalizeTR(c.company).includes(q) ||
+      normalizeTR(c.email).includes(q) || (c.keywords||[]).some(k => normalizeTR(k).includes(q)) ||
+      normalizeTR(c.country).includes(q) || normalizeTR(c.city).includes(q) ||
+      normalizeTR(c.title).includes(q) || normalizeTR(c.mobile).includes(q) ||
+      normalizeTR(c.website).includes(q) || normalizeTR(c.notes).includes(q)
     );
   }, [cards, search]);
 

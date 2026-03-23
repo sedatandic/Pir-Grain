@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe, UserPlus, Briefcase, X } from 'lucide-react';
+import { normalizeTR } from '../lib/utils-tr';
 import { toast } from 'sonner';
 import { Separator } from '../components/ui/separator';
 
@@ -124,8 +125,8 @@ export default function PartnersPage({ filterType }) {
       return types.includes(tab);
     });
     if (search) {
-      const q = search.toLowerCase();
-      list = list.filter(p => p.companyName?.toLowerCase().includes(q) || p.contactPerson?.toLowerCase().includes(q) || p.email?.toLowerCase().includes(q) || p.companyCode?.toLowerCase().includes(q));
+      const q = normalizeTR(search);
+      list = list.filter(p => normalizeTR(p.companyName).includes(q) || normalizeTR(p.contactPerson).includes(q) || normalizeTR(p.email).includes(q) || normalizeTR(p.companyCode).includes(q));
     }
     return list;
   }, [partners, tab, search]);

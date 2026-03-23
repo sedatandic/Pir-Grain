@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import api from '../lib/api';
 
 const STATUS_COLORS = {
@@ -302,95 +303,92 @@ export default function PortLineupsPage() {
 
           {/* Vessel table */}
           {!loading && currentPortData && (
-            <div className="border border-border rounded-lg overflow-hidden bg-card" data-testid="vessel-table-container">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm" data-testid="vessel-table">
-                  <thead>
-                    <tr className="bg-muted/50 border-b border-border">
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Vessel</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Loading Port</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Arrival</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Days</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Status</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Op.</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Cargo</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">B/L Tonnage</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Buyer</th>
-                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Seller</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredVessels.length === 0 ? (
-                      <tr>
-                        <td colSpan={10} className="text-center py-8 text-muted-foreground">
-                          {searchTerm ? 'No vessels match your search' : 'No vessels in this port'}
-                        </td>
-                      </tr>
-                    ) : (
-                      (() => {
-                        // Build vessel group index for alternating colors
-                        let vesselColorIndex = 0;
-                        let lastVessel = null;
-                        const vesselGroupMap = {};
-                        filteredVessels.forEach(v => {
-                          const name = v.vesselName || '(unnamed)';
-                          if (name !== lastVessel) {
-                            if (lastVessel !== null) vesselColorIndex++;
-                            lastVessel = name;
-                          }
-                          if (!(name in vesselGroupMap)) vesselGroupMap[name] = vesselColorIndex;
-                        });
+            <div className="overflow-x-auto border rounded-lg" data-testid="vessel-table-container">
+              <Table data-testid="vessel-table">
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="text-center">Vessel</TableHead>
+                    <TableHead className="text-center">Loading Port</TableHead>
+                    <TableHead className="text-center">Arrival</TableHead>
+                    <TableHead className="text-center">Days</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Op.</TableHead>
+                    <TableHead className="text-center">Cargo</TableHead>
+                    <TableHead className="text-center">B/L Tonnage</TableHead>
+                    <TableHead className="text-center">Buyer</TableHead>
+                    <TableHead className="text-center">Seller</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredVessels.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                        {searchTerm ? 'No vessels match your search' : 'No vessels in this port'}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    (() => {
+                      let vesselColorIndex = 0;
+                      let lastVessel = null;
+                      const vesselGroupMap = {};
+                      filteredVessels.forEach(v => {
+                        const name = v.vesselName || '(unnamed)';
+                        if (name !== lastVessel) {
+                          if (lastVessel !== null) vesselColorIndex++;
+                          lastVessel = name;
+                        }
+                        if (!(name in vesselGroupMap)) vesselGroupMap[name] = vesselColorIndex;
+                      });
 
-                        return filteredVessels.map((v, i) => {
-                          const days = calcDaysSince(v.arrivalDate, selectedDate);
-                          const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
-                          const groupIdx = vesselGroupMap[v.vesselName || '(unnamed)'] || 0;
-                          const isAlt = groupIdx % 2 === 1;
-                          return (
-                            <tr
-                              key={i}
-                              className={`border-b border-border/50 hover:bg-muted/40 transition-colors ${isAlt ? 'bg-[#f0f7f1]' : ''}`}
-                              data-testid={`vessel-row-${i}`}
-                            >
-                              <td className="px-3 py-2 text-center font-medium text-foreground whitespace-nowrap" data-testid={`vessel-name-${i}`}>
-                                {v.vesselName || '-'}
-                              </td>
-                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</td>
-                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</td>
-                              <td className="px-3 py-2 text-center" data-testid={`vessel-days-${i}`}>
-                                {days !== null ? (
-                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
-                                    days > 10 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                    : days > 5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                                  }`}>
-                                    <Clock className="w-3 h-3" />
-                                    {days}
-                                  </span>
-                                ) : '-'}
-                              </td>
-                              <td className="px-3 py-2 text-center">
-                                {v.status ? (
-                                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
-                                    {v.status}
-                                  </span>
-                                ) : '-'}
-                              </td>
-                              <td className="px-3 py-2 text-center text-muted-foreground text-xs">{translateOp(v.operation)}</td>
-                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</td>
-                              <td className="px-3 py-2 text-center font-mono text-muted-foreground whitespace-nowrap">
-                                {v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}
-                              </td>
-                              <td className="px-3 py-2 text-center text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</td>
-                              <td className="px-3 py-2 text-center text-muted-foreground" title={v.seller}>{v.seller || '-'}</td>
-                            </tr>
-                          );
-                        });
-                      })()
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      return filteredVessels.map((v, i) => {
+                        const days = calcDaysSince(v.arrivalDate, selectedDate);
+                        const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
+                        const groupIdx = vesselGroupMap[v.vesselName || '(unnamed)'] || 0;
+                        const isAlt = groupIdx % 2 === 1;
+                        return (
+                          <TableRow
+                            key={i}
+                            className={isAlt ? 'bg-[#f0f7f1] hover:bg-[#e4efe6]' : ''}
+                            data-testid={`vessel-row-${i}`}
+                          >
+                            <TableCell className="text-center font-medium whitespace-nowrap" data-testid={`vessel-name-${i}`}>
+                              {v.vesselName || '-'}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</TableCell>
+                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</TableCell>
+                            <TableCell className="text-center" data-testid={`vessel-days-${i}`}>
+                              {days !== null ? (
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
+                                  days > 10 ? 'bg-red-100 text-red-700'
+                                  : days > 5 ? 'bg-amber-100 text-amber-700'
+                                  : 'bg-emerald-100 text-emerald-700'
+                                }`}>
+                                  <Clock className="w-3 h-3" />
+                                  {days}
+                                </span>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {v.status ? (
+                                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
+                                  {v.status}
+                                </span>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground text-xs">{translateOp(v.operation)}</TableCell>
+                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</TableCell>
+                            <TableCell className="text-center font-mono text-muted-foreground whitespace-nowrap">
+                              {v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</TableCell>
+                            <TableCell className="text-center text-muted-foreground" title={v.seller}>{v.seller || '-'}</TableCell>
+                          </TableRow>
+                        );
+                      });
+                    })()
+                  )}
+                </TableBody>
+              </Table>
               {/* Footer stats */}
               {filteredVessels.length > 0 && (
                 <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground" data-testid="table-footer-stats">

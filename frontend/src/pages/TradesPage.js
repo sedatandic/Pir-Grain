@@ -88,11 +88,10 @@ export default function TradesPage() {
     return trades.filter(t => {
       const tradeYear = getTradeYear(t);
       if (tradeYear === filterYear) return true;
-      // When viewing current year, also include older trades that are NOT yet completed/cancelled/washout
+      // When viewing current year, also include older trades that are NOT yet completed/cancelled
       if (filterYear === currentYear) {
         const isIncomplete = !COMPLETED_STATUSES.includes(t.status) &&
-                             !CANCELLED_STATUSES.includes(t.status) &&
-                             !WASHOUT_STATUSES.includes(t.status);
+                             !CANCELLED_STATUSES.includes(t.status);
         return isIncomplete;
       }
       return false;

@@ -225,6 +225,29 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("B/L DATE", bl_date),
         ])
         closing = "Please arrange payment at your earliest convenience."
+
+    elif doc_name == "Vessel Nomination":
+        vessel_imo = trade.get("vesselIMO") or "-"
+        vessel_flag = trade.get("vesselFlag") or "-"
+        vessel_built = trade.get("vesselBuilt") or "-"
+        vessel_dwt = trade.get("vesselDWT") or "-"
+        rows = "".join([
+            row_html("CONTRACT NO", contract_label),
+            row_html("PIR GRAIN REF. NO", ref),
+            row_html("COMMODITY", commodity_with_crop),
+            row_html("QUANTITY", f"{fmt_qty(quantity)} MT"),
+            row_html("VESSEL NAME", f"<strong>{vessel}</strong>"),
+            row_html("IMO NUMBER", vessel_imo),
+            row_html("FLAG", vessel_flag),
+            row_html("BUILT", vessel_built),
+            row_html("DWT", fmt_qty(vessel_dwt) if vessel_dwt != "-" else "-"),
+            row_html("LOADING PORT", load_port_full),
+            row_html("DISCHARGE PORT", discharge_port_full),
+            row_html("SELLER", seller),
+            row_html("BUYER", buyer),
+        ])
+        closing = "Please confirm acceptance of the above vessel nomination."
+
     else:
         rows = ""
         closing = ""
@@ -269,10 +292,13 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     seller_email = req.seller_email or get_partner_email(trade.get("sellerId"))
     buyer_email = req.buyer_email or get_partner_email(trade.get("buyerId"))
 
-    # Generate the PDF (skip for business_confirmation)
+    # Generate the PDF (skip for business_confirmation and vessel_nomination)
     attachment = None
     if req.doc_type == "business_confirmation":
         doc_name = "Business Confirmation"
+        filename = None
+    elif req.doc_type == "vessel_nomination":
+        doc_name = "Vessel Nomination"
         filename = None
     elif req.doc_type == "shipment_appropriation":
         from routes.shipment_appropriation import generate_sa_pdf
@@ -289,7 +315,7 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
 
     subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
 
-    if filename and req.doc_type != "business_confirmation":
+    if filename and req.doc_type not in ("business_confirmation", "vessel_nomination"):
         pdf_bytes = pdf_buf.getvalue()
         pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
         attachment = {"filename": filename, "content": pdf_b64, "content_type": "application/pdf"}

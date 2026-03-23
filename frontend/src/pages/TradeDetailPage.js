@@ -641,19 +641,18 @@ export default function TradeDetailPage() {
             </Card>
 
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Commission Invoice</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Vessel Nomination</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <Button size="sm" variant="outline" className="w-full" onClick={async () => {
-                  try {
-                    const res = await api.get(`/api/commission-invoice/${tradeId}/pdf`, { responseType: 'blob' });
-                    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
-                    window.open(url, '_blank');
-                  } catch { toast.error('Failed to generate Commission Invoice'); }
-                }} data-testid="download-ci-btn">
-                  <FileText className="h-4 w-4 mr-1" />Download PDF
-                </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={() => openEmailDialog('commission_invoice', 'Commission Invoice')} data-testid="email-ci-btn">
-                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                <div className="text-sm text-muted-foreground">
+                  {trade?.vesselName ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between"><span>Vessel:</span><span className="font-medium text-foreground">{trade.vesselName}</span></div>
+                      {trade.vesselIMO && <div className="flex justify-between"><span>IMO:</span><span className="font-medium text-foreground">{trade.vesselIMO}</span></div>}
+                    </div>
+                  ) : <p>No vessel assigned yet</p>}
+                </div>
+                <Button size="sm" className="w-full bg-primary" disabled={!trade?.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')} data-testid="send-vessel-nomination-btn">
+                  <Send className="h-4 w-4 mr-1" />Send Nomination
                 </Button>
               </CardContent>
             </Card>

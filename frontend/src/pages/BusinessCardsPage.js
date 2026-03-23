@@ -204,11 +204,11 @@ export default function BusinessCardsPage() {
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Name</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Company</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Position</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Email</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">WhatsApp</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Website</th>
+                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
+                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Keywords</th>
                       <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap w-20"></th>
                     </tr>
@@ -224,8 +224,6 @@ export default function BusinessCardsPage() {
                         <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{card.name || '-'}</td>
                         <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.company || '-'}</td>
                         <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.title || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.city || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.country || '-'}</td>
                         <td className="px-3 py-2">
                           {card.email ? (
                             <a href={`mailto:${card.email}`} className="text-blue-600 hover:underline text-xs" onClick={e => e.stopPropagation()}>{card.email}</a>
@@ -243,6 +241,8 @@ export default function BusinessCardsPage() {
                             <a href={card.website?.startsWith('http') ? card.website : `https://${card.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs max-w-[150px] truncate block" onClick={e => e.stopPropagation()}>{card.website}</a>
                           ) : '-'}
                         </td>
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.city || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.country || '-'}</td>
                         <td className="px-3 py-2">
                           {card.keywords?.length > 0 ? (
                             <div className="flex flex-wrap gap-1">

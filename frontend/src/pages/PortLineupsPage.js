@@ -378,9 +378,9 @@ export default function PortLineupsPage() {
               <Table className="trade-table" data-testid="vessel-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
+                    <TableHead className="text-center">Arrival</TableHead>
                     <TableHead className="text-center">Vessel</TableHead>
                     <TableHead className="text-center">Loading Port</TableHead>
-                    <TableHead className="text-center">Arrival</TableHead>
                     <TableHead className="text-center">Days</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-center">Op.</TableHead>
@@ -422,11 +422,11 @@ export default function PortLineupsPage() {
                             className={isAlt ? 'bg-[#f0f7f1] hover:bg-[#e4efe6]' : ''}
                             data-testid={`vessel-row-${i}`}
                           >
+                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</TableCell>
                             <TableCell className="text-center font-medium whitespace-nowrap" data-testid={`vessel-name-${i}`}>
                               {v.vesselName || '-'}
                             </TableCell>
                             <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</TableCell>
-                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</TableCell>
                             <TableCell className="text-center" data-testid={`vessel-days-${i}`}>
                               {days !== null ? (
                                 <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${

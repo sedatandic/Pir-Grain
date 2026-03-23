@@ -106,7 +106,7 @@ export default function NewTradePage() {
     deliveryTerm: 'CIF', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
-    surveyorId: '', brokeragePerMT: '', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
+    surveyorId: '', brokeragePerMT: '1', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
     dischargeRate: '', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',

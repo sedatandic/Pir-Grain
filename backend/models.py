@@ -94,6 +94,9 @@ class DisportAgentCreate(BaseModel):
     name: str
     port: Optional[str] = None
     contact: Optional[str] = None
+    email: Optional[str] = None
+    tel: Optional[str] = None
+    whatsapp: Optional[str] = None
     address: Optional[str] = None
 
 

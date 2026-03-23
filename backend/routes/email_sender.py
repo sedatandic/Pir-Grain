@@ -239,7 +239,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         vessel_imo = (vessel_doc or {}).get("imoNumber") or trade.get("vesselIMO") or "-"
         vessel_flag = (vessel_doc or {}).get("flag") or trade.get("vesselFlag") or "-"
         vessel_built = (vessel_doc or {}).get("builtYear") or trade.get("vesselBuilt") or "-"
-        surveyor_name = trade.get("surveyorName") or "-"
+        surveyor_name = trade.get("sellerSurveyor") or trade.get("surveyorName") or "-"
         # Look up load port agent full details
         lpa_name = trade.get("loadportAgent") or ""
         lpa_details = "-"

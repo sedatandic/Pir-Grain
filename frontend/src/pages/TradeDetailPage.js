@@ -517,6 +517,8 @@ export default function TradeDetailPage() {
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Bill of Lading Details</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Vessel Name</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
+              <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
@@ -939,29 +941,21 @@ export default function TradeDetailPage() {
             </div>
             <div className="space-y-2">
               <Label>Load Port Agent</Label>
-              <Select value={blForm.loadportAgent || '_custom'} onValueChange={(v) => setBlForm({...blForm, loadportAgent: v === '_custom' ? '' : v})}>
+              <Select value={blForm.loadportAgent || ''} onValueChange={(v) => setBlForm({...blForm, loadportAgent: v})}>
                 <SelectTrigger><SelectValue placeholder="Select load port agent" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_custom">Custom...</SelectItem>
                   {loadportAgents.sort((a, b) => a.name.localeCompare(b.name)).map(a => <SelectItem key={a.id} value={a.name}>{a.name}{a.port ? ` (${a.port})` : ''}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {(!blForm.loadportAgent || !loadportAgents.some(a => a.name === blForm.loadportAgent)) && (
-                <Input value={blForm.loadportAgent || ''} onChange={(e) => setBlForm({...blForm, loadportAgent: e.target.value})} placeholder="Type agent name" />
-              )}
             </div>
             <div className="space-y-2">
               <Label>Disport Agent</Label>
-              <Select value={blForm.disportAgent || '_custom'} onValueChange={(v) => setBlForm({...blForm, disportAgent: v === '_custom' ? '' : v})}>
+              <Select value={blForm.disportAgent || ''} onValueChange={(v) => setBlForm({...blForm, disportAgent: v})}>
                 <SelectTrigger><SelectValue placeholder="Select disport agent" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="_custom">Custom...</SelectItem>
                   {disportAgents.sort((a, b) => a.name.localeCompare(b.name)).map(a => <SelectItem key={a.id} value={a.name}>{a.name}{a.port ? ` (${a.port})` : ''}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {(!blForm.disportAgent || !disportAgents.some(a => a.name === blForm.disportAgent)) && (
-                <Input value={blForm.disportAgent || ''} onChange={(e) => setBlForm({...blForm, disportAgent: e.target.value})} placeholder="Type agent name" />
-              )}
             </div>
           </div>
           <DialogFooter>

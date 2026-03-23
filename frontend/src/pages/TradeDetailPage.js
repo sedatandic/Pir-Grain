@@ -278,7 +278,8 @@ export default function TradeDetailPage() {
       setEmailDialog({ open: false, docType: '', docLabel: '' });
       fetchTrade();
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to send email');
+      console.error('Email send error:', err.response?.status, err.response?.data);
+      toast.error(err.response?.data?.detail || err.response?.data?.message || 'Failed to send email');
     } finally { setEmailSending(false); }
   };
 

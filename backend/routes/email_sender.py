@@ -17,7 +17,7 @@ from auth import get_current_user
 router = APIRouter(prefix="/api", tags=["email"])
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "alenakaragoz@pirgrain.com")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <onboarding@resend.dev>")
 CC_EMAILS = ["melisa.karagoz@pirgrain.com", "salih.karagoz@pirgrain.com"]
 
 LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
@@ -153,7 +153,13 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
 
     logo_html = ""
     if LOGO_B64:
-        logo_html = f'<img src="data:image/jpeg;base64,{LOGO_B64}" style="height: 60px; margin: 0 auto; display: block;" alt="PIR Grain & Pulses Ltd" />'
+        logo_html = f'''
+            <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
+                <td style="text-align: center; padding: 10px 0;">
+                    <img src="data:image/jpeg;base64,{LOGO_B64}" style="height: 50px; vertical-align: middle;" alt="PIR" />
+                    <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">PIR Grain &amp; Pulses Ltd</span>
+                </td>
+            </tr></table>'''
 
     if doc_name == "Business Confirmation":
         rows = "".join([
@@ -251,12 +257,11 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     seller_email = req.seller_email or get_partner_email(trade.get("sellerId"))
     buyer_email = req.buyer_email or get_partner_email(trade.get("buyerId"))
 
-    # Generate the PDF
+    # Generate the PDF (skip for business_confirmation)
+    attachment = None
     if req.doc_type == "business_confirmation":
-        from routes.business_confirmation import generate_bc_pdf
-        pdf_buf = generate_bc_pdf(trade)
         doc_name = "Business Confirmation"
-        filename = f"Business_Confirmation_{contract_label}.pdf"
+        filename = None
     elif req.doc_type == "shipment_appropriation":
         from routes.shipment_appropriation import generate_sa_pdf
         pdf_buf = generate_sa_pdf(trade)
@@ -272,9 +277,10 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
 
     subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
 
-    pdf_bytes = pdf_buf.getvalue()
-    pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
-    attachment = {"filename": filename, "content": pdf_b64, "content_type": "application/pdf"}
+    if filename and req.doc_type != "business_confirmation":
+        pdf_bytes = pdf_buf.getvalue()
+        pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+        attachment = {"filename": filename, "content": pdf_b64, "content_type": "application/pdf"}
 
     sent_to = []
     errors = []
@@ -290,8 +296,9 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "cc": seller_cc,
                 "subject": subject,
                 "html": seller_body,
-                "attachments": [attachment],
             }
+            if attachment:
+                params["attachments"] = [attachment]
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Seller: {seller_email}")
         except Exception as e:
@@ -308,8 +315,9 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "cc": buyer_cc,
                 "subject": subject,
                 "html": buyer_body,
-                "attachments": [attachment],
             }
+            if attachment:
+                params["attachments"] = [attachment]
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Buyer: {buyer_email}")
         except Exception as e:
@@ -324,8 +332,9 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "to": CC_EMAILS,
                 "subject": subject,
                 "html": body,
-                "attachments": [attachment],
             }
+            if attachment:
+                params["attachments"] = [attachment]
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Internal: {', '.join(CC_EMAILS)}")
         except Exception as e:

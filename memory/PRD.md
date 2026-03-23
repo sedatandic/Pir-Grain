@@ -49,10 +49,17 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Brokerage Invoices with PENDING/PAID workflow
 - Bank Accounts & Vendors management in Settings
 
+### Contracts Page Price Display (2026-03-23)
+- Unit Price column now shows **discharge port price** instead of base price
+- When discharge port matches a port variation: shows adjusted price only
+- When discharge port doesn't match or no discharge port set: shows base price + all variations
+- Updated: Main table, Entity Trades Dialog, and Trade Detail Modal
+
 ## Prioritized Backlog
 
 ### P1
 - Full Server-Side RBAC (protect all API routes by role)
+- Google Workspace Integration (email menu bar, Gmail access)
 
 ### P2
 - Frontend Refactoring: TradeDetailPage.js (1000+ lines), NewTradePage.js (630+ lines)

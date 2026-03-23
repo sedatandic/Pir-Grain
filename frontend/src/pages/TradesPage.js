@@ -197,6 +197,27 @@ export default function TradesPage() {
   const formatShipmentDate = (d) => { if (!d) return ''; const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) return d; try { return format(parseISO(d), 'dd/MM/yyyy'); } catch { return d; } };
   const formatQty = (q) => q ? `${q.toLocaleString()} MT` : '-';
 
+  // Calculate discharge port price: base price + port variation difference for selected discharge port
+  const getDischargePortPrice = useCallback((trade) => {
+    const basePrice = trade.pricePerMT;
+    if (!basePrice) return null;
+    
+    const dischargePortId = trade.dischargePortId;
+    const portVariations = trade.portVariations || [];
+    
+    // If no discharge port selected or no variations, return base price
+    if (!dischargePortId || portVariations.length === 0) return basePrice;
+    
+    // Find the matching port variation
+    const matchingVariation = portVariations.find(pv => pv.portId === dischargePortId);
+    if (matchingVariation) {
+      return basePrice + Number(matchingVariation.difference || 0);
+    }
+    
+    // If discharge port doesn't match any variation, return base price
+    return basePrice;
+  }, []);
+
   const handleVesselUpdate = async (tradeId, vesselName) => {
     try {
       await api.put(`/api/trades/${tradeId}`, { vesselName: vesselName || '' });
@@ -367,7 +388,16 @@ export default function TradesPage() {
                   const basePrice = trade.pricePerMT;
                   const currency = trade.currency || 'USD';
                   if (!basePrice) return '-';
+                  const dischargePrice = getDischargePortPrice(trade);
                   const pvs = trade.portVariations || [];
+                  // If a discharge port is selected and matches a variation, show only that price
+                  if (trade.dischargePortId && pvs.length > 0) {
+                    const matchingPv = pvs.find(pv => pv.portId === trade.dischargePortId);
+                    if (matchingPv) {
+                      return `${dischargePrice.toLocaleString()} ${currency}`;
+                    }
+                  }
+                  // Otherwise show base price with all variations
                   if (pvs.length === 0) return `${basePrice.toLocaleString()} ${currency}`;
                   return (
                     <div className="flex flex-col items-center">
@@ -602,7 +632,10 @@ export default function TradesPage() {
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{selectedTrade.quantity ? `${selectedTrade.quantity.toLocaleString()} MT` : '-'}</span></div>
                     <hr />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{selectedTrade.pricePerMT ? `${selectedTrade.currency || 'USD'} ${selectedTrade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Price</span><span className="font-medium">{(() => {
+                      const price = getDischargePortPrice(selectedTrade);
+                      return price ? `${selectedTrade.currency || 'USD'} ${price.toLocaleString()}/MT` : '-';
+                    })()}</span></div>
                   </div>
                 </div>
                 {/* Trade Terms */}
@@ -681,7 +714,10 @@ export default function TradesPage() {
                           <TableCell className="text-sm">{t.sellerCode || t.sellerName || '-'}</TableCell>
                           <TableCell className="text-sm">{t.buyerCode || t.buyerName || '-'}</TableCell>
                           <TableCell className="text-sm">{t.quantity ? `${t.quantity.toLocaleString()} Mts` : '-'}</TableCell>
-                          <TableCell className="text-sm">{t.pricePerMT ? `$${t.pricePerMT}` : '-'}</TableCell>
+                          <TableCell className="text-sm">{(() => {
+                            const price = getDischargePortPrice(t);
+                            return price ? `$${price.toLocaleString()}` : '-';
+                          })()}</TableCell>
                           <TableCell className="text-sm">{t.vesselName || '-'}</TableCell>
                         </TableRow>
                       );

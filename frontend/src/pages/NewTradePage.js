@@ -561,13 +561,19 @@ export default function NewTradePage() {
                     <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="w-[160px] space-y-1">
+                <div className="w-[130px] space-y-1">
                   {idx === 0 && <Label className="text-xs text-muted-foreground">+/- per MT ({form.currency || 'USD'})</Label>}
                   <Input type="number" value={pv.difference} placeholder="e.g. +5 or -3" onChange={(e) => {
                     const updated = [...form.portVariations];
                     updated[idx] = { ...updated[idx], difference: e.target.value };
                     set('portVariations', updated);
                   }} />
+                </div>
+                <div className="w-[100px] space-y-1 text-center">
+                  {idx === 0 && <Label className="text-xs text-muted-foreground">Price</Label>}
+                  <div className="h-9 flex items-center justify-center text-sm font-mono font-medium">
+                    {form.pricePerMT && pv.difference !== '' ? `${(parseFloat(form.pricePerMT) + parseFloat(pv.difference || 0)).toLocaleString()} ${form.currency || 'USD'}` : <span className="text-muted-foreground">-</span>}
+                  </div>
                 </div>
                 <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => {
                   const updated = form.portVariations.filter((_, i) => i !== idx);
@@ -636,7 +642,7 @@ export default function NewTradePage() {
         <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
         <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {isEdit ? 'Update Trade' : 'Create Trade'}
+          {isEdit ? 'Update Contract' : 'Create Contract'}
         </Button>
       </div>
     </div>

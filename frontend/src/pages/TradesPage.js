@@ -31,6 +31,7 @@ export default function TradesPage() {
   const [filterOrigin, setFilterOrigin] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCoBroker, setFilterCoBroker] = useState('all');
+  const [filterCountry, setFilterCountry] = useState('all');
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -71,8 +72,8 @@ export default function TradesPage() {
     }
   }, [location.state, loading]);
 
-  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterYear !== new Date().getFullYear().toString();
-  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterYear(new Date().getFullYear().toString()); };
+  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterCountry !== 'all' || filterYear !== new Date().getFullYear().toString();
+  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterCountry('all'); setFilterYear(new Date().getFullYear().toString()); };
 
   const getTradeYear = useCallback((trade) => {
     const d = trade.contractDate || trade.createdAt || '';
@@ -106,6 +107,14 @@ export default function TradesPage() {
     trades.forEach(t => { if (t.coBrokerId && t.coBrokerName) map.set(t.coBrokerId, t.coBrokerName); });
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [trades]);
+  const uniqueCountries = useMemo(() => {
+    const set = new Set();
+    trades.forEach(t => {
+      if (t.loadingPortCountry) set.add(t.loadingPortCountry);
+      if (t.dischargePortCountry) set.add(t.dischargePortCountry);
+    });
+    return [...set].sort((a, b) => a.localeCompare(b, 'tr'));
+  }, [trades]);
 
   const entityTrades = useMemo(() => {
     if (!entityFilter) return [];
@@ -126,6 +135,7 @@ export default function TradesPage() {
     if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
     if (filterStatus !== 'all') result = result.filter(t => t.status === filterStatus);
     if (filterCoBroker !== 'all') result = result.filter(t => t.coBrokerId === filterCoBroker);
+    if (filterCountry !== 'all') result = result.filter(t => t.loadingPortCountry === filterCountry || t.dischargePortCountry === filterCountry);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t =>
@@ -137,7 +147,7 @@ export default function TradesPage() {
       );
     }
     return result;
-  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, search]);
+  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, filterCountry, search]);
 
   const categorized = useMemo(() => ({
     ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
@@ -400,6 +410,13 @@ export default function TradesPage() {
               <SelectContent>
                 <SelectItem value="all">All Origins</SelectItem>
                 {origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterCountry} onValueChange={setFilterCountry}>
+              <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Country" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Countries</SelectItem>
+                {uniqueCountries.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterSeller} onValueChange={setFilterSeller}>

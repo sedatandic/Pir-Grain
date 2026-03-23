@@ -33,27 +33,38 @@ LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
 
 
 def fmt_date_dot(d):
+    """Format date to DD-MM-YYYY with dashes."""
     if not d:
         return "-"
     m = re.match(r'^(\d{2})/(\d{2})/(\d{4})$', str(d))
     if m:
-        return f"{m.group(1)}.{m.group(2)}.{m.group(3)}"
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})', str(d))
+    if m:
+        return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+    m = re.match(r'^(\d{2})\.(\d{2})\.(\d{4})$', str(d))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
     try:
         dt = datetime.fromisoformat(str(d).replace('Z', '+00:00'))
-        return dt.strftime('%d.%m.%Y')
+        return dt.strftime('%d-%m-%Y')
     except Exception:
         return str(d)
 
 
 def fmt_date_slash(d):
+    """Format date to DD-MM-YYYY with dashes."""
     if not d:
         return "-"
     m = re.match(r'^(\d{2})/(\d{2})/(\d{4})$', str(d))
     if m:
-        return f"{m.group(1)}/{m.group(2)}/{m.group(3)}"
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})', str(d))
+    if m:
+        return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
     try:
         dt = datetime.fromisoformat(str(d).replace('Z', '+00:00'))
-        return dt.strftime('%d/%m/%Y')
+        return dt.strftime('%d-%m-%Y')
     except Exception:
         return str(d)
 
@@ -84,12 +95,6 @@ def partner_text(partner):
         lines.append(f"Tax ID: {partner['taxId']}")
     return "\n".join(lines)
 
-
-@router.get("/{trade_id}/pdf")
-def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_user)):
-    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
-    if not trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
 
 def generate_bc_pdf(trade):
     """Generate Business Confirmation PDF and return BytesIO buffer."""
@@ -166,7 +171,7 @@ def generate_bc_pdf(trade):
         [Paragraph("SELLERS", s_label), Paragraph(partner_text(seller).replace("\n", "<br/>"), s_val)],
         [Paragraph("BUYERS", s_label), Paragraph(partner_text(buyer).replace("\n", "<br/>"), s_val)],
         [Paragraph("BROKERS", s_label), Paragraph(broker_text.replace("\n", "<br/>"), s_val)],
-        row("COMMODITY", trade.get("commodityDisplayName") or f"{origin} {commodity}"),
+        row("COMMODITY", f"{commodity}, Crop {trade.get('cropYear')}" if trade.get('cropYear') else commodity),
     ]
     # Build specifications from commoditySpecs (multi-line) or individual fields
     specs_text = quality
@@ -214,11 +219,14 @@ def generate_bc_pdf(trade):
             doc_list = comm["documents"]
     docs_text = "<br/>".join([f"- {d}" for d in doc_list]) if doc_list else "-"
 
+    demurrage_rate = trade.get("demurrageRate") or ""
+
     data += [
         row("QUANTITY", f"{fmt_num(quantity)} MT with {more_less}% more or less at {more_less_option}"),
-        row("SHIPMENT", f"{shipment_start} - {shipment_end}, both dates included, at Seller's option"),
+        row("SHIPMENT", f"{shipment_start}<br/>{shipment_end}"),
         [Paragraph("PRICE", s_label), Paragraph(price_text, s_val_bold)],
         row("DISCH. RATE", f"{discharge_rate} MT SSHEX EIU, Half dispatch" if discharge_rate != "-" else "-"),
+        row("DEMURRAGE", f"{currency} {float(demurrage_rate):,.2f}/Day" if demurrage_rate else "-"),
         row("PAYMENT", payment_terms, s_small),
         row("BROKERAGE", f"{brokerage_currency} {brokerage_per_mt:.2f} per MT, payable by the {brokerage_account.capitalize()}"),
         [Paragraph("DOCUMENTS", s_label), Paragraph(docs_text, s_val)],

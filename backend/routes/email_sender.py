@@ -49,8 +49,33 @@ def fmt_price(val, currency="USD"):
         return str(val or "-")
 
 
+def fmt_date_ddmmyyyy(d):
+    """Format date to DD-MM-YYYY. Handles ISO (2025-07-01), slash (01/07/2025), and datetime."""
+    if not d or d == "-":
+        return "-"
+    import re
+    # ISO format: 2025-07-01 or 2025-07-01T...
+    m = re.match(r'^(\d{4})-(\d{2})-(\d{2})', str(d))
+    if m:
+        return f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+    # dd/MM/yyyy
+    m = re.match(r'^(\d{2})/(\d{2})/(\d{4})$', str(d))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    # dd.MM.yyyy
+    m = re.match(r'^(\d{2})\.(\d{2})\.(\d{4})$', str(d))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}-{m.group(3)}"
+    try:
+        from datetime import datetime as dt_cls
+        parsed = dt_cls.fromisoformat(str(d).replace('Z', '+00:00'))
+        return parsed.strftime('%d-%m-%Y')
+    except Exception:
+        return str(d)
+
+
 def row_html(label, value):
-    return f'<tr><td style="padding: 10px 14px; border: 1px solid #e0e0e0; background: #f7f7f0; font-weight: 600; width: 200px; color: #2d5016;">{label}</td><td style="padding: 10px 14px; border: 1px solid #e0e0e0;">{value}</td></tr>'
+    return f'<tr><td style="padding: 10px 14px; border: 1px solid #e0e0e0; background: #E8F5E9; font-weight: 600; width: 200px; color: #1B7A3D;">{label}</td><td style="padding: 10px 14px; border: 1px solid #e0e0e0;">{value}</td></tr>'
 
 
 def get_partner_email(partner_id):
@@ -80,7 +105,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     buyer = trade.get("buyerName") or ""
     quantity = trade.get("quantity") or 0
     bl_quantity = trade.get("blQuantity") or quantity
-    price = trade.get("price") or 0
+    price = trade.get("pricePerMT") or trade.get("price") or 0
     currency = trade.get("currency") or "USD"
     tolerance = trade.get("tolerance") or ""
     origin = trade.get("originName") or trade.get("origin") or ""
@@ -99,33 +124,53 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     brokerage_per_mt = trade.get("brokeragePerMT") or 0
     brokerage_currency = trade.get("brokerageCurrency") or "USD"
     discharge_rate = trade.get("dischargeRate") or ""
+    demurrage_rate = trade.get("demurrageRate") or ""
+    crop_year = trade.get("cropYear") or ""
+    delivery_term = trade.get("deliveryTerm") or ""
     commodity_display = trade.get("commodityDisplayName") or commodity
 
     load_port_full = f"{load_port}, {load_country}" if load_country else load_port
     discharge_port_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     specs_html = commodity_specs.replace("\n", "<br/>") if commodity_specs else "-"
 
+    # Build commodity display: "Yellow Corn, Crop 2025" (no origin adjective)
+    commodity_with_crop = commodity
+    if crop_year:
+        commodity_with_crop = f"{commodity}, Crop {crop_year}"
+
+    # Format date as DD-MM-YYYY
+    formatted_date = fmt_date_ddmmyyyy(contract_date)
+
+    # Format shipment dates as DD-MM-YYYY
+    shipment_start = fmt_date_ddmmyyyy(trade.get("shipmentWindowStart", ""))
+    shipment_end = fmt_date_ddmmyyyy(trade.get("shipmentWindowEnd", ""))
+
+    # Build price with delivery term and base port
+    base_port = trade.get("basePortName") or discharge_port
+    base_port_country = trade.get("basePortCountry") or ""
+    base_port_full = f"{base_port}, {base_port_country}" if base_port_country else base_port
+    price_display = f"{currency} {float(price):,.2f}/MT {delivery_term} {base_port_full}".strip() if price else "-"
+
     logo_html = ""
     if LOGO_B64:
-        logo_html = f'<img src="data:image/jpeg;base64,{LOGO_B64}" style="height: 50px; margin: 0 auto; display: block;" alt="PIR Grain & Pulses Ltd" />'
+        logo_html = f'<img src="data:image/jpeg;base64,{LOGO_B64}" style="height: 60px; margin: 0 auto; display: block;" alt="PIR Grain & Pulses Ltd" />'
 
     if doc_name == "Business Confirmation":
         rows = "".join([
-            row_html("DATE", contract_date),
+            row_html("DATE", formatted_date),
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
             row_html("SELLERS", seller),
             row_html("BUYERS", buyer),
             row_html("BROKER", broker_name),
-            row_html("COMMODITY", f"{origin_adj} {commodity}".strip() if origin_adj else commodity),
+            row_html("COMMODITY", commodity_with_crop),
             row_html("SPECIFICATIONS", specs_html),
             row_html("QUANTITY", f"{fmt_qty(quantity)} MT{(' +/- ' + tolerance + ' at Sellers option') if tolerance else ''}"),
-            row_html("PRICE", fmt_price(price, currency)),
+            row_html("PRICE", price_display),
             row_html("ORIGIN", origin),
-            row_html("SHIPMENT", f"{trade.get('shipmentWindowStart', '')} - {trade.get('shipmentWindowEnd', '')}"),
-            row_html("LOADING PORT", load_port_full),
-            row_html("DISCHARGE PORT", discharge_port_full),
+            row_html("SHIPMENT", f"{shipment_start}<br/>{shipment_end}" if shipment_start != "-" else "-"),
             row_html("DISCHARGE RATE", f"{fmt_qty(discharge_rate)} Mts/Day" if discharge_rate else "-"),
+            row_html("DEMURRAGE RATE", f"{currency} {float(demurrage_rate):,.2f}/Day" if demurrage_rate else "-"),
             row_html("PAYMENT", payment_terms),
             row_html("GAFTA RULE", gafta_term),
         ])
@@ -168,13 +213,12 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
 
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
-        <div style="background-color: #ffffff; padding: 24px; text-align: center; border-bottom: 3px solid #2d5016;">
-            {logo_html}
+        <div style="background-color: #1B7A3D; padding: 20px; text-align: center;">
+            {logo_html if logo_html else '<h1 style="color: #ffffff; margin: 0; font-size: 22px;">PIR Grain &amp; Pulses Ltd</h1>'}
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">
-            <h2 style="color: #2d5016; margin: 0 0 20px 0; font-size: 18px; border-bottom: 2px solid #2d5016; padding-bottom: 10px;">{doc_name}</h2>
             <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
-            <p style="font-size: 15px; color: #333;">Please find below the <strong>{doc_name}</strong> details. The formal PDF document is attached.</p>
+            <p style="font-size: 15px; color: #333;">Please find below the <strong>{doc_name}</strong> details:</p>
 
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
                 {rows}
@@ -183,8 +227,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             <p style="font-size: 14px; color: #555; margin-top: 24px;">{closing}</p>
             <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
         </div>
-        <div style="background-color: #2d5016; padding: 12px; text-align: center;">
-            <p style="color: #aaa; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
+        <div style="background-color: #1B7A3D; padding: 12px; text-align: center;">
+            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
         </div>
     </div>
     """

@@ -77,12 +77,6 @@ def fmt_date_dot(d):
     return dt.strftime('%d.%m.%Y')
 
 
-@router.get("/{trade_id}/pdf")
-def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_user)):
-    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
-    if not trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
-
 def generate_sa_pdf(trade):
     """Generate Shipment Appropriation PDF and return BytesIO buffer."""
     buyer = None

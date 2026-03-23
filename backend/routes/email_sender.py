@@ -426,7 +426,13 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Seller: {seller_email}")
         except Exception as e:
-            errors.append(f"Seller ({seller_email}): {str(e)}")
+            # Retry without CC (Resend test mode restriction)
+            try:
+                params.pop("cc", None)
+                await asyncio.to_thread(resend.Emails.send, params)
+                sent_to.append(f"Seller: {seller_email} (without CC)")
+            except Exception as e2:
+                errors.append(f"Seller ({seller_email}): {str(e2)}")
 
     # Send to buyer (separate email - no seller info in CC)
     if buyer_email:
@@ -446,7 +452,12 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Buyer: {buyer_email}")
         except Exception as e:
-            errors.append(f"Buyer ({buyer_email}): {str(e)}")
+            try:
+                params.pop("cc", None)
+                await asyncio.to_thread(resend.Emails.send, params)
+                sent_to.append(f"Buyer: {buyer_email} (without CC)")
+            except Exception as e2:
+                errors.append(f"Buyer ({buyer_email}): {str(e2)}")
 
     # If no emails provided, send to CC only
     if not seller_email and not buyer_email:

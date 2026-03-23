@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock } from 'lucide-react';
+import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock, X } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { normalizeTR } from '../lib/utils-tr';
 import api from '../lib/api';
@@ -292,7 +292,7 @@ export default function PortLineupsPage() {
             </div>
 
             <div className="relative">
-              <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-load-port">
+              <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-load-port">
                 <option value="all">All Load Ports</option>
                 {filterOptions.loadPorts.map(lp => <option key={lp} value={lp}>{lp}</option>)}
               </select>
@@ -300,7 +300,7 @@ export default function PortLineupsPage() {
             </div>
 
             <div className="relative">
-              <select value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[140px]" data-testid="filter-commodity">
+              <select value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-commodity">
                 <option value="all">All Commodities</option>
                 {filterOptions.commodities.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -308,7 +308,7 @@ export default function PortLineupsPage() {
             </div>
 
             <div className="relative">
-              <select value={filterBuyer} onChange={e => setFilterBuyer(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-buyer">
+              <select value={filterBuyer} onChange={e => setFilterBuyer(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-buyer">
                 <option value="all">All Buyers</option>
                 {filterOptions.buyers.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
@@ -316,12 +316,22 @@ export default function PortLineupsPage() {
             </div>
 
             <div className="relative">
-              <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-seller">
+              <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-seller">
                 <option value="all">All Sellers</option>
                 {filterOptions.sellers.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
+
+            {(searchTerm || filterLoadPort !== 'all' || filterCommodity !== 'all' || filterBuyer !== 'all' || filterSeller !== 'all') && (
+              <button
+                onClick={() => { setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
+                className="flex items-center gap-1 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
+                data-testid="clear-filters-btn"
+              >
+                <X className="w-3.5 h-3.5" />Clear
+              </button>
+            )}
           </div>
 
           {/* Port tabs */}

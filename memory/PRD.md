@@ -45,7 +45,7 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Detail dialog with card image, edit/delete actions, search
 
 ### Other Features
-- Reports page with dynamic filters
+- Reports page with dynamic filters including "All Years" option (fixed 2026-03-23)
 - Brokerage Invoices with PENDING/PAID workflow
 - Bank Accounts & Vendors management in Settings
 

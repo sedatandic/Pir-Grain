@@ -208,14 +208,16 @@ export default function ReportsPage() {
   const filteredTrades = useMemo(() => {
     let result = trades;
     // Year filter
-    result = result.filter(t => {
-      const tradeYear = getTradeYear(t);
-      if (tradeYear === filterYear) return true;
-      if (filterYear === currentYear) {
-        return !COMPLETED_STATUSES.includes(t.status) && !CANCELLED_STATUSES.includes(t.status) && !WASHOUT_STATUSES.includes(t.status);
-      }
-      return false;
-    });
+    if (filterYear !== 'all') {
+      result = result.filter(t => {
+        const tradeYear = getTradeYear(t);
+        if (tradeYear === filterYear) return true;
+        if (filterYear === currentYear) {
+          return !COMPLETED_STATUSES.includes(t.status) && !CANCELLED_STATUSES.includes(t.status) && !WASHOUT_STATUSES.includes(t.status);
+        }
+        return false;
+      });
+    }
     // Entity filters
     if (filterSeller !== 'all') result = result.filter(t => t.sellerId === filterSeller);
     if (filterBuyer !== 'all') result = result.filter(t => t.buyerId === filterBuyer);
@@ -261,6 +263,7 @@ export default function ReportsPage() {
             <Select value={filterYear} onValueChange={setFilterYear}>
               <SelectTrigger className="w-[100px] shrink-0" data-testid="reports-year-filter"><CalendarDays className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
                 <SelectItem value="2026">2026</SelectItem>
                 <SelectItem value="2025">2025</SelectItem>
                 <SelectItem value="2024">2024</SelectItem>

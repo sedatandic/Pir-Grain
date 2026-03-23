@@ -63,7 +63,8 @@ export default function TradeDetailPage() {
   const [sendingSA, setSendingSA] = useState(false);
   const [sendingBC, setSendingBC] = useState(false);
   const [emailDialog, setEmailDialog] = useState({ open: false, docType: '', docLabel: '' });
-  const [emailTo, setEmailTo] = useState('');
+  const [emailSellerTo, setEmailSellerTo] = useState('');
+  const [emailBuyerTo, setEmailBuyerTo] = useState('');
   const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
@@ -254,29 +255,22 @@ export default function TradeDetailPage() {
   };
 
   const openEmailDialog = (docType, docLabel) => {
-    // Pre-fill with counterparty email based on doc type
-    let prefillEmail = '';
-    if (docType === 'business_confirmation') {
-      prefillEmail = trade.sellerEmail || trade.buyerEmail || '';
-    } else if (docType === 'shipment_appropriation') {
-      prefillEmail = trade.buyerEmail || '';
-    } else if (docType === 'commission_invoice') {
-      prefillEmail = trade.sellerEmail || trade.buyerEmail || '';
-    }
-    setEmailTo(prefillEmail);
+    setEmailSellerTo('');
+    setEmailBuyerTo('');
     setEmailDialog({ open: true, docType, docLabel });
   };
 
   const sendDocumentEmail = async () => {
-    if (!emailTo) { toast.error('Please enter a recipient email'); return; }
+    if (!emailSellerTo && !emailBuyerTo) { toast.error('Please enter at least one recipient email'); return; }
     setEmailSending(true);
     try {
       await api.post('/api/send-document-email', {
         trade_id: tradeId,
         doc_type: emailDialog.docType,
-        recipient_email: emailTo,
+        seller_email: emailSellerTo,
+        buyer_email: emailBuyerTo,
       });
-      toast.success(`${emailDialog.docLabel} sent to ${emailTo}`);
+      toast.success(`${emailDialog.docLabel} sent successfully`);
       setEmailDialog({ open: false, docType: '', docLabel: '' });
       fetchTrade();
     } catch (err) {
@@ -963,23 +957,27 @@ export default function TradeDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Email {emailDialog.docLabel}</DialogTitle>
-            <DialogDescription>Send the PDF document via email</DialogDescription>
+            <DialogDescription>Separate emails will be sent to seller and buyer. CC: melisa.karagoz@pirgrain.com, salih.karagoz@pirgrain.com</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Recipient Email *</Label>
-              <Input data-testid="email-recipient" type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="recipient@example.com" />
+              <Label>Seller Email ({trade?.sellerName})</Label>
+              <Input data-testid="email-seller" type="email" value={emailSellerTo} onChange={(e) => setEmailSellerTo(e.target.value)} placeholder="seller@example.com" />
             </div>
-            <div className="p-3 rounded-lg bg-muted/50 text-sm">
+            <div className="space-y-2">
+              <Label>Buyer Email ({trade?.buyerName})</Label>
+              <Input data-testid="email-buyer" type="email" value={emailBuyerTo} onChange={(e) => setEmailBuyerTo(e.target.value)} placeholder="buyer@example.com" />
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 text-sm space-y-1">
               <p><strong>Document:</strong> {emailDialog.docLabel}</p>
               <p><strong>Trade:</strong> {trade?.referenceNumber} ({trade?.sellerContractNumber})</p>
-              <p><strong>Commodity:</strong> {trade?.commodityName}</p>
+              <p><strong>From:</strong> alenakaragoz@pirgrain.com</p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmailDialog({ open: false, docType: '', docLabel: '' })}>Cancel</Button>
             <Button onClick={sendDocumentEmail} disabled={emailSending} data-testid="send-email-btn">
-              {emailSending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Send Email
+              {emailSending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Send Emails
             </Button>
           </DialogFooter>
         </DialogContent>

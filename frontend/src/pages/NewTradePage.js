@@ -108,7 +108,7 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '1', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
-    thirdPartyLab: 'not_allowed',
+    thirdPartyLab: 'allowed',
     dischargeRate: '1500', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
     gaftaTerm: 'GAFTA No. 48, Arbitration Clause 125, London',

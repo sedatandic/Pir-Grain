@@ -278,6 +278,18 @@ export default function PortLineupsPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
 
+            <div className="relative max-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search vessels..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30"
+                data-testid="vessel-search-input"
+              />
+            </div>
+
             <div className="relative">
               <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-load-port">
                 <option value="all">All Load Ports</option>
@@ -309,24 +321,6 @@ export default function PortLineupsPage() {
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
-
-            <div className="relative flex-1 max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search vessels..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30"
-                data-testid="vessel-search-input"
-              />
-            </div>
-
-            {reportData && (
-              <span className="text-xs text-muted-foreground self-center" data-testid="report-stats">
-                {reportData.ports?.length} ports - {dates.length} days
-              </span>
-            )}
           </div>
 
           {/* Port tabs */}

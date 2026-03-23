@@ -351,7 +351,11 @@ export default function PortLineupsPage() {
                   selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'
                 }`}>{portVesselCounts['ALL'] || 0}</span>
               </button>
-              {reportData.ports?.map(port => (
+              {reportData.ports?.slice().sort((a, b) => {
+                const countA = new Set(a.vessels.map(v => v.vesselName).filter(Boolean)).size;
+                const countB = new Set(b.vessels.map(v => v.vesselName).filter(Boolean)).size;
+                return countB - countA;
+              }).map(port => (
                 <button
                   key={port.portName}
                   onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}

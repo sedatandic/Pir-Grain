@@ -133,7 +133,16 @@ export default function NewTradePage() {
         // Default origin to Russia for new contracts
         if (!isEdit) {
           const russia = or.data.find(o => o.name?.toLowerCase() === 'russia');
-          if (russia) setForm(prev => ({ ...prev, originId: russia.id }));
+          const samsun = po.data.find(p => p.name?.toLowerCase().includes('samsun'));
+          const izmir = po.data.find(p => p.name?.toLowerCase().includes('izmir'));
+          const defaultPortVariations = [];
+          if (samsun) defaultPortVariations.push({ portId: samsun.id, portName: samsun.name, portCountry: samsun.country || '', difference: '-2' });
+          if (izmir) defaultPortVariations.push({ portId: izmir.id, portName: izmir.name, portCountry: izmir.country || '', difference: '3' });
+          setForm(prev => ({
+            ...prev,
+            originId: russia ? russia.id : prev.originId,
+            portVariations: defaultPortVariations,
+          }));
         }
 
         if (isEdit) {
@@ -530,13 +539,13 @@ export default function NewTradePage() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Port Variations (price difference per MT)</Label>
+              <Label className="text-sm font-medium">Port Options (price difference per MT)</Label>
               <Button type="button" variant="outline" size="sm" onClick={() => set('portVariations', [...form.portVariations, { portId: '', difference: '' }])}>
                 <Plus className="h-3.5 w-3.5 mr-1" />Add Port
               </Button>
             </div>
             {form.portVariations.length === 0 && (
-              <p className="text-sm text-muted-foreground">No port variations added. Click "Add Port" to specify price differences for other discharge ports.</p>
+              <p className="text-sm text-muted-foreground">No port options added. Click "Add Port" to specify price differences for other discharge ports.</p>
             )}
             {form.portVariations.map((pv, idx) => (
               <div key={idx} className="flex items-end gap-3">

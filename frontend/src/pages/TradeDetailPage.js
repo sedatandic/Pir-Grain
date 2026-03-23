@@ -466,7 +466,7 @@ export default function TradeDetailPage() {
                 {trade.portVariations && trade.portVariations.length > 0 && (
                   <>
                     <div>
-                      <span className="text-muted-foreground">Port Variations</span>
+                      <span className="text-muted-foreground">Port Options</span>
                       <div className="mt-2 space-y-1.5">
                         {trade.portVariations.map((pv, i) => (
                           <div key={i} className="flex items-center justify-between rounded-md border px-3 py-1.5 bg-muted/30">

@@ -512,37 +512,6 @@ export default function TradeDetailPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Shipment (B/L) Details Tab */}
-        <TabsContent value="shipment">
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-base">Bill of Lading Details</CardTitle></CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Vessel Name</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{trade.loadingPortName ? `${trade.loadingPortName}${trade.loadingPortCountry ? ', ' + trade.loadingPortCountry : ''}` : (trade.basePortName || '-')}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{trade.dischargePortName ? `${trade.dischargePortName}${trade.dischargePortCountry ? ', ' + trade.dischargePortCountry : ''}` : '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity (Mts)</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Shortage (Mts)</span><span className="font-medium">{(() => { const s = calcShortage(trade.blQuantity, trade.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">N/A</span>; })()}</span></div>
-              <Separator />
-              <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
-            </CardContent>
-          </Card>
 
           {/* Business Confirmation, Documentary Instruction, Shipment Appropriation, Payment Date — all in one row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
@@ -668,6 +637,29 @@ export default function TradeDetailPage() {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Shipment (B/L) Details Tab */}
+        <TabsContent value="shipment">
+          <Card>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Bill of Lading Details</CardTitle></CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Vessel Name</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
+              <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Notify Party</span><span className="font-medium">{trade.notifyParty || '-'}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Shipping Line</span><span className="font-medium">{trade.shippingLine || '-'}</span></div>
+              <Separator />
+              <Button size="sm" className="w-full" onClick={() => { setBlForm({ blNumber: trade.blNumber || '', blDate: trade.blDate || '', blQuantity: trade.blQuantity || '', notifyParty: trade.notifyParty || '', shippingLine: trade.shippingLine || '', consignee: trade.consignee || '', disportAgent: trade.disportAgent || '', loadportAgent: trade.loadportAgent || '', additionalBLNotes: trade.additionalBLNotes || '' }); setBlDialogOpen(true); }} data-testid="edit-bl-btn"><Pencil className="h-3.5 w-3.5 mr-1" />Edit Shipment (B/L) Details</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Documents Tab */}
         <TabsContent value="documents">
           {/* Bulk Upload Zone */}
           <Card className="mb-4">

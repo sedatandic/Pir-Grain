@@ -307,16 +307,16 @@ export default function PortLineupsPage() {
                 <table className="w-full text-sm" data-testid="vessel-table">
                   <thead>
                     <tr className="bg-muted/50 border-b border-border">
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Vessel</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Loading Port</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Arrival</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Vessel</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Loading Port</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Arrival</th>
                       <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Days</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Status</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Op.</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Cargo</th>
-                      <th className="text-right px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">B/L Tonnage</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Buyer</th>
-                      <th className="text-left px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Seller</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Status</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Op.</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Cargo</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">B/L Tonnage</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Buyer</th>
+                      <th className="text-center px-3 py-2.5 font-medium text-muted-foreground whitespace-nowrap">Seller</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -352,11 +352,11 @@ export default function PortLineupsPage() {
                               className={`border-b border-border/50 hover:bg-muted/40 transition-colors ${isAlt ? 'bg-[#f0f7f1]' : ''}`}
                               data-testid={`vessel-row-${i}`}
                             >
-                              <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap" data-testid={`vessel-name-${i}`}>
+                              <td className="px-3 py-2 text-center font-medium text-foreground whitespace-nowrap" data-testid={`vessel-name-${i}`}>
                                 {v.vesselName || '-'}
                               </td>
-                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</td>
-                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</td>
+                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</td>
+                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</td>
                               <td className="px-3 py-2 text-center" data-testid={`vessel-days-${i}`}>
                                 {days !== null ? (
                                   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -369,20 +369,20 @@ export default function PortLineupsPage() {
                                   </span>
                                 ) : '-'}
                               </td>
-                              <td className="px-3 py-2">
+                              <td className="px-3 py-2 text-center">
                                 {v.status ? (
                                   <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
                                     {v.status}
                                   </span>
                                 ) : '-'}
                               </td>
-                              <td className="px-3 py-2 text-muted-foreground text-xs">{translateOp(v.operation)}</td>
-                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</td>
-                              <td className="px-3 py-2 text-right font-mono text-muted-foreground whitespace-nowrap">
+                              <td className="px-3 py-2 text-center text-muted-foreground text-xs">{translateOp(v.operation)}</td>
+                              <td className="px-3 py-2 text-center text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</td>
+                              <td className="px-3 py-2 text-center font-mono text-muted-foreground whitespace-nowrap">
                                 {v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}
                               </td>
-                              <td className="px-3 py-2 text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</td>
-                              <td className="px-3 py-2 text-muted-foreground" title={v.seller}>{v.seller || '-'}</td>
+                              <td className="px-3 py-2 text-center text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</td>
+                              <td className="px-3 py-2 text-center text-muted-foreground" title={v.seller}>{v.seller || '-'}</td>
                             </tr>
                           );
                         });

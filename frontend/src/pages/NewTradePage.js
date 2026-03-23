@@ -102,7 +102,7 @@ export default function NewTradePage() {
 
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
-    commodityId: '', originId: '', quantity: '', tolerance: '', cropYear: new Date().getFullYear().toString(),
+    commodityId: '', originId: '', quantity: '', tolerance: '10', cropYear: new Date().getFullYear().toString(),
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
@@ -287,8 +287,8 @@ export default function NewTradePage() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate('/trades')}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Trade' : 'New Trade'}</h1>
-          <p className="text-muted-foreground">{isEdit ? 'Update trade details' : 'Create a new commodity trade'}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Contract' : 'New Contract'}</h1>
+          <p className="text-muted-foreground">{isEdit ? 'Update contract details' : 'Create a new commodity contract'}</p>
         </div>
       </div>
 

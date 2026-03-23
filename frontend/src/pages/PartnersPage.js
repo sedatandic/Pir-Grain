@@ -140,7 +140,7 @@ export default function PartnersPage({ filterType }) {
 
   const openCreate = () => {
     setEditingPartner(null);
-    setForm({ ...emptyForm, type: filterType ? [filterType] : ['buyer'] });
+    setForm({ ...emptyForm, type: filterType ? [filterType] : [] });
     setDialogOpen(true);
   };
 

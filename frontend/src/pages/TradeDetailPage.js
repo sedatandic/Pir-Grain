@@ -405,7 +405,7 @@ export default function TradeDetailPage() {
               <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Pir Grain Ref. No</span><span className="font-medium">{trade.referenceNumber || '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Contract Number</span><span className="font-medium">{trade.sellerContractNumber || trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Seller Sales Contract No.</span><span className="font-medium">{trade.sellerContractNumber || trade.pirContractNumber || trade.contractNumber || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Contract Date</span><span className="font-medium">{(() => { const d = trade.contractDate; if (!d) return '-'; if (/^\d{2}\/\d{2}\/\d{4}$/.test(d)) return d; try { const m = d.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[3]}/${m[2]}/${m[1]}`; return d; } catch { return d; } })()}</span></div>
                 <Separator />

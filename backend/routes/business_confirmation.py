@@ -91,6 +91,8 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
 
+def generate_bc_pdf(trade):
+    """Generate Business Confirmation PDF and return BytesIO buffer."""
     seller = partners_col.find_one({"_id": ObjectId(trade["sellerId"])}) if trade.get("sellerId") else None
     buyer = partners_col.find_one({"_id": ObjectId(trade["buyerId"])}) if trade.get("buyerId") else None
     broker = partners_col.find_one({"_id": ObjectId(trade["brokerId"])}) if trade.get("brokerId") else None
@@ -291,7 +293,17 @@ def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_u
 
     doc.build(story)
     buf.seek(0)
+    return buf
 
+
+@router.get("/{trade_id}/pdf")
+def generate_business_confirmation_pdf(trade_id: str, user=Depends(get_current_user)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+
+    buf = generate_bc_pdf(trade)
+    contract_no = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("contractNumber") or trade.get("referenceNumber") or "-"
     filename = f"Business_Confirmation_{contract_no}.pdf"
     return StreamingResponse(
         buf,

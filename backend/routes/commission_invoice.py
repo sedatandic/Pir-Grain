@@ -360,6 +360,52 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     return buffer
 
 
+def generate_ci_pdf(trade):
+    """Generate Commission Invoice PDF and return BytesIO buffer."""
+    trade_id = str(trade["_id"])
+    contract_num = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("referenceNumber") or trade_id
+    brokerage_account = trade.get("brokerageAccount") or "seller"
+
+    if brokerage_account == "buyer":
+        partner_id = trade.get("buyerId")
+    else:
+        partner_id = trade.get("sellerId")
+
+    issued_to_name = ""
+    issued_to_address = ""
+    issued_to_tax_id = ""
+
+    if partner_id:
+        try:
+            partner = partners_col.find_one({"_id": ObjectId(partner_id)})
+            if partner:
+                issued_to_name = partner.get("companyName", "")
+                addr_parts = [partner.get("address", ""), partner.get("city", ""), partner.get("country", "")]
+                issued_to_address = ", ".join([p for p in addr_parts if p])
+                issued_to_tax_id = partner.get("taxId", partner.get("taxNumber", ""))
+        except Exception:
+            pass
+
+    if not issued_to_name:
+        issued_to_name = trade.get("buyerName" if brokerage_account == "buyer" else "sellerName", "-")
+
+    invoice_number = f"COMM-{contract_num}"
+    buyer_payment_date = trade.get("buyerPaymentDate")
+    if buyer_payment_date:
+        invoice_date = buyer_payment_date.replace("/", ".")
+    else:
+        invoice_date = datetime.utcnow().strftime("%d.%m.%Y")
+
+    return generate_invoice_pdf(
+        trade=trade,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        issued_to_name=issued_to_name,
+        issued_to_address=issued_to_address,
+        issued_to_tax_id=issued_to_tax_id,
+    )
+
+
 @router.get("/{trade_id}")
 def get_commission_invoice_pdf(trade_id: str, account: str = "seller", bankIds: str = "", user=Depends(get_current_user)):
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})

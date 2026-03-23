@@ -83,6 +83,8 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
 
+def generate_sa_pdf(trade):
+    """Generate Shipment Appropriation PDF and return BytesIO buffer."""
     buyer = None
     if trade.get("buyerId"):
         buyer = partners_col.find_one({"_id": ObjectId(trade["buyerId"])})
@@ -285,8 +287,19 @@ def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_
 
     doc.build(story)
     buf.seek(0)
+    return buf
 
-    filename = f"Shipment_Appropriation_{contract_no}_{trade_id[-6:]}.pdf"
+
+@router.get("/{trade_id}/pdf")
+def generate_shipment_appropriation_pdf(trade_id: str, user=Depends(get_current_user)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+
+    buf = generate_sa_pdf(trade)
+    contract_no = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("contractNumber") or trade.get("referenceNumber") or "-"
+    trade_id_str = str(trade["_id"])
+    filename = f"Shipment_Appropriation_{contract_no}_{trade_id_str[-6:]}.pdf"
     return StreamingResponse(
         buf,
         media_type="application/pdf",

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Checkbox } from '../components/ui/checkbox';
 import { Separator } from '../components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { ArrowLeft, FileText, Ship, Users, ClipboardCheck, Loader2, Save, CheckCircle2, Circle, Briefcase, User as UserIcon, Mail, Phone, Pencil, Plus, X, Paperclip, Download, Trash2, Upload, GripVertical, Send, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
@@ -62,6 +62,9 @@ export default function TradeDetailPage() {
   const [dropTarget, setDropTarget] = useState(null);
   const [sendingSA, setSendingSA] = useState(false);
   const [sendingBC, setSendingBC] = useState(false);
+  const [emailDialog, setEmailDialog] = useState({ open: false, docType: '', docLabel: '' });
+  const [emailTo, setEmailTo] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -248,6 +251,37 @@ export default function TradeDetailPage() {
       toast.success('Business Confirmation generated');
     } catch { toast.error('Failed to generate'); }
     finally { setSendingBC(false); }
+  };
+
+  const openEmailDialog = (docType, docLabel) => {
+    // Pre-fill with counterparty email based on doc type
+    let prefillEmail = '';
+    if (docType === 'business_confirmation') {
+      prefillEmail = trade.sellerEmail || trade.buyerEmail || '';
+    } else if (docType === 'shipment_appropriation') {
+      prefillEmail = trade.buyerEmail || '';
+    } else if (docType === 'commission_invoice') {
+      prefillEmail = trade.sellerEmail || trade.buyerEmail || '';
+    }
+    setEmailTo(prefillEmail);
+    setEmailDialog({ open: true, docType, docLabel });
+  };
+
+  const sendDocumentEmail = async () => {
+    if (!emailTo) { toast.error('Please enter a recipient email'); return; }
+    setEmailSending(true);
+    try {
+      await api.post('/api/send-document-email', {
+        trade_id: tradeId,
+        doc_type: emailDialog.docType,
+        recipient_email: emailTo,
+      });
+      toast.success(`${emailDialog.docLabel} sent to ${emailTo}`);
+      setEmailDialog({ open: false, docType: '', docLabel: '' });
+      fetchTrade();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to send email');
+    } finally { setEmailSending(false); }
   };
 
   const reverseBusinessConfirmation = async () => {
@@ -535,6 +569,9 @@ export default function TradeDetailPage() {
                     {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
                   </Button>
                 )}
+                <Button size="sm" variant="outline" onClick={() => openEmailDialog('business_confirmation', 'Business Confirmation')} data-testid="email-bc-btn">
+                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                </Button>
               </CardContent>
             </Card>
 
@@ -603,6 +640,9 @@ export default function TradeDetailPage() {
                     {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
                   </Button>
                 )}
+                <Button size="sm" variant="outline" onClick={() => openEmailDialog('shipment_appropriation', 'Shipment Appropriation')} data-testid="email-sa-btn">
+                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                </Button>
               </CardContent>
             </Card>
 
@@ -919,6 +959,32 @@ export default function TradeDetailPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setBlDialogOpen(false)}>Cancel</Button>
             <Button onClick={saveBlDetails} disabled={blSaving}>{blSaving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Shipment (B/L) Details</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={emailDialog.open} onOpenChange={(o) => !o && setEmailDialog({ open: false, docType: '', docLabel: '' })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Email {emailDialog.docLabel}</DialogTitle>
+            <DialogDescription>Send the PDF document via email</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Recipient Email *</Label>
+              <Input data-testid="email-recipient" type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} placeholder="recipient@example.com" />
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 text-sm">
+              <p><strong>Document:</strong> {emailDialog.docLabel}</p>
+              <p><strong>Trade:</strong> {trade?.referenceNumber} ({trade?.sellerContractNumber})</p>
+              <p><strong>Commodity:</strong> {trade?.commodityName}</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialog({ open: false, docType: '', docLabel: '' })}>Cancel</Button>
+            <Button onClick={sendDocumentEmail} disabled={emailSending} data-testid="send-email-btn">
+              {emailSending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Send Email
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

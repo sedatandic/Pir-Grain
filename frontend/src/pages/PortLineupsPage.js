@@ -101,15 +101,26 @@ export default function PortLineupsPage() {
   const filteredVessels = useMemo(() => {
     if (!currentPortData) return [];
     const term = searchTerm.toLowerCase();
-    if (!term) return currentPortData.vessels;
-    return currentPortData.vessels.filter(v =>
-      v.vesselName?.toLowerCase().includes(term) ||
-      v.loadingPort?.toLowerCase().includes(term) ||
-      v.cargo?.toLowerCase().includes(term) ||
-      v.buyer?.toLowerCase().includes(term) ||
-      v.seller?.toLowerCase().includes(term)
-    );
-  }, [currentPortData, searchTerm]);
+    let result = currentPortData.vessels;
+    if (term) {
+      result = result.filter(v =>
+        v.vesselName?.toLowerCase().includes(term) ||
+        v.loadingPort?.toLowerCase().includes(term) ||
+        v.cargo?.toLowerCase().includes(term) ||
+        v.buyer?.toLowerCase().includes(term) ||
+        v.seller?.toLowerCase().includes(term)
+      );
+    }
+    // Sort by days at port ascending (lowest first)
+    return [...result].sort((a, b) => {
+      const daysA = calcDaysSince(a.arrivalDate, selectedDate);
+      const daysB = calcDaysSince(b.arrivalDate, selectedDate);
+      if (daysA === null && daysB === null) return 0;
+      if (daysA === null) return 1;
+      if (daysB === null) return -1;
+      return daysA - daysB;
+    });
+  }, [currentPortData, searchTerm, selectedDate]);
 
   // Group vessels by vesselName and aggregate tonnage
   const vesselSummary = useMemo(() => {

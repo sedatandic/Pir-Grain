@@ -18,54 +18,36 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 
 ### Core Features
 - JWT Authentication with role-based access
-- Trade CRUD with complex data model (commodityDisplayName, cropYear, originAdjective)
+- Trade CRUD with complex data model
 - Counterparties/Partners management
-- Commodities, Origins, Ports, Surveyors, Disport Agents reference data
-- Vessels management
-- Calendar/Events
-- Notifications system
-- Dashboard with trade statistics
-
-### Trade Features
-- New/Edit Trade form with all fields (parties, commodity, pricing, shipping, contacts)
-- Loading Port as separate field from Base Port
-- Port Variations with country names stored
-- Trade Detail page with tabs (Summary, Shipment B/L, Documents)
-- B/L Details dialog with Load Port, Discharge Port, Surveyors, Disport Agent
-- Document checklist and bulk upload with drag-and-drop assignment
-- Year-based filtering on Trades page
+- Reference data (Commodities, Origins, Ports, Surveyors, Disport Agents)
+- Vessels, Calendar/Events, Notifications, Dashboard
 
 ### PDF Generation (Updated 2026-03-23)
-- **Business Confirmation PDF** - Date DD-MM-YYYY, commodity as "Name, Crop Year" without origin adj, DEMURRAGE row added
-- **Shipment Appropriation PDF** - with port countries, framed layout
-- **Commission Invoice PDF** - single-page professional layout
-- All three PDFs share consistent corporate design (PIR logo, stamp, footer)
-- Fixed duplicate route definitions that caused PDFs to return null
-- Authenticated download via blob URLs
+- Business Confirmation, Shipment Appropriation, Commission Invoice
+- Date DD-MM-YYYY, commodity as "Name, Crop Year", DEMURRAGE row added
+- Fixed duplicate route definitions that caused null responses
 
 ### Email Integration (Updated 2026-03-23)
-- Send all three PDF documents via email with HTML body + attachment
-- Email header uses PIR logo on #1B7A3D green background
-- Business Confirmation email: DATE=DD-MM-YYYY, COMMODITY without origin adj + crop year, SHIPMENT dates on separate lines, removed LOADING/DISCHARGE PORT, added DEMURRAGE RATE
-- Separate emails to buyer and seller with CC to internal users
+- All 3 PDF documents via Resend with HTML body + attachment
+- PIR logo on #1B7A3D green header
+- Business Confirmation: no LOADING/DISCHARGE PORT, added DEMURRAGE RATE
 
 ### Port Line-Ups (2026-03-23)
-- Upload daily port report Excel files (Gunluk Limanlar Raporu.xlsx)
-- Parses multi-sheet Excel (92 sheets, one per date, organized by port sections)
-- Stores 10,000+ vessel records in MongoDB
-- Frontend page with date selector, port tabs, and vessel detail table
-- Calculates "days since arrival" with color-coded badges
-- Status badges (RIHTIMDA/green, DEMIR/amber, AYRILDI/grey)
-- Search across vessels, cargo, buyers, sellers
-- Footer stats with record count and total B/L tonnage
+- Upload/parse daily port report Excel, 92 dates, 12 ports, 10K+ vessels
+- Date selector, port tabs, vessel table with days-since-arrival calculation
+
+### Business Cards (Updated 2026-03-23)
+- Auto-OCR on upload via GPT-4o Vision (name, company, position, city, country, email, whatsapp, website)
+- TABLE VIEW grouped by country (replaced card grid)
+- Columns: Name, Company, Position, City, Country, Email, WhatsApp, Website, Keywords
+- Collapsible country sections with contact counts
+- Detail dialog with card image, edit/delete actions, search
 
 ### Other Features
-- Business Cards with GPT-4o Vision OCR
-- Reports page with dynamic filters (Year, Seller, Buyer, Commodity, Origin)
+- Reports page with dynamic filters
 - Brokerage Invoices with PENDING/PAID workflow
-- Bank Accounts management in Settings
-- Vendors management in Settings
-- Commission auto-generation on trade completion
+- Bank Accounts & Vendors management in Settings
 
 ## Prioritized Backlog
 
@@ -73,17 +55,10 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Full Server-Side RBAC (protect all API routes by role)
 
 ### P2
-- **Frontend Refactoring (CRITICAL)**: TradeDetailPage.js (1000+ lines), NewTradePage.js (630+ lines)
+- Frontend Refactoring: TradeDetailPage.js (1000+ lines), NewTradePage.js (630+ lines)
 - Counterparty Departments CRUD
 - Document Templates Page
 
 ### P3
 - Export Business Cards to CSV
 - Create Counterparty from scanned business card
-
-## Key Technical Notes
-- PDF routes had duplicate @router.get decorators causing null responses - fixed 2026-03-23
-- Date format across PDFs and emails standardized to DD-MM-YYYY with dashes
-- Port lineups stored in `port_lineups` MongoDB collection (one doc per date)
-- Resend email integration in sandbox mode (only verified addresses)
-- openpyxl used for Excel file parsing

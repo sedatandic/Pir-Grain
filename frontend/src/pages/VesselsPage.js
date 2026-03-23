@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Pencil, Trash2, Loader2, Ship, Anchor } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Loader2, Ship, Anchor, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function VesselsPage() {
@@ -76,6 +76,7 @@ export default function VesselsPage() {
         <CardContent className="pt-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1 min-w-[200px] max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search vessels..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+            {search && <Button variant="ghost" size="sm" onClick={() => setSearch('')} className="text-destructive hover:text-destructive" data-testid="vessels-clear-filter"><X className="h-4 w-4 mr-1" />Clear</Button>}
             <div className="ml-auto"><Button onClick={openCreate} data-testid="vessels-new-button"><Plus className="mr-2 h-4 w-4" />Add Vessel</Button></div>
           </div>
           <div className="overflow-x-auto border rounded-lg">

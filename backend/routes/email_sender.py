@@ -26,9 +26,9 @@ if os.path.exists(LOGO_PATH):
     with open(LOGO_PATH, "rb") as f:
         LOGO_B64 = base64.b64encode(f.read()).decode()
 
-# Public logo URL for emails (Gmail blocks base64 images)
+# Public logo URL for emails
 APP_URL = os.environ.get("APP_URL", "")
-LOGO_URL = f"{APP_URL}/api/static/pir-logo.jpeg" if APP_URL else ""
+LOGO_URL = f"{APP_URL}/api/public/logo" if APP_URL else ""
 
 
 class EmailSendRequest(BaseModel):

@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 
 from config import UPLOAD_DIR
 from seed import seed_data
@@ -38,6 +39,22 @@ app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 app.mount("/api/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 app.include_router(auth_router)
+
+# Public logo endpoint for emails (no auth)
+@app.get("/api/public/logo")
+async def get_public_logo():
+    import requests as req_lib
+    try:
+        STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
+        key = os.environ.get("EMERGENT_LLM_KEY", "")
+        init_resp = req_lib.post(f"{STORAGE_URL}/init", json={"emergent_key": key}, timeout=10)
+        init_resp.raise_for_status()
+        sk = init_resp.json()["storage_key"]
+        resp = req_lib.get(f"{STORAGE_URL}/objects/pir-grain/assets/pir-logo.jpeg", headers={"X-Storage-Key": sk}, timeout=15)
+        resp.raise_for_status()
+        return Response(content=resp.content, media_type="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})
+    except:
+        return Response(content=b"", status_code=404)
 app.include_router(trades_router)
 app.include_router(partners_router)
 app.include_router(vessels_router)

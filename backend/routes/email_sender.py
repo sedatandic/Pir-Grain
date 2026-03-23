@@ -234,6 +234,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
                 vessel_doc = db.vessels.find_one({"_id": ObjectId(trade["vesselId"])})
             except:
                 pass
+        if not vessel_doc and trade.get("vesselName"):
+            vessel_doc = db.vessels.find_one({"name": trade["vesselName"]})
         vessel_imo = (vessel_doc or {}).get("imoNumber") or trade.get("vesselIMO") or "-"
         vessel_flag = (vessel_doc or {}).get("flag") or trade.get("vesselFlag") or "-"
         vessel_built = (vessel_doc or {}).get("builtYear") or trade.get("vesselBuilt") or "-"

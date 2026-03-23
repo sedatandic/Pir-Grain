@@ -5,7 +5,7 @@ from bson import ObjectId
 
 from database import (
     commodities_col, origins_col, ports_col, surveyors_col,
-    disport_agents_col, serialize_doc, create_notification
+    disport_agents_col, loadport_agents_col, serialize_doc, create_notification
 )
 from auth import require_roles
 from models import CommodityCreate, OriginCreate, PortCreate, SurveyorCreate, DisportAgentCreate
@@ -138,6 +138,37 @@ def delete_surveyor(item_id: str, user=Depends(non_accountant)):
     create_notification("settings", f"Surveyor deleted: {s.get('name', '') if s else item_id}", item_id, user.get("username"))
     return {"message": "Deleted"}
 
+
+
+# ─── Load Port Agents ─────────────────────────────────────────
+@router.get("/loadport-agents")
+def list_loadport_agents(user=Depends(non_accountant)):
+    return [serialize_doc(i) for i in loadport_agents_col.find().sort("name", 1)]
+
+
+@router.post("/loadport-agents")
+def create_loadport_agent(item: DisportAgentCreate, user=Depends(non_accountant)):
+    data = item.dict()
+    data["createdAt"] = datetime.utcnow()
+    result = loadport_agents_col.insert_one(data)
+    data["_id"] = result.inserted_id
+    create_notification("settings", f"Load Port Agent added: {data.get('name', '')}", str(result.inserted_id), user.get("username"))
+    return serialize_doc(data)
+
+
+@router.put("/loadport-agents/{item_id}")
+def update_loadport_agent(item_id: str, item: DisportAgentCreate, user=Depends(non_accountant)):
+    loadport_agents_col.update_one({"_id": ObjectId(item_id)}, {"$set": item.dict()})
+    create_notification("settings", f"Load Port Agent updated: {item.name}", item_id, user.get("username"))
+    return serialize_doc(loadport_agents_col.find_one({"_id": ObjectId(item_id)}))
+
+
+@router.delete("/loadport-agents/{item_id}")
+def delete_loadport_agent(item_id: str, user=Depends(non_accountant)):
+    a = loadport_agents_col.find_one({"_id": ObjectId(item_id)})
+    loadport_agents_col.delete_one({"_id": ObjectId(item_id)})
+    create_notification("settings", f"Load Port Agent deleted: {a.get('name', '') if a else item_id}", item_id, user.get("username"))
+    return {"message": "Deleted"}
 
 
 # ─── Disport Agents ──────────────────────────────────────────

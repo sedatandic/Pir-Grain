@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [surveyors, setSurveyors] = useState([]);
   const [users, setUsers] = useState([]);
   const [disportAgents, setDisportAgents] = useState([]);
+  const [loadportAgents, setLoadportAgents] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,10 +35,10 @@ export default function SettingsPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [co, or, po, su, us, da, ve, ba] = await Promise.all([
-        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'), api.get('/api/vendors'), api.get('/api/bank-accounts'),
+      const [co, or, po, su, us, da, ve, ba, la] = await Promise.all([
+        api.get('/api/commodities'), api.get('/api/origins'), api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/users'), api.get('/api/disport-agents'), api.get('/api/vendors'), api.get('/api/bank-accounts'), api.get('/api/loadport-agents'),
       ]);
-      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data); setVendors(ve.data); setBankAccounts(ba.data);
+      setCommodities(co.data); setOrigins(or.data); setPorts(po.data); setSurveyors(su.data); setUsers(us.data); setDisportAgents(da.data); setVendors(ve.data); setBankAccounts(ba.data); setLoadportAgents(la.data);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   }, []);
 
@@ -59,8 +60,8 @@ export default function SettingsPage() {
       const editId = dialogForm._editId;
       const formData = { ...dialogForm };
       delete formData._editId;
-      // Apply Title Case for disport-agents name field
-      if (dialogType === 'disport-agents' && formData.name) {
+      // Apply Title Case for disport-agents and loadport-agents name field
+      if ((dialogType === 'disport-agents' || dialogType === 'loadport-agents') && formData.name) {
         formData.name = toTitleCase(formData.name);
       }
       const endpoint = `/api/${dialogType}`;
@@ -125,6 +126,7 @@ export default function SettingsPage() {
               <TabsTrigger value="loading-ports"><Anchor className="h-3.5 w-3.5 mr-1" />Loading Ports</TabsTrigger>
               <TabsTrigger value="discharge-ports"><Ship className="h-3.5 w-3.5 mr-1" />Discharge Ports</TabsTrigger>
               <TabsTrigger value="surveyors"><Map className="h-3.5 w-3.5 mr-1" />Surveyors</TabsTrigger>
+              <TabsTrigger value="loadport-agents"><Ship className="h-3.5 w-3.5 mr-1" />Load Port Agents</TabsTrigger>
               <TabsTrigger value="disport-agents"><Anchor className="h-3.5 w-3.5 mr-1" />Disport Agents</TabsTrigger>
               <TabsTrigger value="vendors"><DollarSign className="h-3.5 w-3.5 mr-1" />Vendors</TabsTrigger>
               <TabsTrigger value="bank-accounts"><Landmark className="h-3.5 w-3.5 mr-1" />Bank Accounts</TabsTrigger>
@@ -168,6 +170,13 @@ export default function SettingsPage() {
               </TableBody></Table></div>
             </TabsContent>
 
+            <TabsContent value="loadport-agents">
+              <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Load Port Agents ({loadportAgents.length})</h3><Button size="sm" onClick={() => openAdd('loadport-agents', { name: '', port: '', contact: '', email: '', tel: '', whatsapp: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Load Port Agent</Button></div>
+              <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead>Email</TableHead><TableHead>Tel</TableHead><TableHead>WhatsApp</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
+                {loadportAgents.map(a => <TableRow key={a.id}><TableCell className="font-medium">{a.name}</TableCell><TableCell>{a.port || '-'}</TableCell><TableCell>{a.contact || '-'}</TableCell><TableCell>{a.email ? <a href={`mailto:${a.email}`} className="text-blue-600 hover:underline text-xs">{a.email}</a> : '-'}</TableCell><TableCell className="text-xs">{a.tel || '-'}</TableCell><TableCell className="text-xs">{a.whatsapp || '-'}</TableCell><TableCell><p className="text-xs whitespace-pre-line">{a.address || '-'}</p></TableCell><TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDialogType('loadport-agents'); setDialogForm({ name: a.name || '', port: a.port || '', contact: a.contact || '', email: a.email || '', tel: a.tel || '', whatsapp: a.whatsapp || '', address: a.address || '', _editId: a.id }); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete('loadport-agents', a.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell></TableRow>)}
+              </TableBody></Table></div>
+            </TabsContent>
+
             <TabsContent value="disport-agents">
               <div className="flex items-center justify-between mb-4"><h3 className="font-semibold">Discharge Port Agents ({disportAgents.length})</h3><Button size="sm" onClick={() => openAdd('disport-agents', { name: '', port: '', contact: '', email: '', tel: '', whatsapp: '', address: '' })}><Plus className="h-3.5 w-3.5 mr-1" />Add Disport-Agent</Button></div>
               <div className="border rounded-lg overflow-x-auto"><Table><TableHeader><TableRow className="bg-muted/50"><TableHead>Agent Name</TableHead><TableHead>Port</TableHead><TableHead>Contact</TableHead><TableHead>Email</TableHead><TableHead>Tel</TableHead><TableHead>WhatsApp</TableHead><TableHead className="min-w-[250px]">Address</TableHead><TableHead className="w-[80px]">Actions</TableHead></TableRow></TableHeader><TableBody>
@@ -201,8 +210,8 @@ export default function SettingsPage() {
 
       {/* Generic Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setNewDocInput(''); }}>
-        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' || dialogType === 'bank-accounts' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
-          <DialogHeader className="text-center"><DialogTitle className="text-center">{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport-Agent' : dialogType === 'commodities' ? 'Commodity' : dialogType === 'bank-accounts' ? 'Bank Account' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription className="text-center">Fill in the details.</DialogDescription></DialogHeader>
+        <DialogContent className={dialogType === 'commodities' && dialogForm._editId ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : dialogType === 'disport-agents' || dialogType === 'loadport-agents' || dialogType === 'bank-accounts' ? 'max-w-2xl max-h-[85vh] overflow-y-auto' : ''}>
+          <DialogHeader className="text-center"><DialogTitle className="text-center">{dialogForm._editId ? 'Edit' : 'Add'} {dialogType === 'disport-agents' ? 'Disport Agent' : dialogType === 'loadport-agents' ? 'Load Port Agent' : dialogType === 'commodities' ? 'Commodity' : dialogType === 'bank-accounts' ? 'Bank Account' : dialogType.replace(/s$/, '')}</DialogTitle><DialogDescription className="text-center">Fill in the details.</DialogDescription></DialogHeader>
           <div className="space-y-3 py-4">
             {Object.entries(dialogForm).filter(([key]) => key !== '_editId' && key !== 'documents').map(([key, val]) => (
               key === 'type' && (dialogType === 'ports' || dialogType === 'loading-ports' || dialogType === 'discharge-ports') ? (

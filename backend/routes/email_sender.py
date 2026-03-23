@@ -26,6 +26,10 @@ if os.path.exists(LOGO_PATH):
     with open(LOGO_PATH, "rb") as f:
         LOGO_B64 = base64.b64encode(f.read()).decode()
 
+# Public logo URL for emails (Gmail blocks base64 images)
+APP_URL = os.environ.get("APP_URL", "")
+LOGO_URL = f"{APP_URL}/api/static/pir-logo.jpeg" if APP_URL else ""
+
 
 class EmailSendRequest(BaseModel):
     trade_id: str
@@ -152,7 +156,15 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     price_display = f"{currency} {float(price):,.2f}/MT {delivery_term} {base_port_full}".strip() if price else "-"
 
     logo_html = ""
-    if LOGO_B64:
+    if LOGO_URL:
+        logo_html = f'''
+            <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
+                <td style="text-align: center; padding: 10px 0;">
+                    <img src="{LOGO_URL}" style="height: 50px; vertical-align: middle;" alt="PIR" />
+                    <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">PIR Grain &amp; Pulses Ltd</span>
+                </td>
+            </tr></table>'''
+    elif LOGO_B64:
         logo_html = f'''
             <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
                 <td style="text-align: center; padding: 10px 0;">

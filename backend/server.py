@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="PIR Grain & Pulses API", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/api/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
 
 app.include_router(auth_router)
 app.include_router(trades_router)

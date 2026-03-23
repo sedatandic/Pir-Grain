@@ -647,7 +647,7 @@ export default function TradeDetailPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="resend-sa-btn">
-                        {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
+                        {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Resend
                       </Button>
                       <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={reverseShipmentAppropriation} disabled={sendingSA} data-testid="reverse-sa-btn">
                         <X className="h-4 w-4 mr-1" />Reverse
@@ -656,11 +656,11 @@ export default function TradeDetailPage() {
                   </div>
                 ) : (
                   <Button onClick={sendShipmentAppropriation} disabled={sendingSA} data-testid="send-sa-btn">
-                    {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
+                    {sendingSA ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}Generate Shipment Appropriation
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => openEmailDialog('shipment_appropriation', 'Shipment Appropriation')} data-testid="email-sa-btn">
-                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                <Button variant="outline" onClick={() => openEmailDialog('shipment_appropriation', 'Shipment Appropriation')} data-testid="email-sa-btn">
+                  <Send className="h-4 w-4 mr-1" />Email Shipment Appropriation
                 </Button>
               </CardContent>
             </Card>

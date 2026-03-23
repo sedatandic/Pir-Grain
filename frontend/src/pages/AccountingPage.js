@@ -381,22 +381,19 @@ export default function AccountingPage() {
             <div className="space-y-2"><Label>Currency</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>
             </div>
-            <div className="space-y-2"><Label>Due Date</Label><Input 
-              placeholder="dd/mm/yyyy"
-              value={form.dueDate ? (() => { const [y,m,d] = form.dueDate.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.dueDate; })() : ''} 
-              onChange={(e) => {
-                let v = e.target.value.replace(/[^\d/]/g, '');
-                if (v.length === 2 && !v.includes('/')) v += '/';
-                if (v.length === 5 && v.split('/').length === 2) v += '/';
-                if (v.length > 10) v = v.slice(0, 10);
-                const parts = v.split('/');
-                if (parts.length === 3 && parts[2].length === 4) {
-                  setForm({...form, dueDate: `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`});
-                } else {
-                  setForm({...form, dueDate: v});
-                }
-              }}
-            /></div>
+            <div className="space-y-2"><Label>Due Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.dueDate && 'text-muted-foreground')}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {form.dueDate ? (() => { try { const [y,m,d] = form.dueDate.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.dueDate; } catch { return form.dueDate; } })() : 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={form.dueDate ? (() => { try { return parseISO(form.dueDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, dueDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-2"><Label>Category</Label>
               <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{(form.direction === 'incoming' ? INCOMING_CATEGORIES : OUTGOING_CATEGORIES).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
             </div>

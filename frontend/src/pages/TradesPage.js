@@ -523,7 +523,7 @@ export default function TradesPage() {
               </SelectContent>
             </Select>
             <div className="ml-auto shrink-0">
-              <Button onClick={() => navigate('/trades/new')} data-testid="trades-new-trade-button"><Plus className="mr-2 h-4 w-4" />New Trade</Button>
+              <Button onClick={() => navigate('/trades/new')} data-testid="trades-new-trade-button"><Plus className="mr-2 h-4 w-4" />New Contract</Button>
             </div>
           </div>
         </CardContent>

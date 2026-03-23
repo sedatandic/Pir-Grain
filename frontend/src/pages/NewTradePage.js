@@ -137,7 +137,7 @@ export default function NewTradePage() {
           const izmir = po.data.find(p => p.name?.toLowerCase().includes('izmir'));
           const defaultPortVariations = [];
           if (samsun) defaultPortVariations.push({ portId: samsun.id, portName: samsun.name, portCountry: samsun.country || '', difference: '-2' });
-          if (izmir) defaultPortVariations.push({ portId: izmir.id, portName: izmir.name, portCountry: izmir.country || '', difference: '3' });
+          if (izmir) defaultPortVariations.push({ portId: izmir.id, portName: izmir.name, portCountry: izmir.country || '', difference: '+3' });
           setForm(prev => ({
             ...prev,
             originId: russia ? russia.id : prev.originId,
@@ -563,9 +563,10 @@ export default function NewTradePage() {
                 </div>
                 <div className="w-[130px] space-y-1">
                   {idx === 0 && <Label className="text-xs text-muted-foreground">+/- per MT ({form.currency || 'USD'})</Label>}
-                  <Input type="number" value={pv.difference} placeholder="e.g. +5 or -3" onChange={(e) => {
+                  <Input type="text" value={pv.difference} placeholder="e.g. +5 or -3" onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9.+-]/g, '');
                     const updated = [...form.portVariations];
-                    updated[idx] = { ...updated[idx], difference: e.target.value };
+                    updated[idx] = { ...updated[idx], difference: val };
                     set('portVariations', updated);
                   }} />
                 </div>

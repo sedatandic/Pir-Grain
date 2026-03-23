@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -91,6 +91,8 @@ export default function AccountingPage() {
   const [bankAccounts, setBankAccounts] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [vendors, setVendors] = useState([]);
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
+  const [filterMonth, setFilterMonth] = useState('all');
 
   const fetchData = async () => {
     try {
@@ -117,11 +119,47 @@ export default function AccountingPage() {
   const incoming = invoices.filter(i => i.direction === 'incoming');
   const outgoing = invoices.filter(i => i.direction !== 'incoming');
 
+  const getInvoiceYM = (inv) => {
+    const d = inv.createdAt || inv.dueDate || '';
+    try {
+      const dt = parseISO(d);
+      return { y: dt.getFullYear().toString(), m: (dt.getMonth() + 1).toString() };
+    } catch { return { y: '', m: '' }; }
+  };
+
+  const filterByYM = (list) => {
+    let result = list;
+    if (filterYear !== 'all') result = result.filter(i => getInvoiceYM(i).y === filterYear);
+    if (filterMonth !== 'all') result = result.filter(i => getInvoiceYM(i).m === filterMonth);
+    return result;
+  };
+
+  const filteredIncoming = useMemo(() => filterByYM(incoming), [incoming, filterYear, filterMonth]);
+  const filteredOutgoing = useMemo(() => filterByYM(outgoing), [outgoing, filterYear, filterMonth]);
+  const filteredBankStatements = useMemo(() => {
+    let result = bankStatements;
+    if (filterYear !== 'all') result = result.filter(s => String(s.year) === filterYear);
+    if (filterMonth !== 'all') result = result.filter(s => String(s.month) === filterMonth);
+    return result;
+  }, [bankStatements, filterYear, filterMonth]);
+
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    invoices.forEach(i => { const y = getInvoiceYM(i).y; if (y) years.add(y); });
+    bankStatements.forEach(s => { if (s.year) years.add(String(s.year)); });
+    return Array.from(years).sort().reverse();
+  }, [invoices, bankStatements]);
+
+  const MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const hasActiveTimeFilter = filterYear !== new Date().getFullYear().toString() || filterMonth !== 'all';
+  const clearTimeFilters = () => { setFilterYear(new Date().getFullYear().toString()); setFilterMonth('all'); };
+
   const stats = {
-    inTotal: incoming.reduce((s, i) => s + (i.amount || 0), 0),
-    inPending: incoming.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
-    outTotal: outgoing.reduce((s, i) => s + (i.amount || 0), 0),
-    outPending: outgoing.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
+    inTotal: filteredIncoming.reduce((s, i) => s + (i.amount || 0), 0),
+    inPending: filteredIncoming.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
+    outTotal: filteredOutgoing.reduce((s, i) => s + (i.amount || 0), 0),
+    outPending: filteredOutgoing.filter(i => i.status === 'pending').reduce((s, i) => s + (i.amount || 0), 0),
   };
 
   const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -188,11 +226,33 @@ export default function AccountingPage() {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Outgoing Pending</CardTitle><Clock className="h-4 w-4 text-amber-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{fmt(stats.outPending)}</div></CardContent></Card>
       </div>
 
+      {/* Year & Month Filter */}
+      <Card>
+        <CardContent className="pt-4 pb-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Select value={filterYear} onValueChange={(v) => { setFilterYear(v); }} data-testid="accounting-year-filter">
+              <SelectTrigger className="w-[110px] shrink-0" data-testid="accounting-year-filter"><CalendarDays className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {availableYears.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {hasActiveTimeFilter && <Button variant="ghost" size="sm" onClick={clearTimeFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="accounting-clear-filter"><X className="h-4 w-4 mr-1" />Clear</Button>}
+            <div className="flex items-center gap-1 flex-wrap">
+              <Button variant={filterMonth === 'all' ? 'default' : 'outline'} size="sm" className="h-7 text-xs px-2.5" onClick={() => setFilterMonth('all')} data-testid="accounting-month-all">All</Button>
+              {MONTH_LABELS.map((m, i) => (
+                <Button key={i} variant={filterMonth === String(i + 1) ? 'default' : 'outline'} size="sm" className="h-7 text-xs px-2.5" onClick={() => setFilterMonth(String(i + 1))} data-testid={`accounting-month-${i+1}`}>{m}</Button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="incoming">
         <TabsList>
-          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({incoming.length})</TabsTrigger>
-          <TabsTrigger value="outgoing"><ArrowUpRight className="h-3.5 w-3.5 mr-1" />Outgoing Payments ({outgoing.length})</TabsTrigger>
-          <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({bankStatements.length})</TabsTrigger>
+          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({filteredIncoming.length})</TabsTrigger>
+          <TabsTrigger value="outgoing"><ArrowUpRight className="h-3.5 w-3.5 mr-1" />Outgoing Payments ({filteredOutgoing.length})</TabsTrigger>
+          <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({filteredBankStatements.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="incoming">
@@ -202,7 +262,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={incoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
+              <InvoiceTable invoices={filteredIncoming} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -214,7 +274,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search outgoing..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
-              <InvoiceTable invoices={outgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
+              <InvoiceTable invoices={filteredOutgoing} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -225,7 +285,7 @@ export default function AccountingPage() {
           ) : (
             <div className="space-y-4">
               {bankAccounts.map(bank => {
-                const stmts = bankStatements.filter(s => s.bankAccountId === bank.id);
+              const stmts = filteredBankStatements.filter(s => s.bankAccountId === bank.id);
                 return (
                   <Card key={bank.id}>
                     <CardContent className="pt-6">
@@ -260,7 +320,7 @@ export default function AccountingPage() {
                 );
               })}
               {/* Unassigned statements */}
-              {bankStatements.filter(s => !s.bankAccountId).length > 0 && (
+              {filteredBankStatements.filter(s => !s.bankAccountId).length > 0 && (
                 <Card>
                   <CardContent className="pt-6">
                     <h3 className="font-semibold mb-4 text-muted-foreground">Unassigned Statements</h3>
@@ -270,7 +330,7 @@ export default function AccountingPage() {
                           <TableHead>Period</TableHead><TableHead>Description</TableHead><TableHead>File</TableHead><TableHead>Uploaded</TableHead><TableHead className="w-[60px]">Actions</TableHead>
                         </TableRow></TableHeader>
                         <TableBody>
-                          {bankStatements.filter(s => !s.bankAccountId).map(s => (
+                          {filteredBankStatements.filter(s => !s.bankAccountId).map(s => (
                             <TableRow key={s.id}>
                               <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
                               <TableCell>{s.description || '-'}</TableCell>

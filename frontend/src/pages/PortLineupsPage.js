@@ -285,51 +285,66 @@ export default function PortLineupsPage() {
                         </td>
                       </tr>
                     ) : (
-                      filteredVessels.map((v, i) => {
-                        const days = calcDaysSince(v.arrivalDate, selectedDate);
-                        const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
-                        return (
-                          <tr
-                            key={i}
-                            className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${
-                              i % 2 === 0 ? '' : 'bg-muted/10'
-                            }`}
-                            data-testid={`vessel-row-${i}`}
-                          >
-                            <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap" data-testid={`vessel-name-${i}`}>
-                              {v.vesselName || '-'}
-                            </td>
-                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</td>
-                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</td>
-                            <td className="px-3 py-2 text-center" data-testid={`vessel-days-${i}`}>
-                              {days !== null ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
-                                  days > 10 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-                                  : days > 5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                                }`}>
-                                  <Clock className="w-3 h-3" />
-                                  {days}
-                                </span>
-                              ) : '-'}
-                            </td>
-                            <td className="px-3 py-2">
-                              {v.status ? (
-                                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
-                                  {v.status}
-                                </span>
-                              ) : '-'}
-                            </td>
-                            <td className="px-3 py-2 text-muted-foreground text-xs">{v.operation || '-'}</td>
-                            <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.cargo || '-'}</td>
-                            <td className="px-3 py-2 text-right font-mono text-muted-foreground whitespace-nowrap">
-                              {v.blTonnage != null ? v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '-'}
-                            </td>
-                            <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.buyer}>{v.buyer || '-'}</td>
-                            <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.seller}>{v.seller || '-'}</td>
-                          </tr>
-                        );
-                      })
+                      (() => {
+                        // Build vessel group index for alternating colors
+                        let vesselColorIndex = 0;
+                        let lastVessel = null;
+                        const vesselGroupMap = {};
+                        filteredVessels.forEach(v => {
+                          const name = v.vesselName || '(unnamed)';
+                          if (name !== lastVessel) {
+                            if (lastVessel !== null) vesselColorIndex++;
+                            lastVessel = name;
+                          }
+                          if (!(name in vesselGroupMap)) vesselGroupMap[name] = vesselColorIndex;
+                        });
+
+                        return filteredVessels.map((v, i) => {
+                          const days = calcDaysSince(v.arrivalDate, selectedDate);
+                          const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
+                          const groupIdx = vesselGroupMap[v.vesselName || '(unnamed)'] || 0;
+                          const isAlt = groupIdx % 2 === 1;
+                          return (
+                            <tr
+                              key={i}
+                              className={`border-b border-border/50 hover:bg-muted/40 transition-colors ${isAlt ? 'bg-[#f0f7f1]' : ''}`}
+                              data-testid={`vessel-row-${i}`}
+                            >
+                              <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap" data-testid={`vessel-name-${i}`}>
+                                {v.vesselName || '-'}
+                              </td>
+                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</td>
+                              <td className="px-3 py-2 text-center" data-testid={`vessel-days-${i}`}>
+                                {days !== null ? (
+                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
+                                    days > 10 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                    : days > 5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
+                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                                  }`}>
+                                    <Clock className="w-3 h-3" />
+                                    {days}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                              <td className="px-3 py-2">
+                                {v.status ? (
+                                  <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
+                                    {v.status}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                              <td className="px-3 py-2 text-muted-foreground text-xs">{v.operation || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{v.cargo || '-'}</td>
+                              <td className="px-3 py-2 text-right font-mono text-muted-foreground whitespace-nowrap">
+                                {v.blTonnage != null ? v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 }) : '-'}
+                              </td>
+                              <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.buyer}>{v.buyer || '-'}</td>
+                              <td className="px-3 py-2 text-muted-foreground max-w-[200px] truncate" title={v.seller}>{v.seller || '-'}</td>
+                            </tr>
+                          );
+                        });
+                      })()
                     )}
                   </tbody>
                 </table>

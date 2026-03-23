@@ -228,26 +228,24 @@ export default function PartnersPage({ filterType }) {
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead>Company</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Location</TableHead>
+                    <TableHead>Company Code</TableHead>
+                    <TableHead>City</TableHead>
+                    <TableHead>Country</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
                   ) : filtered.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
-                        <div><div className="font-medium">{p.companyName}</div>{p.companyCode && <div className="text-xs text-muted-foreground">{p.companyCode}</div>}</div>
+                        <div className="font-medium">{p.companyName}</div>
                       </TableCell>
-                      <TableCell className="text-sm">{p.contactPerson || '-'}</TableCell>
-                      <TableCell className="text-sm">{p.email ? <a href={`mailto:${p.email}`} className="text-primary hover:underline flex items-center gap-1"><Mail className="h-3 w-3" />{p.email}</a> : '-'}</TableCell>
-                      <TableCell className="text-sm">{p.phone ? <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</span> : '-'}</TableCell>
-                      <TableCell className="text-sm">{[p.city, p.country].filter(Boolean).join(', ') || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.companyCode || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.city || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.country || '-'}</TableCell>
                       <TableCell><div className="flex flex-wrap gap-1">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>
                       <TableCell>
                         <div className="flex gap-1">

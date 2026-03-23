@@ -11,9 +11,9 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays } from 'lucide-react';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays, TrendingUp, AlertCircle, DollarSign, Users, Building } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isAfter, startOfDay } from 'date-fns';
 
 export default function TradesPage() {
   const navigate = useNavigate();
@@ -24,6 +24,8 @@ export default function TradesPage() {
   const [origins, setOrigins] = useState([]);
   const [vessels, setVessels] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState([]);
+  const [events, setEvents] = useState([]);
   const [search, setSearch] = useState('');
   const [filterCommodity, setFilterCommodity] = useState('all');
   const [filterSeller, setFilterSeller] = useState('all');
@@ -40,18 +42,22 @@ export default function TradesPage() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [tr, pa, co, or, ve] = await Promise.all([
+      const [tr, pa, co, or, ve, inv, ev] = await Promise.all([
         api.get('/api/trades'),
         api.get('/api/partners'),
         api.get('/api/commodities'),
         api.get('/api/origins'),
         api.get('/api/vessels'),
+        api.get('/api/invoices'),
+        api.get('/api/events'),
       ]);
       setTrades(tr.data);
       setPartners(pa.data);
       setCommodities(co.data);
       setOrigins(or.data);
       setVessels(ve.data);
+      setInvoices(inv.data);
+      setEvents(ev.data);
     } catch (err) {
       toast.error('Failed to load data');
     } finally {
@@ -165,6 +171,18 @@ export default function TradesPage() {
     washout: applyFilters(categorized.washout),
     cancelled: applyFilters(categorized.cancelled),
   }), [categorized, applyFilters]);
+
+  const upcomingItems = useMemo(() => {
+    const today = startOfDay(new Date());
+    const items = [];
+    invoices.filter(i => i.status === 'pending').forEach(inv => {
+      items.push({ id: inv.id, type: 'invoice', title: `Invoice ${inv.invoiceNumber} - ${inv.vendorName}`, date: inv.dueDate, icon: 'payment' });
+    });
+    events.filter(e => { try { const d = parseISO(e.date); return isAfter(d, today) || format(d, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'); } catch { return false; } })
+      .forEach(evt => { items.push({ id: evt.id, type: 'event', title: evt.title, date: evt.date, icon: evt.type }); });
+    items.sort((a, b) => { try { return new Date(a.date) - new Date(b.date); } catch { return 0; } });
+    return items;
+  }, [invoices, events]);
 
   const handleStatusChange = async (tradeId, newStatus) => {
     try {
@@ -380,6 +398,68 @@ export default function TradesPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Trades</h1>
         <p className="text-muted-foreground">Manage all your commodity trades</p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-ongoing" onClick={() => { const el = document.getElementById('trades-ongoing'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-blue-100"><Ship className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /></div>
+          </CardHeader>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{categorized.ongoing.length}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>In transit</span></div>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-pending" onClick={() => { const el = document.getElementById('trades-pending'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Pending Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-amber-100"><Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-600" /></div>
+          </CardHeader>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{categorized.pending.length}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground"><AlertCircle className="h-3 w-3" /><span>Awaiting vessel</span></div>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-completed" onClick={() => { const el = document.getElementById('trades-completed'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+          <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Completed Trades</CardTitle>
+            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-green-50"><CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-secondary" /></div>
+          </CardHeader>
+          <CardContent className="pb-2">
+            <div className="text-2xl md:text-3xl font-bold mt-1">{categorized.completed.length}</div>
+            <div className="mt-1 flex items-center gap-1 text-xs text-secondary"><TrendingUp className="h-3 w-3" /><span>Completed</span></div>
+          </CardContent>
+        </Card>
+        <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-upcoming" onClick={() => navigate('/calendar')}>
+          <CardHeader className="pb-1 pt-1">
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground text-center">Upcoming Payments & Events</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {upcomingItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-2 text-center">
+                <CalendarDays className="h-8 w-8 text-muted-foreground/30 mb-1" />
+                <p className="text-xs text-muted-foreground">No upcoming items</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {upcomingItems.slice(0, 3).map((item) => (
+                  <div key={`${item.type}-${item.id}`} className="flex items-center gap-2 p-1.5 rounded-lg border bg-muted/30">
+                    <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${item.icon === 'payment' || item.type === 'invoice' ? 'bg-green-100' : item.icon === 'meeting' ? 'bg-blue-100' : item.icon === 'conference' ? 'bg-purple-100' : 'bg-gray-100'}`}>
+                      {item.icon === 'payment' || item.type === 'invoice' ? <DollarSign className="h-3 w-3 text-green-600" /> : item.icon === 'meeting' ? <Users className="h-3 w-3 text-blue-600" /> : item.icon === 'conference' ? <Building className="h-3 w-3 text-purple-600" /> : <CalendarDays className="h-3 w-3 text-gray-600" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate">{item.title}</p>
+                      <p className="text-[10px] text-muted-foreground">{(() => { try { return format(parseISO(item.date), 'MMM d, yyyy'); } catch { return ''; } })()}</p>
+                    </div>
+                  </div>
+                ))}
+                {upcomingItems.length > 3 && <p className="text-xs text-center text-muted-foreground">+{upcomingItems.length - 3} more</p>}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search + Filters */}

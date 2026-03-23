@@ -275,7 +275,7 @@ export default function BusinessCardsPage() {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailCard} onOpenChange={(o) => !o && setDetailCard(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">Contact Details</DialogTitle>
@@ -290,7 +290,7 @@ export default function BusinessCardsPage() {
           {detailCard && (
             <div className="space-y-3">
               {detailCard.imageUrl && (
-                <img src={`${process.env.REACT_APP_BACKEND_URL}${detailCard.imageUrl}`} alt="" className="w-full rounded-lg border object-contain max-h-48" />
+                <img src={`${process.env.REACT_APP_BACKEND_URL}${detailCard.imageUrl}`} alt="" className="w-full rounded-lg border object-contain max-h-64" />
               )}
               <div className="space-y-2.5">
                 <DetailRow icon={User} label="Name" value={detailCard.name} />

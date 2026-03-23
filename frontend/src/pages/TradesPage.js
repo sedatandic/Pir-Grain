@@ -289,7 +289,7 @@ export default function TradesPage() {
   };
 
   const renderTable = (list, empty) => {
-    if (list.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">{search || hasActiveFilters ? 'No trades match your search or filters' : empty}</div>;
+    if (list.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">{search || hasActiveFilters ? 'No contracts match your search or filters' : empty}</div>;
     return (
       <div className="overflow-x-auto border rounded-lg">
         <Table className="trade-table">
@@ -404,7 +404,7 @@ export default function TradesPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-ongoing" onClick={() => { const el = document.getElementById('trades-ongoing'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
           <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
-            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Ongoing Trades</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Ongoing Contracts</CardTitle>
             <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-blue-100"><Ship className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" /></div>
           </CardHeader>
           <CardContent className="pb-2">
@@ -414,7 +414,7 @@ export default function TradesPage() {
         </Card>
         <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-pending" onClick={() => { const el = document.getElementById('trades-pending'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
           <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
-            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Pending Trades</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Pending Contracts</CardTitle>
             <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-amber-100"><Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-600" /></div>
           </CardHeader>
           <CardContent className="pb-2">
@@ -424,7 +424,7 @@ export default function TradesPage() {
         </Card>
         <Card className="relative overflow-hidden p-1.5 md:p-2 cursor-pointer hover:shadow-md transition-shadow" data-testid="trades-kpi-completed" onClick={() => { const el = document.getElementById('trades-completed'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
           <CardHeader className="flex flex-row items-center justify-between pb-1 pt-1">
-            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Completed Trades</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-semibold text-muted-foreground">Completed Contracts</CardTitle>
             <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg bg-green-50"><CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 text-secondary" /></div>
           </CardHeader>
           <CardContent className="pb-2">
@@ -532,8 +532,8 @@ export default function TradesPage() {
       {/* Ongoing */}
       <Card id="trades-ongoing" className="border-l-4 border-l-emerald-500 bg-emerald-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Trades</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
-          <CardDescription className="text-emerald-700">Trades with vessel details</CardDescription>
+          <div className="flex items-center gap-2"><Ship className="h-5 w-5 text-emerald-600" /><CardTitle className="text-emerald-800">Ongoing Contracts</CardTitle><Badge variant="secondary" className="bg-emerald-100 text-emerald-800">{filtered.ongoing.length}</Badge></div>
+          <CardDescription className="text-emerald-700">Contracts with vessel details</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.ongoing, 'No ongoing contracts')}</CardContent>
       </Card>
@@ -541,7 +541,7 @@ export default function TradesPage() {
       {/* Pending */}
       <Card id="trades-pending" className="border-l-4 border-l-amber-400 bg-amber-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Pending Trades</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.pending.length}</Badge></div>
+          <div className="flex items-center gap-2"><Clock className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Pending Contracts</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.pending.length}</Badge></div>
           <CardDescription className="text-amber-700">Waiting for vessel nomination</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.pending, 'No pending contracts')}</CardContent>
@@ -550,8 +550,8 @@ export default function TradesPage() {
       {/* Completed */}
       <Card id="trades-completed" className="border-l-4 border-l-slate-400 bg-slate-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Trades</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
-          <CardDescription className="text-slate-600">Successfully completed trades</CardDescription>
+          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Contracts</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
+          <CardDescription className="text-slate-600">Successfully completed contracts</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
       </Card>

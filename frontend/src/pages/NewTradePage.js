@@ -108,7 +108,7 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '1', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
-    dischargeRate: '', demurrageRate: '',
+    dischargeRate: '1500', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
     gaftaTerm: 'GAFTA No. 48, Arbitration Clause 125, London',
     excludedDisports: [], excludedSurveyors: [],
@@ -431,7 +431,7 @@ export default function NewTradePage() {
           </div>
           <div className="space-y-2">
             <Label>Quantity (MT)</Label>
-            <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => set('quantity', e.target.value.replace(/,/g, ''))} placeholder="0" />
+            <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => { const qty = e.target.value.replace(/,/g, ''); set('quantity', qty); const n = parseInt(qty); if (n === 3000) set('dischargeRate', '1000'); else if (n === 5000) set('dischargeRate', '1500'); }} placeholder="0" />
           </div>
           <div className="space-y-2">
             <Label>Tolerance (%)</Label>

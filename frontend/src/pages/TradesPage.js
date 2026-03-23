@@ -85,6 +85,7 @@ export default function TradesPage() {
 
   const currentYear = new Date().getFullYear().toString();
   const yearFilteredTrades = useMemo(() => {
+    if (filterYear === 'all') return trades;
     return trades.filter(t => {
       const tradeYear = getTradeYear(t);
       if (tradeYear === filterYear) return true;
@@ -392,6 +393,7 @@ export default function TradesPage() {
             <Select value={filterYear} onValueChange={setFilterYear}>
               <SelectTrigger className="w-[100px] shrink-0" data-testid="trades-year-filter"><CalendarDays className="h-3.5 w-3.5 mr-1 text-muted-foreground" /><SelectValue placeholder="Year" /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
                 <SelectItem value="2026">2026</SelectItem>
                 <SelectItem value="2025">2025</SelectItem>
                 <SelectItem value="2024">2024</SelectItem>

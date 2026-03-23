@@ -108,6 +108,7 @@ export default function NewTradePage() {
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '1', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
+    thirdPartyLab: 'not_allowed',
     dischargeRate: '1500', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
     gaftaTerm: 'GAFTA No. 48, Arbitration Clause 125, London',
@@ -191,6 +192,7 @@ export default function NewTradePage() {
             pirContractNumber: t.pirContractNumber || '',
             sellerContractNumber: t.sellerContractNumber || 'N/A',
             gaftaTerm: t.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London',
+            thirdPartyLab: t.thirdPartyLab || 'not_allowed',
             excludedDisports: t.excludedDisports || [],
             excludedSurveyors: t.excludedSurveyors || [],
             dischargeRate: t.dischargeRate != null ? String(t.dischargeRate) : '',
@@ -631,6 +633,16 @@ export default function NewTradePage() {
           <div className="space-y-2">
             <Label>GAFTA Term</Label>
             <Input value={form.gaftaTerm} onChange={(e) => set('gaftaTerm', e.target.value)} placeholder="GAFTA No. 48, Arbitration Clause 125, London" data-testid="gafta-term-input" />
+          </div>
+          <div className="space-y-2">
+            <Label>3rd Party Laboratory</Label>
+            <Select value={form.thirdPartyLab} onValueChange={(v) => set('thirdPartyLab', v)}>
+              <SelectTrigger data-testid="third-party-lab-select"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="allowed">Allowed</SelectItem>
+                <SelectItem value="not_allowed">Not Allowed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Notes</Label>

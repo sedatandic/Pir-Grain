@@ -258,8 +258,9 @@ export default function TradeDetailPage() {
   };
 
   const openEmailDialog = (docType, docLabel) => {
-    setEmailSellerTo('');
-    setEmailBuyerTo('');
+    // Pre-fill with seller/buyer emails from the trade
+    setEmailSellerTo(trade?.sellerEmail || '');
+    setEmailBuyerTo(trade?.buyerEmail || '');
     setEmailDialog({ open: true, docType, docLabel });
   };
 
@@ -969,7 +970,7 @@ export default function TradeDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Email {emailDialog.docLabel}</DialogTitle>
-            <DialogDescription>Separate emails will be sent to seller and buyer. CC: melisa.karagoz@pirgrain.com, salih.karagoz@pirgrain.com</DialogDescription>
+            <DialogDescription>Separate emails will be sent to seller and buyer. Admin users will be CC'd automatically.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

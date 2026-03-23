@@ -551,7 +551,7 @@ export default function TradeDetailPage() {
                     </div>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={sendBusinessConfirmation} disabled={sendingBC} data-testid="resend-bc-btn">
-                        {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Resend
+                        {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Resend
                       </Button>
                       <Button size="sm" variant="outline" className="text-destructive hover:text-destructive" onClick={reverseBusinessConfirmation} disabled={sendingBC} data-testid="reverse-bc-btn">
                         <X className="h-4 w-4 mr-1" />Reverse
@@ -560,11 +560,11 @@ export default function TradeDetailPage() {
                   </div>
                 ) : (
                   <Button onClick={sendBusinessConfirmation} disabled={sendingBC} data-testid="send-bc-btn">
-                    {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send
+                    {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Mail className="h-4 w-4 mr-1" />}Send
                   </Button>
                 )}
                 <Button size="sm" variant="outline" onClick={() => openEmailDialog('business_confirmation', 'Business Confirmation')} data-testid="email-bc-btn">
-                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                  <Send className="h-4 w-4 mr-1" />Email PDF
                 </Button>
               </CardContent>
             </Card>

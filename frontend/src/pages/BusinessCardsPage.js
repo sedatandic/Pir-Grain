@@ -275,17 +275,9 @@ export default function BusinessCardsPage() {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailCard} onOpenChange={(o) => !o && setDetailCard(null)}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" hideCloseButton>
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-lg">Contact Details</DialogTitle>
-              <div className="flex gap-1">
-                {detailCard && <>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(detailCard)} data-testid="edit-detail-btn"><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(detailCard.id)} data-testid="delete-detail-btn"><Trash2 className="h-3.5 w-3.5" /></Button>
-                </>}
-              </div>
-            </div>
+            <DialogTitle className="text-lg">Contact Details</DialogTitle>
           </DialogHeader>
           {detailCard && (
             <div className="space-y-3">
@@ -300,7 +292,7 @@ export default function BusinessCardsPage() {
                 <DetailRow icon={Phone} label="Phone" value={detailCard.phone} />
                 {detailCard.mobile && <DetailRow icon={MessageCircle} label="WhatsApp" value={detailCard.mobile} link={`https://wa.me/${detailCard.mobile.replace(/[^0-9+]/g, '')}`} isWhatsApp />}
                 {detailCard.website && <DetailRow icon={Globe} label="Website" value={detailCard.website} link={detailCard.website?.startsWith('http') ? detailCard.website : `https://${detailCard.website}`} />}
-                <DetailRow icon={MapPin} label="Location" value={[detailCard.address, detailCard.city, detailCard.country].filter(Boolean).join(', ')} />
+                <DetailRow icon={MapPin} label="Address" value={[detailCard.address, detailCard.city, detailCard.country].filter(Boolean).join(', ')} />
               </div>
               {detailCard.keywords?.length > 0 && (
                 <div>
@@ -314,6 +306,18 @@ export default function BusinessCardsPage() {
                   <p className="text-sm bg-muted/50 rounded-lg p-2.5 whitespace-pre-wrap">{detailCard.notes}</p>
                 </div>
               )}
+              {/* Action buttons at bottom right */}
+              <div className="flex items-center justify-between pt-3 border-t">
+                <Button variant="outline" size="sm" onClick={() => setDetailCard(null)} data-testid="close-detail-btn">Close</Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openEdit(detailCard)} data-testid="edit-detail-btn">
+                    <Pencil className="h-3.5 w-3.5" />Edit
+                  </Button>
+                  <Button variant="destructive" size="sm" className="gap-1.5" onClick={() => handleDelete(detailCard.id)} data-testid="delete-detail-btn">
+                    <Trash2 className="h-3.5 w-3.5" />Delete
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>

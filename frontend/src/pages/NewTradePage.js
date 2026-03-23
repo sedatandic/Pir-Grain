@@ -102,7 +102,7 @@ export default function NewTradePage() {
 
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
-    commodityId: '', originId: '', quantity: '', tolerance: '10', cropYear: new Date().getFullYear().toString(),
+    commodityId: '', originId: '', quantity: '5000', tolerance: '10', cropYear: new Date().getFullYear().toString(),
     deliveryTerm: '', pricePerMT: '', currency: 'USD',
     paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
@@ -129,6 +129,12 @@ export default function NewTradePage() {
         ]);
         setPartners(pa.data); setCommodities(co.data); setOrigins(or.data);
         setPorts(po.data); setSurveyors(su.data); setVessels(ve.data);
+
+        // Default origin to Russia for new contracts
+        if (!isEdit) {
+          const russia = or.data.find(o => o.name?.toLowerCase() === 'russia');
+          if (russia) setForm(prev => ({ ...prev, originId: russia.id }));
+        }
 
         if (isEdit) {
           setLoadingTrade(true);

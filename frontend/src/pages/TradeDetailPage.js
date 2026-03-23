@@ -541,7 +541,7 @@ export default function TradeDetailPage() {
           </Card>
 
           {/* Business Confirmation, Documentary Instruction, Shipment Appropriation, Payment Date — all in one row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Business Confirmation to Seller &amp; Buyer</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -661,28 +661,6 @@ export default function TradeDetailPage() {
                 <Button size="sm" variant="outline" className="w-full" onClick={() => openEmailDialog('commission_invoice', 'Commission Invoice')} data-testid="email-ci-btn">
                   <Mail className="h-4 w-4 mr-1" />Email PDF
                 </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Payment Date from Buyer</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button data-testid="buyer-payment-date-btn" variant="outline" className={cn('w-full justify-start text-left font-normal', !trade.buyerPaymentDate && 'text-muted-foreground')}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {trade.buyerPaymentDate ? (() => { try { if (/^\d{2}\/\d{2}\/\d{4}$/.test(trade.buyerPaymentDate)) return trade.buyerPaymentDate; const d = new Date(trade.buyerPaymentDate + (trade.buyerPaymentDate.includes('T') ? '' : 'T00:00:00')); return !isNaN(d) ? format(d, 'dd/MM/yyyy') : trade.buyerPaymentDate; } catch { return trade.buyerPaymentDate; } })() : 'Select date'}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={trade.buyerPaymentDate ? (() => { try { if (/^\d{2}\/\d{2}\/\d{4}$/.test(trade.buyerPaymentDate)) { const [dd,mm,yyyy] = trade.buyerPaymentDate.split('/'); return new Date(yyyy, mm-1, dd); } const d = new Date(trade.buyerPaymentDate + (trade.buyerPaymentDate.includes('T') ? '' : 'T00:00:00')); return !isNaN(d) ? d : undefined; } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) saveBuyerPaymentDate(format(d, 'dd/MM/yyyy')); }} initialFocus />
-                  </PopoverContent>
-                </Popover>
-                {trade.buyerPaymentDate && (
-                  <Button size="sm" variant="ghost" className="text-destructive text-xs" onClick={() => saveBuyerPaymentDate('')}>
-                    <X className="h-3 w-3 mr-1" />Clear date
-                  </Button>
-                )}
               </CardContent>
             </Card>
           </div>

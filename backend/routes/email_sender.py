@@ -37,6 +37,135 @@ def get_trade_context(trade):
     return ref, seller_contract, commodity, seller, buyer
 
 
+def fmt_qty(val):
+    try:
+        return f"{float(val):,.0f}"
+    except:
+        return str(val or "-")
+
+
+def fmt_price(val, currency="USD"):
+    try:
+        return f"{float(val):,.2f} {currency}"
+    except:
+        return str(val or "-")
+
+
+def row_html(label, value):
+    return f'<tr><td style="padding: 10px 14px; border: 1px solid #e0e0e0; background: #f7f7f0; font-weight: 600; width: 200px; color: #2d5016;">{label}</td><td style="padding: 10px 14px; border: 1px solid #e0e0e0;">{value}</td></tr>'
+
+
+def build_email_body(trade, doc_name, recipient_name):
+    ref, seller_contract, commodity, seller, buyer = get_trade_context(trade)
+    contract_label = seller_contract or ref
+    quantity = trade.get("quantity") or 0
+    bl_quantity = trade.get("blQuantity") or quantity
+    price = trade.get("price") or 0
+    currency = trade.get("currency") or "USD"
+    tolerance = trade.get("tolerance") or ""
+    origin = trade.get("originName") or trade.get("origin") or ""
+    origin_adj = trade.get("originAdjective") or ""
+    load_port = trade.get("loadingPortName") or trade.get("basePortName") or ""
+    load_country = trade.get("loadingPortCountry") or ""
+    discharge_port = trade.get("dischargePortName") or ""
+    discharge_country = trade.get("dischargePortCountry") or ""
+    vessel = trade.get("vesselName") or "-"
+    bl_date = trade.get("blDate") or "-"
+    payment_terms = trade.get("paymentTerms") or "-"
+    contract_date = trade.get("contractDate") or "-"
+    commodity_specs = trade.get("commoditySpecs") or ""
+    gafta_term = trade.get("gaftaTerm") or "-"
+    broker_name = trade.get("brokerName") or "-"
+    brokerage_per_mt = trade.get("brokeragePerMT") or 0
+    brokerage_currency = trade.get("brokerageCurrency") or "USD"
+    discharge_rate = trade.get("dischargeRate") or ""
+    commodity_display = trade.get("commodityDisplayName") or commodity
+
+    load_port_full = f"{load_port}, {load_country}" if load_country else load_port
+    discharge_port_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
+    specs_html = commodity_specs.replace("\n", "<br/>") if commodity_specs else "-"
+
+    # Build rows based on document type
+    if doc_name == "Business Confirmation":
+        rows = "".join([
+            row_html("DATE", contract_date),
+            row_html("CONTRACT NO", contract_label),
+            row_html("PIR GRAIN REF. NO", ref),
+            row_html("SELLERS", seller),
+            row_html("BUYERS", buyer),
+            row_html("BROKER", broker_name),
+            row_html("COMMODITY", f"{origin_adj} {commodity}".strip() if origin_adj else commodity),
+            row_html("SPECIFICATIONS", specs_html),
+            row_html("QUANTITY", f"{fmt_qty(quantity)} MT{(' +/- ' + tolerance + ' at Sellers option') if tolerance else ''}"),
+            row_html("PRICE", fmt_price(price, currency)),
+            row_html("ORIGIN", origin),
+            row_html("SHIPMENT", f"{trade.get('shipmentWindowStart', '')} - {trade.get('shipmentWindowEnd', '')}"),
+            row_html("LOADING PORT", load_port_full),
+            row_html("DISCHARGE PORT", discharge_port_full),
+            row_html("DISCHARGE RATE", f"{fmt_qty(discharge_rate)} Mts/Day" if discharge_rate else "-"),
+            row_html("PAYMENT", payment_terms),
+            row_html("GAFTA RULE", gafta_term),
+        ])
+        closing = "A draft contract will be shared shortly. Thank you for the business."
+
+    elif doc_name == "Shipment Appropriation":
+        rows = "".join([
+            row_html("CONTRACT NO", contract_label),
+            row_html("PIR GRAIN REF. NO", ref),
+            row_html("COMMODITY", commodity_display),
+            row_html("QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
+            row_html("VESSEL", vessel),
+            row_html("B/L DATE", bl_date),
+            row_html("LOADING PORT", load_port_full),
+            row_html("DISCHARGE PORT", discharge_port_full),
+            row_html("SELLER", seller),
+            row_html("BUYER", buyer),
+        ])
+        closing = "Please find the shipment details above for your reference."
+
+    elif doc_name == "Commission Invoice":
+        commission_total = brokerage_per_mt * (bl_quantity or quantity or 0)
+        rows = "".join([
+            row_html("INVOICE NO", f"COMM-{contract_label}"),
+            row_html("CONTRACT NO", contract_label),
+            row_html("PIR GRAIN REF. NO", ref),
+            row_html("COMMODITY", commodity_display),
+            row_html("SELLER", seller),
+            row_html("BUYER", buyer),
+            row_html("B/L QUANTITY", f"{fmt_qty(bl_quantity)} MT"),
+            row_html("BROKERAGE RATE", f"{brokerage_per_mt} {brokerage_currency}/MT"),
+            row_html("COMMISSION AMOUNT", f"<strong>{fmt_price(commission_total, brokerage_currency)}</strong>"),
+            row_html("VESSEL", vessel),
+            row_html("B/L DATE", bl_date),
+        ])
+        closing = "Please arrange payment at your earliest convenience."
+    else:
+        rows = ""
+        closing = ""
+
+    return f"""
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
+        <div style="background-color: #2d5016; padding: 24px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">PIR Grain &amp; Pulses Ltd</h1>
+        </div>
+        <div style="padding: 30px 28px; background-color: #fafaf8;">
+            <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
+            <p style="font-size: 15px; color: #333;">Please find below the <strong>{doc_name}</strong> details:</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+                {rows}
+            </table>
+
+            <p style="font-size: 14px; color: #555; margin-top: 24px;">{closing}</p>
+            <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
+        </div>
+        <div style="background-color: #2d5016; padding: 12px; text-align: center;">
+            <p style="color: #aaa; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
+        </div>
+    </div>
+    """
+
+
 @router.post("/send-document-email")
 async def send_document_email(req: EmailSendRequest, user=Depends(get_current_user)):
     trade = trades_col.find_one({"_id": ObjectId(req.trade_id)})
@@ -68,28 +197,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
     recipient_name = req.recipient_name or req.recipient_email
 
-    html_body = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background-color: #2d5016; padding: 20px; text-align: center;">
-            <h2 style="color: white; margin: 0;">PIR Grain & Pulses Ltd</h2>
-        </div>
-        <div style="padding: 20px; background-color: #f9f9f9;">
-            <p>Dear {recipient_name},</p>
-            <p>Please find attached the <strong>{doc_name}</strong> for the following trade:</p>
-            <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
-                <tr><td style="padding: 8px; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold;">Contract No</td><td style="padding: 8px; border: 1px solid #ddd;">{contract_label}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold;">PIR Ref. No</td><td style="padding: 8px; border: 1px solid #ddd;">{ref}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold;">Commodity</td><td style="padding: 8px; border: 1px solid #ddd;">{commodity}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold;">Seller</td><td style="padding: 8px; border: 1px solid #ddd;">{seller}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd; background: #f0f0f0; font-weight: bold;">Buyer</td><td style="padding: 8px; border: 1px solid #ddd;">{buyer}</td></tr>
-            </table>
-            <p>Best Regards,<br><strong>PIR Grain & Pulses Ltd</strong></p>
-        </div>
-        <div style="background-color: #2d5016; padding: 10px; text-align: center;">
-            <p style="color: #ccc; font-size: 12px; margin: 0;">PIR Grain & Pulses Ltd.</p>
-        </div>
-    </div>
-    """
+    # Build detailed HTML email body based on document type
+    html_body = build_email_body(trade, doc_name, recipient_name)
 
     pdf_bytes = pdf_buf.getvalue()
     pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")

@@ -10,8 +10,7 @@ import { cn } from '../../lib/utils';
 const PIR_GREEN = '#1B7A3D';
 
 const mainNavItems = [
-  { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'user'] },
-  { title: 'Trades', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
+  { title: 'Contracts', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
   { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
   { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
   { title: 'Calendar', href: '/calendar', icon: CalendarDays, roles: ['admin', 'user'] },
@@ -35,8 +34,7 @@ export default function Sidebar() {
   const { user } = useAuth();
 
   const navItems = [
-    { title: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'user'] },
-    { title: 'Trades', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
+    { title: 'Contracts', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
     { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
     { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
     { title: 'Calendar', href: '/calendar', icon: CalendarDays, roles: ['admin', 'user'] },

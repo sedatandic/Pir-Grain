@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
 import TradesPage from './pages/TradesPage';
 import NewTradePage from './pages/NewTradePage';
 import PartnersPage from './pages/PartnersPage';
@@ -25,7 +24,6 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/trades" element={<TradesPage />} />
             <Route path="/trades/new" element={<NewTradePage />} />
             <Route path="/trades/:tradeId/edit" element={<NewTradePage />} />
@@ -44,7 +42,7 @@ function App() {
             <Route path="/port-lineups" element={<PortLineupsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/trades" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

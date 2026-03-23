@@ -245,8 +245,12 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         lpa_details = "-"
         if lpa_name:
             lpa_doc = db.loadport_agents.find_one({"name": lpa_name})
+            if not lpa_doc:
+                import re
+                lpa_doc = db.loadport_agents.find_one({"name": re.compile(f"^{re.escape(lpa_name)}", re.IGNORECASE)})
             if lpa_doc:
                 parts = [f"<strong>{lpa_doc.get('name', '')}</strong>"]
+                if lpa_doc.get('contact'): parts.append(f"Contact: {lpa_doc['contact']}")
                 if lpa_doc.get('tel'): parts.append(f"Tel: {lpa_doc['tel']}")
                 if lpa_doc.get('email'): parts.append(f"Email: {lpa_doc['email']}")
                 if lpa_doc.get('address'): parts.append(lpa_doc['address'])

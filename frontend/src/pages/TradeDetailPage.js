@@ -541,7 +541,7 @@ export default function TradeDetailPage() {
           </Card>
 
           {/* Business Confirmation, Documentary Instruction, Shipment Appropriation, Payment Date — all in one row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Business Confirmation to Seller &amp; Buyer</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -641,6 +641,24 @@ export default function TradeDetailPage() {
                   </Button>
                 )}
                 <Button size="sm" variant="outline" onClick={() => openEmailDialog('shipment_appropriation', 'Shipment Appropriation')} data-testid="email-sa-btn">
+                  <Mail className="h-4 w-4 mr-1" />Email PDF
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Commission Invoice</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <Button size="sm" variant="outline" className="w-full" onClick={async () => {
+                  try {
+                    const res = await api.get(`/api/commission-invoice/${tradeId}/pdf`, { responseType: 'blob' });
+                    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+                    window.open(url, '_blank');
+                  } catch { toast.error('Failed to generate Commission Invoice'); }
+                }} data-testid="download-ci-btn">
+                  <FileText className="h-4 w-4 mr-1" />Download PDF
+                </Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => openEmailDialog('commission_invoice', 'Commission Invoice')} data-testid="email-ci-btn">
                   <Mail className="h-4 w-4 mr-1" />Email PDF
                 </Button>
               </CardContent>

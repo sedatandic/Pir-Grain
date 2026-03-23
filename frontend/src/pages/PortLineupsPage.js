@@ -65,6 +65,10 @@ export default function PortLineupsPage() {
   const [reportData, setReportData] = useState(null);
   const [selectedPort, setSelectedPort] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterLoadPort, setFilterLoadPort] = useState('all');
+  const [filterCommodity, setFilterCommodity] = useState('all');
+  const [filterBuyer, setFilterBuyer] = useState('all');
+  const [filterSeller, setFilterSeller] = useState('all');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -130,6 +134,24 @@ export default function PortLineupsPage() {
     return reportData.ports?.find(p => p.portName === selectedPort);
   }, [reportData, selectedPort]);
 
+  // Unique filter options from current port's vessels
+  const filterOptions = useMemo(() => {
+    if (!currentPortData) return { loadPorts: [], commodities: [], buyers: [], sellers: [] };
+    const lp = new Set(), cm = new Set(), bu = new Set(), se = new Set();
+    currentPortData.vessels.forEach(v => {
+      if (v.loadingPort) lp.add(v.loadingPort.trim());
+      if (v.cargo) cm.add(translateCargo(v.cargo));
+      if (v.buyer) bu.add(v.buyer.trim());
+      if (v.seller) se.add(v.seller.trim());
+    });
+    return {
+      loadPorts: [...lp].sort((a, b) => a.localeCompare(b, 'tr')),
+      commodities: [...cm].sort((a, b) => a.localeCompare(b)),
+      buyers: [...bu].sort((a, b) => a.localeCompare(b, 'tr')),
+      sellers: [...se].sort((a, b) => a.localeCompare(b, 'tr')),
+    };
+  }, [currentPortData]);
+
   const filteredVessels = useMemo(() => {
     if (!currentPortData) return [];
     const term = searchTerm.toLowerCase();
@@ -143,6 +165,10 @@ export default function PortLineupsPage() {
         v.seller?.toLowerCase().includes(term)
       );
     }
+    if (filterLoadPort !== 'all') result = result.filter(v => v.loadingPort?.trim() === filterLoadPort);
+    if (filterCommodity !== 'all') result = result.filter(v => translateCargo(v.cargo) === filterCommodity);
+    if (filterBuyer !== 'all') result = result.filter(v => v.buyer?.trim() === filterBuyer);
+    if (filterSeller !== 'all') result = result.filter(v => v.seller?.trim() === filterSeller);
     // Sort by days at port ascending (lowest first)
     return [...result].sort((a, b) => {
       const daysA = calcDaysSince(a.arrivalDate, selectedDate);
@@ -152,7 +178,7 @@ export default function PortLineupsPage() {
       if (daysB === null) return -1;
       return daysA - daysB;
     });
-  }, [currentPortData, searchTerm, selectedDate]);
+  }, [currentPortData, searchTerm, selectedDate, filterLoadPort, filterCommodity, filterBuyer, filterSeller]);
 
   // Group vessels by vesselName and aggregate tonnage
   const vesselSummary = useMemo(() => {
@@ -231,14 +257,14 @@ export default function PortLineupsPage() {
       {/* Data present */}
       {dates.length > 0 && (
         <>
-          {/* Date selector + Search */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Date selector + Filters */}
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative" data-testid="date-selector-wrapper">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[170px]"
+                className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]"
                 data-testid="date-selector"
               >
                 {dates.map(d => (
@@ -248,11 +274,43 @@ export default function PortLineupsPage() {
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
 
+            <div className="relative">
+              <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-load-port">
+                <option value="all">All Load Ports</option>
+                {filterOptions.loadPorts.map(lp => <option key={lp} value={lp}>{lp}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
+            <div className="relative">
+              <select value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[140px]" data-testid="filter-commodity">
+                <option value="all">All Commodities</option>
+                {filterOptions.commodities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
+            <div className="relative">
+              <select value={filterBuyer} onChange={e => setFilterBuyer(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-buyer">
+                <option value="all">All Buyers</option>
+                {filterOptions.buyers.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
+            <div className="relative">
+              <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-seller">
+                <option value="all">All Sellers</option>
+                {filterOptions.sellers.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search vessels, cargo, buyer..."
+                placeholder="Search vessels..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30"
@@ -262,7 +320,7 @@ export default function PortLineupsPage() {
 
             {reportData && (
               <span className="text-xs text-muted-foreground self-center" data-testid="report-stats">
-                {reportData.ports?.length} ports - {dates.length} days of data
+                {reportData.ports?.length} ports - {dates.length} days
               </span>
             )}
           </div>
@@ -273,7 +331,7 @@ export default function PortLineupsPage() {
               {reportData.ports?.map(port => (
                 <button
                   key={port.portName}
-                  onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); }}
+                  onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
                     selectedPort === port.portName
                       ? 'bg-[#1B7A3D] text-white'
@@ -313,7 +371,7 @@ export default function PortLineupsPage() {
                     <TableHead className="text-center">Days</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead className="text-center">Op.</TableHead>
-                    <TableHead className="text-center">Cargo</TableHead>
+                    <TableHead className="text-center">Commodity</TableHead>
                     <TableHead className="text-center">B/L Tonnage</TableHead>
                     <TableHead className="text-center">Buyer</TableHead>
                     <TableHead className="text-center">Seller</TableHead>

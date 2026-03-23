@@ -983,7 +983,8 @@ export default function TradeDetailPage() {
             <div className="p-3 rounded-lg bg-muted/50 text-sm space-y-1">
               <p><strong>Document:</strong> {emailDialog.docLabel}</p>
               <p><strong>Trade:</strong> {trade?.referenceNumber} ({trade?.sellerContractNumber})</p>
-              <p><strong>From:</strong> alenakaragoz@pirgrain.com</p>
+              <p><strong>From:</strong> PIR Grain (onboarding@resend.dev)</p>
+              <p className="text-xs text-amber-600">Note: Test mode — emails can only be sent to alenakaragoz@pirgrain.com until pirgrain.com domain is verified on Resend.</p>
             </div>
           </div>
           <DialogFooter>

@@ -34,7 +34,7 @@ async def extract_card_info(file_path: str) -> dict:
     chat = LlmChat(
         api_key=api_key,
         session_id=f"card-ocr-{uuid.uuid4()}",
-        system_message="You are a business card OCR assistant. Extract all information from the business card image and return ONLY a JSON object with these fields: name, title, company, email, phone, mobile, website, address, city, country. If a field is not found, use an empty string. Return ONLY valid JSON, no markdown."
+        system_message="You are a business card OCR assistant. Extract all information from the business card image and return ONLY a JSON object with these fields: name, title, company, email, phone, mobile, website, address, city, country. For 'country', always infer it from the address, city, phone prefix, or language if not explicitly stated (e.g. Istanbul/Gaziantep = Turkey, London = UK). If a field is not found, use an empty string. Return ONLY valid JSON, no markdown."
     ).with_model("openai", "gpt-4o")
 
     image_content = ImageContent(image_base64=img_b64)

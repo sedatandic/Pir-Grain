@@ -570,6 +570,23 @@ export default function TradeDetailPage() {
             </Card>
 
             <Card>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Vessel Nomination</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm text-muted-foreground">
+                  {trade?.vesselName ? (
+                    <div className="space-y-1">
+                      <div className="flex justify-between"><span>Vessel:</span><span className="font-medium text-foreground">{trade.vesselName}</span></div>
+                      {trade.vesselIMO && <div className="flex justify-between"><span>IMO:</span><span className="font-medium text-foreground">{trade.vesselIMO}</span></div>}
+                    </div>
+                  ) : <p>No vessel assigned yet</p>}
+                </div>
+                <Button size="sm" className="w-full bg-primary" disabled={!trade?.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')} data-testid="send-vessel-nomination-btn">
+                  <Send className="h-4 w-4 mr-1" />Send Nomination
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Documentary Instruction</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
@@ -636,23 +653,6 @@ export default function TradeDetailPage() {
                 )}
                 <Button size="sm" variant="outline" onClick={() => openEmailDialog('shipment_appropriation', 'Shipment Appropriation')} data-testid="email-sa-btn">
                   <Mail className="h-4 w-4 mr-1" />Email PDF
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Vessel Nomination</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <div className="text-sm text-muted-foreground">
-                  {trade?.vesselName ? (
-                    <div className="space-y-1">
-                      <div className="flex justify-between"><span>Vessel:</span><span className="font-medium text-foreground">{trade.vesselName}</span></div>
-                      {trade.vesselIMO && <div className="flex justify-between"><span>IMO:</span><span className="font-medium text-foreground">{trade.vesselIMO}</span></div>}
-                    </div>
-                  ) : <p>No vessel assigned yet</p>}
-                </div>
-                <Button size="sm" className="w-full bg-primary" disabled={!trade?.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')} data-testid="send-vessel-nomination-btn">
-                  <Send className="h-4 w-4 mr-1" />Send Nomination
                 </Button>
               </CardContent>
             </Card>

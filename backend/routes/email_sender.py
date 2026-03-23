@@ -250,7 +250,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("FLAG", str(vessel_flag)),
             row_html("BUILT", str(vessel_built)),
             row_html("LOADING PORT", load_port_full),
-            row_html("LOAD PORT SURVEY", surveyor_name),
+            row_html("LOAD PORT AGENT", trade.get("loadportAgent") or "-"),
+            row_html("SELLER SURVEY", surveyor_name),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),
         ])

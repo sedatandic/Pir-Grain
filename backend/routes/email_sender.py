@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from database import trades_col, partners_col
+from database import trades_col, partners_col, db
 from auth import get_current_user
 
 router = APIRouter(prefix="/api", tags=["email"])
@@ -227,22 +227,28 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         closing = "Please arrange payment at your earliest convenience."
 
     elif doc_name == "Vessel Nomination":
-        vessel_imo = trade.get("vesselIMO") or "-"
-        vessel_flag = trade.get("vesselFlag") or "-"
-        vessel_built = trade.get("vesselBuilt") or "-"
-        vessel_dwt = trade.get("vesselDWT") or "-"
+        # Look up vessel details from vessels collection
+        vessel_doc = None
+        if trade.get("vesselId"):
+            try:
+                vessel_doc = db.vessels.find_one({"_id": ObjectId(trade["vesselId"])})
+            except:
+                pass
+        vessel_imo = (vessel_doc or {}).get("imoNumber") or trade.get("vesselIMO") or "-"
+        vessel_flag = (vessel_doc or {}).get("flag") or trade.get("vesselFlag") or "-"
+        vessel_built = (vessel_doc or {}).get("builtYear") or trade.get("vesselBuilt") or "-"
+        surveyor_name = trade.get("surveyorName") or "-"
         rows = "".join([
             row_html("CONTRACT NO", contract_label),
             row_html("PIR GRAIN REF. NO", ref),
             row_html("COMMODITY", commodity_with_crop),
             row_html("QUANTITY", f"{fmt_qty(quantity)} MT"),
             row_html("VESSEL NAME", f"<strong>{vessel}</strong>"),
-            row_html("IMO NUMBER", vessel_imo),
-            row_html("FLAG", vessel_flag),
-            row_html("BUILT", vessel_built),
-            row_html("DWT", fmt_qty(vessel_dwt) if vessel_dwt != "-" else "-"),
+            row_html("IMO NUMBER", str(vessel_imo)),
+            row_html("FLAG", str(vessel_flag)),
+            row_html("BUILT", str(vessel_built)),
             row_html("LOADING PORT", load_port_full),
-            row_html("DISCHARGE PORT", discharge_port_full),
+            row_html("LOAD PORT SURVEY", surveyor_name),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),
         ])

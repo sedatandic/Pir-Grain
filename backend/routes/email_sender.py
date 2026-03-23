@@ -386,10 +386,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
         doc_name = "Vessel Nomination"
         filename = None
     elif req.doc_type == "shipment_appropriation":
-        from routes.shipment_appropriation import generate_sa_pdf
-        pdf_buf = generate_sa_pdf(trade)
         doc_name = "Shipment Appropriation"
-        filename = f"Shipment_Appropriation_{contract_label}.pdf"
+        filename = None
     elif req.doc_type == "commission_invoice":
         from routes.commission_invoice import generate_ci_pdf
         pdf_buf = generate_ci_pdf(trade)

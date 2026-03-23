@@ -54,6 +54,7 @@ export default function TradeDetailPage() {
   const [blForm, setBlForm] = useState({});
   const [blSaving, setBlSaving] = useState(false);
   const [disportAgents, setDisportAgents] = useState([]);
+  const [loadportAgents, setLoadportAgents] = useState([]);
   const [diUploading, setDiUploading] = useState(false);
   const [docFiles, setDocFiles] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(null);
@@ -70,7 +71,7 @@ export default function TradeDetailPage() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [tradeRes, partRes, comRes, vesRes, surRes, portRes, daRes] = await Promise.all([
+        const [tradeRes, partRes, comRes, vesRes, surRes, portRes, daRes, laRes] = await Promise.all([
           api.get(`/api/trades/${tradeId}`),
           api.get('/api/partners'),
           api.get('/api/commodities'),
@@ -78,6 +79,7 @@ export default function TradeDetailPage() {
           api.get('/api/surveyors'),
           api.get('/api/ports'),
           api.get('/api/disport-agents'),
+          api.get('/api/loadport-agents'),
         ]);
         setTrade(tradeRes.data);
         setPartners(partRes.data);
@@ -86,6 +88,7 @@ export default function TradeDetailPage() {
         setSurveyors(surRes.data);
         setPorts(portRes.data);
         setDisportAgents(daRes.data);
+        setLoadportAgents(laRes.data);
         setDocChecks(tradeRes.data.docChecks || {});
         setAdditionalDocs(tradeRes.data.additionalDocuments || []);
         // Fetch uploaded document files for this trade
@@ -327,6 +330,7 @@ export default function TradeDetailPage() {
       buyerSurveyor: trade.buyerSurveyor || 'N/A',
       dischargeQuantity: trade.dischargeQuantity != null ? String(trade.dischargeQuantity) : '',
       disportAgent: trade.disportAgent || '',
+      loadportAgent: trade.loadportAgent || '',
     });
     setBlDialogOpen(true);
   };
@@ -358,6 +362,7 @@ export default function TradeDetailPage() {
         buyerSurveyor: blForm.buyerSurveyor,
         dischargeQuantity: blForm.dischargeQuantity ? parseFloat(blForm.dischargeQuantity) : 0,
         disportAgent: blForm.disportAgent,
+        loadportAgent: blForm.loadportAgent,
       };
       const res = await api.put(`/api/trades/${tradeId}`, data);
       setTrade(res.data);
@@ -530,6 +535,7 @@ export default function TradeDetailPage() {
               <Separator />
               <div className="flex justify-between"><span className="text-muted-foreground">Shortage (Mts)</span><span className="font-medium">{(() => { const s = calcShortage(trade.blQuantity, trade.dischargeQuantity); if (s === null) return '-'; if (s > 0) return <span className="text-red-600 font-bold">-{s.toLocaleString(undefined, {maximumFractionDigits: 2})} MT</span>; return <span className="text-green-600">N/A</span>; })()}</span></div>
               <Separator />
+              <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
             </CardContent>
           </Card>
@@ -930,6 +936,19 @@ export default function TradeDetailPage() {
                   <Input value={blForm.buyerSurveyor || ''} onChange={(e) => setBlForm({...blForm, buyerSurveyor: e.target.value})} placeholder="Type surveyor name" />
                 )}
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Load Port Agent</Label>
+              <Select value={blForm.loadportAgent || '_custom'} onValueChange={(v) => setBlForm({...blForm, loadportAgent: v === '_custom' ? '' : v})}>
+                <SelectTrigger><SelectValue placeholder="Select load port agent" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_custom">Custom...</SelectItem>
+                  {loadportAgents.sort((a, b) => a.name.localeCompare(b.name)).map(a => <SelectItem key={a.id} value={a.name}>{a.name}{a.port ? ` (${a.port})` : ''}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {(!blForm.loadportAgent || !loadportAgents.some(a => a.name === blForm.loadportAgent)) && (
+                <Input value={blForm.loadportAgent || ''} onChange={(e) => setBlForm({...blForm, loadportAgent: e.target.value})} placeholder="Type agent name" />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Disport Agent</Label>

@@ -28,7 +28,7 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 
 ### Trade Features
 - New/Edit Trade form with all fields (parties, commodity, pricing, shipping, contacts)
-- **Loading Port** as separate field from Base Port (fixed 2026-03-22)
+- **Loading Port** as separate field from Base Port
 - Port Variations with country names stored
 - Trade Detail page with tabs (Summary, Shipment B/L, Documents)
 - B/L Details dialog with Load Port, Discharge Port, Surveyors, Disport Agent
@@ -42,6 +42,22 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - All three PDFs share consistent corporate design (PIR logo, stamp, footer)
 - Authenticated download via blob URLs
 
+### Email Integration (Resend)
+- Send all three PDF documents via email with HTML body + attachment
+- Separate emails to buyer and seller with CC to internal users
+- Company logo embedded in emails
+
+### Port Line-Ups (NEW - 2026-03-23)
+- Upload daily port report Excel files (Gunluk Limanlar Raporu.xlsx)
+- Parses multi-sheet Excel (92 sheets, one per date, organized by port sections)
+- Stores 10,000+ vessel records in MongoDB
+- Frontend page with date selector, port tabs, and vessel detail table
+- Calculates "days since arrival" with color-coded badges
+- Status badges (RIHTIMDA/green, DEMIR/amber, AYRILDI/grey)
+- Search across vessels, cargo, buyers, sellers
+- Footer stats with record count and total B/L tonnage
+- Sidebar navigation with Anchor icon
+
 ### Other Features
 - Business Cards with GPT-4o Vision OCR
 - Reports page with dynamic filters (Year, Seller, Buyer, Commodity, Origin)
@@ -50,23 +66,19 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Vendors management in Settings
 - Commission auto-generation on trade completion
 
-### UI/UX Updates (2026-03-22)
+### UI/UX Updates
 - Commissions page: merged columns, inline editing for brokerage rates
 - Accounting page: "Invoice To" header, "Commodity" column added
 - Removed crop year from commodity display names in table views
-- "Pir Grain Contract Number" renamed to "Pir Grain Ref. No" on New/Edit Trade page
 - Conditional "Prod. YYYY" vs "Crop YYYY" for processed commodities
 
 ## Prioritized Backlog
-
-### P0 - Blocked
-- Business Confirmation Email Integration (BLOCKED on Resend API key)
 
 ### P1
 - Full Server-Side RBAC (protect all API routes by role)
 
 ### P2
-- **Frontend Refactoring (CRITICAL)**: TradeDetailPage.js (880+ lines), NewTradePage.js (630+ lines) need component decomposition
+- **Frontend Refactoring (CRITICAL)**: TradeDetailPage.js (1000+ lines), NewTradePage.js (630+ lines) need component decomposition
 - Counterparty Departments CRUD
 - Document Templates Page
 - Refactor PartnersPage.js (~430 lines)
@@ -83,3 +95,13 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - Authenticated PDF download uses blob + objectURL pattern
 - Backend `null` handling uses MongoDB `$unset` for clearing fields
 - `poppler-utils` installed for PDF text extraction testing
+- `openpyxl` used for Excel file parsing (port lineups)
+- Port lineups stored in `port_lineups` MongoDB collection (one doc per date)
+- Resend email integration in sandbox mode (only verified addresses)
+
+## Key DB Collections
+- **trades**: Core trade records with buyer/seller, commodity, pricing, shipping
+- **invoices**: Brokerage commission invoices with PENDING/PAID status
+- **partners**: Counterparty companies (sellers, buyers, co-brokers)
+- **port_lineups**: Daily port report data parsed from Excel uploads
+- **vessels**: Vessel registry for trade assignments

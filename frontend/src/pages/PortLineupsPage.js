@@ -63,7 +63,7 @@ export default function PortLineupsPage() {
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [reportData, setReportData] = useState(null);
-  const [selectedPort, setSelectedPort] = useState('');
+  const [selectedPort, setSelectedPort] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLoadPort, setFilterLoadPort] = useState('all');
   const [filterCommodity, setFilterCommodity] = useState('all');
@@ -95,9 +95,7 @@ export default function PortLineupsPage() {
     api.get(`/api/port-lineups/report/${encodeURIComponent(selectedDate)}`)
       .then(res => {
         setReportData(res.data);
-        if (res.data.ports?.length > 0) {
-          setSelectedPort(res.data.ports[0].portName);
-        }
+        setSelectedPort('ALL');
       })
       .catch(() => setError('Failed to load report data'))
       .finally(() => setLoading(false));
@@ -130,8 +128,12 @@ export default function PortLineupsPage() {
   };
 
   const currentPortData = useMemo(() => {
-    if (!reportData || !selectedPort) return null;
-    return reportData.ports?.find(p => p.portName === selectedPort);
+    if (!reportData) return null;
+    if (selectedPort === 'ALL') {
+      const allVessels = (reportData.ports || []).flatMap(p => p.vessels);
+      return { portName: 'ALL', vessels: allVessels };
+    }
+    return reportData.ports?.find(p => p.portName === selectedPort) || null;
   }, [reportData, selectedPort]);
 
   // Unique filter options from current port's vessels
@@ -200,11 +202,13 @@ export default function PortLineupsPage() {
   const portVesselCounts = useMemo(() => {
     if (!reportData) return {};
     const counts = {};
+    let allTotal = 0;
     reportData.ports?.forEach(p => {
-      // Count unique vessel names
       const uniqueVessels = new Set(p.vessels.map(v => v.vesselName).filter(Boolean));
       counts[p.portName] = uniqueVessels.size;
+      allTotal += uniqueVessels.size;
     });
+    counts['ALL'] = allTotal;
     return counts;
   }, [reportData]);
 
@@ -328,6 +332,20 @@ export default function PortLineupsPage() {
           {/* Port tabs */}
           {reportData && (
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" data-testid="port-tabs">
+              <button
+                onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
+                  selectedPort === 'ALL'
+                    ? 'bg-[#1B7A3D] text-white'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+                data-testid="port-tab-all"
+              >
+                ALL
+                <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
+                  selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'
+                }`}>{portVesselCounts['ALL'] || 0}</span>
+              </button>
               {reportData.ports?.map(port => (
                 <button
                   key={port.portName}

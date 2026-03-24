@@ -1058,21 +1058,49 @@ export default function MarketDataPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Shipment Period From</Label>
-                <Input 
-                  data-testid="tender-shipment-start"
-                  value={tenderForm.shipmentPeriodStart} 
-                  onChange={(e) => setTenderForm({ ...tenderForm, shipmentPeriodStart: e.target.value })}
-                  placeholder="e.g., 01/02"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" data-testid="tender-shipment-start" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tenderForm.shipmentPeriodStart || 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarPicker
+                      mode="single"
+                      selected={tenderForm.shipmentPeriodStart ? parse(tenderForm.shipmentPeriodStart, 'dd/MM/yyyy', new Date()) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setTenderForm({ ...tenderForm, shipmentPeriodStart: format(date, 'dd/MM/yyyy') });
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Shipment Period To</Label>
-                <Input 
-                  data-testid="tender-shipment-end"
-                  value={tenderForm.shipmentPeriodEnd} 
-                  onChange={(e) => setTenderForm({ ...tenderForm, shipmentPeriodEnd: e.target.value })}
-                  placeholder="e.g., 15/03/2026"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" data-testid="tender-shipment-end" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tenderForm.shipmentPeriodEnd || 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarPicker
+                      mode="single"
+                      selected={tenderForm.shipmentPeriodEnd ? parse(tenderForm.shipmentPeriodEnd, 'dd/MM/yyyy', new Date()) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setTenderForm({ ...tenderForm, shipmentPeriodEnd: format(date, 'dd/MM/yyyy') });
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
             <div className="space-y-2">

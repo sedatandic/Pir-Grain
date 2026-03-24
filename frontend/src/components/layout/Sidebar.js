@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils';
 const PIR_GREEN = '#1B7A3D';
 
 const mainNavItems = [
+  { title: 'Market Data', href: '/market-data', icon: TrendingUp, roles: ['admin', 'user'] },
   { title: 'Contracts', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
   { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
   { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
@@ -34,6 +35,7 @@ export default function Sidebar() {
   const { user } = useAuth();
 
   const navItems = [
+    { title: 'Market Data', href: '/market-data', icon: TrendingUp, roles: ['admin', 'user'] },
     { title: 'Contracts', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
     { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
     { title: 'Shipment Docs.', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },

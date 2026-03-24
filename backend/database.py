@@ -25,6 +25,14 @@ bank_accounts_col = db["bank_accounts"]
 vendors_col = db["vendors"]
 business_cards_col = db["business_cards"]
 
+# Market Data Module Collections
+market_prices_col = db["market_prices"]
+market_notes_col = db["market_notes"]
+tmo_tenders_col = db["tmo_tenders"]
+telegram_channels_col = db["telegram_channels"]
+market_commodities_col = db["market_commodities"]
+turkish_exchange_prices_col = db["turkish_exchange_prices"]
+
 
 def serialize_doc(doc):
     if doc is None:

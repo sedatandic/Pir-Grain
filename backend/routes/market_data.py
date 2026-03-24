@@ -160,6 +160,67 @@ async def scrape_barchart_forex(symbol: str):
     return None
 
 
+async def scrape_barchart_commodity(symbol: str):
+    """Scrape CBOT commodity prices from Barchart.com"""
+    import re
+    try:
+        # Map commodity symbols to Barchart futures URLs
+        url_map = {
+            "WHEAT": "https://www.barchart.com/futures/quotes/ZW*0/overview",    # CBOT Wheat
+            "CORN": "https://www.barchart.com/futures/quotes/ZC*0/overview",     # CBOT Corn
+            "SOYBEAN": "https://www.barchart.com/futures/quotes/ZS*0/overview",  # CBOT Soybeans
+            "GOLD": "https://www.barchart.com/futures/quotes/GC*0/overview",     # COMEX Gold
+            "CRUDE_OIL": "https://www.barchart.com/futures/quotes/CL*0/overview", # WTI Crude
+        }
+        
+        url = url_map.get(symbol)
+        if not url:
+            return None
+            
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            }
+            response = await client.get(url, headers=headers, follow_redirects=True)
+            
+            if response.status_code == 200:
+                html = response.text
+                
+                # Extract all lastPrice values and get the longest/most significant one
+                all_prices = re.findall(r'"lastPrice":"(\d+\.?\d*)"', html)
+                
+                if all_prices:
+                    # Filter to get reasonable prices (at least 2 digits for commodities)
+                    valid_prices = [float(p) for p in all_prices if len(p) >= 2]
+                    if valid_prices:
+                        # For Gold, get the largest price (should be ~2000-3000)
+                        # For others, get the first valid price
+                        if symbol == "GOLD":
+                            price = max(valid_prices)
+                        else:
+                            price = valid_prices[0]
+                        
+                        # Get change values
+                        change_match = re.search(r'"priceChange":"([+-]?\d+\.?\d*)"', html)
+                        pct_match = re.search(r'"percentChange":"([+-]?\d+\.?\d*)%?"', html)
+                        
+                        change = float(change_match.group(1)) if change_match else 0
+                        change_pct = float(pct_match.group(1)) if pct_match else 0
+                        
+                        return {
+                            "price": price,
+                            "change": change,
+                            "changePercent": change_pct,
+                            "source": "Barchart"
+                        }
+                    
+    except Exception as e:
+        print(f"Barchart commodity scraping error for {symbol}: {e}")
+    
+    return None
+
+
 async def fetch_commodity_price(symbol: str):
     """Fetch commodity price - try different sources"""
     # Map our symbols to Alpha Vantage symbols
@@ -176,6 +237,33 @@ async def fetch_commodity_price(symbol: str):
     }
     
     av_symbol = av_symbols.get(symbol, symbol)
+    
+    # For CBOT commodities - try Barchart scraping first
+    if symbol in ["WHEAT", "CORN", "SOYBEAN", "GOLD", "CRUDE_OIL"]:
+        barchart_data = await scrape_barchart_commodity(symbol)
+        if barchart_data:
+            # Cache the price
+            market_prices_col.update_one(
+                {"symbol": symbol},
+                {"$set": {
+                    "symbol": symbol, 
+                    "price": barchart_data["price"], 
+                    "change": barchart_data["change"], 
+                    "changePercent": barchart_data["changePercent"], 
+                    "source": "Barchart",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }},
+                upsert=True
+            )
+            return {
+                "symbol": symbol,
+                "price": round(barchart_data["price"], 2),
+                "change": round(barchart_data["change"], 2),
+                "changePercent": round(barchart_data["changePercent"], 2),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "isLive": True,
+                "source": "Barchart"
+            }
     
     # For forex - try Barchart scraping first, then fallback to API
     if symbol in ["EUR_USD", "USD_RUB", "USD_TRY", "USD_UAH"]:

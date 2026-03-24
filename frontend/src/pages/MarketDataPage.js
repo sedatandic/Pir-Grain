@@ -754,7 +754,15 @@ export default function MarketDataPage() {
               </Card>
             ) : (
               <div className="space-y-6">
-                {tenders.map((tender) => {
+                {[...tenders].sort((a, b) => {
+                  const parseDate = (d) => {
+                    if (!d) return 0;
+                    const parts = d.split('/');
+                    if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+                    return 0;
+                  };
+                  return parseDate(b.tenderDate) - parseDate(a.tenderDate);
+                }).map((tender) => {
                   const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
                   return (
                   <Card key={tender.id} className="overflow-hidden border-2 border-gray-300" data-testid={`tender-card-${tender.id}`}>

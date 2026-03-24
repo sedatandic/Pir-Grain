@@ -257,7 +257,7 @@ export default function MarketDataPage() {
         toast.success('Tender created');
       }
       setTenderDialogOpen(false);
-      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] });
+      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] });
       setEditingTender(null);
       const res = await api.get('/api/market/tenders');
       setTenders(res.data);
@@ -733,6 +733,7 @@ export default function MarketDataPage() {
                   tenderDate: '', 
                   commodity: 'Feed Barley', 
                   totalQuantity: 0,
+                  tenderType: 'Import',
                   shipmentPeriodStart: '', 
                   shipmentPeriodEnd: '', 
                   status: 'open', 
@@ -769,7 +770,7 @@ export default function MarketDataPage() {
                           : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />
                         }
                         <h3 className="font-bold text-lg tracking-wide text-center flex-1">
-                          {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} Import Tender - Date: {tender.tenderDate}
+                          {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Date: {tender.tenderDate}
                         </h3>
                       </div>
                       {/* Shipment Period Row */}
@@ -1111,15 +1112,27 @@ export default function MarketDataPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Quantity (Mts)</Label>
-              <Input 
-                data-testid="tender-quantity-input"
-                type="number"
-                value={tenderForm.totalQuantity || ''} 
-                onChange={(e) => setTenderForm({ ...tenderForm, totalQuantity: parseFloat(e.target.value) || 0 })}
-                placeholder="e.g., 220000"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Quantity (Mts)</Label>
+                <Input 
+                  data-testid="tender-quantity-input"
+                  type="number"
+                  value={tenderForm.totalQuantity || ''} 
+                  onChange={(e) => setTenderForm({ ...tenderForm, totalQuantity: parseFloat(e.target.value) || 0 })}
+                  placeholder="e.g., 220000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={tenderForm.tenderType || 'Import'} onValueChange={(v) => setTenderForm({ ...tenderForm, tenderType: v })}>
+                  <SelectTrigger data-testid="tender-type-select"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Import">Import</SelectItem>
+                    <SelectItem value="Export">Export</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

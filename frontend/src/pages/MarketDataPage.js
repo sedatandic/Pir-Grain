@@ -1102,7 +1102,6 @@ export default function MarketDataPage() {
                     <SelectItem value="Feed Barley">Feed Barley</SelectItem>
                     <SelectItem value="Wheat">Wheat</SelectItem>
                     <SelectItem value="Feed Corn">Feed Corn</SelectItem>
-                    <SelectItem value="Barley">Barley</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

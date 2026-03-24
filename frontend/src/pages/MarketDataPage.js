@@ -769,7 +769,7 @@ export default function MarketDataPage() {
                           : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />
                         }
                         <h3 className="font-bold text-lg tracking-wide text-center flex-1">
-                          TMO {tender.commodity} Tender - Date: {tender.tenderDate}
+                          {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} Import Tender - Date: {tender.tenderDate}
                         </h3>
                       </div>
                       {/* Shipment Period Row */}

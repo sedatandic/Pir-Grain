@@ -390,7 +390,14 @@ export default function MarketDataPage() {
                           selectedCommodity === item.symbol ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
                         }`}
                       >
-                        <span className="font-medium">{item.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{item.name}</span>
+                          {item.isLive ? (
+                            <Badge variant="default" className="text-[10px] bg-green-600">Live</Badge>
+                          ) : item.isMock ? (
+                            <Badge variant="outline" className="text-[10px]">Demo</Badge>
+                          ) : null}
+                        </div>
                         <div className="text-right">
                           <div className="font-bold">{item.price?.toFixed(4)}</div>
                           <div className={`text-xs ${item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : ''}`}>

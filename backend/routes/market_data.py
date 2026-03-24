@@ -87,6 +87,23 @@ async def fetch_alpha_vantage_price(symbol: str, function: str = "GLOBAL_QUOTE")
         print(f"Alpha Vantage error for {symbol}: {e}")
     return None
 
+
+async def fetch_live_currency_rates():
+    """Fetch live currency rates from free exchangerate API"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            # Use free open.er-api.com (no key required, reliable)
+            url = "https://open.er-api.com/v6/latest/USD"
+            response = await client.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("result") == "success" and data.get("rates"):
+                    return data["rates"]
+    except Exception as e:
+        print(f"Currency API error: {e}")
+    return None
+
+
 async def fetch_commodity_price(symbol: str):
     """Fetch commodity price - try different sources"""
     # Map our symbols to Alpha Vantage symbols
@@ -103,8 +120,44 @@ async def fetch_commodity_price(symbol: str):
     
     av_symbol = av_symbols.get(symbol, symbol)
     
-    # For forex
+    # For forex - try live API first
     if symbol in ["EUR_USD", "USD_RUB", "USD_TRY"]:
+        live_rates = await fetch_live_currency_rates()
+        if live_rates:
+            currency_map = {
+                "EUR_USD": ("EUR", True),   # Need to invert (1/EUR rate)
+                "USD_RUB": ("RUB", False),
+                "USD_TRY": ("TRY", False),
+            }
+            curr_code, invert = currency_map.get(symbol, (None, False))
+            if curr_code and curr_code in live_rates:
+                rate = live_rates[curr_code]
+                if invert:
+                    rate = 1 / rate if rate else 0
+                
+                # Get cached price for change calculation
+                cached = market_prices_col.find_one({"symbol": symbol}, sort=[("timestamp", -1)])
+                old_price = cached.get("price", rate) if cached else rate
+                change = rate - old_price
+                change_pct = (change / old_price * 100) if old_price else 0
+                
+                # Cache the new price
+                market_prices_col.update_one(
+                    {"symbol": symbol},
+                    {"$set": {"symbol": symbol, "price": rate, "change": change, "changePercent": change_pct, "timestamp": datetime.now(timezone.utc).isoformat()}},
+                    upsert=True
+                )
+                
+                return {
+                    "symbol": symbol,
+                    "price": round(rate, 4),
+                    "change": round(change, 4),
+                    "changePercent": round(change_pct, 2),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "isLive": True
+                }
+        
+        # Fallback to Alpha Vantage
         from_curr, to_curr = symbol.replace("_", "/").split("/")
         data = await fetch_alpha_vantage_price(f"{from_curr}{to_curr}", "CURRENCY_EXCHANGE_RATE")
         if data and "Realtime Currency Exchange Rate" in data:

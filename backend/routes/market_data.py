@@ -734,6 +734,19 @@ async def delete_market_note(note_id: str, user=Depends(get_current_user)):
     return {"message": "Note deleted"}
 
 
+@router.get("/notes/years")
+async def get_market_note_years(user=Depends(get_current_user)):
+    """Get list of distinct years that have notes"""
+    pipeline = [
+        {"$match": {"period": {"$regex": r"^\d{4}$"}}},
+        {"$group": {"_id": "$period"}},
+        {"$sort": {"_id": -1}}
+    ]
+    years = [doc["_id"] for doc in market_notes_col.aggregate(pipeline)]
+    return years
+
+
+
 # ============== TMO TENDERS ==============
 
 @router.get("/tenders")

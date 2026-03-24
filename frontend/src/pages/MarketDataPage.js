@@ -70,6 +70,8 @@ export default function MarketDataPage() {
   // Market News state
   const [marketNews, setMarketNews] = useState({ Wheat: [], Corn: [], Barley: [], Others: [] });
   const [newsInput, setNewsInput] = useState({ Wheat: '', Corn: '', Barley: '', Others: '' });
+  const [newsPeriod, setNewsPeriod] = useState('daily');
+  const [archiveYears, setArchiveYears] = useState([]);
   
   // Turkish exchange state
   const [turkishPrices, setTurkishPrices] = useState([]);
@@ -117,7 +119,8 @@ export default function MarketDataPage() {
 
   useEffect(() => {
     fetchMarketNews();
-  }, []);
+    fetchArchiveYears();
+  }, [newsPeriod]);
 
   const fetchData = async () => {
     try {
@@ -156,12 +159,13 @@ export default function MarketDataPage() {
     }
   };
 
-  const fetchMarketNews = async () => {
+  const fetchMarketNews = async (period) => {
+    const p = period || newsPeriod;
     try {
       const categories = ['Wheat', 'Corn', 'Barley', 'Others'];
       const results = {};
       for (const cat of categories) {
-        const res = await api.get(`/api/market/notes?commodity=${cat}&period=daily`);
+        const res = await api.get(`/api/market/notes?commodity=${cat}&period=${p}`);
         results[cat] = res.data;
       }
       setMarketNews(results);
@@ -170,11 +174,20 @@ export default function MarketDataPage() {
     }
   };
 
+  const fetchArchiveYears = async () => {
+    try {
+      const res = await api.get('/api/market/notes/years');
+      setArchiveYears(res.data);
+    } catch (err) {
+      console.error('Failed to load archive years');
+    }
+  };
+
   const handlePostComment = async (category) => {
     const content = newsInput[category]?.trim();
     if (!content) return;
     try {
-      await api.post('/api/market/notes', { commodity: category, period: 'daily', content, tags: [] });
+      await api.post('/api/market/notes', { commodity: category, period: newsPeriod, content, tags: [] });
       setNewsInput(prev => ({ ...prev, [category]: '' }));
       fetchMarketNews();
     } catch (err) {
@@ -648,9 +661,53 @@ export default function MarketDataPage() {
           {/* NOTES TAB */}
           {/* MARKET NEWS TAB */}
           <TabsContent value="news" className="space-y-4 mt-4">
-            <div className="text-center mb-6">
+            <div className="text-center mb-4">
               <h2 className="text-lg font-semibold text-green-600">MARKET NEWS</h2>
-              <p className="text-sm text-muted-foreground">Daily Market Commentary</p>
+              <p className="text-sm text-muted-foreground">
+                {newsPeriod === 'daily' ? 'Daily' : newsPeriod === 'monthly' ? 'Monthly' : newsPeriod} Market Commentary
+              </p>
+            </div>
+
+            {/* Period Tabs */}
+            <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
+              <Button
+                size="sm"
+                variant={newsPeriod === 'daily' ? 'default' : 'outline'}
+                onClick={() => setNewsPeriod('daily')}
+                data-testid="news-period-daily"
+              >
+                Daily
+              </Button>
+              <Button
+                size="sm"
+                variant={newsPeriod === 'monthly' ? 'default' : 'outline'}
+                onClick={() => setNewsPeriod('monthly')}
+                data-testid="news-period-monthly"
+              >
+                Monthly
+              </Button>
+              {/* Current year always shown */}
+              {!archiveYears.includes(String(new Date().getFullYear())) && (
+                <Button
+                  size="sm"
+                  variant={newsPeriod === String(new Date().getFullYear()) ? 'default' : 'outline'}
+                  onClick={() => setNewsPeriod(String(new Date().getFullYear()))}
+                  data-testid={`news-period-${new Date().getFullYear()}`}
+                >
+                  {new Date().getFullYear()}
+                </Button>
+              )}
+              {archiveYears.map((year) => (
+                <Button
+                  key={year}
+                  size="sm"
+                  variant={newsPeriod === year ? 'default' : 'outline'}
+                  onClick={() => setNewsPeriod(year)}
+                  data-testid={`news-period-${year}`}
+                >
+                  {year}
+                </Button>
+              ))}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

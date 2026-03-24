@@ -11,8 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from database import trades_col, partners_col, db
+from database import trades_col, partners_col, documents_col, db
 from auth import get_current_user
+from config import UPLOAD_DIR
 
 router = APIRouter(prefix="/api", tags=["email"])
 
@@ -102,6 +103,50 @@ def get_partner_email(partner_id):
     except:
         pass
     return ""
+
+
+def get_bl_documents(trade_id):
+    """Fetch Bill of Ladings documents for a trade."""
+    attachments = []
+    try:
+        # Find documents with docName containing "Bill of Lading" (case insensitive)
+        import re
+        bl_docs = documents_col.find({
+            "tradeId": trade_id,
+            "docName": re.compile(r"bill.*lading", re.IGNORECASE)
+        })
+        
+        for doc in bl_docs:
+            saved_name = doc.get("savedName", "")
+            file_name = doc.get("fileName", saved_name)
+            file_path = os.path.join(UPLOAD_DIR, saved_name)
+            
+            if os.path.exists(file_path):
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                    b64_content = base64.b64encode(content).decode("utf-8")
+                    
+                    # Determine content type
+                    ext = os.path.splitext(file_name)[1].lower()
+                    content_type_map = {
+                        '.pdf': 'application/pdf',
+                        '.jpg': 'image/jpeg',
+                        '.jpeg': 'image/jpeg',
+                        '.png': 'image/png',
+                        '.doc': 'application/msword',
+                        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    }
+                    content_type = content_type_map.get(ext, 'application/octet-stream')
+                    
+                    attachments.append({
+                        "filename": file_name,
+                        "content": b64_content,
+                        "content_type": content_type
+                    })
+    except Exception as e:
+        print(f"Error fetching BL documents: {e}")
+    
+    return attachments
 
 
 def build_email_body(trade, doc_name, recipient_name, recipient_role):
@@ -379,6 +424,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
 
     # Generate the PDF (skip for business_confirmation and vessel_nomination)
     attachment = None
+    attachments_list = []  # For multiple attachments (like BL documents)
+    
     if req.doc_type == "business_confirmation":
         doc_name = "Business Confirmation"
         filename = None
@@ -388,6 +435,9 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     elif req.doc_type == "shipment_appropriation":
         doc_name = "Shipment Appropriation"
         filename = None
+        # Fetch Bill of Ladings documents for this trade
+        bl_attachments = get_bl_documents(req.trade_id)
+        attachments_list.extend(bl_attachments)
     elif req.doc_type == "commission_invoice":
         from routes.commission_invoice import generate_ci_pdf
         pdf_buf = generate_ci_pdf(trade)
@@ -402,6 +452,10 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
         pdf_bytes = pdf_buf.getvalue()
         pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
         attachment = {"filename": filename, "content": pdf_b64, "content_type": "application/pdf"}
+    
+    # Combine single attachment with attachments list
+    if attachment:
+        attachments_list.insert(0, attachment)
 
     sent_to = []
     errors = []
@@ -419,8 +473,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "subject": subject,
                 "html": seller_body,
             }
-            if attachment:
-                params["attachments"] = [attachment]
+            if attachments_list:
+                params["attachments"] = attachments_list
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Seller: {seller_email}")
         except Exception as e:
@@ -445,8 +499,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "subject": subject,
                 "html": buyer_body,
             }
-            if attachment:
-                params["attachments"] = [attachment]
+            if attachments_list:
+                params["attachments"] = attachments_list
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Buyer: {buyer_email}")
         except Exception as e:
@@ -467,8 +521,8 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
                 "subject": subject,
                 "html": body,
             }
-            if attachment:
-                params["attachments"] = [attachment]
+            if attachments_list:
+                params["attachments"] = attachments_list
             await asyncio.to_thread(resend.Emails.send, params)
             sent_to.append(f"Internal: {', '.join(get_cc_emails())}")
         except Exception as e:

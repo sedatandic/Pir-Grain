@@ -16,7 +16,7 @@ import { format, parse } from 'date-fns';
 import { 
   TrendingUp, TrendingDown, Minus, RefreshCw, Loader2, Plus, 
   Wheat, Droplets, Sun, Circle, DollarSign, Fuel, PenLine, X, Tag,
-  Send, Building2, Calendar as CalendarIcon, Package, Trash2, Pencil
+  Send, Building2, Calendar as CalendarIcon, Package, Trash2, Pencil, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -93,6 +93,7 @@ export default function MarketDataPage() {
   const [resultForm, setResultForm] = useState({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
   const [selectedTenderForResult, setSelectedTenderForResult] = useState(null);
   const [editingResultIndex, setEditingResultIndex] = useState(null);
+  const [expandedTenders, setExpandedTenders] = useState({});
   
   // Telegram state
   const [telegramMessages, setTelegramMessages] = useState([]);
@@ -756,21 +757,34 @@ export default function MarketDataPage() {
                   const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
                   return (
                   <Card key={tender.id} className="overflow-hidden border-2 border-gray-300" data-testid={`tender-card-${tender.id}`}>
-                    {/* Tender Title Row */}
-                    <div className="bg-gray-100 border-b-2 border-gray-300 px-4 py-2 text-center">
-                      <h3 className="font-bold text-lg tracking-wide">
-                        TMO {tender.commodity} Tender - Date: {tender.tenderDate}
-                      </h3>
-                    </div>
-                    {/* Shipment Period Row */}
-                    <div className="bg-gray-50 border-b-2 border-gray-300 px-4 py-2 text-center">
-                      <p className="font-bold text-base">
-                        {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
-                          ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 
-                          : 'Shipment Period: TBD'}
-                      </p>
+                    {/* Clickable Header */}
+                    <div 
+                      className="cursor-pointer select-none"
+                      onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}
+                    >
+                      {/* Tender Title Row */}
+                      <div className="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center">
+                        {expandedTenders[tender.id] 
+                          ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />
+                          : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />
+                        }
+                        <h3 className="font-bold text-lg tracking-wide text-center flex-1">
+                          TMO {tender.commodity} Tender - Date: {tender.tenderDate}
+                        </h3>
+                      </div>
+                      {/* Shipment Period Row */}
+                      <div className="bg-gray-50 border-b border-gray-300 px-4 py-1.5 text-center">
+                        <p className="font-medium text-sm text-muted-foreground">
+                          {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
+                            ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 
+                            : 'Shipment Period: TBD'}
+                        </p>
+                      </div>
                     </div>
                     
+                    {/* Expandable Content */}
+                    {expandedTenders[tender.id] && (
+                      <>
                     {/* Results Table */}
                     <CardContent className="p-0">
                       <Table>
@@ -888,6 +902,8 @@ export default function MarketDataPage() {
                         </Button>
                       </div>
                     </div>
+                      </>
+                    )}
                   </Card>
                   );
                 })}

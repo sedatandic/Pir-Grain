@@ -66,13 +66,12 @@ DEFAULT_COMMODITIES = [
     {"symbol": "WHEAT", "name": "Wheat", "type": "agricultural", "unit": "USD/bushel"},
     {"symbol": "CORN", "name": "Corn", "type": "agricultural", "unit": "USD/bushel"},
     {"symbol": "SOYBEAN", "name": "Soybeans", "type": "agricultural", "unit": "USD/bushel"},
-    {"symbol": "BARLEY", "name": "Barley", "type": "agricultural", "unit": "USD/MT"},
-    {"symbol": "SUNFLOWER", "name": "Sunflower", "type": "agricultural", "unit": "USD/MT"},
-    {"symbol": "GOLD", "name": "Gold", "type": "metal", "unit": "USD/oz"},
-    {"symbol": "CRUDE_OIL", "name": "Crude Oil", "type": "energy", "unit": "USD/barrel"},
+    {"symbol": "GOLD", "name": "Gold", "type": "commodity", "unit": "USD/oz"},
+    {"symbol": "CRUDE_OIL", "name": "Crude Oil", "type": "commodity", "unit": "USD/barrel"},
     {"symbol": "EUR_USD", "name": "EUR/USD", "type": "currency", "unit": ""},
     {"symbol": "USD_RUB", "name": "USD/RUB", "type": "currency", "unit": ""},
     {"symbol": "USD_TRY", "name": "USD/TRY", "type": "currency", "unit": ""},
+    {"symbol": "USD_UAH", "name": "USD/UAH", "type": "currency", "unit": ""},
 ]
 
 async def fetch_alpha_vantage_price(symbol: str, function: str = "GLOBAL_QUOTE"):
@@ -112,6 +111,7 @@ async def scrape_barchart_forex(symbol: str):
             "EUR_USD": "https://www.barchart.com/forex/quotes/%5EEURUSD/overview",
             "USD_RUB": "https://www.barchart.com/forex/quotes/%5EUSDRUB/overview",
             "USD_TRY": "https://www.barchart.com/forex/quotes/%5EUSDTRY/overview",
+            "USD_UAH": "https://www.barchart.com/forex/quotes/%5EUSDUAH/overview",
         }
         
         url = url_map.get(symbol)
@@ -163,12 +163,13 @@ async def fetch_commodity_price(symbol: str):
         "EUR_USD": "EUR/USD",
         "USD_RUB": "USD/RUB",
         "USD_TRY": "USD/TRY",
+        "USD_UAH": "USD/UAH",
     }
     
     av_symbol = av_symbols.get(symbol, symbol)
     
     # For forex - try Barchart scraping first, then fallback to API
-    if symbol in ["EUR_USD", "USD_RUB", "USD_TRY"]:
+    if symbol in ["EUR_USD", "USD_RUB", "USD_TRY", "USD_UAH"]:
         # Try Barchart first
         barchart_data = await scrape_barchart_forex(symbol)
         if barchart_data:
@@ -202,6 +203,7 @@ async def fetch_commodity_price(symbol: str):
                 "EUR_USD": ("EUR", True),   # Need to invert (1/EUR rate)
                 "USD_RUB": ("RUB", False),
                 "USD_TRY": ("TRY", False),
+                "USD_UAH": ("UAH", False),
             }
             curr_code, invert = currency_map.get(symbol, (None, False))
             if curr_code and curr_code in live_rates:
@@ -266,13 +268,12 @@ async def fetch_commodity_price(symbol: str):
         "WHEAT": {"price": 585.25, "change": 2.50, "changePercent": 0.43},
         "CORN": {"price": 445.75, "change": -1.25, "changePercent": -0.28},
         "SOYBEAN": {"price": 1025.50, "change": 5.75, "changePercent": 0.56},
-        "BARLEY": {"price": 210.00, "change": 1.00, "changePercent": 0.48},
-        "SUNFLOWER": {"price": 520.00, "change": -2.00, "changePercent": -0.38},
         "GOLD": {"price": 2345.80, "change": 12.40, "changePercent": 0.53},
         "CRUDE_OIL": {"price": 78.45, "change": -0.85, "changePercent": -1.07},
         "EUR_USD": {"price": 1.0875, "change": 0.0012, "changePercent": 0.11},
         "USD_RUB": {"price": 92.45, "change": 0.35, "changePercent": 0.38},
         "USD_TRY": {"price": 34.25, "change": 0.08, "changePercent": 0.23},
+        "USD_UAH": {"price": 41.50, "change": 0.15, "changePercent": 0.36},
     }
     
     mock = mock_prices.get(symbol, {"price": 100.00, "change": 0, "changePercent": 0})
@@ -376,65 +377,72 @@ async def scrape_ktb_prices():
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                 'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Cache-Control': 'no-cache',
             }
             
-            # Try to get the rendered page content
-            response = await client.get("https://www.ktb.org.tr/gunlukfiyat", headers=headers, follow_redirects=True)
+            # Try the main page which has live data
+            response = await client.get("https://www.ktb.org.tr", headers=headers, follow_redirects=True)
             
             if response.status_code == 200:
                 html = response.text
                 
-                # The page uses JavaScript to render data
-                # Try to find JSON data embedded in the page
-                json_pattern = r'data\s*[=:]\s*(\[.*?\]|\{.*?\})'
-                json_matches = re.findall(json_pattern, html)
+                # Extract date
+                date_match = re.search(r'(\d{2}\.\d{2}\.\d{4})', html)
+                date_str = date_match.group(1) if date_match else datetime.now().strftime("%d.%m.%Y")
                 
-                # Also try looking for price patterns in any format
-                # Pattern: product | price TL | price TL | price TL
-                price_pattern = r'([A-Za-zığüşöçİĞÜŞÖÇ\s]+)\|?\s*(\d+[,\.]\d+)\s*TL\s*\|?\s*(\d+[,\.]\d+)\s*TL\s*\|?\s*(\d+[,\.]\d+)\s*TL'
-                matches = re.findall(price_pattern, html)
+                # Pattern to match product prices from the main page
+                # Format: Product name followed by price in TL
+                product_patterns = [
+                    (r'Makarnalık Buğday.*?(\d+[,\.]\d+)\s*₺', 'Makarnalık Buğday', 'Durum Wheat'),
+                    (r'Beyaz Sert Buğday.*?(\d+[,\.]\d+)\s*₺', 'Beyaz Sert Buğday', 'White Hard Wheat'),
+                    (r'Kırmızı Sert Buğday.*?(\d+[,\.]\d+)\s*₺', 'Kırmızı Sert Buğday', 'Red Hard Wheat'),
+                    (r'Diğer Beyaz Buğday.*?(\d+[,\.]\d+)\s*₺', 'Diğer Beyaz Buğday', 'Other White Wheat'),
+                    (r'Diğer Kırmızı Buğday.*?(\d+[,\.]\d+)\s*₺', 'Diğer Kırmızı Buğday', 'Other Red Wheat'),
+                    (r'(?<![a-zA-ZğüşöçİĞÜŞÖÇ])Arpa.*?(\d+[,\.]\d+)\s*₺', 'Arpa', 'Barley'),
+                    (r'(?<![a-zA-ZğüşöçİĞÜŞÖÇ])Mısır.*?(\d+[,\.]\d+)\s*₺', 'Mısır', 'Corn'),
+                ]
                 
-                if matches:
-                    for match in matches:
-                        product = match[0].strip()
-                        if product and len(product) > 2:
-                            prices.append({
-                                "exchange": "KTB",
-                                "product": product,
-                                "minPrice": float(match[1].replace(',', '.')),
-                                "maxPrice": float(match[2].replace(',', '.')),
-                                "avgPrice": float(match[3].replace(',', '.')),
-                                "unit": "TRY/KG",
-                                "date": datetime.now().strftime("%d.%m.%Y"),
-                                "source": "ktb.org.tr"
-                            })
+                for pattern, product_tr, product_en in product_patterns:
+                    matches = re.findall(pattern, html, re.IGNORECASE | re.DOTALL)
+                    if matches:
+                        # Get the first valid price
+                        price = float(matches[0].replace(',', '.'))
+                        prices.append({
+                            "exchange": "KTB",
+                            "product": product_tr,
+                            "productEn": product_en,
+                            "avgPrice": price,
+                            "minPrice": price,
+                            "maxPrice": price,
+                            "unit": "TRY/KG",
+                            "date": date_str,
+                            "source": "ktb.org.tr"
+                        })
                 
     except Exception as e:
         print(f"KTB scraping error: {e}")
     
-    # If scraping failed, use fallback with typical KTB prices
-    # These are updated periodically based on crawl data
-    if not prices:
+    # If scraping failed or got incomplete data, use fallback with typical KTB prices
+    if len(prices) < 5:
         today = datetime.now().strftime("%d.%m.%Y")
         fallback_prices = [
-            {"product": "Makarnalık Buğday", "productEn": "Durum Wheat", "minPrice": 14.229, "maxPrice": 14.229, "avgPrice": 14.229},
-            {"product": "Beyaz Sert Buğday", "productEn": "White Hard Wheat", "minPrice": 15.301, "maxPrice": 15.301, "avgPrice": 15.301},
-            {"product": "Kırmızı Sert Buğday", "productEn": "Red Hard Wheat", "minPrice": 15.634, "maxPrice": 15.636, "avgPrice": 15.6349},
-            {"product": "Diğer Beyaz Buğday", "productEn": "Other White Wheat", "minPrice": 14.100, "maxPrice": 14.801, "avgPrice": 14.4843},
-            {"product": "Diğer Kırmızı Buğday", "productEn": "Other Red Wheat", "minPrice": 14.501, "maxPrice": 14.669, "avgPrice": 14.5941},
-            {"product": "Arpa", "productEn": "Barley", "minPrice": 13.860, "maxPrice": 14.456, "avgPrice": 14.2457},
-            {"product": "Mısır", "productEn": "Corn", "minPrice": 13.598, "maxPrice": 14.613, "avgPrice": 14.1681},
+            {"product": "Makarnalık Buğday", "productEn": "Durum Wheat", "avgPrice": 14.1395},
+            {"product": "Beyaz Sert Buğday", "productEn": "White Hard Wheat", "avgPrice": 15.5149},
+            {"product": "Kırmızı Sert Buğday", "productEn": "Red Hard Wheat", "avgPrice": 15.3521},
+            {"product": "Diğer Beyaz Buğday", "productEn": "Other White Wheat", "avgPrice": 14.5600},
+            {"product": "Diğer Kırmızı Buğday", "productEn": "Other Red Wheat", "avgPrice": 15.1042},
+            {"product": "Arpa", "productEn": "Barley", "avgPrice": 14.2336},
+            {"product": "Mısır", "productEn": "Corn", "avgPrice": 14.2727},
         ]
         
+        prices = []
         for p in fallback_prices:
             prices.append({
                 "exchange": "KTB",
                 "product": p["product"],
                 "productEn": p["productEn"],
-                "minPrice": p["minPrice"],
-                "maxPrice": p["maxPrice"],
                 "avgPrice": p["avgPrice"],
+                "minPrice": p["avgPrice"],
+                "maxPrice": p["avgPrice"],
                 "unit": "TRY/KG",
                 "date": today,
                 "source": "ktb.org.tr (cached)"

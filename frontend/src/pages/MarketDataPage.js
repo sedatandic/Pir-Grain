@@ -268,7 +268,7 @@ export default function MarketDataPage() {
   const groupedPrices = useMemo(() => {
     return {
       agricultural: prices.filter(p => p.type === 'agricultural'),
-      metals: prices.filter(p => p.type === 'metal' || p.type === 'energy'),
+      commodities: prices.filter(p => p.type === 'commodity'),
       currencies: prices.filter(p => p.type === 'currency'),
     };
   }, [prices]);
@@ -308,19 +308,20 @@ export default function MarketDataPage() {
 
           {/* PRICES TAB */}
           <TabsContent value="prices" className="space-y-4 mt-4">
-            {/* Agricultural Commodities */}
+            {/* Agricultural Commodities + Gold & Crude Oil */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Wheat className="h-5 w-5 text-amber-600" />
-                  Agricultural Commodities
+                  Commodities
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {groupedPrices.agricultural.map((item) => {
+                  {[...groupedPrices.agricultural, ...groupedPrices.commodities].map((item) => {
                     const Icon = COMMODITY_ICONS[item.symbol] || Circle;
                     const isSelected = selectedCommodity === item.symbol;
+                    const isCurrency = item.symbol === 'GOLD' || item.symbol === 'CRUDE_OIL';
                     return (
                       <div
                         key={item.symbol}
@@ -334,14 +335,14 @@ export default function MarketDataPage() {
                           <span className="font-medium text-sm">{item.name}</span>
                         </div>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-bold">{item.price?.toLocaleString()}</span>
+                          <span className="text-lg font-bold">{isCurrency ? '$' : ''}{item.price?.toLocaleString()}</span>
                           <span className="text-xs text-muted-foreground">{item.unit}</span>
                         </div>
                         <div className={`flex items-center gap-1 text-xs ${
                           item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : 'text-muted-foreground'
                         }`}>
                           {item.change > 0 ? <TrendingUp className="h-3 w-3" /> : item.change < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                          <span>{item.change > 0 ? '+' : ''}{item.change?.toFixed(2)} ({item.changePercent?.toFixed(2)}%)</span>
+                          <span>{item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%</span>
                         </div>
                         {item.isMock && <Badge variant="outline" className="text-[10px] mt-1">Demo</Badge>}
                       </div>
@@ -351,80 +352,41 @@ export default function MarketDataPage() {
               </CardContent>
             </Card>
 
-            {/* Metals & Energy + Currencies */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Circle className="h-5 w-5 text-yellow-500" />
-                    Metals & Energy
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    {groupedPrices.metals.map((item) => {
-                      const Icon = COMMODITY_ICONS[item.symbol] || Circle;
-                      const isSelected = selectedCommodity === item.symbol;
-                      return (
-                        <div
-                          key={item.symbol}
-                          onClick={() => setSelectedCommodity(item.symbol)}
-                          className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                            isSelected ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <Icon className="h-4 w-4" style={{ color: COMMODITY_COLORS[item.symbol] }} />
-                            <span className="font-medium text-sm">{item.name}</span>
-                          </div>
-                          <div className="text-lg font-bold">${item.price?.toLocaleString()}</div>
-                          <div className={`text-xs ${item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : ''}`}>
-                            {item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-blue-500" />
-                    Currency Rates (vs USD)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {groupedPrices.currencies.map((item) => (
-                      <div
-                        key={item.symbol}
-                        onClick={() => setSelectedCommodity(item.symbol)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all flex items-center justify-between ${
-                          selectedCommodity === item.symbol ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{item.name}</span>
-                          {item.isLive ? (
-                            <Badge variant="default" className="text-[10px] bg-green-600">Live</Badge>
-                          ) : item.isMock ? (
-                            <Badge variant="outline" className="text-[10px]">Demo</Badge>
-                          ) : null}
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold">{item.price?.toFixed(4)}</div>
-                          <div className={`text-xs ${item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : ''}`}>
-                            {item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
-                          </div>
-                        </div>
+            {/* Currency Rates */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-blue-500" />
+                  Currency Rates (vs USD)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {groupedPrices.currencies.map((item) => (
+                    <div
+                      key={item.symbol}
+                      onClick={() => setSelectedCommodity(item.symbol)}
+                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                        selectedCommodity === item.symbol ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium">{item.name}</span>
+                        {item.isLive ? (
+                          <Badge variant="default" className="text-[10px] bg-green-600">Live</Badge>
+                        ) : item.isMock ? (
+                          <Badge variant="outline" className="text-[10px]">Demo</Badge>
+                        ) : null}
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                      <div className="text-lg font-bold">{item.price?.toFixed(4)}</div>
+                      <div className={`text-xs ${item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : ''}`}>
+                        {item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Price Chart */}
             {selectedCommodity && selectedPrice && (

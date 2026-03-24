@@ -72,6 +72,9 @@ export default function MarketDataPage() {
   const [newsInput, setNewsInput] = useState({ Wheat: '', Corn: '', Barley: '', Others: '' });
   const [newsPeriod, setNewsPeriod] = useState('daily');
   const [archiveYears, setArchiveYears] = useState([]);
+  const [newsNavLevel, setNewsNavLevel] = useState('day'); // 'year', 'month', 'day'
+  const [newsSelectedYear, setNewsSelectedYear] = useState(new Date().getFullYear());
+  const [newsSelectedMonth, setNewsSelectedMonth] = useState(new Date().getMonth());
   
   // Turkish exchange state
   const [turkishPrices, setTurkishPrices] = useState([]);
@@ -665,48 +668,135 @@ export default function MarketDataPage() {
             <div className="text-center mb-4">
               <h2 className="text-lg font-semibold text-green-600">MARKET NEWS</h2>
               <p className="text-sm text-muted-foreground">
-                {(() => {
-                  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                  const now = new Date();
-                  if (newsPeriod === 'daily') return `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()} Market Commentary`;
-                  if (newsPeriod === 'monthly') return `${months[now.getMonth()]} ${now.getFullYear()} Market Commentary`;
-                  return `${newsPeriod} Market Commentary`;
-                })()}
+                {newsPeriod === 'daily' ? 'Today\'s' : newsPeriod === 'monthly' ? 'Monthly' : ''} Market Commentary
               </p>
             </div>
 
-            {/* Period Tabs */}
-            <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
-              {(() => {
-                const now = new Date();
-                const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
-                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-                const todayStr = `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
-                const monthStr = `${months[now.getMonth()]} ${now.getFullYear()}`;
-                const yearStr = String(now.getFullYear());
-                
-                // Build period options: today (weekdays only), current month, current year, archive years
-                const periods = [];
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                  periods.push({ key: 'daily', label: todayStr });
+            {/* Period Navigation - Drill Down */}
+            {(() => {
+              const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+              const now = new Date();
+              const currentYear = now.getFullYear();
+              const currentMonth = now.getMonth();
+              const todayStr = `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+              // Get weekdays for a given year+month
+              const getWeekdays = (year, month) => {
+                const days = [];
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                for (let d = 1; d <= daysInMonth; d++) {
+                  const date = new Date(year, month, d);
+                  const dow = date.getDay();
+                  if (dow >= 1 && dow <= 5) {
+                    days.push({
+                      label: `${String(d).padStart(2,'0')} ${months[month]} ${year}`,
+                      key: `${String(d).padStart(2,'0')}_${months[month]}_${year}`
+                    });
+                  }
                 }
-                periods.push({ key: 'monthly', label: monthStr });
-                periods.push({ key: yearStr, label: yearStr });
-                archiveYears.filter(y => y !== yearStr).forEach(y => periods.push({ key: y, label: y }));
-                
-                return periods.map(p => (
-                  <Button
-                    key={p.key}
-                    size="sm"
-                    variant={newsPeriod === p.key ? 'default' : 'outline'}
-                    onClick={() => setNewsPeriod(p.key)}
-                    data-testid={`news-period-${p.key}`}
-                  >
-                    {p.label}
-                  </Button>
-                ));
-              })()}
-            </div>
+                return days;
+              };
+
+              // Available years
+              const years = [currentYear];
+              archiveYears.forEach(y => { if (!years.includes(Number(y))) years.push(Number(y)); });
+              years.sort((a, b) => b - a);
+
+              return (
+                <div className="space-y-3 mb-4">
+                  {/* Breadcrumb */}
+                  <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                    <button className="hover:text-foreground font-medium" onClick={() => { setNewsNavLevel('year'); }}>Years</button>
+                    {(newsNavLevel === 'month' || newsNavLevel === 'day') && (
+                      <>
+                        <span>/</span>
+                        <button className="hover:text-foreground font-medium" onClick={() => { setNewsNavLevel('month'); }}>
+                          {newsSelectedYear}
+                        </button>
+                      </>
+                    )}
+                    {newsNavLevel === 'day' && (
+                      <>
+                        <span>/</span>
+                        <span className="font-medium text-foreground">{months[newsSelectedMonth]} {newsSelectedYear}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Level: Years */}
+                  {newsNavLevel === 'year' && (
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {years.map(y => (
+                        <Button key={y} size="sm" variant="outline" onClick={() => {
+                          setNewsSelectedYear(y);
+                          setNewsNavLevel('month');
+                        }}>
+                          {y}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Level: Months */}
+                  {newsNavLevel === 'month' && (
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {months.map((m, idx) => {
+                        // Only show months up to current month for current year
+                        if (newsSelectedYear === currentYear && idx > currentMonth) return null;
+                        return (
+                          <Button key={m} size="sm"
+                            variant={newsPeriod === 'monthly' && newsSelectedMonth === idx && newsSelectedYear === currentYear ? 'default' : 'outline'}
+                            onClick={() => {
+                              setNewsSelectedMonth(idx);
+                              setNewsNavLevel('day');
+                            }}
+                          >
+                            {m} {newsSelectedYear}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Level: Weekdays */}
+                  {newsNavLevel === 'day' && (
+                    <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                      {getWeekdays(newsSelectedYear, newsSelectedMonth).map(day => {
+                        // Don't show future dates
+                        const dayNum = parseInt(day.label.split(' ')[0]);
+                        if (newsSelectedYear === currentYear && newsSelectedMonth === currentMonth && dayNum > now.getDate()) return null;
+                        const isActive = newsPeriod === day.key;
+                        return (
+                          <Button key={day.key} size="sm"
+                            variant={isActive ? 'default' : 'outline'}
+                            className="text-xs px-2 py-1 h-7"
+                            onClick={() => setNewsPeriod(day.key)}
+                          >
+                            {day.label}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Today shortcut */}
+                  {newsNavLevel !== 'year' && (
+                    <div className="flex justify-center">
+                      <Button size="sm" variant={newsPeriod === 'daily' ? 'default' : 'ghost'} className="text-xs"
+                        onClick={() => {
+                          setNewsPeriod('daily');
+                          setNewsSelectedYear(currentYear);
+                          setNewsSelectedMonth(currentMonth);
+                          setNewsNavLevel('day');
+                        }}
+                      >
+                        Today ({todayStr})
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['Wheat', 'Corn', 'Barley', 'Others'].map((category) => (

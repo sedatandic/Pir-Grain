@@ -770,7 +770,7 @@ export default function MarketDataPage() {
                                   <TableCell className="font-medium">{result.port}</TableCell>
                                   <TableCell>{result.company || result.winner}</TableCell>
                                   <TableCell className="text-right font-mono">
-                                    {((parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0) * 1000).toLocaleString('de-DE', { minimumFractionDigits: 0 })}
+                                    {(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}
                                   </TableCell>
                                   <TableCell className="text-right font-mono font-bold text-red-600">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
@@ -789,7 +789,7 @@ export default function MarketDataPage() {
                                 <TableCell className="font-bold text-base">TOTAL</TableCell>
                                 <TableCell></TableCell>
                                 <TableCell className="text-right font-mono font-bold text-base">
-                                  {(totalQty * 1000).toLocaleString('de-DE', { minimumFractionDigits: 0 })}
+                                  {totalQty.toLocaleString('de-DE')}
                                 </TableCell>
                                 <TableCell></TableCell>
                                 <TableCell></TableCell>
@@ -1157,14 +1157,14 @@ export default function MarketDataPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Quantity (KMT)</Label>
+              <Label>Quantity (MTS)</Label>
               <Input 
                 data-testid="result-quantity-input"
                 type="number" 
                 step="0.1"
                 value={resultForm.quantity} 
                 onChange={(e) => setResultForm({ ...resultForm, quantity: e.target.value })}
-                placeholder="e.g., 25 (for 25 KMT)"
+                placeholder="e.g., 25000"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

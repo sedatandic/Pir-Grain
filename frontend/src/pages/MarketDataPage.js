@@ -70,7 +70,11 @@ export default function MarketDataPage() {
   // Market News state
   const [marketNews, setMarketNews] = useState({ Wheat: [], Corn: [], Barley: [], Others: [] });
   const [newsInput, setNewsInput] = useState({ Wheat: '', Corn: '', Barley: '', Others: '' });
-  const [newsPeriod, setNewsPeriod] = useState('daily');
+  const [newsPeriod, setNewsPeriod] = useState(() => {
+    const now = new Date();
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${String(now.getDate()).padStart(2,'0')}_${months[now.getMonth()]}_${now.getFullYear()}`;
+  });
   const [archiveYears, setArchiveYears] = useState([]);
   const [newsNavLevel, setNewsNavLevel] = useState('day'); // 'year', 'month', 'day'
   const [newsSelectedYear, setNewsSelectedYear] = useState(new Date().getFullYear());
@@ -782,9 +786,9 @@ export default function MarketDataPage() {
                   {/* Today shortcut */}
                   {newsNavLevel !== 'year' && (
                     <div className="flex justify-center">
-                      <Button size="sm" variant={newsPeriod === 'daily' ? 'default' : 'ghost'} className="text-xs"
+                      <Button size="sm" variant={newsPeriod === `${String(now.getDate()).padStart(2,'0')}_${months[now.getMonth()]}_${now.getFullYear()}` ? 'default' : 'ghost'} className="text-xs"
                         onClick={() => {
-                          setNewsPeriod('daily');
+                          setNewsPeriod(`${String(now.getDate()).padStart(2,'0')}_${months[now.getMonth()]}_${now.getFullYear()}`);
                           setNewsSelectedYear(currentYear);
                           setNewsSelectedMonth(currentMonth);
                           setNewsNavLevel('day');

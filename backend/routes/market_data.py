@@ -68,9 +68,9 @@ DEFAULT_COMMODITIES = [
     {"symbol": "SOYBEAN", "name": "Soybeans", "type": "agricultural", "unit": "USD/bushel"},
     {"symbol": "GOLD", "name": "Gold", "type": "commodity", "unit": "USD/oz"},
     {"symbol": "CRUDE_OIL", "name": "Crude Oil", "type": "commodity", "unit": "USD/barrel"},
+    {"symbol": "USD_TRY", "name": "USD/TRY", "type": "currency", "unit": ""},
     {"symbol": "EUR_USD", "name": "EUR/USD", "type": "currency", "unit": ""},
     {"symbol": "USD_RUB", "name": "USD/RUB", "type": "currency", "unit": ""},
-    {"symbol": "USD_TRY", "name": "USD/TRY", "type": "currency", "unit": ""},
     {"symbol": "USD_UAH", "name": "USD/UAH", "type": "currency", "unit": ""},
 ]
 

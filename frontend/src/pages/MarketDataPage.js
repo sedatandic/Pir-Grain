@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -22,27 +22,28 @@ const COMMODITY_ICONS = {
   WHEAT: Wheat,
   CORN: Wheat,
   SOYBEAN: Droplets,
-  BARLEY: Wheat,
-  SUNFLOWER: Sun,
   GOLD: Circle,
   CRUDE_OIL: Fuel,
   EUR_USD: DollarSign,
   USD_RUB: DollarSign,
   USD_TRY: DollarSign,
+  USD_UAH: DollarSign,
 };
 
 const COMMODITY_COLORS = {
   WHEAT: '#F59E0B',
   CORN: '#EAB308',
   SOYBEAN: '#84CC16',
-  BARLEY: '#D97706',
-  SUNFLOWER: '#FBBF24',
   GOLD: '#FCD34D',
   CRUDE_OIL: '#1F2937',
   EUR_USD: '#3B82F6',
   USD_RUB: '#EF4444',
   USD_TRY: '#DC2626',
+  USD_UAH: '#10B981',
 };
+
+// Auto-refresh interval (15 minutes)
+const AUTO_REFRESH_INTERVAL = 15 * 60 * 1000;
 
 const NOTE_TAGS = [
   'Black Sea', 'Mersin Port', 'CPT', 'FOB', 'CIF', 'Russia', 'Ukraine', 'EU', 'Turkey',
@@ -53,6 +54,7 @@ export default function MarketDataPage() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [selectedCommodity, setSelectedCommodity] = useState(null);
   const [chartPeriod, setChartPeriod] = useState('daily');
   const [chartData, setChartData] = useState([]);
@@ -93,6 +95,13 @@ export default function MarketDataPage() {
 
   useEffect(() => {
     fetchData();
+    
+    // Set up auto-refresh every 15 minutes
+    const interval = setInterval(() => {
+      refreshPrices();
+    }, AUTO_REFRESH_INTERVAL);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -119,6 +128,7 @@ export default function MarketDataPage() {
       setTenders(tendersRes.data);
       setTelegramMessages(telegramRes.data.messages || []);
       setTelegramChannels(channelsRes.data);
+      setLastUpdated(new Date());
       if (pricesRes.data.length > 0 && !selectedCommodity) {
         setSelectedCommodity(pricesRes.data[0].symbol);
       }
@@ -155,6 +165,7 @@ export default function MarketDataPage() {
     try {
       const res = await api.get('/api/market/prices');
       setPrices(res.data);
+      setLastUpdated(new Date());
       toast.success('Prices refreshed');
     } catch (err) {
       toast.error('Failed to refresh prices');
@@ -292,10 +303,20 @@ export default function MarketDataPage() {
             <h1 className="text-3xl font-bold tracking-tight">Market Data</h1>
             <p className="text-muted-foreground">Live commodity prices, notes, and tender tracking</p>
           </div>
-          <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3">
+            {lastUpdated && (
+              <span className="text-sm text-muted-foreground">
+                Last Updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <div className="flex flex-col items-end">
+              <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm">
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh Now
+              </Button>
+              <span className="text-xs text-muted-foreground mt-1">Auto-refreshes every 15 minutes</span>
+            </div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -308,83 +329,115 @@ export default function MarketDataPage() {
 
           {/* PRICES TAB */}
           <TabsContent value="prices" className="space-y-4 mt-4">
-            {/* Agricultural Commodities + Gold & Crude Oil */}
+            {/* Live Market Prices Table */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Wheat className="h-5 w-5 text-amber-600" />
-                  Commodities
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    Live Market Prices
+                  </CardTitle>
+                  {lastUpdated && (
+                    <span className="text-sm text-muted-foreground">
+                      Updated: {lastUpdated.toLocaleTimeString()}
+                    </span>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                  {[...groupedPrices.agricultural, ...groupedPrices.commodities].map((item) => {
-                    const Icon = COMMODITY_ICONS[item.symbol] || Circle;
-                    const isSelected = selectedCommodity === item.symbol;
-                    const isCurrency = item.symbol === 'GOLD' || item.symbol === 'CRUDE_OIL';
-                    return (
-                      <div
-                        key={item.symbol}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[200px]">Market</TableHead>
+                      <TableHead className="text-right">Price</TableHead>
+                      <TableHead className="text-right">Change</TableHead>
+                      <TableHead className="text-right">% Change</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* CBOT Commodities */}
+                    {groupedPrices.agricultural.map((item) => (
+                      <TableRow 
+                        key={item.symbol} 
+                        className="cursor-pointer hover:bg-muted/50"
                         onClick={() => setSelectedCommodity(item.symbol)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                          isSelected ? 'border-primary bg-primary/5 ring-2 ring-primary/20' : 'hover:bg-muted/50'
-                        }`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon className="h-4 w-4" style={{ color: COMMODITY_COLORS[item.symbol] }} />
-                          <span className="font-medium text-sm">{item.name}</span>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-lg font-bold">{isCurrency ? '$' : ''}{item.price?.toLocaleString()}</span>
-                          <span className="text-xs text-muted-foreground">{item.unit}</span>
-                        </div>
-                        <div className={`flex items-center gap-1 text-xs ${
-                          item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : 'text-muted-foreground'
-                        }`}>
-                          {item.change > 0 ? <TrendingUp className="h-3 w-3" /> : item.change < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                          <span>{item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%</span>
-                        </div>
-                        {item.isMock && <Badge variant="outline" className="text-[10px] mt-1">Demo</Badge>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Currency Rates */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-blue-500" />
-                  Currency Rates (vs USD)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {groupedPrices.currencies.map((item) => (
-                    <div
-                      key={item.symbol}
-                      onClick={() => setSelectedCommodity(item.symbol)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                        selectedCommodity === item.symbol ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium">{item.name}</span>
-                        {item.isLive ? (
-                          <Badge variant="default" className="text-[10px] bg-green-600">Live</Badge>
-                        ) : item.isMock ? (
-                          <Badge variant="outline" className="text-[10px]">Demo</Badge>
-                        ) : null}
-                      </div>
-                      <div className="text-lg font-bold">{item.price?.toFixed(4)}</div>
-                      <div className={`text-xs ${item.change > 0 ? 'text-green-600' : item.change < 0 ? 'text-red-600' : ''}`}>
-                        {item.change > 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Wheat className="h-4 w-4 text-amber-600" />
+                            CBOT - {item.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          ${item.price?.toLocaleString()}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.change >= 0 ? '+' : ''}{item.change?.toFixed(2)}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.changePercent >= 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    
+                    {/* Gold & Crude Oil */}
+                    {groupedPrices.commodities.map((item) => (
+                      <TableRow 
+                        key={item.symbol} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedCommodity(item.symbol)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {item.symbol === 'GOLD' ? (
+                              <Circle className="h-4 w-4 text-yellow-500" />
+                            ) : (
+                              <Fuel className="h-4 w-4 text-gray-700" />
+                            )}
+                            {item.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          ${item.price?.toLocaleString()}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.change >= 0 ? '+' : ''}{item.change?.toFixed(2)}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.changePercent >= 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    
+                    {/* Currency Rates */}
+                    {groupedPrices.currencies.map((item) => (
+                      <TableRow 
+                        key={item.symbol} 
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => setSelectedCommodity(item.symbol)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-blue-500" />
+                            {item.name}
+                            {item.isLive && (
+                              <Badge variant="default" className="text-[10px] bg-green-600 ml-1">Live</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold">
+                          {item.price?.toFixed(4)}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.change >= 0 ? '+' : ''}{item.change?.toFixed(4)}
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${item.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {item.changePercent >= 0 ? '+' : ''}{item.changePercent?.toFixed(2)}%
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
 

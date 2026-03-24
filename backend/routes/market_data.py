@@ -36,14 +36,23 @@ class MarketNote(BaseModel):
     content: str
     tags: Optional[List[str]] = []
 
+class TMOTenderResult(BaseModel):
+    rank: Optional[int] = None
+    winner: str
+    port: str
+    sizeKMT: float
+    deliveryMode: str  # EX-ANTREPO, C&F, FOB, etc.
+    pricePerMT: float
+    cfEquivalent: Optional[str] = ""  # e.g., "262 C&F Equivalent"
+
 class TMOTender(BaseModel):
     tenderDate: str
-    commodity: str  # Wheat, Corn, Barley
-    quantities: Optional[dict] = {}  # port: quantity
+    commodity: str  # Wheat, Corn, Barley, Feed Barley
+    totalQuantityKMT: Optional[float] = 0  # e.g., 175 KMT
     shipmentPeriodStart: Optional[str] = ""
     shipmentPeriodEnd: Optional[str] = ""
     status: Optional[str] = "open"  # open, closed, awarded
-    results: Optional[List[dict]] = []  # [{company, price, port, quantity}]
+    results: Optional[List[dict]] = []  # List of TMOTenderResult dicts
 
 class TelegramChannel(BaseModel):
     name: str

@@ -70,6 +70,7 @@ export default function MarketDataPage() {
   const [turkishPrices, setTurkishPrices] = useState([]);
   const [turkishDialogOpen, setTurkishDialogOpen] = useState(false);
   const [turkishForm, setTurkishForm] = useState({ exchange: 'KTB', product: '', price: '', unit: 'TRY/KG', date: '', category: '' });
+  const [scrapingKTB, setScrapingKTB] = useState(false);
   
   // TMO Tenders state
   const [tenders, setTenders] = useState([]);
@@ -209,6 +210,20 @@ export default function MarketDataPage() {
       setTurkishPrices(res.data);
     } catch (err) {
       toast.error('Failed to add price');
+    }
+  };
+
+  const handleScrapeKTB = async () => {
+    setScrapingKTB(true);
+    try {
+      const res = await api.get('/api/market/turkish-exchanges/scrape');
+      toast.success(`Fetched ${res.data.ktb?.length || 0} prices from KTB`);
+      const pricesRes = await api.get('/api/market/turkish-exchanges');
+      setTurkishPrices(pricesRes.data);
+    } catch (err) {
+      toast.error('Failed to fetch KTB prices');
+    } finally {
+      setScrapingKTB(false);
     }
   };
 
@@ -473,48 +488,107 @@ export default function MarketDataPage() {
           <TabsContent value="turkish" className="space-y-4 mt-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Turkish Commodity Exchange Prices</h2>
-              <Button onClick={() => setTurkishDialogOpen(true)} size="sm">
-                <Plus className="h-4 w-4 mr-2" />Add Price
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleScrapeKTB} disabled={scrapingKTB} size="sm" variant="outline">
+                  {scrapingKTB ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Fetch from KTB
+                </Button>
+                <Button onClick={() => setTurkishDialogOpen(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />Add Price
+                </Button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {['KTB', 'GTB'].map((exchange) => (
-                <Card key={exchange}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Building2 className="h-4 w-4" />
-                      {exchange === 'KTB' ? 'Konya Ticaret Borsasi' : 'Gaziantep Ticaret Borsasi'}
-                    </CardTitle>
-                    <CardDescription>{exchange}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {turkishPrices.filter(p => p.exchange === exchange).length === 0 ? (
-                      <p className="text-sm text-muted-foreground py-4 text-center">No prices recorded</p>
-                    ) : (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Product</TableHead>
-                            <TableHead>Price</TableHead>
-                            <TableHead>Date</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {turkishPrices.filter(p => p.exchange === exchange).slice(0, 10).map((price) => (
-                            <TableRow key={price.id}>
-                              <TableCell className="font-medium">{price.product}</TableCell>
-                              <TableCell>{price.price?.toLocaleString()} {price.unit}</TableCell>
-                              <TableCell className="text-muted-foreground text-sm">{price.date}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* KTB Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Konya Ticaret Borsasi (KTB)
+                </CardTitle>
+                <CardDescription>Source: ktb.org.tr</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {turkishPrices.filter(p => p.exchange === 'KTB').length === 0 ? (
+                  <div className="text-center py-6">
+                    <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No prices recorded</p>
+                    <p className="text-xs text-muted-foreground mt-1">Click "Fetch from KTB" to get daily prices</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead className="text-right">Min</TableHead>
+                        <TableHead className="text-right">Max</TableHead>
+                        <TableHead className="text-right">Avg</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {turkishPrices.filter(p => p.exchange === 'KTB').slice(0, 15).map((price, idx) => (
+                        <TableRow key={price.id || idx}>
+                          <TableCell>
+                            <div>
+                              <span className="font-medium">{price.product}</span>
+                              {price.productEn && price.productEn !== price.product && (
+                                <span className="text-xs text-muted-foreground ml-2">({price.productEn})</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {price.minPrice?.toFixed(4) || price.price?.toLocaleString()} {price.unit}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {price.maxPrice?.toFixed(4) || '-'} {price.maxPrice ? price.unit : ''}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm font-medium">
+                            {price.avgPrice?.toFixed(4) || '-'} {price.avgPrice ? price.unit : ''}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{price.date}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* GTB Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Gaziantep Ticaret Borsasi (GTB)
+                </CardTitle>
+                <CardDescription>Manual entry</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {turkishPrices.filter(p => p.exchange === 'GTB').length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No prices recorded</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {turkishPrices.filter(p => p.exchange === 'GTB').slice(0, 10).map((price) => (
+                        <TableRow key={price.id}>
+                          <TableCell className="font-medium">{price.product}</TableCell>
+                          <TableCell>{price.price?.toLocaleString()} {price.unit}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{price.date}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* NOTES TAB */}

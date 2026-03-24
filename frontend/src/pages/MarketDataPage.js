@@ -838,10 +838,6 @@ export default function MarketDataPage() {
                                   </TableCell>
                                 </TableRow>
                               ))}
-                              {/* Empty separator row */}
-                              <TableRow className="border-b border-gray-200">
-                                <TableCell colSpan={6}>&nbsp;</TableCell>
-                              </TableRow>
                               {/* Total Row */}
                               <TableRow className="border-t-2 border-gray-300 font-bold">
                                 <TableCell className="font-bold text-base">TOTAL</TableCell>

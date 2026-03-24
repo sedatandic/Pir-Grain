@@ -735,17 +735,18 @@ export default function MarketDataPage() {
                   const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
                   return (
                   <Card key={tender.id} className="overflow-hidden border-2 border-gray-300" data-testid={`tender-card-${tender.id}`}>
-                    {/* Title Header - PIR GRAIN & PULSES */}
+                    {/* Tender Title Row */}
                     <div className="bg-gray-100 border-b-2 border-gray-300 px-4 py-2 text-center">
-                      <h3 className="font-bold text-lg tracking-wide">PIR GRAIN & PULSES</h3>
+                      <h3 className="font-bold text-lg tracking-wide">
+                        TMO {tender.commodity} Tender - Date: {tender.tenderDate}
+                      </h3>
                     </div>
-                    {/* Tender Info Row */}
+                    {/* Shipment Period Row */}
                     <div className="bg-gray-50 border-b-2 border-gray-300 px-4 py-2 text-center">
                       <p className="font-bold text-base">
-                        {tender.tenderDate} TMO {tender.commodity} TENDER
                         {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
-                          ? ` (${tender.shipmentPeriodStart}-${tender.shipmentPeriodEnd})` 
-                          : ''} Shipment
+                          ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 
+                          : 'Shipment Period: TBD'}
                       </p>
                     </div>
                     

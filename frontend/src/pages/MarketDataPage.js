@@ -721,7 +721,7 @@ export default function MarketDataPage() {
 
           {/* TMO TENDERS TAB */}
           <TabsContent value="tenders" className="space-y-4 mt-4">
-            <div className="flex flex-col items-center gap-2 mb-8">
+            <div className="flex flex-col items-center gap-2 mb-12">
               <div className="text-center">
                 <h2 className="text-lg font-semibold text-green-600">TMO / TURKISH GRAIN BOARD</h2>
                 <p className="text-sm text-muted-foreground">Tenders & Results</p>
@@ -770,7 +770,7 @@ export default function MarketDataPage() {
                           : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />
                         }
                         <h3 className="font-bold text-lg tracking-wide text-center flex-1">
-                          {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Date: {tender.tenderDate}
+                          {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
                         </h3>
                       </div>
                       {/* Shipment Period Row */}

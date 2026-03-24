@@ -67,13 +67,9 @@ export default function MarketDataPage() {
   const [chartData, setChartData] = useState([]);
   const [chartLoading, setChartLoading] = useState(false);
   
-  // Notes state
-  const [notes, setNotes] = useState([]);
-  const [notePeriod, setNotePeriod] = useState('daily');
-  const [noteCommodity, setNoteCommodity] = useState('WHEAT');
-  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
-  const [noteForm, setNoteForm] = useState({ content: '', tags: [] });
-  const [editingNote, setEditingNote] = useState(null);
+  // Market News state
+  const [marketNews, setMarketNews] = useState({ Wheat: [], Corn: [], Barley: [], Others: [] });
+  const [newsInput, setNewsInput] = useState({ Wheat: '', Corn: '', Barley: '', Others: '' });
   
   // Turkish exchange state
   const [turkishPrices, setTurkishPrices] = useState([]);
@@ -100,7 +96,7 @@ export default function MarketDataPage() {
   const [telegramChannels, setTelegramChannels] = useState([]);
 
   // Active tab
-  const [activeTab, setActiveTab] = useState('prices');
+  const [activeTab, setActiveTab] = useState('news');
 
   useEffect(() => {
     fetchData();
@@ -120,8 +116,8 @@ export default function MarketDataPage() {
   }, [selectedCommodity, chartPeriod]);
 
   useEffect(() => {
-    fetchNotes();
-  }, [noteCommodity, notePeriod]);
+    fetchMarketNews();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -160,12 +156,39 @@ export default function MarketDataPage() {
     }
   };
 
-  const fetchNotes = async () => {
+  const fetchMarketNews = async () => {
     try {
-      const res = await api.get(`/api/market/notes?commodity=${noteCommodity}&period=${notePeriod}`);
-      setNotes(res.data);
+      const categories = ['Wheat', 'Corn', 'Barley', 'Others'];
+      const results = {};
+      for (const cat of categories) {
+        const res = await api.get(`/api/market/notes?commodity=${cat}&period=daily`);
+        results[cat] = res.data;
+      }
+      setMarketNews(results);
     } catch (err) {
-      console.error('Failed to load notes');
+      console.error('Failed to load market news');
+    }
+  };
+
+  const handlePostComment = async (category) => {
+    const content = newsInput[category]?.trim();
+    if (!content) return;
+    try {
+      await api.post('/api/market/notes', { commodity: category, period: 'daily', content, tags: [] });
+      setNewsInput(prev => ({ ...prev, [category]: '' }));
+      fetchMarketNews();
+    } catch (err) {
+      toast.error('Failed to post comment');
+    }
+  };
+
+  const handleDeleteComment = async (noteId) => {
+    try {
+      await api.delete(`/api/market/notes/${noteId}`);
+      toast.success('Comment deleted');
+      fetchMarketNews();
+    } catch (err) {
+      toast.error('Failed to delete comment');
     }
   };
 
@@ -180,39 +203,6 @@ export default function MarketDataPage() {
       toast.error('Failed to refresh prices');
     } finally {
       setRefreshing(false);
-    }
-  };
-
-  const handleSaveNote = async () => {
-    if (!noteForm.content.trim()) {
-      toast.error('Note content is required');
-      return;
-    }
-    try {
-      const data = { commodity: noteCommodity, period: notePeriod, ...noteForm };
-      if (editingNote) {
-        await api.put(`/api/market/notes/${editingNote.id}`, data);
-        toast.success('Note updated');
-      } else {
-        await api.post('/api/market/notes', data);
-        toast.success('Note created');
-      }
-      setNoteDialogOpen(false);
-      setNoteForm({ content: '', tags: [] });
-      setEditingNote(null);
-      fetchNotes();
-    } catch (err) {
-      toast.error('Failed to save note');
-    }
-  };
-
-  const handleDeleteNote = async (noteId) => {
-    try {
-      await api.delete(`/api/market/notes/${noteId}`);
-      toast.success('Note deleted');
-      fetchNotes();
-    } catch (err) {
-      toast.error('Failed to delete note');
     }
   };
 
@@ -350,9 +340,9 @@ export default function MarketDataPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 w-full max-w-lg">
+            <TabsTrigger value="news">Market News</TabsTrigger>
             <TabsTrigger value="prices">Prices</TabsTrigger>
             <TabsTrigger value="turkish">Turkish Exchanges</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
             <TabsTrigger value="tenders">TMO Tenders</TabsTrigger>
           </TabsList>
 
@@ -642,81 +632,58 @@ export default function MarketDataPage() {
           </TabsContent>
 
           {/* NOTES TAB */}
-          <TabsContent value="notes" className="space-y-4 mt-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Select value={noteCommodity} onValueChange={setNoteCommodity}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {groupedPrices.agricultural.map((c) => (
-                      <SelectItem key={c.symbol} value={c.symbol}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <div className="flex gap-1">
-                  {['daily', 'monthly', 'yearly'].map((period) => (
-                    <Button
-                      key={period}
-                      size="sm"
-                      variant={notePeriod === period ? 'default' : 'outline'}
-                      onClick={() => setNotePeriod(period)}
-                      className="capitalize"
-                    >
-                      {period}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              <Button onClick={() => { setNoteForm({ content: '', tags: [] }); setEditingNote(null); setNoteDialogOpen(true); }} size="sm">
-                <PenLine className="h-4 w-4 mr-2" />Add Note
-              </Button>
+          {/* MARKET NEWS TAB */}
+          <TabsContent value="news" className="space-y-4 mt-4">
+            <div className="text-center mb-6">
+              <h2 className="text-lg font-semibold text-green-600">MARKET NEWS</h2>
+              <p className="text-sm text-muted-foreground">Daily Market Commentary</p>
             </div>
 
-            <Card>
-              <CardContent className="pt-4">
-                {notes.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No notes for this commodity/period. Add your first note!</p>
-                ) : (
-                  <div className="space-y-3">
-                    {notes.map((note) => (
-                      <div key={note.id} className="p-3 border rounded-lg">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                            {note.tags?.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-2">
-                                {note.tags.map((tag, i) => (
-                                  <Badge key={i} variant="secondary" className="text-xs">
-                                    <Tag className="h-3 w-3 mr-1" />{tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-2">
-                              {note.createdBy} • {new Date(note.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
-                              setEditingNote(note);
-                              setNoteForm({ content: note.content, tags: note.tags || [] });
-                              setNoteDialogOpen(true);
-                            }}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteNote(note.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {['Wheat', 'Corn', 'Barley', 'Others'].map((category) => (
+                <Card key={category} className="border" data-testid={`news-card-${category.toLowerCase()}`}>
+                  <div className="bg-gray-100 px-4 py-2 border-b">
+                    <h3 className="font-bold text-base">{category}</h3>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <CardContent className="p-3 space-y-3">
+                    {/* Existing comments */}
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {(marketNews[category] || []).length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-2">No comments yet</p>
+                      ) : (
+                        (marketNews[category] || []).map((note) => (
+                          <div key={note.id} className="p-2 bg-muted/30 rounded-md group">
+                            <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-xs text-muted-foreground">
+                                {note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB')} {new Date(note.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteComment(note.id)}>
+                                <Trash2 className="h-3 w-3 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    {/* Inline comment input */}
+                    <div className="flex gap-2">
+                      <Input
+                        data-testid={`news-input-${category.toLowerCase()}`}
+                        placeholder="Type your commentary..."
+                        value={newsInput[category] || ''}
+                        onChange={(e) => setNewsInput(prev => ({ ...prev, [category]: e.target.value }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handlePostComment(category); }}
+                        className="text-sm"
+                      />
+                      <Button size="sm" data-testid={`news-send-${category.toLowerCase()}`} onClick={() => handlePostComment(category)}>
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           {/* TMO TENDERS TAB */}
@@ -953,52 +920,6 @@ export default function MarketDataPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Note Dialog */}
-      <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingNote ? 'Edit Note' : 'Add Note'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Content</Label>
-              <Textarea 
-                value={noteForm.content} 
-                onChange={(e) => setNoteForm({ ...noteForm, content: e.target.value })}
-                rows={5}
-                placeholder="Market rumors, traded levels, origin pricing..."
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Tags</Label>
-              <div className="flex flex-wrap gap-1">
-                {NOTE_TAGS.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant={noteForm.tags?.includes(tag) ? 'default' : 'outline'}
-                    className="cursor-pointer"
-                    onClick={() => {
-                      const tags = noteForm.tags || [];
-                      if (tags.includes(tag)) {
-                        setNoteForm({ ...noteForm, tags: tags.filter(t => t !== tag) });
-                      } else {
-                        setNoteForm({ ...noteForm, tags: [...tags, tag] });
-                      }
-                    }}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveNote}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Turkish Price Dialog */}
       <Dialog open={turkishDialogOpen} onOpenChange={setTurkishDialogOpen}>

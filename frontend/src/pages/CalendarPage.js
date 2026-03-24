@@ -249,7 +249,7 @@ export default function CalendarPage() {
                     {holidays.map((h, i) => (
                       <div key={i} className={`flex items-center gap-3 py-1.5 px-2 rounded-lg border ${h.colorClass || 'bg-muted/50'}`}>
                         <span className="text-lg shrink-0">{h.flag}</span>
-                        <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{h.title}</p><p className="text-xs text-muted-foreground">{h.flag} {({TR:'Turkey',RU:'Russia',UA:'Ukraine',US:'USA'})[h.country] || h.country}</p></div>
+                        <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{h.title}</p><p className="text-xs text-muted-foreground">{({TR:'Turkey',RU:'Russia',UA:'Ukraine',US:'USA'})[h.country] || h.country}</p></div>
                         <span className="text-xs font-medium text-muted-foreground shrink-0">{format(h.dateObj, 'dd MMM')}</span>
                       </div>
                     ))}

@@ -729,6 +729,43 @@ async def add_tender_result(tender_id: str, result: dict, user=Depends(require_r
     return serialize_doc(updated)
 
 
+
+@router.put("/tenders/{tender_id}/results/{result_index}")
+async def update_tender_result(tender_id: str, result_index: int, result: dict, user=Depends(require_roles("admin"))):
+    """Update a specific result in a TMO tender by index"""
+    tender = tmo_tenders_col.find_one({"_id": ObjectId(tender_id)})
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+    results = tender.get("results", [])
+    if result_index < 0 or result_index >= len(results):
+        raise HTTPException(status_code=404, detail="Result index out of range")
+    results[result_index] = {**result, "updatedAt": datetime.now(timezone.utc).isoformat()}
+    tmo_tenders_col.update_one(
+        {"_id": ObjectId(tender_id)},
+        {"$set": {"results": results, "updatedAt": datetime.now(timezone.utc).isoformat()}}
+    )
+    updated = tmo_tenders_col.find_one({"_id": ObjectId(tender_id)})
+    return serialize_doc(updated)
+
+
+@router.delete("/tenders/{tender_id}/results/{result_index}")
+async def delete_tender_result(tender_id: str, result_index: int, user=Depends(require_roles("admin"))):
+    """Delete a specific result from a TMO tender by index"""
+    tender = tmo_tenders_col.find_one({"_id": ObjectId(tender_id)})
+    if not tender:
+        raise HTTPException(status_code=404, detail="Tender not found")
+    results = tender.get("results", [])
+    if result_index < 0 or result_index >= len(results):
+        raise HTTPException(status_code=404, detail="Result index out of range")
+    results.pop(result_index)
+    tmo_tenders_col.update_one(
+        {"_id": ObjectId(tender_id)},
+        {"$set": {"results": results, "updatedAt": datetime.now(timezone.utc).isoformat()}}
+    )
+    updated = tmo_tenders_col.find_one({"_id": ObjectId(tender_id)})
+    return serialize_doc(updated)
+
+
 @router.delete("/tenders/{tender_id}")
 async def delete_tmo_tender(tender_id: str, user=Depends(require_roles("admin"))):
     """Delete a TMO tender"""

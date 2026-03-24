@@ -92,6 +92,7 @@ export default function MarketDataPage() {
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [resultForm, setResultForm] = useState({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
   const [selectedTenderForResult, setSelectedTenderForResult] = useState(null);
+  const [editingResultIndex, setEditingResultIndex] = useState(null);
   
   // Telegram state
   const [telegramMessages, setTelegramMessages] = useState([]);
@@ -267,21 +268,39 @@ export default function MarketDataPage() {
   const handleAddResult = async () => {
     if (!selectedTenderForResult) return;
     try {
-      await api.post(`/api/market/tenders/${selectedTenderForResult.id}/results`, {
+      const payload = {
         port: resultForm.port,
         company: resultForm.company,
         quantity: parseFloat(resultForm.quantity) || 0,
         cifPrice: resultForm.cifPrice ? parseFloat(resultForm.cifPrice) : null,
         exwPrice: resultForm.exwPrice ? parseFloat(resultForm.exwPrice) : null,
-      });
-      toast.success('Result added');
+      };
+      if (editingResultIndex !== null) {
+        await api.put(`/api/market/tenders/${selectedTenderForResult.id}/results/${editingResultIndex}`, payload);
+        toast.success('Result updated');
+      } else {
+        await api.post(`/api/market/tenders/${selectedTenderForResult.id}/results`, payload);
+        toast.success('Result added');
+      }
       setResultDialogOpen(false);
       setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
       setSelectedTenderForResult(null);
+      setEditingResultIndex(null);
       const res = await api.get('/api/market/tenders');
       setTenders(res.data);
     } catch (err) {
-      toast.error('Failed to add result');
+      toast.error('Failed to save result');
+    }
+  };
+
+  const handleDeleteResult = async (tender, resultIdx) => {
+    try {
+      await api.delete(`/api/market/tenders/${tender.id}/results/${resultIdx}`);
+      toast.success('Result deleted');
+      const res = await api.get('/api/market/tenders');
+      setTenders(res.data);
+    } catch (err) {
+      toast.error('Failed to delete result');
     }
   };
 
@@ -760,6 +779,7 @@ export default function MarketDataPage() {
                             <TableHead className="font-bold text-black text-sm text-right">QUANTITY</TableHead>
                             <TableHead className="font-bold text-red-600 text-sm text-right">CIF</TableHead>
                             <TableHead className="font-bold text-black text-sm text-right">EXW</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-center w-20"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -778,11 +798,32 @@ export default function MarketDataPage() {
                                   <TableCell className="text-right font-mono">
                                     {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
                                   </TableCell>
+                                  <TableCell className="text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => {
+                                        setSelectedTenderForResult(tender);
+                                        setEditingResultIndex(idx);
+                                        setResultForm({
+                                          port: result.port || '',
+                                          company: result.company || result.winner || '',
+                                          quantity: String(result.quantity || result.sizeKMT || ''),
+                                          cifPrice: result.cifPrice != null ? String(result.cifPrice) : '',
+                                          exwPrice: result.exwPrice != null ? String(result.exwPrice) : '',
+                                        });
+                                        setResultDialogOpen(true);
+                                      }}>
+                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                      </Button>
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteResult(tender, idx)}>
+                                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
                                 </TableRow>
                               ))}
                               {/* Empty separator row */}
                               <TableRow className="border-b border-gray-200">
-                                <TableCell colSpan={5}>&nbsp;</TableCell>
+                                <TableCell colSpan={6}>&nbsp;</TableCell>
                               </TableRow>
                               {/* Total Row */}
                               <TableRow className="border-t-2 border-gray-300 font-bold">
@@ -793,11 +834,12 @@ export default function MarketDataPage() {
                                 </TableCell>
                                 <TableCell></TableCell>
                                 <TableCell></TableCell>
+                                <TableCell></TableCell>
                               </TableRow>
                             </>
                           ) : (
                             <TableRow>
-                              <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">
                                 No results added yet
                               </TableCell>
                             </TableRow>
@@ -817,6 +859,7 @@ export default function MarketDataPage() {
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" data-testid={`add-result-btn-${tender.id}`} onClick={() => {
                           setSelectedTenderForResult(tender);
+                          setEditingResultIndex(null);
                           setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
                           setResultDialogOpen(true);
                         }}>
@@ -1131,7 +1174,7 @@ export default function MarketDataPage() {
       <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
         <DialogContent className="sm:max-w-md mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-center">Add Tender Result</DialogTitle>
+            <DialogTitle className="text-center">{editingResultIndex !== null ? 'Edit Tender Result' : 'Add Tender Result'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1195,7 +1238,7 @@ export default function MarketDataPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResultDialogOpen(false)}>Cancel</Button>
-            <Button data-testid="add-result-submit-btn" onClick={handleAddResult}>Add Result</Button>
+            <Button data-testid="add-result-submit-btn" onClick={handleAddResult}>{editingResultIndex !== null ? 'Save' : 'Add Result'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

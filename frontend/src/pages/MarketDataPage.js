@@ -1057,7 +1057,7 @@ export default function MarketDataPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Shipment Start</Label>
+                <Label>Shipment Period From</Label>
                 <Input 
                   data-testid="tender-shipment-start"
                   value={tenderForm.shipmentPeriodStart} 
@@ -1066,7 +1066,7 @@ export default function MarketDataPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Shipment End</Label>
+                <Label>Shipment Period To</Label>
                 <Input 
                   data-testid="tender-shipment-end"
                   value={tenderForm.shipmentPeriodEnd} 

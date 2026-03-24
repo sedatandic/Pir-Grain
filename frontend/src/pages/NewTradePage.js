@@ -519,11 +519,11 @@ export default function NewTradePage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Shipment Period Start</Label>
+              <Label>Shipment Period From</Label>
               <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
             </div>
             <div className="space-y-2">
-              <Label>Shipment Period End</Label>
+              <Label>Shipment Period To</Label>
               <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
             </div>
           </div>

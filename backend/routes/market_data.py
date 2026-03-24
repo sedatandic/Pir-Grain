@@ -37,18 +37,16 @@ class MarketNote(BaseModel):
     tags: Optional[List[str]] = []
 
 class TMOTenderResult(BaseModel):
-    rank: Optional[int] = None
-    winner: str
     port: str
-    sizeKMT: float
-    deliveryMode: str  # EX-ANTREPO, C&F, FOB, etc.
-    pricePerMT: float
-    cfEquivalent: Optional[str] = ""  # e.g., "262 C&F Equivalent"
+    company: str
+    quantity: float  # in MT, displayed as X.XXX
+    cifPrice: Optional[float] = None  # CIF price USD/MT
+    exwPrice: Optional[float] = None  # EXW price USD/MT
 
 class TMOTender(BaseModel):
     tenderDate: str
     commodity: str  # Wheat, Corn, Barley, Feed Barley
-    totalQuantityKMT: Optional[float] = 0  # e.g., 175 KMT
+    totalQuantity: Optional[float] = 0  # total in MT, e.g., 220000
     shipmentPeriodStart: Optional[str] = ""
     shipmentPeriodEnd: Optional[str] = ""
     status: Optional[str] = "open"  # open, closed, awarded
@@ -164,13 +162,12 @@ async def scrape_barchart_commodity(symbol: str):
     """Scrape CBOT commodity prices from Barchart.com"""
     import re
     try:
-        # Map commodity symbols to Barchart futures URLs
         url_map = {
-            "WHEAT": "https://www.barchart.com/futures/quotes/ZW*0/overview",    # CBOT Wheat
-            "CORN": "https://www.barchart.com/futures/quotes/ZC*0/overview",     # CBOT Corn
-            "SOYBEAN": "https://www.barchart.com/futures/quotes/ZS*0/overview",  # CBOT Soybeans
-            "GOLD": "https://www.barchart.com/futures/quotes/GC*0/overview",     # COMEX Gold
-            "CRUDE_OIL": "https://www.barchart.com/futures/quotes/CL*0/overview", # WTI Crude
+            "WHEAT": "https://www.barchart.com/futures/quotes/ZW*0/overview",
+            "CORN": "https://www.barchart.com/futures/quotes/ZC*0/overview",
+            "SOYBEAN": "https://www.barchart.com/futures/quotes/ZS*0/overview",
+            "GOLD": "https://www.barchart.com/futures/quotes/GC*0/overview",
+            "CRUDE_OIL": "https://www.barchart.com/futures/quotes/CL*0/overview",
         }
         
         url = url_map.get(symbol)
@@ -187,33 +184,45 @@ async def scrape_barchart_commodity(symbol: str):
             if response.status_code == 200:
                 html = response.text
                 
-                # Extract all lastPrice values and get the longest/most significant one
-                all_prices = re.findall(r'"lastPrice":"(\d+\.?\d*)"', html)
+                # Extract lastPrice values - handle comma-separated numbers like "4,408.0"
+                all_prices_raw = re.findall(r'"lastPrice":"([^"]+)"', html)
+                valid_prices = []
+                for p in all_prices_raw:
+                    cleaned = p.replace(',', '')
+                    try:
+                        val = float(cleaned)
+                        if val > 1:
+                            valid_prices.append(val)
+                    except ValueError:
+                        continue
                 
-                if all_prices:
-                    # Filter to get reasonable prices (at least 2 digits for commodities)
-                    valid_prices = [float(p) for p in all_prices if len(p) >= 2]
-                    if valid_prices:
-                        # For Gold, get the largest price (should be ~2000-3000)
-                        # For others, get the first valid price
-                        if symbol == "GOLD":
-                            price = max(valid_prices)
-                        else:
-                            price = valid_prices[0]
-                        
-                        # Get change values
-                        change_match = re.search(r'"priceChange":"([+-]?\d+\.?\d*)"', html)
-                        pct_match = re.search(r'"percentChange":"([+-]?\d+\.?\d*)%?"', html)
-                        
-                        change = float(change_match.group(1)) if change_match else 0
-                        change_pct = float(pct_match.group(1)) if pct_match else 0
-                        
-                        return {
-                            "price": price,
-                            "change": change,
-                            "changePercent": change_pct,
-                            "source": "Barchart"
-                        }
+                # Also try unquoted format: "lastPrice":4408
+                unquoted = re.findall(r'"lastPrice":(\d[\d,]*\.?\d*)', html)
+                for p in unquoted:
+                    cleaned = p.replace(',', '')
+                    try:
+                        val = float(cleaned)
+                        if val > 1:
+                            valid_prices.append(val)
+                    except ValueError:
+                        continue
+                
+                if valid_prices:
+                    price = max(valid_prices)
+                    
+                    # Get change values (also handle commas)
+                    change_match = re.search(r'"priceChange":"?([+-]?[\d,]+\.?\d*)"?', html)
+                    pct_match = re.search(r'"percentChange":"?([+-]?[\d,]+\.?\d*)%?"?', html)
+                    
+                    change = float(change_match.group(1).replace(',', '')) if change_match else 0
+                    change_pct = float(pct_match.group(1).replace(',', '')) if pct_match else 0
+                    
+                    return {
+                        "price": price,
+                        "change": change,
+                        "changePercent": change_pct,
+                        "source": "Barchart"
+                    }
                     
     except Exception as e:
         print(f"Barchart commodity scraping error for {symbol}: {e}")

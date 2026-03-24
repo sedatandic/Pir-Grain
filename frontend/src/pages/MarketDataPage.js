@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { 
   TrendingUp, TrendingDown, Minus, RefreshCw, Loader2, Plus, 
   Wheat, Droplets, Sun, Circle, DollarSign, Fuel, PenLine, X, Tag,
-  Send, Building2, Calendar, Package, Award, Trash2, Pencil
+  Send, Building2, Calendar, Package, Trash2, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -83,7 +83,7 @@ export default function MarketDataPage() {
   });
   const [editingTender, setEditingTender] = useState(null);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
-  const [resultForm, setResultForm] = useState({ winner: '', port: '', sizeKMT: '', deliveryMode: 'EX-ANTREPO', pricePerMT: '', cfEquivalent: '' });
+  const [resultForm, setResultForm] = useState({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
   const [selectedTenderForResult, setSelectedTenderForResult] = useState(null);
   
   // Telegram state
@@ -248,7 +248,7 @@ export default function MarketDataPage() {
         toast.success('Tender created');
       }
       setTenderDialogOpen(false);
-      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantityKMT: 0, shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] });
+      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] });
       setEditingTender(null);
       const res = await api.get('/api/market/tenders');
       setTenders(res.data);
@@ -261,13 +261,15 @@ export default function MarketDataPage() {
     if (!selectedTenderForResult) return;
     try {
       await api.post(`/api/market/tenders/${selectedTenderForResult.id}/results`, {
-        ...resultForm,
-        sizeKMT: parseFloat(resultForm.sizeKMT),
-        pricePerMT: parseFloat(resultForm.pricePerMT)
+        port: resultForm.port,
+        company: resultForm.company,
+        quantity: parseFloat(resultForm.quantity) || 0,
+        cifPrice: resultForm.cifPrice ? parseFloat(resultForm.cifPrice) : null,
+        exwPrice: resultForm.exwPrice ? parseFloat(resultForm.exwPrice) : null,
       });
       toast.success('Result added');
       setResultDialogOpen(false);
-      setResultForm({ winner: '', port: '', sizeKMT: '', deliveryMode: 'EX-ANTREPO', pricePerMT: '', cfEquivalent: '' });
+      setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
       setSelectedTenderForResult(null);
       const res = await api.get('/api/market/tenders');
       setTenders(res.data);
@@ -366,6 +368,9 @@ export default function MarketDataPage() {
                           <div className="flex items-center gap-2">
                             <Wheat className="h-4 w-4 text-amber-600" />
                             CBOT - {item.name}
+                            {item.source === 'Barchart' && (
+                              <Badge variant="default" className="text-[10px] bg-green-600 ml-1">Live</Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold">
@@ -395,6 +400,9 @@ export default function MarketDataPage() {
                               <Fuel className="h-4 w-4 text-gray-700" />
                             )}
                             {item.name}
+                            {item.source === 'Barchart' && (
+                              <Badge variant="default" className="text-[10px] bg-green-600 ml-1">Live</Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold">
@@ -420,7 +428,7 @@ export default function MarketDataPage() {
                           <div className="flex items-center gap-2">
                             <DollarSign className="h-4 w-4 text-blue-500" />
                             {item.name}
-                            {item.isLive && (
+                            {item.source === 'Barchart' && (
                               <Badge variant="default" className="text-[10px] bg-green-600 ml-1">Live</Badge>
                             )}
                           </div>
@@ -691,11 +699,11 @@ export default function MarketDataPage() {
                 <h2 className="text-lg font-semibold text-green-600">TMO / TURKISH GRAIN BOARD</h2>
                 <p className="text-sm text-muted-foreground">Tender Finals & Results</p>
               </div>
-              <Button onClick={() => { 
+              <Button data-testid="new-tender-btn" onClick={() => { 
                 setTenderForm({ 
                   tenderDate: '', 
                   commodity: 'Feed Barley', 
-                  totalQuantityKMT: 0,
+                  totalQuantity: 0,
                   shipmentPeriodStart: '', 
                   shipmentPeriodEnd: '', 
                   status: 'open', 
@@ -715,98 +723,121 @@ export default function MarketDataPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
-                {tenders.map((tender) => (
-                  <Card key={tender.id} className="overflow-hidden">
-                    {/* Tender Header */}
-                    <div className="bg-green-600 text-white px-4 py-2 flex items-center justify-between">
-                      <div>
-                        <h3 className="font-bold text-lg">
-                          {tender.totalQuantityKMT || '?'} KMT OF {tender.commodity?.toUpperCase()} TENDER FINALS
-                        </h3>
-                        <p className="text-sm text-green-100">
-                          {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
-                            ? `${tender.shipmentPeriodStart} / ${tender.shipmentPeriodEnd} SHIPMENT/DELIVERY` 
-                            : 'Shipment period TBD'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium">{tender.tenderDate}</p>
-                        <Badge 
-                          variant={tender.status === 'awarded' ? 'default' : 'secondary'} 
-                          className={tender.status === 'awarded' ? 'bg-white text-green-600' : 'bg-green-500'}
-                        >
-                          {tender.status?.toUpperCase()}
-                        </Badge>
-                      </div>
+              <div className="space-y-6">
+                {tenders.map((tender) => {
+                  const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
+                  return (
+                  <Card key={tender.id} className="overflow-hidden border-2 border-gray-300" data-testid={`tender-card-${tender.id}`}>
+                    {/* Title Header - PIR GRAIN & PULSES */}
+                    <div className="bg-gray-100 border-b-2 border-gray-300 px-4 py-2 text-center">
+                      <h3 className="font-bold text-lg tracking-wide">PIR GRAIN & PULSES</h3>
+                    </div>
+                    {/* Tender Info Row */}
+                    <div className="bg-gray-50 border-b-2 border-gray-300 px-4 py-2 text-center">
+                      <p className="font-bold text-base">
+                        {tender.tenderDate} TMO {tender.commodity} TENDER
+                        {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
+                          ? ` (${tender.shipmentPeriodStart}-${tender.shipmentPeriodEnd})` 
+                          : ''} Shipment
+                      </p>
                     </div>
                     
                     {/* Results Table */}
                     <CardContent className="p-0">
-                      {tender.results?.length > 0 ? (
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-muted/50">
-                              <TableHead className="w-12 text-center">#</TableHead>
-                              <TableHead className="text-blue-600 font-bold">WINNER</TableHead>
-                              <TableHead>PORT</TableHead>
-                              <TableHead className="text-right">SIZE, KMT</TableHead>
-                              <TableHead>DELIVERY MODE</TableHead>
-                              <TableHead className="text-right">PRICE, $/MT</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {tender.results.map((result, idx) => (
-                              <TableRow key={idx}>
-                                <TableCell className="text-center font-medium">{idx + 1}</TableCell>
-                                <TableCell className="text-blue-600 font-semibold">{result.winner}</TableCell>
-                                <TableCell>{result.port}</TableCell>
-                                <TableCell className="text-right font-mono">{result.sizeKMT}</TableCell>
-                                <TableCell>{result.deliveryMode}</TableCell>
-                                <TableCell className="text-right">
-                                  <span className="font-mono font-semibold">{result.pricePerMT}</span>
-                                  {result.cfEquivalent && (
-                                    <span className="text-xs text-muted-foreground ml-2">({result.cfEquivalent})</span>
-                                  )}
-                                </TableCell>
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                            <TableHead className="font-bold text-black text-sm">PORT</TableHead>
+                            <TableHead className="font-bold text-black text-sm">COMPANY</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-right">QUANTITY</TableHead>
+                            <TableHead className="font-bold text-red-600 text-sm text-right">CIF</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-right">EXW</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tender.results?.length > 0 ? (
+                            <>
+                              {tender.results.map((result, idx) => (
+                                <TableRow key={idx} className="border-b border-gray-200">
+                                  <TableCell className="font-medium">{result.port}</TableCell>
+                                  <TableCell>{result.company || result.winner}</TableCell>
+                                  <TableCell className="text-right font-mono">
+                                    {((parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0) * 1000).toLocaleString('de-DE', { minimumFractionDigits: 0 })}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono font-bold text-red-600">
+                                    {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                                  </TableCell>
+                                  <TableCell className="text-right font-mono">
+                                    {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                              {/* Empty separator row */}
+                              <TableRow className="border-b border-gray-200">
+                                <TableCell colSpan={5}>&nbsp;</TableCell>
                               </TableRow>
-                            ))}
-                            {/* Total Row */}
-                            <TableRow className="bg-muted/30 font-bold">
-                              <TableCell colSpan={3} className="text-right">TOTAL:</TableCell>
-                              <TableCell className="text-right font-mono">
-                                {tender.results.reduce((sum, r) => sum + (parseFloat(r.sizeKMT) || 0), 0)}
+                              {/* Total Row */}
+                              <TableRow className="border-t-2 border-gray-300 font-bold">
+                                <TableCell className="font-bold text-base">TOTAL</TableCell>
+                                <TableCell></TableCell>
+                                <TableCell className="text-right font-mono font-bold text-base">
+                                  {(totalQty * 1000).toLocaleString('de-DE', { minimumFractionDigits: 0 })}
+                                </TableCell>
+                                <TableCell></TableCell>
+                                <TableCell></TableCell>
+                              </TableRow>
+                            </>
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
+                                No results added yet
                               </TableCell>
-                              <TableCell colSpan={2}></TableCell>
                             </TableRow>
-                          </TableBody>
-                        </Table>
-                      ) : (
-                        <div className="p-4 text-center text-muted-foreground">
-                          No results added yet
-                        </div>
-                      )}
+                          )}
+                        </TableBody>
+                      </Table>
                     </CardContent>
                     
                     {/* Actions */}
-                    <div className="px-4 py-2 bg-muted/20 flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => {
-                        setSelectedTenderForResult(tender);
-                        setResultForm({ winner: '', port: '', sizeKMT: '', deliveryMode: 'EX-ANTREPO', pricePerMT: '', cfEquivalent: '' });
-                        setResultDialogOpen(true);
-                      }}>
-                        <Award className="h-4 w-4 mr-1" />Add Result
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => {
-                        setEditingTender(tender);
-                        setTenderForm(tender);
-                        setTenderDialogOpen(true);
-                      }}>
-                        <Pencil className="h-4 w-4 mr-1" />Edit
-                      </Button>
+                    <div className="px-4 py-2 bg-muted/20 flex items-center justify-between border-t">
+                      <Badge 
+                        variant={tender.status === 'awarded' ? 'default' : 'secondary'} 
+                        className={tender.status === 'awarded' ? 'bg-green-600 text-white' : ''}
+                      >
+                        {tender.status?.toUpperCase()}
+                      </Badge>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" data-testid={`add-result-btn-${tender.id}`} onClick={() => {
+                          setSelectedTenderForResult(tender);
+                          setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
+                          setResultDialogOpen(true);
+                        }}>
+                          <Plus className="h-4 w-4 mr-1" />Add Result
+                        </Button>
+                        <Button variant="ghost" size="sm" data-testid={`edit-tender-btn-${tender.id}`} onClick={() => {
+                          setEditingTender(tender);
+                          setTenderForm(tender);
+                          setTenderDialogOpen(true);
+                        }}>
+                          <Pencil className="h-4 w-4 mr-1" />Edit
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" data-testid={`delete-tender-btn-${tender.id}`} onClick={async () => {
+                          try {
+                            await api.delete(`/api/market/tenders/${tender.id}`);
+                            toast.success('Tender deleted');
+                            const res = await api.get('/api/market/tenders');
+                            setTenders(res.data);
+                          } catch (err) {
+                            toast.error('Failed to delete tender');
+                          }
+                        }}>
+                          <Trash2 className="h-4 w-4 mr-1" />Delete
+                        </Button>
+                      </div>
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -977,6 +1008,7 @@ export default function MarketDataPage() {
               <div className="space-y-2">
                 <Label>Tender Date</Label>
                 <Input 
+                  data-testid="tender-date-input"
                   type="date" 
                   value={tenderForm.tenderDate} 
                   onChange={(e) => setTenderForm({ ...tenderForm, tenderDate: e.target.value })}
@@ -985,7 +1017,7 @@ export default function MarketDataPage() {
               <div className="space-y-2">
                 <Label>Commodity</Label>
                 <Select value={tenderForm.commodity} onValueChange={(v) => setTenderForm({ ...tenderForm, commodity: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-testid="tender-commodity-select"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Feed Barley">Feed Barley</SelectItem>
                     <SelectItem value="Wheat">Wheat</SelectItem>
@@ -996,37 +1028,30 @@ export default function MarketDataPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Total Quantity (KMT)</Label>
-              <Input 
-                type="number" 
-                value={tenderForm.totalQuantityKMT || ''} 
-                onChange={(e) => setTenderForm({ ...tenderForm, totalQuantityKMT: parseFloat(e.target.value) || 0 })}
-                placeholder="e.g., 175"
-              />
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Shipment Start</Label>
                 <Input 
+                  data-testid="tender-shipment-start"
                   value={tenderForm.shipmentPeriodStart} 
                   onChange={(e) => setTenderForm({ ...tenderForm, shipmentPeriodStart: e.target.value })}
-                  placeholder="e.g., 25 MAR"
+                  placeholder="e.g., 01/02"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Shipment End</Label>
                 <Input 
+                  data-testid="tender-shipment-end"
                   value={tenderForm.shipmentPeriodEnd} 
                   onChange={(e) => setTenderForm({ ...tenderForm, shipmentPeriodEnd: e.target.value })}
-                  placeholder="e.g., 17 APR 2026"
+                  placeholder="e.g., 15/03/2026"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <Select value={tenderForm.status} onValueChange={(v) => setTenderForm({ ...tenderForm, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="tender-status-select"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="open">Open</SelectItem>
                   <SelectItem value="closed">Closed</SelectItem>
@@ -1037,7 +1062,7 @@ export default function MarketDataPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTenderDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveTender}>Save</Button>
+            <Button data-testid="save-tender-btn" onClick={handleSaveTender}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1049,69 +1074,66 @@ export default function MarketDataPage() {
             <DialogTitle>Add Tender Result</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Winner (Company Name)</Label>
-              <Input 
-                value={resultForm.winner} 
-                onChange={(e) => setResultForm({ ...resultForm, winner: e.target.value })}
-                placeholder="e.g., BOGAZICI, ASTON, IPEK"
-              />
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Port</Label>
                 <Input 
+                  data-testid="result-port-input"
                   value={resultForm.port} 
                   onChange={(e) => setResultForm({ ...resultForm, port: e.target.value })}
-                  placeholder="e.g., MERSIN, ISKENDERUN"
+                  placeholder="e.g., Iskenderun, Mersin"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Size (KMT)</Label>
+                <Label>Company</Label>
                 <Input 
-                  type="number" 
-                  value={resultForm.sizeKMT} 
-                  onChange={(e) => setResultForm({ ...resultForm, sizeKMT: e.target.value })}
-                  placeholder="e.g., 50"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Delivery Mode</Label>
-                <Select value={resultForm.deliveryMode} onValueChange={(v) => setResultForm({ ...resultForm, deliveryMode: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="EX-ANTREPO">EX-ANTREPO</SelectItem>
-                    <SelectItem value="C&F">C&F</SelectItem>
-                    <SelectItem value="FOB">FOB</SelectItem>
-                    <SelectItem value="CIF">CIF</SelectItem>
-                    <SelectItem value="CFR">CFR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Price ($/MT)</Label>
-                <Input 
-                  type="number" 
-                  value={resultForm.pricePerMT} 
-                  onChange={(e) => setResultForm({ ...resultForm, pricePerMT: e.target.value })}
-                  placeholder="e.g., 256"
+                  data-testid="result-company-input"
+                  value={resultForm.company} 
+                  onChange={(e) => setResultForm({ ...resultForm, company: e.target.value })}
+                  placeholder="e.g., Arion, Bunge"
                 />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>C&F Equivalent (optional)</Label>
+              <Label>Quantity (KMT)</Label>
               <Input 
-                value={resultForm.cfEquivalent} 
-                onChange={(e) => setResultForm({ ...resultForm, cfEquivalent: e.target.value })}
-                placeholder="e.g., 262 C&F Equivalent"
+                data-testid="result-quantity-input"
+                type="number" 
+                step="0.1"
+                value={resultForm.quantity} 
+                onChange={(e) => setResultForm({ ...resultForm, quantity: e.target.value })}
+                placeholder="e.g., 25 (for 25 KMT)"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>CIF Price (USD/MT)</Label>
+                <Input 
+                  data-testid="result-cif-input"
+                  type="number" 
+                  step="0.01"
+                  value={resultForm.cifPrice} 
+                  onChange={(e) => setResultForm({ ...resultForm, cifPrice: e.target.value })}
+                  placeholder="e.g., 326.70"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>EXW Price (USD/MT)</Label>
+                <Input 
+                  data-testid="result-exw-input"
+                  type="number" 
+                  step="0.01"
+                  value={resultForm.exwPrice} 
+                  onChange={(e) => setResultForm({ ...resultForm, exwPrice: e.target.value })}
+                  placeholder="e.g., 329.50"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Fill in CIF or EXW price (or both). Leave blank if not applicable.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResultDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddResult}>Add Result</Button>
+            <Button data-testid="add-result-submit-btn" onClick={handleAddResult}>Add Result</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

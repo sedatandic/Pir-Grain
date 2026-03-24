@@ -1101,8 +1101,7 @@ export default function MarketDataPage() {
                   <SelectContent>
                     <SelectItem value="Feed Barley">Feed Barley</SelectItem>
                     <SelectItem value="Wheat">Wheat</SelectItem>
-                    <SelectItem value="Milling Wheat">Milling Wheat</SelectItem>
-                    <SelectItem value="Corn">Corn</SelectItem>
+                    <SelectItem value="Feed Corn">Feed Corn</SelectItem>
                     <SelectItem value="Barley">Barley</SelectItem>
                   </SelectContent>
                 </Select>

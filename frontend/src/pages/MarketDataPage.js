@@ -53,6 +53,10 @@ const NOTE_TAGS = [
   'Rumor', 'Traded Level', 'Bid', 'Offer', 'Basis', 'Spread'
 ];
 
+const TMO_PORTS = [
+  'İskenderun', 'Bandırma', 'Tekirdağ', 'Karasu', 'İzmir', 'Samsun', 'Mersin', 'Adana', 'Trabzon'
+];
+
 export default function MarketDataPage() {
   const [prices, setPrices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1002,9 +1006,9 @@ export default function MarketDataPage() {
 
       {/* Tender Dialog */}
       <Dialog open={tenderDialogOpen} onOpenChange={setTenderDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-lg mx-auto">
           <DialogHeader>
-            <DialogTitle>{editingTender ? 'Edit Tender' : 'New TMO Tender'}</DialogTitle>
+            <DialogTitle className="text-center">{editingTender ? 'Edit Tender' : 'New TMO Tender'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1124,20 +1128,22 @@ export default function MarketDataPage() {
 
       {/* Result Dialog */}
       <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md mx-auto">
           <DialogHeader>
-            <DialogTitle>Add Tender Result</DialogTitle>
+            <DialogTitle className="text-center">Add Tender Result</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Port</Label>
-                <Input 
-                  data-testid="result-port-input"
-                  value={resultForm.port} 
-                  onChange={(e) => setResultForm({ ...resultForm, port: e.target.value })}
-                  placeholder="e.g., Iskenderun, Mersin"
-                />
+                <Select value={resultForm.port} onValueChange={(v) => setResultForm({ ...resultForm, port: v })}>
+                  <SelectTrigger data-testid="result-port-input"><SelectValue placeholder="Select port" /></SelectTrigger>
+                  <SelectContent>
+                    {TMO_PORTS.map((port) => (
+                      <SelectItem key={port} value={port}>{port}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Company</Label>

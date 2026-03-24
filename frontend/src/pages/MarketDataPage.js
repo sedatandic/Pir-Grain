@@ -1006,12 +1006,12 @@ export default function MarketDataPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tender Date</Label>
+                <Label>Tender Date (dd/mm/yyyy)</Label>
                 <Input 
                   data-testid="tender-date-input"
-                  type="date" 
                   value={tenderForm.tenderDate} 
                   onChange={(e) => setTenderForm({ ...tenderForm, tenderDate: e.target.value })}
+                  placeholder="e.g., 12/01/2026"
                 />
               </div>
               <div className="space-y-2">
@@ -1028,9 +1028,19 @@ export default function MarketDataPage() {
                 </Select>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Quantity (Mts)</Label>
+              <Input 
+                data-testid="tender-quantity-input"
+                type="number"
+                value={tenderForm.totalQuantity || ''} 
+                onChange={(e) => setTenderForm({ ...tenderForm, totalQuantity: parseFloat(e.target.value) || 0 })}
+                placeholder="e.g., 220000"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Shipment Start</Label>
+                <Label>Shipment Start (dd/mm)</Label>
                 <Input 
                   data-testid="tender-shipment-start"
                   value={tenderForm.shipmentPeriodStart} 
@@ -1039,7 +1049,7 @@ export default function MarketDataPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Shipment End</Label>
+                <Label>Shipment End (dd/mm/yyyy)</Label>
                 <Input 
                   data-testid="tender-shipment-end"
                   value={tenderForm.shipmentPeriodEnd} 

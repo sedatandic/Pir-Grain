@@ -783,21 +783,7 @@ export default function MarketDataPage() {
                     </div>
                   )}
 
-                  {/* Today shortcut */}
-                  {newsNavLevel !== 'year' && (
-                    <div className="flex justify-center">
-                      <Button size="sm" variant={newsPeriod === `${String(now.getDate()).padStart(2,'0')}_${months[now.getMonth()]}_${now.getFullYear()}` ? 'default' : 'ghost'} className="text-xs"
-                        onClick={() => {
-                          setNewsPeriod(`${String(now.getDate()).padStart(2,'0')}_${months[now.getMonth()]}_${now.getFullYear()}`);
-                          setNewsSelectedYear(currentYear);
-                          setNewsSelectedMonth(currentMonth);
-                          setNewsNavLevel('day');
-                        }}
-                      >
-                        Today ({todayStr})
-                      </Button>
-                    </div>
-                  )}
+                  {/* End of drill-down levels */}
                 </div>
               );
             })()}

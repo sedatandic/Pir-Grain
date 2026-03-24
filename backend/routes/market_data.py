@@ -872,40 +872,51 @@ async def delete_telegram_channel(channel_id: str, user=Depends(require_roles("a
 @router.get("/telegram/messages")
 async def get_telegram_messages(user=Depends(get_current_user)):
     """
-    Get messages from Telegram channels.
-    Requires TELEGRAM_BOT_TOKEN environment variable.
+    Get messages from public Telegram channels by scraping their web previews.
+    No bot token required for public channels.
     """
-    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    if not bot_token:
-        return {"error": "Telegram bot token not configured", "messages": []}
-    
     channels = list(telegram_channels_col.find({"isActive": True}))
+    if not channels:
+        return {"messages": []}
+    
     all_messages = []
     
-    async with httpx.AsyncClient(timeout=10.0) as client:
+    async with httpx.AsyncClient(timeout=15.0) as client:
         for channel in channels:
+            channel_id = channel.get("channelId", "").replace("@", "")
+            if not channel_id:
+                continue
             try:
-                # Get updates from Telegram Bot API
-                url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-                response = await client.get(url)
+                url = f"https://t.me/s/{channel_id}"
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                }
+                response = await client.get(url, headers=headers, follow_redirects=True)
                 if response.status_code == 200:
-                    data = response.json()
-                    if data.get("ok"):
-                        for update in data.get("result", [])[-20:]:  # Last 20 messages
-                            msg = update.get("channel_post") or update.get("message")
-                            if msg:
-                                all_messages.append({
-                                    "channelName": channel.get("name"),
-                                    "channelId": channel.get("channelId"),
-                                    "text": msg.get("text", ""),
-                                    "date": msg.get("date"),
-                                    "messageId": msg.get("message_id")
-                                })
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    msgs = soup.find_all('div', class_='tgme_widget_message_wrap')
+                    for msg in msgs[-10:]:
+                        text_el = msg.find('div', class_='tgme_widget_message_text')
+                        date_el = msg.find('time')
+                        photo_el = msg.find('a', class_='tgme_widget_message_photo_wrap')
+                        
+                        text = text_el.get_text(strip=True) if text_el else ''
+                        date_str = date_el.get('datetime', '') if date_el else ''
+                        has_photo = photo_el is not None
+                        
+                        if text or has_photo:
+                            all_messages.append({
+                                "channelName": channel.get("name"),
+                                "channelId": channel_id,
+                                "text": text[:500] if text else "(photo/media)",
+                                "date": date_str,
+                                "hasPhoto": has_photo,
+                                "link": f"https://t.me/{channel_id}"
+                            })
             except Exception as e:
-                print(f"Error fetching Telegram messages: {e}")
+                print(f"Error fetching Telegram channel {channel_id}: {e}")
     
-    # Sort by date descending
-    all_messages.sort(key=lambda x: x.get("date", 0), reverse=True)
+    all_messages.sort(key=lambda x: x.get("date", ""), reverse=True)
     return {"messages": all_messages[:50]}
 
 

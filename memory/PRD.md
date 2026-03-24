@@ -15,42 +15,16 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses with tr
 - **Live Price Scraping**: Real-time from Barchart.com (commodities + currencies), Gold fix applied
 - **Live Badges**: All items show green "Live" badge
 - **Auto-Refresh**: 15-minute cycle
-- **Market News Tab** (first tab): 4 always-open cards (Wheat, Corn, Barley, Others) with inline click-to-type commenting, author/date/time display
-- **Turkish Exchanges Tab**: 
-  - **KTB**: Konya Ticaret Borsasi scraper (ktb.org.tr)
-  - **GTB**: Gaziantep Ticaret Borsasi scraper (gtb.org.tr/salon-satis-fiyatlari) - 8 products with Min/Max/Avg prices
-  - Single "Fetch Prices" button scrapes both
-- **TMO Tenders Tab**:
-  - Collapsible cards with click-to-expand
-  - Title: "[Qty] Mts [Commodity] [Import/Export] Tender - Dated: [dd/mm/yyyy]"
-  - Columns: COMPANY, PORT, QUANTITY, CIF (red), EXW
-  - Date pickers (dd/mm/yyyy) for all date fields
-  - Turkish ports dropdown (9 ports)
-  - Commodities: Feed Barley, Wheat, Feed Corn
-  - Type: Import/Export
-  - CRUD for tenders + individual result edit/delete
-  - Newest dated tender shows first
+- **Market News Tab** (first tab): 4 always-open cards (Wheat, Corn, Barley, Others) with inline commenting
+- **Turkish Exchanges Tab**: KTB + GTB scrapers (both fetched with single button)
+- **TMO Tenders Tab**: Collapsible cards, COMPANY/PORT/QUANTITY/CIF/EXW columns, Import/Export type, dd/mm/yyyy date pickers
+- **Telegram Feed Sidebar**: Live feed from 4 public channels (ipavensky, andre_sizov, demetraholding_dh, RusgrainUnion) — scraped from web previews, no bot token needed
 
 ### Core Features
 - JWT Auth, Trade CRUD, Counterparties, Reference data
-- PDF Generation (Business Confirmation, Shipment Appropriation, Commission Invoice)
-- Email via Resend with auto-attached Bill of Ladings
-- Port Line-Ups, Business Cards OCR, Calendar, Reports, Dashboard
-
-## Key API Endpoints
-- `GET /api/market/prices` - Live market prices
-- `GET /api/market/turkish-exchanges/scrape` - Scrape KTB + GTB
-- `GET /api/market/turkish-exchanges` - Get stored prices
-- `GET, POST /api/market/notes` - Market news CRUD
-- `GET, POST, PUT, DELETE /api/market/tenders` - TMO tenders
-- `POST /api/market/tenders/{id}/results` - Add result
-- `PUT /api/market/tenders/{id}/results/{idx}` - Edit result
-- `DELETE /api/market/tenders/{id}/results/{idx}` - Delete result
+- PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar, Reports
 
 ## Prioritized Backlog
-
-### P0
-- Telegram Feed Integration (blocked: needs Bot Token + channel names)
 
 ### P1
 - KTB Historical Data Views (daily/monthly/yearly period selectors)

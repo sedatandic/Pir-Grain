@@ -915,19 +915,28 @@ export default function MarketDataPage() {
             {telegramMessages.length === 0 ? (
               <div className="text-center py-8">
                 <Send className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No messages yet</p>
-                <p className="text-xs text-muted-foreground mt-1">Configure Telegram bot token in settings</p>
+                <p className="text-sm text-muted-foreground">Loading messages...</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {telegramMessages.map((msg, i) => (
-                  <div key={i} className="p-2 bg-muted/50 rounded-lg text-sm">
-                    <p className="font-medium text-xs text-blue-600 mb-1">{msg.channelName}</p>
-                    <p className="text-muted-foreground">{msg.text?.slice(0, 200)}{msg.text?.length > 200 ? '...' : ''}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {msg.date ? new Date(msg.date * 1000).toLocaleString() : ''}
+                  <a 
+                    key={i} 
+                    href={msg.link || `https://t.me/${msg.channelId}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="block p-2.5 bg-muted/50 rounded-lg text-sm hover:bg-muted transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="font-semibold text-xs text-blue-600">{msg.channelName}</span>
+                    </div>
+                    <p className="text-foreground leading-snug text-xs">
+                      {msg.text?.slice(0, 200)}{msg.text?.length > 200 ? '...' : ''}
                     </p>
-                  </div>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">
+                      {msg.date ? new Date(msg.date).toLocaleDateString('en-GB') + ' ' + new Date(msg.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </p>
+                  </a>
                 ))}
               </div>
             )}

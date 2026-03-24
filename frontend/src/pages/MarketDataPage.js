@@ -223,15 +223,15 @@ export default function MarketDataPage() {
     }
   };
 
-  const handleScrapeKTB = async () => {
+  const handleScrapeExchanges = async () => {
     setScrapingKTB(true);
     try {
       const res = await api.get('/api/market/turkish-exchanges/scrape');
-      toast.success(`Fetched ${res.data.ktb?.length || 0} prices from KTB`);
+      toast.success(`Fetched ${res.data.ktb?.length || 0} KTB + ${res.data.gtb?.length || 0} GTB prices`);
       const pricesRes = await api.get('/api/market/turkish-exchanges');
       setTurkishPrices(pricesRes.data);
     } catch (err) {
-      toast.error('Failed to fetch KTB prices');
+      toast.error('Failed to fetch exchange prices');
     } finally {
       setScrapingKTB(false);
     }
@@ -529,9 +529,9 @@ export default function MarketDataPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Turkish Commodity Exchange Prices</h2>
               <div className="flex gap-2">
-                <Button onClick={handleScrapeKTB} disabled={scrapingKTB} size="sm" variant="outline">
+                <Button onClick={handleScrapeExchanges} disabled={scrapingKTB} size="sm" variant="outline">
                   {scrapingKTB ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                  Fetch from KTB
+                  Fetch Prices
                 </Button>
                 <Button onClick={() => setTurkishDialogOpen(true)} size="sm">
                   <Plus className="h-4 w-4 mr-2" />Add Price
@@ -553,7 +553,7 @@ export default function MarketDataPage() {
                   <div className="text-center py-6">
                     <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">No prices recorded</p>
-                    <p className="text-xs text-muted-foreground mt-1">Click "Fetch from KTB" to get daily prices</p>
+                    <p className="text-xs text-muted-foreground mt-1">Click "Fetch Prices" to get daily prices</p>
                   </div>
                 ) : (
                   <Table>
@@ -602,25 +602,39 @@ export default function MarketDataPage() {
                   <Building2 className="h-4 w-4" />
                   Gaziantep Ticaret Borsasi (GTB)
                 </CardTitle>
-                <CardDescription>Manual entry</CardDescription>
+                <CardDescription>Source: gtb.org.tr - Salon Satis Fiyatlari</CardDescription>
               </CardHeader>
               <CardContent>
                 {turkishPrices.filter(p => p.exchange === 'GTB').length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">No prices recorded</p>
+                  <div className="text-center py-6">
+                    <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No prices recorded</p>
+                    <p className="text-xs text-muted-foreground mt-1">Click "Fetch Prices" to get daily prices</p>
+                  </div>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Product</TableHead>
-                        <TableHead>Price</TableHead>
+                        <TableHead className="text-right">Min</TableHead>
+                        <TableHead className="text-right">Max</TableHead>
+                        <TableHead className="text-right">Avg</TableHead>
                         <TableHead>Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {turkishPrices.filter(p => p.exchange === 'GTB').slice(0, 10).map((price) => (
-                        <TableRow key={price.id}>
+                      {turkishPrices.filter(p => p.exchange === 'GTB').slice(0, 15).map((price, idx) => (
+                        <TableRow key={price.id || idx}>
                           <TableCell className="font-medium">{price.product}</TableCell>
-                          <TableCell>{price.price?.toLocaleString()} {price.unit}</TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {price.minPrice?.toFixed(3)} {price.unit}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm">
+                            {price.maxPrice?.toFixed(3)} {price.unit}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-sm font-medium">
+                            {price.avgPrice?.toFixed(3)} {price.unit}
+                          </TableCell>
                           <TableCell className="text-muted-foreground text-sm">{price.date}</TableCell>
                         </TableRow>
                       ))}

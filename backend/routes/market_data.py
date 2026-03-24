@@ -12,6 +12,7 @@ import httpx
 import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from bson import ObjectId
@@ -557,6 +558,60 @@ async def scrape_ktb_prices():
     return prices
 
 
+async def scrape_gtb_prices():
+    """Scrape daily Salon Satış Fiyatları from Gaziantep Ticaret Borsası (GTB)"""
+    prices = []
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+            }
+            response = await client.get("https://www.gtb.org.tr/salon-satis-fiyatlari", headers=headers, follow_redirects=True)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # Extract date (e.g. "24.03.2026 - Salon Satış Fiyatları")
+                import re
+                date_str = datetime.now().strftime("%d.%m.%Y")
+                date_match = re.search(r'(\d{2}\.\d{2}\.\d{4})\s*-\s*Salon', response.text)
+                if date_match:
+                    date_str = date_match.group(1)
+
+                table = soup.find('table')
+                if table:
+                    rows = table.find_all('tr')
+                    for row in rows:
+                        cols = row.find_all('td')
+                        if len(cols) >= 3:
+                            product = cols[0].get_text(strip=True)
+                            # Turkish format: "15,400" means 15.400 TRY (comma = decimal)
+                            min_raw = cols[1].get_text(strip=True).replace('.', '').replace(',', '.')
+                            max_raw = cols[2].get_text(strip=True).replace('.', '').replace(',', '.')
+                            try:
+                                min_price = float(min_raw)
+                                max_price = float(max_raw)
+                                avg_price = round((min_price + max_price) / 2, 3)
+                                prices.append({
+                                    "exchange": "GTB",
+                                    "product": product,
+                                    "productEn": product,
+                                    "minPrice": min_price,
+                                    "maxPrice": max_price,
+                                    "avgPrice": avg_price,
+                                    "unit": "TRY/KG",
+                                    "date": date_str,
+                                    "source": "gtb.org.tr"
+                                })
+                            except ValueError:
+                                continue
+    except Exception as e:
+        print(f"GTB scraping error: {e}")
+    return prices
+
+
+
 @router.get("/turkish-exchanges")
 async def get_turkish_exchange_prices(user=Depends(get_current_user)):
     """Get prices from Turkish commodity exchanges (KTB, GTB)"""
@@ -566,26 +621,38 @@ async def get_turkish_exchange_prices(user=Depends(get_current_user)):
 
 @router.get("/turkish-exchanges/scrape")
 async def scrape_turkish_exchanges(user=Depends(get_current_user)):
-    """Scrape and return latest prices from KTB"""
+    """Scrape and return latest prices from KTB and GTB"""
     ktb_prices = await scrape_ktb_prices()
+    gtb_prices = await scrape_gtb_prices()
     
     # Store in database
     stored_count = 0
+    today = datetime.now().strftime("%d.%m.%Y")
+    
     if ktb_prices:
-        today = datetime.now().strftime("%d.%m.%Y")
-        # Remove old entries for today
         turkish_exchange_prices_col.delete_many({"exchange": "KTB", "date": today, "source": {"$regex": "ktb.org.tr"}})
-        
-        # Insert new entries (make copies to avoid mutation)
         for price in ktb_prices:
-            doc = {**price}  # Copy the dict
+            doc = {**price}
             doc["createdAt"] = datetime.now(timezone.utc).isoformat()
             doc["createdBy"] = "system"
             turkish_exchange_prices_col.insert_one(doc)
             stored_count += 1
     
-    # Return the original prices (without ObjectId)
-    return {"ktb": ktb_prices, "count": stored_count, "message": f"Fetched {stored_count} prices from KTB"}
+    if gtb_prices:
+        turkish_exchange_prices_col.delete_many({"exchange": "GTB", "date": today, "source": {"$regex": "gtb.org.tr"}})
+        for price in gtb_prices:
+            doc = {**price}
+            doc["createdAt"] = datetime.now(timezone.utc).isoformat()
+            doc["createdBy"] = "system"
+            turkish_exchange_prices_col.insert_one(doc)
+            stored_count += 1
+    
+    return {
+        "ktb": ktb_prices, 
+        "gtb": gtb_prices, 
+        "count": stored_count, 
+        "message": f"Fetched {len(ktb_prices)} KTB + {len(gtb_prices)} GTB prices"
+    }
 
 
 @router.post("/turkish-exchanges")

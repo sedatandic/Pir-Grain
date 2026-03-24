@@ -1,7 +1,7 @@
 # PIR Grain & Pulses - Commodity Trading Dashboard
 
 ## Original Problem Statement
-Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The project includes detailed data management for trades and counterparties, UI/UX customizations, role-based access control, notification system, business card scanning, reporting, PDF document generation, and a market data module with live prices, TMO tender tracking, Turkish exchange integration, and Telegram feed.
+Build a comprehensive commodity trading dashboard for PIR Grain & Pulses with trade management, market data, TMO tender tracking, Turkish exchange prices, and Telegram integration.
 
 ## Core Architecture
 - **Frontend**: React + Shadcn UI (port 3000)
@@ -9,89 +9,58 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses. The pr
 - **Database**: MongoDB
 - **Auth**: JWT-based authentication
 
-## User Personas
-- **Admin** (salih.karagoz / salih123): Full access
-- **User**: Trade management access
-- **Accountant** (pir.accounts / pir123): Financial views
-
 ## What's Been Implemented
 
+### Market Data Module (Latest: 2026-03-24)
+- **Live Price Scraping**: Real-time from Barchart.com (commodities + currencies), Gold fix applied
+- **Live Badges**: All items show green "Live" badge
+- **Auto-Refresh**: 15-minute cycle
+- **Market News Tab** (first tab): 4 always-open cards (Wheat, Corn, Barley, Others) with inline click-to-type commenting, author/date/time display
+- **Turkish Exchanges Tab**: 
+  - **KTB**: Konya Ticaret Borsasi scraper (ktb.org.tr)
+  - **GTB**: Gaziantep Ticaret Borsasi scraper (gtb.org.tr/salon-satis-fiyatlari) - 8 products with Min/Max/Avg prices
+  - Single "Fetch Prices" button scrapes both
+- **TMO Tenders Tab**:
+  - Collapsible cards with click-to-expand
+  - Title: "[Qty] Mts [Commodity] [Import/Export] Tender - Dated: [dd/mm/yyyy]"
+  - Columns: COMPANY, PORT, QUANTITY, CIF (red), EXW
+  - Date pickers (dd/mm/yyyy) for all date fields
+  - Turkish ports dropdown (9 ports)
+  - Commodities: Feed Barley, Wheat, Feed Corn
+  - Type: Import/Export
+  - CRUD for tenders + individual result edit/delete
+  - Newest dated tender shows first
+
 ### Core Features
-- JWT Authentication with role-based access
-- Trade CRUD with complex data model
-- Counterparties/Partners management
-- Reference data (Commodities, Origins, Ports, Surveyors, Disport Agents)
-- Vessels, Calendar/Events, Notifications, Dashboard
-
-### PDF Generation
-- Business Confirmation, Shipment Appropriation, Commission Invoice
-- Date DD-MM-YYYY, commodity as "Name, Crop Year", DEMURRAGE row added
-
-### Email Integration
-- All 3 PDF documents via Resend with HTML body + attachment
-- PIR logo on #1B7A3D green header
-- Shipment Appropriation auto-attaches Bill of Ladings
-
-### Port Line-Ups
-- Upload/parse daily port report Excel, 92 dates, 12 ports, 10K+ vessels
-- Date selector, port tabs, vessel table with days-since-arrival calculation
-
-### Business Cards
-- Auto-OCR on upload via GPT-4o Vision
-- TABLE VIEW grouped by country, collapsible sections
-- Detail dialog with card image, edit/delete actions, search
-
-### Contracts Page Price Display
-- Unit Price column shows discharge port price
-- When discharge port matches a port variation: shows adjusted price only
-
-### Market Data Module (Updated 2026-03-24)
-- **Live Price Scraping**: Real-time data from Barchart.com for all commodities and currencies
-- **Gold Price Fix**: Fixed regex to handle comma-separated numbers (e.g., "4,408.0")
-- **Live Badges**: All commodities and currencies show green "Live" badge when source is Barchart
-- **Auto-Refresh**: 15-minute auto-refresh with manual refresh button
-- **KTB Integration**: Daily prices from Konya Ticaret Borsasi (ktb.org.tr)
-- **TMO Tenders Redesign (2026-03-24)**: Matches user's spreadsheet format:
-  - Header: "PIR GRAIN & PULSES" + "[Date] TMO [Commodity] TENDER ([Start]-[End]) Shipment"
-  - Columns: PORT, COMPANY, QUANTITY (European format), CIF (red text), EXW ($ prefix)
-  - TOTAL row at bottom, Create/Edit/Delete tenders, Add results with CIF/EXW prices
-
-### Other Features
-- Reports page with dynamic filters including "All Years" option
-- Brokerage Invoices with PENDING/PAID workflow
-- Bank Accounts & Vendors management in Settings
+- JWT Auth, Trade CRUD, Counterparties, Reference data
+- PDF Generation (Business Confirmation, Shipment Appropriation, Commission Invoice)
+- Email via Resend with auto-attached Bill of Ladings
+- Port Line-Ups, Business Cards OCR, Calendar, Reports, Dashboard
 
 ## Key API Endpoints
 - `GET /api/market/prices` - Live market prices
-- `GET /api/market/turkish-exchanges/scrape` - Scrape KTB prices
-- `GET, POST /api/market/notes` - Market notes CRUD
-- `GET, POST, PUT, DELETE /api/market/tenders` - TMO tenders CRUD
-- `POST /api/market/tenders/{id}/results` - Add tender result
-
-## Key DB Schema
-- `market_prices`: { symbol, price, change, changePercent, source, timestamp }
-- `turkish_exchange_prices`: { exchange, product, price, unit, date, category }
-- `market_notes`: { commodity, period, content, tags, createdBy, createdAt }
-- `tmo_tenders`: { tenderDate, commodity, totalQuantity, shipmentPeriodStart, shipmentPeriodEnd, status, results: [{ port, company, quantity, cifPrice, exwPrice }] }
+- `GET /api/market/turkish-exchanges/scrape` - Scrape KTB + GTB
+- `GET /api/market/turkish-exchanges` - Get stored prices
+- `GET, POST /api/market/notes` - Market news CRUD
+- `GET, POST, PUT, DELETE /api/market/tenders` - TMO tenders
+- `POST /api/market/tenders/{id}/results` - Add result
+- `PUT /api/market/tenders/{id}/results/{idx}` - Edit result
+- `DELETE /api/market/tenders/{id}/results/{idx}` - Delete result
 
 ## Prioritized Backlog
 
 ### P0
-- Telegram Feed Integration (blocked: needs Bot Token + channel names from user)
+- Telegram Feed Integration (blocked: needs Bot Token + channel names)
 
 ### P1
 - KTB Historical Data Views (daily/monthly/yearly period selectors)
-- Gaziantep (GTB) Exchange Integration
-- Full Server-Side RBAC (protect all API routes by role)
+- Full Server-Side RBAC
 
 ### P2
-- Google Workspace Integration (email menu bar, Gmail access)
-- Frontend Refactoring: MarketDataPage.js (1100+ lines), TradeDetailPage.js, NewTradePage.js
-- Backend Refactoring: market_data.py modularization
-- Clarify Soybeans removal from live prices
+- Google Workspace Integration
+- Frontend Refactoring (MarketDataPage.js 1200+ lines)
+- Backend Refactoring (market_data.py modularization)
 
 ### P3
 - Export Business Cards to CSV
 - Create Counterparty from scanned business card
-- Counterparty Departments CRUD
-- Document Templates Page

@@ -720,7 +720,7 @@ export default function MarketDataPage() {
 
           {/* TMO TENDERS TAB */}
           <TabsContent value="tenders" className="space-y-4 mt-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center gap-2">
               <div className="text-center">
                 <h2 className="text-lg font-semibold text-green-600">TMO / TURKISH GRAIN BOARD</h2>
                 <p className="text-sm text-muted-foreground">Tenders & Results</p>

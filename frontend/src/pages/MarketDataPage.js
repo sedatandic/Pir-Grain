@@ -725,6 +725,8 @@ export default function MarketDataPage() {
                 <h2 className="text-lg font-semibold text-green-600">TMO / TURKISH GRAIN BOARD</h2>
                 <p className="text-sm text-muted-foreground">Tenders & Results</p>
               </div>
+            </div>
+            <div className="flex justify-end">
               <Button data-testid="new-tender-btn" onClick={() => { 
                 setTenderForm({ 
                   tenderDate: '', 
@@ -774,8 +776,8 @@ export default function MarketDataPage() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-gray-100 border-b-2 border-gray-300">
-                            <TableHead className="font-bold text-black text-sm">PORT</TableHead>
                             <TableHead className="font-bold text-black text-sm">COMPANY</TableHead>
+                            <TableHead className="font-bold text-black text-sm">PORT</TableHead>
                             <TableHead className="font-bold text-black text-sm text-right">QUANTITY</TableHead>
                             <TableHead className="font-bold text-red-600 text-sm text-right">CIF</TableHead>
                             <TableHead className="font-bold text-black text-sm text-right">EXW</TableHead>
@@ -787,8 +789,8 @@ export default function MarketDataPage() {
                             <>
                               {tender.results.map((result, idx) => (
                                 <TableRow key={idx} className="border-b border-gray-200">
-                                  <TableCell className="font-medium">{result.port}</TableCell>
-                                  <TableCell>{result.company || result.winner}</TableCell>
+                                  <TableCell className="font-medium">{result.company || result.winner}</TableCell>
+                                  <TableCell>{result.port}</TableCell>
                                   <TableCell className="text-right font-mono">
                                     {(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}
                                   </TableCell>
@@ -1179,6 +1181,15 @@ export default function MarketDataPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label>Company</Label>
+                <Input 
+                  data-testid="result-company-input"
+                  value={resultForm.company} 
+                  onChange={(e) => setResultForm({ ...resultForm, company: e.target.value })}
+                  placeholder="e.g., Arion, Bunge"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label>Port</Label>
                 <Select value={resultForm.port} onValueChange={(v) => setResultForm({ ...resultForm, port: v })}>
                   <SelectTrigger data-testid="result-port-input"><SelectValue placeholder="Select port" /></SelectTrigger>
@@ -1188,15 +1199,6 @@ export default function MarketDataPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Company</Label>
-                <Input 
-                  data-testid="result-company-input"
-                  value={resultForm.company} 
-                  onChange={(e) => setResultForm({ ...resultForm, company: e.target.value })}
-                  placeholder="e.g., Arion, Bunge"
-                />
               </div>
             </div>
             <div className="space-y-2">

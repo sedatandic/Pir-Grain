@@ -104,6 +104,53 @@ async def fetch_live_currency_rates():
     return None
 
 
+async def scrape_barchart_forex(symbol: str):
+    """Scrape forex rate from Barchart.com"""
+    import re
+    try:
+        url_map = {
+            "EUR_USD": "https://www.barchart.com/forex/quotes/%5EEURUSD/overview",
+            "USD_RUB": "https://www.barchart.com/forex/quotes/%5EUSDRUB/overview",
+            "USD_TRY": "https://www.barchart.com/forex/quotes/%5EUSDTRY/overview",
+        }
+        
+        url = url_map.get(symbol)
+        if not url:
+            return None
+            
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            }
+            response = await client.get(url, headers=headers, follow_redirects=True)
+            
+            if response.status_code == 200:
+                html = response.text
+                
+                # Extract from JSON in page: "lastPrice":"1.15864","priceChange":"-0.00270"
+                price_match = re.search(r'"lastPrice"[:\s]*"?(\d+\.\d+)"?', html)
+                change_match = re.search(r'"priceChange"[:\s]*"?([+-]?\d+\.\d+)"?', html)
+                pct_match = re.search(r'"percentChange"[:\s]*"?([+-]?\d+\.\d+)%?"?', html)
+                
+                if price_match:
+                    price = float(price_match.group(1))
+                    change = float(change_match.group(1)) if change_match else 0
+                    change_pct = float(pct_match.group(1)) if pct_match else 0
+                    
+                    return {
+                        "price": price,
+                        "change": change,
+                        "changePercent": change_pct,
+                        "source": "Barchart"
+                    }
+                    
+    except Exception as e:
+        print(f"Barchart scraping error for {symbol}: {e}")
+    
+    return None
+
+
 async def fetch_commodity_price(symbol: str):
     """Fetch commodity price - try different sources"""
     # Map our symbols to Alpha Vantage symbols
@@ -120,8 +167,35 @@ async def fetch_commodity_price(symbol: str):
     
     av_symbol = av_symbols.get(symbol, symbol)
     
-    # For forex - try live API first
+    # For forex - try Barchart scraping first, then fallback to API
     if symbol in ["EUR_USD", "USD_RUB", "USD_TRY"]:
+        # Try Barchart first
+        barchart_data = await scrape_barchart_forex(symbol)
+        if barchart_data:
+            # Cache the price
+            market_prices_col.update_one(
+                {"symbol": symbol},
+                {"$set": {
+                    "symbol": symbol, 
+                    "price": barchart_data["price"], 
+                    "change": barchart_data["change"], 
+                    "changePercent": barchart_data["changePercent"], 
+                    "source": "Barchart",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }},
+                upsert=True
+            )
+            return {
+                "symbol": symbol,
+                "price": round(barchart_data["price"], 5),
+                "change": round(barchart_data["change"], 5),
+                "changePercent": round(barchart_data["changePercent"], 2),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "isLive": True,
+                "source": "Barchart"
+            }
+        
+        # Fallback to open.er-api.com
         live_rates = await fetch_live_currency_rates()
         if live_rates:
             currency_map = {

@@ -96,6 +96,7 @@ export default function MarketDataPage() {
   // Telegram state
   const [telegramMessages, setTelegramMessages] = useState([]);
   const [telegramChannels, setTelegramChannels] = useState([]);
+  const [selectedTgMessage, setSelectedTgMessage] = useState(null);
 
   // Active tab
   const [activeTab, setActiveTab] = useState('news');
@@ -664,50 +665,47 @@ export default function MarketDataPage() {
             <div className="text-center mb-4">
               <h2 className="text-lg font-semibold text-green-600">MARKET NEWS</h2>
               <p className="text-sm text-muted-foreground">
-                {newsPeriod === 'daily' ? 'Daily' : newsPeriod === 'monthly' ? 'Monthly' : newsPeriod} Market Commentary
+                {(() => {
+                  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                  const now = new Date();
+                  if (newsPeriod === 'daily') return `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()} Market Commentary`;
+                  if (newsPeriod === 'monthly') return `${months[now.getMonth()]} ${now.getFullYear()} Market Commentary`;
+                  return `${newsPeriod} Market Commentary`;
+                })()}
               </p>
             </div>
 
             {/* Period Tabs */}
             <div className="flex items-center justify-center gap-2 flex-wrap mb-4">
-              <Button
-                size="sm"
-                variant={newsPeriod === 'daily' ? 'default' : 'outline'}
-                onClick={() => setNewsPeriod('daily')}
-                data-testid="news-period-daily"
-              >
-                Daily
-              </Button>
-              <Button
-                size="sm"
-                variant={newsPeriod === 'monthly' ? 'default' : 'outline'}
-                onClick={() => setNewsPeriod('monthly')}
-                data-testid="news-period-monthly"
-              >
-                Monthly
-              </Button>
-              {/* Current year always shown */}
-              {!archiveYears.includes(String(new Date().getFullYear())) && (
-                <Button
-                  size="sm"
-                  variant={newsPeriod === String(new Date().getFullYear()) ? 'default' : 'outline'}
-                  onClick={() => setNewsPeriod(String(new Date().getFullYear()))}
-                  data-testid={`news-period-${new Date().getFullYear()}`}
-                >
-                  {new Date().getFullYear()}
-                </Button>
-              )}
-              {archiveYears.map((year) => (
-                <Button
-                  key={year}
-                  size="sm"
-                  variant={newsPeriod === year ? 'default' : 'outline'}
-                  onClick={() => setNewsPeriod(year)}
-                  data-testid={`news-period-${year}`}
-                >
-                  {year}
-                </Button>
-              ))}
+              {(() => {
+                const now = new Date();
+                const dayOfWeek = now.getDay(); // 0=Sun, 6=Sat
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const todayStr = `${String(now.getDate()).padStart(2,'0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
+                const monthStr = `${months[now.getMonth()]} ${now.getFullYear()}`;
+                const yearStr = String(now.getFullYear());
+                
+                // Build period options: today (weekdays only), current month, current year, archive years
+                const periods = [];
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                  periods.push({ key: 'daily', label: todayStr });
+                }
+                periods.push({ key: 'monthly', label: monthStr });
+                periods.push({ key: yearStr, label: yearStr });
+                archiveYears.filter(y => y !== yearStr).forEach(y => periods.push({ key: y, label: y }));
+                
+                return periods.map(p => (
+                  <Button
+                    key={p.key}
+                    size="sm"
+                    variant={newsPeriod === p.key ? 'default' : 'outline'}
+                    onClick={() => setNewsPeriod(p.key)}
+                    data-testid={`news-period-${p.key}`}
+                  >
+                    {p.label}
+                  </Button>
+                ));
+              })()}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -977,12 +975,10 @@ export default function MarketDataPage() {
             ) : (
               <div className="space-y-3">
                 {telegramMessages.map((msg, i) => (
-                  <a 
+                  <div 
                     key={i} 
-                    href={msg.link || `https://t.me/${msg.channelId}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="block p-2.5 bg-muted/50 rounded-lg text-sm hover:bg-muted transition-colors cursor-pointer"
+                    className="p-2.5 bg-muted/50 rounded-lg text-sm hover:bg-muted transition-colors cursor-pointer"
+                    onClick={() => setSelectedTgMessage(msg)}
                   >
                     <div className="flex items-center gap-1.5 mb-1">
                       <span className="font-semibold text-xs text-blue-600">{msg.channelName}</span>
@@ -993,7 +989,7 @@ export default function MarketDataPage() {
                     <p className="text-[10px] text-muted-foreground mt-1.5">
                       {msg.date ? new Date(msg.date).toLocaleDateString('en-GB') + ' ' + new Date(msg.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}
                     </p>
-                  </a>
+                  </div>
                 ))}
               </div>
             )}
@@ -1273,6 +1269,27 @@ export default function MarketDataPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setResultDialogOpen(false)}>Cancel</Button>
             <Button data-testid="add-result-submit-btn" onClick={handleAddResult}>{editingResultIndex !== null ? 'Save' : 'Add Result'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Telegram Message Popup */}
+      <Dialog open={!!selectedTgMessage} onOpenChange={() => setSelectedTgMessage(null)}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-blue-600 flex items-center gap-2">
+              <Send className="h-4 w-4" />
+              {selectedTgMessage?.channelName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">{selectedTgMessage?.text}</p>
+            <p className="text-xs text-muted-foreground">
+              {selectedTgMessage?.date ? new Date(selectedTgMessage.date).toLocaleDateString('en-GB') + ' ' + new Date(selectedTgMessage.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setSelectedTgMessage(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -10,10 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { Calendar as CalendarPicker } from '../components/ui/calendar';
+import { format, parse } from 'date-fns';
 import { 
   TrendingUp, TrendingDown, Minus, RefreshCw, Loader2, Plus, 
   Wheat, Droplets, Sun, Circle, DollarSign, Fuel, PenLine, X, Tag,
-  Send, Building2, Calendar, Package, Trash2, Pencil
+  Send, Building2, Calendar as CalendarIcon, Package, Trash2, Pencil
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -1006,13 +1009,27 @@ export default function MarketDataPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Tender Date (dd/mm/yyyy)</Label>
-                <Input 
-                  data-testid="tender-date-input"
-                  value={tenderForm.tenderDate} 
-                  onChange={(e) => setTenderForm({ ...tenderForm, tenderDate: e.target.value })}
-                  placeholder="e.g., 12/01/2026"
-                />
+                <Label>Tender Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" data-testid="tender-date-input" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {tenderForm.tenderDate || 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <CalendarPicker
+                      mode="single"
+                      selected={tenderForm.tenderDate ? parse(tenderForm.tenderDate, 'dd/MM/yyyy', new Date()) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setTenderForm({ ...tenderForm, tenderDate: format(date, 'dd/MM/yyyy') });
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Commodity</Label>
@@ -1040,7 +1057,7 @@ export default function MarketDataPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Shipment Start (dd/mm)</Label>
+                <Label>Shipment Start</Label>
                 <Input 
                   data-testid="tender-shipment-start"
                   value={tenderForm.shipmentPeriodStart} 
@@ -1049,7 +1066,7 @@ export default function MarketDataPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Shipment End (dd/mm/yyyy)</Label>
+                <Label>Shipment End</Label>
                 <Input 
                   data-testid="tender-shipment-end"
                   value={tenderForm.shipmentPeriodEnd} 

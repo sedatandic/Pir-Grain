@@ -227,9 +227,9 @@ export default function DocInstructionsPage() {
   const formNotify = form.notifyOption === 'buyer_details' ? getBuyerDisplay(form.notifyBuyerId) :
     form.notifyCustom || '—';
 
-  // Discharge ports with country for display
+  // Discharge ports with country for display (exclude Marmara ports)
   const dischargePorts = [...new Map(
-    ports.filter(p => p.type === 'discharge')
+    ports.filter(p => p.type === 'discharge' && !p.name.toLowerCase().includes('marmara'))
       .map(p => [`${p.name}, ${p.country}`, { name: p.name, country: p.country, display: `${p.name}, ${p.country}` }])
   ).values()].sort((a, b) => a.display.localeCompare(b.display));
 
@@ -456,7 +456,7 @@ export default function DocInstructionsPage() {
                   <Select value={form.agentId} onValueChange={handleAgentSelect}>
                     <SelectTrigger data-testid="di-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
                     <SelectContent side="bottom">
-                      {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.port})</SelectItem>)}
+                      {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -468,7 +468,7 @@ export default function DocInstructionsPage() {
                   {form.agentFax && <p>Fax: {form.agentFax}</p>}
                   {form.agentMobile && <p>Mobile: {form.agentMobile}</p>}
                   {form.agentEmail && <p>Email: {form.agentEmail}</p>}
-                  {form.agentAddress && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{form.agentAddress}</p>}
+                  {form.agentAddress && <p className="whitespace-pre-wrap">{form.agentAddress}</p>}
                 </div>
               )}
               <div className="space-y-2">

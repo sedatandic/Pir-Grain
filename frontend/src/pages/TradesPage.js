@@ -35,6 +35,7 @@ export default function TradesPage() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCoBroker, setFilterCoBroker] = useState('all');
   const [filterCountry, setFilterCountry] = useState('all');
+  const [filterBrokerName, setFilterBrokerName] = useState('all');
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -79,8 +80,8 @@ export default function TradesPage() {
     }
   }, [location.state, loading]);
 
-  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterCountry !== 'all' || filterYear !== new Date().getFullYear().toString();
-  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterCountry('all'); setFilterYear(new Date().getFullYear().toString()); };
+  const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterCountry !== 'all' || filterBrokerName !== 'all' || filterYear !== new Date().getFullYear().toString();
+  const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterCountry('all'); setFilterBrokerName('all'); setFilterYear(new Date().getFullYear().toString()); };
 
   const getTradeYear = useCallback((trade) => {
     const d = trade.contractDate || trade.createdAt || '';
@@ -142,6 +143,7 @@ export default function TradesPage() {
     if (filterOrigin !== 'all') result = result.filter(t => t.originId === filterOrigin);
     if (filterStatus !== 'all') result = result.filter(t => t.status === filterStatus);
     if (filterCoBroker !== 'all') result = result.filter(t => t.coBrokerId === filterCoBroker);
+    if (filterBrokerName !== 'all') result = result.filter(t => t.brokerName === filterBrokerName);
     if (filterCountry !== 'all') result = result.filter(t => t.loadingPortCountry === filterCountry || t.dischargePortCountry === filterCountry);
     if (search) {
       const q = normalizeTR(search);
@@ -154,7 +156,7 @@ export default function TradesPage() {
       );
     }
     return result;
-  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, filterCountry, search]);
+  }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, filterBrokerName, filterCountry, search]);
 
   const categorized = useMemo(() => ({
     ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
@@ -543,6 +545,14 @@ export default function TradesPage() {
               <SelectContent>
                 <SelectItem value="all">All Buyers</SelectItem>
                 {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterBrokerName} onValueChange={setFilterBrokerName}>
+              <SelectTrigger className="w-[140px] shrink-0" data-testid="filter-broker-name"><SelectValue placeholder="Broker Name" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Brokers</SelectItem>
+                <SelectItem value="Salih Karagoz">Salih Karagoz</SelectItem>
+                <SelectItem value="Melisa Karagoz">Melisa Karagoz</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterCoBroker} onValueChange={setFilterCoBroker}>

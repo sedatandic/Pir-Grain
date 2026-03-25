@@ -58,7 +58,7 @@ export default function CoasterFreightsTab() {
       
       weeks.push({ week: w, label: `Week ${w} (${dateRange})` });
     }
-    return weeks.reverse();
+    return weeks;
   };
 
   return (

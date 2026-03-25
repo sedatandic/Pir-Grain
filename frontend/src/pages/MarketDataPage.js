@@ -106,12 +106,8 @@ export default function MarketDataPage() {
   const [selectedTgMessage, setSelectedTgMessage] = useState(null);
 
   // Coaster Freights state
-  const [freightWeek, setFreightWeek] = useState(() => {
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const days = Math.floor((now - startOfYear) / 86400000);
-    return Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  });
+  const [freightWeek, setFreightWeek] = useState(null);
+  const [freightYear, setFreightYear] = useState(2026);
   const [freightData, setFreightData] = useState(null);
   const [freightLoading, setFreightLoading] = useState(false);
 
@@ -223,10 +219,10 @@ export default function MarketDataPage() {
     }
   };
 
-  const fetchFreightReport = async (week) => {
+  const fetchFreightReport = async (week, year) => {
     setFreightLoading(true);
     try {
-      const res = await api.get(`/api/market/coaster-freights/${week}`);
+      const res = await api.get(`/api/market/coaster-freights/${week}?year=${year || freightYear}`);
       setFreightData(res.data);
     } catch (err) {
       setFreightData(null);
@@ -236,10 +232,10 @@ export default function MarketDataPage() {
   };
 
   useEffect(() => {
-    if (activeTab === 'freights') {
-      fetchFreightReport(freightWeek);
+    if (activeTab === 'freights' && freightWeek) {
+      fetchFreightReport(freightWeek, freightYear);
     }
-  }, [freightWeek, activeTab]);
+  }, [freightWeek, freightYear, activeTab]);
 
   const refreshPrices = async () => {
     setRefreshing(true);
@@ -1068,18 +1064,34 @@ export default function MarketDataPage() {
               <p className="text-sm text-muted-foreground">Weekly Freight Market Reports - Azov-Black Sea & Baltic</p>
             </div>
 
-            {/* Week Selector */}
+            {/* Year Tabs */}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              {[2023, 2024, 2025, 2026].map(y => (
+                <Button key={y} size="sm"
+                  variant={freightYear === y ? 'default' : 'outline'}
+                  onClick={() => { setFreightYear(y); setFreightWeek(null); setFreightData(null); }}
+                >
+                  {y}
+                </Button>
+              ))}
+            </div>
+
+            {/* Week Selector for selected year */}
             <div className="flex items-center justify-center gap-1.5 flex-wrap mb-4">
               {(() => {
-                const now = new Date();
-                const currentWeek = freightWeek;
-                const weeks = [];
                 const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                const y = freightYear;
+                const now = new Date();
+                // Calculate max week for current year
+                const maxWeek = y < now.getFullYear() ? 52 : (() => {
+                  const startOfYear = new Date(y, 0, 1);
+                  const days = Math.floor((now - startOfYear) / 86400000);
+                  return Math.ceil((days + startOfYear.getDay() + 1) / 7);
+                })();
                 
-                // Show last 8 weeks
-                for (let w = Math.max(1, currentWeek - 7); w <= currentWeek; w++) {
-                  // Calculate Monday of ISO week
-                  const jan4 = new Date(2026, 0, 4);
+                const weeks = [];
+                for (let w = 1; w <= maxWeek; w++) {
+                  const jan4 = new Date(y, 0, 4);
                   const dayOfWeek = jan4.getDay() || 7;
                   const monday = new Date(jan4);
                   monday.setDate(jan4.getDate() - dayOfWeek + 1 + (w - 1) * 7);
@@ -1098,10 +1110,8 @@ export default function MarketDataPage() {
                   weeks.push({ week: w, label: `Week ${w} (${dateRange})` });
                 }
                 
-                return weeks.map(({ week, label }) => (
-                  <Button
-                    key={week}
-                    size="sm"
+                return weeks.reverse().map(({ week, label }) => (
+                  <Button key={week} size="sm"
                     variant={freightWeek === week ? 'default' : 'outline'}
                     className="text-xs"
                     onClick={() => setFreightWeek(week)}
@@ -1141,7 +1151,7 @@ export default function MarketDataPage() {
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground">No report available for Week {freightWeek}</p>
+                    <p className="text-muted-foreground">{freightWeek ? `No report available for Week ${freightWeek}` : 'Select a week to view the freight report'}</p>
                   </div>
                 )}
               </CardContent>

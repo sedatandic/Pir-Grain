@@ -964,9 +964,8 @@ async def delete_market_commodity(commodity_id: str, user=Depends(require_roles(
 
 
 @router.get("/coaster-freights/{week_number}")
-async def get_coaster_freight(week_number: int, user=Depends(get_current_user)):
-    """Scrape freight report from sealines.su for a given ISO week number"""
-    year = 2026
+async def get_coaster_freight(week_number: int, year: int = 2026, user=Depends(get_current_user)):
+    """Scrape freight report from sealines.su for a given ISO week number and year"""
     url = f"https://sealines.su/en/market-news/{week_number}-week-{year}/"
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:

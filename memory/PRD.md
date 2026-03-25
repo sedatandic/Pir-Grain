@@ -1,8 +1,5 @@
 # PIR Grain & Pulses - Commodity Trading Dashboard
 
-## Original Problem Statement
-Build a comprehensive commodity trading dashboard for PIR Grain & Pulses with trade management, market data, TMO tender tracking, Turkish exchange prices, and Telegram integration.
-
 ## Core Architecture
 - **Frontend**: React + Shadcn UI (port 3000)
 - **Backend**: FastAPI (port 8001, prefix /api)
@@ -11,30 +8,29 @@ Build a comprehensive commodity trading dashboard for PIR Grain & Pulses with tr
 
 ## What's Been Implemented
 
-### Market Data Module (Latest: 2026-03-24)
-- **Live Price Scraping**: Real-time from Barchart.com (commodities + currencies), Gold fix applied
-- **Live Badges**: All items show green "Live" badge
-- **Auto-Refresh**: 15-minute cycle
-- **Market News Tab** (first tab): 4 always-open cards (Wheat, Corn, Barley, Others) with inline commenting
-- **Turkish Exchanges Tab**: KTB + GTB scrapers (both fetched with single button)
-- **TMO Tenders Tab**: Collapsible cards, COMPANY/PORT/QUANTITY/CIF/EXW columns, Import/Export type, dd/mm/yyyy date pickers
-- **Telegram Feed Sidebar**: Live feed from 4 public channels (ipavensky, andre_sizov, demetraholding_dh, RusgrainUnion) — scraped from web previews, no bot token needed
+### Market Data Module (Latest: 2026-03-25)
+- **Indications Tab** (first): 4 cards (Wheat, Corn, Barley, Others) with drill-down navigation: Years → Months → Weekdays (excludes weekends), inline commenting
+- **Prices Tab**: Live from Barchart.com with Live badges, 15-min auto-refresh
+- **Turkish Exchanges Tab**: KTB + GTB scrapers (single "Fetch Prices" button)
+- **TMO Tenders Tab**: Collapsible cards, COMPANY/PORT/QUANTITY/CIF/EXW, Import/Export, dd/mm/yyyy date pickers
+- **Coaster Freights Tab**: Weekly freight reports from sealines.su, "Week 12 (16-22 March 2026)" format, PDF download, last 8 weeks
+- **Telegram Feed Sidebar**: 7 public channels scraped, in-app popup for messages
 
 ### Core Features
 - JWT Auth, Trade CRUD, Counterparties, Reference data
 - PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar, Reports
 
+## Key API Endpoints
+- `GET /api/market/coaster-freights/{week_number}` - Scrape freight report for given week
+- `GET /api/market/prices` - Live market prices
+- `GET /api/market/turkish-exchanges/scrape` - Scrape KTB + GTB
+- `GET, POST /api/market/notes` - Indications CRUD
+- `GET, POST, PUT, DELETE /api/market/tenders` - TMO tenders
+
 ## Prioritized Backlog
-
 ### P1
-- KTB Historical Data Views (daily/monthly/yearly period selectors)
+- KTB Historical Data Views (daily/monthly/yearly)
 - Full Server-Side RBAC
-
 ### P2
 - Google Workspace Integration
-- Frontend Refactoring (MarketDataPage.js 1200+ lines)
-- Backend Refactoring (market_data.py modularization)
-
-### P3
-- Export Business Cards to CSV
-- Create Counterparty from scanned business card
+- Frontend/Backend Refactoring

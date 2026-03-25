@@ -960,3 +960,46 @@ async def delete_market_commodity(commodity_id: str, user=Depends(require_roles(
     """Remove a commodity from tracking"""
     market_commodities_col.delete_one({"_id": ObjectId(commodity_id)})
     return {"message": "Commodity removed"}
+
+
+
+@router.get("/coaster-freights/{week_number}")
+async def get_coaster_freight(week_number: int, user=Depends(get_current_user)):
+    """Scrape freight report from sealines.su for a given ISO week number"""
+    year = 2026
+    url = f"https://sealines.su/en/market-news/{week_number}-week-{year}/"
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            }
+            response = await client.get(url, headers=headers, follow_redirects=True)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                
+                # Find PDF link
+                pdf_link = soup.find('a', string=lambda s: s and 'Download' in str(s))
+                pdf_url = pdf_link.get('href') if pdf_link else None
+                
+                # Find content - get paragraphs from article/entry-content
+                content_div = soup.find('div', class_='entry-content') or soup.find('article')
+                paragraphs = []
+                if content_div:
+                    for p in content_div.find_all('p'):
+                        text = p.get_text(strip=True)
+                        if text and 'Download report' not in text:
+                            paragraphs.append(text)
+                
+                return {
+                    "week": week_number,
+                    "year": year,
+                    "content": "\n\n".join(paragraphs),
+                    "pdfUrl": pdf_url,
+                    "sourceUrl": url,
+                    "found": True
+                }
+            else:
+                return {"week": week_number, "year": year, "content": "", "pdfUrl": None, "sourceUrl": url, "found": False}
+    except Exception as e:
+        print(f"Coaster freight scraping error for week {week_number}: {e}")
+        return {"week": week_number, "year": year, "content": "", "pdfUrl": None, "sourceUrl": url, "found": False, "error": str(e)}

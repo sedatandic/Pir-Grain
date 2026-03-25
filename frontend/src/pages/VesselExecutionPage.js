@@ -7,9 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
+import { format, parse } from 'date-fns';
 
 const DEFAULT_DOCS = [
   "Bill of Ladings", "Commercial Invoice", "Phytosanitary Certificate",
@@ -648,7 +651,23 @@ export default function VesselExecutionPage() {
           <DialogHeader><DialogTitle className="text-center">Edit B/L Details</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label>B/L Number</Label><Input value={blForm.blNumber || ''} onChange={(e) => setBlForm(p => ({ ...p, blNumber: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>B/L Date</Label><Input value={blForm.blDate || ''} onChange={(e) => setBlForm(p => ({ ...p, blDate: e.target.value }))} placeholder="dd/mm/yyyy" /></div>
+            <div className="space-y-2"><Label>B/L Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {blForm.blDate || 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={(() => { try { const [d, m, y] = (blForm.blDate || '').split('/'); return new Date(y, m - 1, d); } catch { return undefined; } })()}
+                    onSelect={(date) => { if (date) setBlForm(p => ({ ...p, blDate: format(date, 'dd/MM/yyyy') })); }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-2"><Label>B/L Quantity (MT)</Label><Input type="number" value={blForm.blQuantity || ''} onChange={(e) => setBlForm(p => ({ ...p, blQuantity: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Discharge Quantity (MT)</Label><Input type="number" value={blForm.dischargeQuantity || ''} onChange={(e) => setBlForm(p => ({ ...p, dischargeQuantity: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Load Port</Label>

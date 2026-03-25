@@ -135,7 +135,7 @@ export default function BusinessCardsPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground" data-testid="business-cards-title">Business Cards</h1>
+          <h1 className="text-3xl font-bold tracking-tight" data-testid="business-cards-title">Business Cards</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Scan, organize and search your contacts</p>
         </div>
         <div className="flex gap-2">

@@ -440,7 +440,7 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{trade.buyerName || getName(partners, trade.buyerId)}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{trade.brokerName || getName(partners, trade.brokerId) || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium text-right">{trade.brokerName || getName(partners, trade.brokerId) || '-'}{trade.brokerPersonName && <div className="text-xs text-muted-foreground">{trade.brokerPersonName}</div>}</span></div>
                 {trade.coBrokerId && (
                   <div className="flex justify-between"><span className="text-muted-foreground text-orange-600">Co-Broker</span><span className="font-medium text-orange-600">{trade.coBrokerName || getName(partners, trade.coBrokerId) || '-'}</span></div>
                 )}
@@ -454,7 +454,7 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Unit Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Unit Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT ${(() => { const port = trade.basePortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' '); })()}` : '-'}</span></div>
               </CardContent>
             </Card>
             <Card>

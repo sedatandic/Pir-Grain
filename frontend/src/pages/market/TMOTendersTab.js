@@ -122,20 +122,19 @@ export default function TMOTendersTab() {
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex flex-col items-center gap-2 mb-12">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-green-600" data-testid="tmo-tenders-title">TMO / TURKISH GRAIN BOARD</h2>
-          <p className="text-sm text-muted-foreground">Tenders & Results</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-green-700" data-testid="tmo-tenders-title">TMO / Turkish Grain Board - Tenders & Results</h2>
         </div>
-      </div>
-      <div className="flex justify-end">
-        <Button data-testid="new-tender-btn" onClick={() => { 
-          setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] }); 
-          setEditingTender(null); 
-          setTenderDialogOpen(true); 
-        }} size="sm">
-          <Plus className="h-4 w-4 mr-2" />New Tender
-        </Button>
+        <div className="flex gap-2">
+          <Button data-testid="new-tender-btn" onClick={() => { 
+            setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] }); 
+            setEditingTender(null); 
+            setTenderDialogOpen(true); 
+          }} size="sm">
+            <Plus className="h-4 w-4 mr-2" />New Tender
+          </Button>
+        </div>
       </div>
 
       {tenders.length === 0 ? (

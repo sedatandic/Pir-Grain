@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays, X } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays, X, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -88,6 +88,7 @@ export default function AccountingPage() {
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: '' });
+  const [stmtFile, setStmtFile] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [sellers, setSellers] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -201,8 +202,23 @@ export default function AccountingPage() {
 
   const handleSaveStmt = async () => {
     setSaving(true);
-    try { await api.post('/api/bank-statements', stmtForm); toast.success('Bank statement added'); setStmtDialogOpen(false); fetchData(); }
-    catch (err) { toast.error('Failed'); } finally { setSaving(false); }
+    try {
+      if (stmtFile) {
+        const formData = new FormData();
+        formData.append('file', stmtFile);
+        formData.append('month', stmtForm.month);
+        formData.append('year', stmtForm.year);
+        formData.append('description', stmtForm.description || '');
+        formData.append('bankAccountId', stmtForm.bankAccountId || '');
+        await api.post('/api/bank-statements/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        await api.post('/api/bank-statements', stmtForm);
+      }
+      toast.success('Bank statement added');
+      setStmtDialogOpen(false);
+      setStmtFile(null);
+      fetchData();
+    } catch (err) { toast.error('Failed'); } finally { setSaving(false); }
   };
 
   const handleDeleteStmt = async (id) => {
@@ -309,7 +325,7 @@ export default function AccountingPage() {
                           <h3 className="font-semibold">{bank.accountName || bank.beneficiary}</h3>
                           <p className="text-xs text-muted-foreground">{bank.bankName} {bank.currency ? `(${bank.currency})` : ''} — {bank.iban}</p>
                         </div>
-                        <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: bank.id }); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
+                        <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: bank.id }); setStmtFile(null); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
                       </div>
                       <div className="overflow-x-auto border rounded-lg">
                         <Table>
@@ -322,7 +338,7 @@ export default function AccountingPage() {
                               <TableRow key={s.id}>
                                 <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
                                 <TableCell>{s.description || '-'}</TableCell>
-                                <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                                <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                                 <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
                                 <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
                               </TableRow>
@@ -349,7 +365,7 @@ export default function AccountingPage() {
                             <TableRow key={s.id}>
                               <TableCell className="font-medium">{MONTHS[(s.month||1)-1]} {s.year}</TableCell>
                               <TableCell>{s.description || '-'}</TableCell>
-                              <TableCell>{s.fileName ? <Badge variant="secondary"><FileText className="h-3 w-3 mr-1" />{s.fileName}</Badge> : '-'}</TableCell>
+                              <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                               <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
                               <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
                             </TableRow>
@@ -373,7 +389,19 @@ export default function AccountingPage() {
             </div>
             <div className="space-y-2"><Label>Year</Label><Input type="number" value={stmtForm.year} onChange={(e) => setStmtForm({...stmtForm, year: parseInt(e.target.value)})} /></div>
             <div className="col-span-2 space-y-2"><Label>Description</Label><Input value={stmtForm.description} onChange={(e) => setStmtForm({...stmtForm, description: e.target.value})} placeholder="e.g. March 2026 statement" /></div>
-            <div className="col-span-2 space-y-2"><Label>File Name</Label><Input value={stmtForm.fileName} onChange={(e) => setStmtForm({...stmtForm, fileName: e.target.value})} placeholder="statement_march_2026.pdf" /></div>
+            <div className="col-span-2 space-y-2">
+              <Label>Attach Bank Statement</Label>
+              <div className="flex items-center gap-2">
+                <label className="flex-1 cursor-pointer">
+                  <div className={cn("flex items-center gap-2 border rounded-md px-3 py-2 text-sm hover:bg-muted/50 transition-colors", stmtFile ? "border-primary" : "border-input")}>
+                    <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className={stmtFile ? "text-foreground" : "text-muted-foreground"}>{stmtFile ? stmtFile.name : "Choose file..."}</span>
+                  </div>
+                  <input type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.jpeg,.png" onChange={(e) => { if (e.target.files?.[0]) setStmtFile(e.target.files[0]); }} data-testid="stmt-file-input" />
+                </label>
+                {stmtFile && <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive" onClick={() => setStmtFile(null)}><X className="h-4 w-4" /></Button>}
+              </div>
+            </div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setStmtDialogOpen(false)}>Cancel</Button><Button onClick={handleSaveStmt} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Add</Button></DialogFooter>
         </DialogContent>

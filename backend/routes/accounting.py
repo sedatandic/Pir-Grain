@@ -1,11 +1,16 @@
+import os
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi.responses import FileResponse
 from bson import ObjectId
 
 from database import invoices_col, bank_statements_col, trades_col, serialize_doc, create_notification
 from auth import require_roles
 from models import InvoiceCreate, BankStatementCreate
+
+UPLOAD_DIR = "/app/backend/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 accounting_access = require_roles("admin", "accountant")
 
@@ -82,6 +87,52 @@ def create_bank_statement(stmt: BankStatementCreate, user=Depends(accounting_acc
     data["_id"] = result.inserted_id
     create_notification("accounting", "New bank statement added", str(result.inserted_id), user.get("username"))
     return serialize_doc(data)
+
+
+@router.post("/bank-statements/upload")
+async def upload_bank_statement(
+    file: UploadFile = File(...),
+    month: int = Form(...),
+    year: int = Form(...),
+    description: str = Form(""),
+    bankAccountId: str = Form(""),
+    user=Depends(accounting_access),
+):
+    allowed = ('.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.jpg', '.jpeg', '.png')
+    if not file.filename.lower().endswith(allowed):
+        raise HTTPException(status_code=400, detail="File type not allowed")
+    data = {
+        "month": month,
+        "year": year,
+        "description": description,
+        "bankAccountId": bankAccountId,
+        "fileName": file.filename,
+        "createdAt": datetime.utcnow(),
+    }
+    result = bank_statements_col.insert_one(data)
+    stmt_id = str(result.inserted_id)
+    ext = file.filename.rsplit('.', 1)[-1] if '.' in file.filename else 'pdf'
+    stored_name = f"stmt_{stmt_id}.{ext}"
+    filepath = os.path.join(UPLOAD_DIR, stored_name)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    bank_statements_col.update_one({"_id": result.inserted_id}, {"$set": {"storedFileName": stored_name}})
+    data["_id"] = result.inserted_id
+    data["storedFileName"] = stored_name
+    create_notification("accounting", "Bank statement uploaded", stmt_id, user.get("username"))
+    return serialize_doc(data)
+
+
+@router.get("/bank-statements/{stmt_id}/download")
+def download_bank_statement(stmt_id: str, user=Depends(accounting_access)):
+    stmt = bank_statements_col.find_one({"_id": ObjectId(stmt_id)})
+    if not stmt or not stmt.get("storedFileName"):
+        raise HTTPException(status_code=404, detail="No file found")
+    filepath = os.path.join(UPLOAD_DIR, stmt["storedFileName"])
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    return FileResponse(filepath, filename=stmt.get("fileName", "bank_statement"), media_type="application/octet-stream")
 
 
 @router.delete("/bank-statements/{stmt_id}")

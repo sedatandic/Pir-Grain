@@ -165,9 +165,9 @@ export default function TMOTendersTab() {
                 {expandedTenders[tender.id] && (
                   <>
                     <CardContent className="p-0">
-                      <Table>
+                      <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300">
                         <TableHeader>
-                          <TableRow className="bg-gray-100 border-b-2 border-gray-300">
+                          <TableRow className="bg-gray-100">
                             <TableHead className="font-bold text-black text-sm">COMPANY</TableHead>
                             <TableHead className="font-bold text-black text-sm">PORT</TableHead>
                             <TableHead className="font-bold text-black text-sm text-right">QUANTITY</TableHead>
@@ -180,17 +180,17 @@ export default function TMOTendersTab() {
                           {tender.results?.length > 0 ? (
                             <>
                               {tender.results.map((result, idx) => (
-                                <TableRow key={idx} className="border-b border-gray-200">
-                                  <TableCell className="font-medium">{result.company || result.winner}</TableCell>
-                                  <TableCell>{result.port}</TableCell>
-                                  <TableCell className="text-right font-mono">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-right font-mono font-bold text-red-600">
+                                <TableRow key={idx}>
+                                  <TableCell className="font-medium py-4">{result.company || result.winner}</TableCell>
+                                  <TableCell className="py-4">{result.port}</TableCell>
+                                  <TableCell className="text-right font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
+                                  <TableCell className="text-right font-mono font-bold text-red-600 py-4">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                   </TableCell>
-                                  <TableCell className="text-right font-mono">
+                                  <TableCell className="text-right font-mono py-4">
                                     {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
                                   </TableCell>
-                                  <TableCell className="text-center">
+                                  <TableCell className="text-center py-4">
                                     <div className="flex items-center justify-center gap-1">
                                       <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => {
                                         setSelectedTenderForResult(tender);
@@ -213,13 +213,13 @@ export default function TMOTendersTab() {
                                   </TableCell>
                                 </TableRow>
                               ))}
-                              <TableRow className="border-t-2 border-gray-300 font-bold">
-                                <TableCell className="font-bold text-base">TOTAL</TableCell>
-                                <TableCell></TableCell>
-                                <TableCell className="text-right font-mono font-bold text-base">{totalQty.toLocaleString('de-DE')}</TableCell>
-                                <TableCell></TableCell>
-                                <TableCell></TableCell>
-                                <TableCell></TableCell>
+                              <TableRow className="font-bold">
+                                <TableCell className="font-bold text-base py-4">TOTAL</TableCell>
+                                <TableCell className="py-4"></TableCell>
+                                <TableCell className="text-right font-mono font-bold text-base py-4">{totalQty.toLocaleString('de-DE')}</TableCell>
+                                <TableCell className="py-4"></TableCell>
+                                <TableCell className="py-4"></TableCell>
+                                <TableCell className="py-4"></TableCell>
                               </TableRow>
                             </>
                           ) : (

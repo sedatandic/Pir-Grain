@@ -233,13 +233,15 @@ export default function DocInstructionsPage() {
       .map(p => [`${p.name}, ${p.country}`, { name: p.name, country: p.country, display: `${p.name}, ${p.country}` }])
   ).values()].sort((a, b) => a.display.localeCompare(b.display));
 
-  // Handle trade selection - auto-populate seller surveyor
+  // Handle trade selection - auto-populate seller surveyor and buyer
   const handleTradeSelect = (tradeId) => {
     const trade = trades.find(t => t.id === tradeId);
     setForm(prev => ({
       ...prev,
       tradeId,
       sellerSurveyor: trade?.sellerSurveyor || '',
+      notifyBuyerId: trade?.buyerId || prev.notifyBuyerId,
+      consigneeBuyerId: trade?.buyerId || prev.consigneeBuyerId,
     }));
   };
 
@@ -410,19 +412,11 @@ export default function DocInstructionsPage() {
                       <SelectItem value="other">Other (Custom)</SelectItem>
                     </SelectContent>
                   </Select>
-                  {form.consigneeOption === 'buyer_details' && (
-                    <Select value={form.consigneeBuyerId} onValueChange={v => set('consigneeBuyerId', v)}>
-                      <SelectTrigger data-testid="di-consignee-buyer"><SelectValue placeholder="Select buyer" /></SelectTrigger>
-                      <SelectContent>
-                        {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
                   {form.consigneeOption === 'other' && (
                     <Textarea value={form.consigneeCustom} onChange={e => set('consigneeCustom', e.target.value)} rows={2} placeholder="Enter custom consignee" />
                   )}
                   {form.consigneeOption === 'buyer_details' && form.consigneeBuyerId && (
-                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap">{getBuyerDisplay(form.consigneeBuyerId)}</div>
+                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap font-medium">{getBuyerDisplay(form.consigneeBuyerId)}</div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -434,19 +428,11 @@ export default function DocInstructionsPage() {
                       <SelectItem value="other">Other (Custom)</SelectItem>
                     </SelectContent>
                   </Select>
-                  {form.notifyOption === 'buyer_details' && (
-                    <Select value={form.notifyBuyerId} onValueChange={v => set('notifyBuyerId', v)}>
-                      <SelectTrigger data-testid="di-notify-buyer"><SelectValue placeholder="Select buyer" /></SelectTrigger>
-                      <SelectContent>
-                        {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  )}
                   {form.notifyOption === 'other' && (
                     <Textarea value={form.notifyCustom} onChange={e => set('notifyCustom', e.target.value)} rows={2} placeholder="Enter custom notify party" />
                   )}
                   {form.notifyOption === 'buyer_details' && form.notifyBuyerId && (
-                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap">{getBuyerDisplay(form.notifyBuyerId)}</div>
+                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap font-medium">{getBuyerDisplay(form.notifyBuyerId)}</div>
                   )}
                 </div>
               </div>

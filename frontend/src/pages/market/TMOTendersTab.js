@@ -168,11 +168,11 @@ export default function TMOTendersTab() {
                       <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300 [&_th]:align-middle [&_td]:align-middle">
                         <TableHeader>
                           <TableRow className="bg-gray-100">
-                            <TableHead className="font-bold text-black text-sm text-center">Company</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">Port</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">Quantity (Mts)</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">CIF</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">EXW</TableHead>
+                            <TableHead className="font-bold text-green-700 text-sm text-center">Company</TableHead>
+                            <TableHead className="font-bold text-green-700 text-sm text-center">Port</TableHead>
+                            <TableHead className="font-bold text-green-700 text-sm text-center">Quantity (Mts)</TableHead>
+                            <TableHead className="font-bold text-green-700 text-sm text-center">CIF</TableHead>
+                            <TableHead className="font-bold text-green-700 text-sm text-center">EXW</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center w-20"></TableHead>
                           </TableRow>
                         </TableHeader>
@@ -184,7 +184,7 @@ export default function TMOTendersTab() {
                                   <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
                                   <TableCell className="py-4 text-center">{result.port}</TableCell>
                                   <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-center font-mono font-bold text-black py-4">
+                                  <TableCell className="text-center font-mono text-black py-4">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                   </TableCell>
                                   <TableCell className="text-center font-mono py-4">

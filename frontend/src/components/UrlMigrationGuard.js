@@ -14,7 +14,7 @@ export default function UrlMigrationGuard({ children }) {
 
   const checkActiveUrl = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/config/active-url`);
+      const res = await fetch(`${API_BASE}/api/config/active-url`, { cache: 'no-store' });
       const data = await res.json();
       const activeUrl = (data.activeUrl || '').replace(/\/$/, '');
       const currentOrigin = window.location.origin.replace(/\/$/, '');

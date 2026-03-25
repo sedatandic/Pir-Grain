@@ -25,12 +25,17 @@ export default function CalendarPage() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [form, setForm] = useState({ title: '', date: '', dateTo: '', type: 'other', description: '' });
   const [saving, setSaving] = useState(false);
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const fetch = async () => {
       try { const res = await api.get('/api/events'); setEvents(res.data); } catch (err) { console.error(err); } finally { setLoading(false); }
     };
+    const fetchUsers = async () => {
+      try { const res = await api.get('/api/auth/users'); setUsers(res.data); } catch (err) { console.error(err); }
+    };
     fetch();
+    fetchUsers();
   }, []);
 
   const calendarDays = useMemo(() => {
@@ -268,9 +273,8 @@ export default function CalendarPage() {
         <DialogContent>
           <DialogHeader><DialogTitle className="text-center">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} data-testid="event-title-input" /></div>
             <div className="space-y-2"><Label>Type</Label>
-              <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+              <Select value={form.type} onValueChange={(v) => setForm({...form, type: v, title: v === 'staff_leave' ? '' : form.title})}>
                 <SelectTrigger data-testid="event-type-select"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="payment">Payment</SelectItem>
@@ -281,6 +285,18 @@ export default function CalendarPage() {
                 </SelectContent>
               </Select>
             </div>
+            {form.type === 'staff_leave' ? (
+              <div className="space-y-2"><Label>Staff Name *</Label>
+                <Select value={form.title} onValueChange={(v) => setForm({...form, title: v})}>
+                  <SelectTrigger data-testid="event-title-input"><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                  <SelectContent>
+                    {users.map(u => <SelectItem key={u.id || u.username} value={u.name || u.username}>{u.name || u.username}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} data-testid="event-title-input" /></div>
+            )}
             {(form.type === 'conference' || form.type === 'staff_leave') ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Date From *</Label>

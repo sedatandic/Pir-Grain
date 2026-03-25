@@ -1053,13 +1053,21 @@ async def get_coaster_freight(week_number: int, year: int = 2026, user=Depends(g
     
     en_url = f"https://sealines.su/en/market-news/{week_number}-week-{year}/"
     ru_url = f"https://sealines.su/market-news/{week_number}-week-{year}/"
+    # Sealines uses inconsistent week numbering - some are zero-padded (03, 09), some not (4, 10)
+    en_url_alt = f"https://sealines.su/en/market-news/{week_number:02d}-week-{year}/"
+    ru_url_alt = f"https://sealines.su/market-news/{week_number:02d}-week-{year}/"
     
     try:
         async with httpx.AsyncClient(timeout=20.0) as client:
             headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
             
-            # Fetch English content
+            # Try primary URL first, then alternate format
             en_response = await client.get(en_url, headers=headers, follow_redirects=True)
+            actual_en_url = en_url
+            if en_response.status_code != 200 or len(en_response.text) < 500:
+                en_response = await client.get(en_url_alt, headers=headers, follow_redirects=True)
+                actual_en_url = en_url_alt
+            
             en_paragraphs = []
             pdf_url = None
             
@@ -1077,6 +1085,8 @@ async def get_coaster_freight(week_number: int, year: int = 2026, user=Depends(g
             # Fetch Russian content
             ru_paragraphs = []
             ru_response = await client.get(ru_url, headers=headers, follow_redirects=True)
+            if ru_response.status_code != 200 or len(ru_response.text) < 500:
+                ru_response = await client.get(ru_url_alt, headers=headers, follow_redirects=True)
             if ru_response.status_code == 200:
                 soup_ru = BeautifulSoup(ru_response.text, 'html.parser')
                 content_ru = soup_ru.find('div', class_='entry-content') or soup_ru.find('article')
@@ -1111,7 +1121,7 @@ async def get_coaster_freight(week_number: int, year: int = 2026, user=Depends(g
                 "contentRu": "\n\n".join(ru_paragraphs),
                 "pdfUrl": pdf_url,
                 "pdfImages": pdf_images,
-                "sourceUrl": en_url,
+                "sourceUrl": actual_en_url,
                 "found": len(en_paragraphs) > 0 or len(ru_paragraphs) > 0
             }
     except Exception as e:

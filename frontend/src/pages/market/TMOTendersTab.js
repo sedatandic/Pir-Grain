@@ -152,7 +152,7 @@ export default function TMOTendersTab() {
                       {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
                     </h3>
                   </div>
-                  <div className="bg-muted/50 border-b border-border px-4 py-1.5 text-center">
+                  <div className="bg-muted border-b border-border px-4 py-1.5 text-center">
                     <p className="font-medium text-sm text-muted-foreground">
                       {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
                         ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 

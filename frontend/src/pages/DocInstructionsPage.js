@@ -208,8 +208,8 @@ export default function DocInstructionsPage() {
   const formNotify = form.notifyOption === 'buyer_details' ? getBuyerDisplay(form.notifyBuyerId) :
     form.notifyCustom || '—';
 
-  // Unique discharge port names from ports collection
-  const portNames = [...new Set(ports.map(p => p.name))].sort();
+  // Only discharge ports for DI
+  const portNames = [...new Set(ports.filter(p => p.type === 'discharge').map(p => p.name))].sort();
 
   return (
     <div className="space-y-6" data-testid="doc-instructions-page">
@@ -363,56 +363,6 @@ export default function DocInstructionsPage() {
               </Select>
             </div>
 
-            {/* Shipment & Port */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Shipment & Port Details</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Discharge Port</Label>
-                  <Select value={form.dischargePort} onValueChange={handlePortSelect}>
-                    <SelectTrigger data-testid="di-port-select"><SelectValue placeholder="Select port" /></SelectTrigger>
-                    <SelectContent>
-                      {portNames.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Disport Agent</Label>
-                  <Select value={form.agentId} onValueChange={handleAgentSelect}>
-                    <SelectTrigger data-testid="di-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
-                    <SelectContent>
-                      {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.port})</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {form.agentName && (
-                <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
-                  <p className="font-medium">{form.agentName}</p>
-                  {form.agentPhone && <p>Tel: {form.agentPhone}</p>}
-                  {form.agentFax && <p>Fax: {form.agentFax}</p>}
-                  {form.agentMobile && <p>Mobile: {form.agentMobile}</p>}
-                  {form.agentEmail && <p>Email: {form.agentEmail}</p>}
-                  {form.agentAddress && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{form.agentAddress}</p>}
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Surveyor at Load Port</Label>
-                <Select value={form.surveyor} onValueChange={v => set('surveyor', v)}>
-                  <SelectTrigger data-testid="di-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
-                  <SelectContent>
-                    {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Original Docs Address */}
-            <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Original Documents Address</h3>
-              <Textarea value={form.originalDocsAddress} onChange={e => set('originalDocsAddress', e.target.value)} rows={3} placeholder="Full multiline address" />
-            </div>
-
             {/* Consignee & Notify */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Consignee & Notify Party</h3>
@@ -467,6 +417,56 @@ export default function DocInstructionsPage() {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Shipment & Port */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Shipment & Port Details</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Discharge Port</Label>
+                  <Select value={form.dischargePort} onValueChange={handlePortSelect}>
+                    <SelectTrigger data-testid="di-port-select"><SelectValue placeholder="Select port" /></SelectTrigger>
+                    <SelectContent>
+                      {portNames.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Disport Agent</Label>
+                  <Select value={form.agentId} onValueChange={handleAgentSelect}>
+                    <SelectTrigger data-testid="di-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
+                    <SelectContent>
+                      {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.port})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              {form.agentName && (
+                <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
+                  <p className="font-medium">{form.agentName}</p>
+                  {form.agentPhone && <p>Tel: {form.agentPhone}</p>}
+                  {form.agentFax && <p>Fax: {form.agentFax}</p>}
+                  {form.agentMobile && <p>Mobile: {form.agentMobile}</p>}
+                  {form.agentEmail && <p>Email: {form.agentEmail}</p>}
+                  {form.agentAddress && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{form.agentAddress}</p>}
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Surveyor at Load Port</Label>
+                <Select value={form.surveyor} onValueChange={v => set('surveyor', v)}>
+                  <SelectTrigger data-testid="di-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
+                  <SelectContent>
+                    {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Original Docs Address */}
+            <div className="space-y-2">
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Original Documents Address</h3>
+              <Textarea value={form.originalDocsAddress} onChange={e => set('originalDocsAddress', e.target.value)} rows={3} placeholder="Full multiline address" />
             </div>
           </div>
           <DialogFooter>

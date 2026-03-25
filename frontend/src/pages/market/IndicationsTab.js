@@ -239,7 +239,7 @@ export default function IndicationsTab() {
                   <p className="text-sm text-muted-foreground text-center py-2">No comments yet</p>
                 ) : (
                   (marketNews[category] || []).map((note) => (
-                    <div key={note.id} className="py-1.5 border-b border-muted/40 group">
+                    <div key={note.id} className="py-1.5 border-b border-border group">
                       <p className="text-sm">{note.content}</p>
                       <div className="flex items-center justify-between mt-0.5">
                         <span className="text-[11px] text-muted-foreground italic">

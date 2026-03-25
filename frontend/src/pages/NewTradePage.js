@@ -99,6 +99,7 @@ export default function NewTradePage() {
   const [ports, setPorts] = useState([]);
   const [surveyors, setSurveyors] = useState([]);
   const [vessels, setVessels] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
@@ -119,17 +120,20 @@ export default function NewTradePage() {
     brokerTradeContact: null, brokerExecutionContact: null,
     coBrokerTradeContact: null, coBrokerExecutionContact: null,
     executionHandledBy: 'Alena Karagoz',
+    brokerName: 'Salih Karagoz',
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pa, co, or, po, su, ve] = await Promise.all([
+        const [pa, co, or, po, su, ve, us] = await Promise.all([
           api.get('/api/partners'), api.get('/api/commodities'), api.get('/api/origins'),
           api.get('/api/ports'), api.get('/api/surveyors'), api.get('/api/vessels'),
+          api.get('/api/users'),
         ]);
         setPartners(pa.data); setCommodities(co.data); setOrigins(or.data);
         setPorts(po.data); setSurveyors(su.data); setVessels(ve.data);
+        setAllUsers(us.data);
 
         // Default origin to Russia for new contracts
         if (!isEdit) {
@@ -207,6 +211,7 @@ export default function NewTradePage() {
             coBrokerTradeContact: t.coBrokerTradeContact || null,
             coBrokerExecutionContact: t.coBrokerExecutionContact || null,
             executionHandledBy: t.executionHandledBy || '',
+            brokerName: t.brokerName || 'Salih Karagoz',
           });
           setLoadingTrade(false);
         } else {
@@ -381,6 +386,15 @@ export default function NewTradePage() {
             </Select>
           </div>
           <div className="space-y-2">
+            <Label>Broker Name</Label>
+            <Select value={form.brokerName || 'Salih Karagoz'} onValueChange={(v) => set('brokerName', v)}>
+              <SelectTrigger data-testid="broker-name-select"><SelectValue placeholder="Select broker name" /></SelectTrigger>
+              <SelectContent>
+                {allUsers.filter(u => u.username !== 'pir.accounts').map(u => <SelectItem key={u.username} value={u.name}>{u.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label>Co-Broker</Label>
             <Select value={form.coBrokerId} onValueChange={handleCoBrokerChange}>
               <SelectTrigger><SelectValue placeholder="Select co-broker" /></SelectTrigger>
@@ -411,44 +425,48 @@ export default function NewTradePage() {
 
       <Card>
         <CardHeader><CardTitle>Commodity Details</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Commodity *</Label>
-            <Select value={form.commodityId} onValueChange={(v) => {
-              set('commodityId', v);
-              const comm = commodities.find(c => c.id === v);
-              set('commoditySpecs', comm?.specs || '');
-            }}>
-              <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
-              <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-            </Select>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Commodity *</Label>
+              <Select value={form.commodityId} onValueChange={(v) => {
+                set('commodityId', v);
+                const comm = commodities.find(c => c.id === v);
+                set('commoditySpecs', comm?.specs || '');
+              }}>
+                <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
+                <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Crop Year</Label>
+              <Select value={form.cropYear} onValueChange={(v) => set('cropYear', v)}>
+                <SelectTrigger data-testid="crop-year-select"><SelectValue placeholder="Select crop year" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={String(new Date().getFullYear())}>{new Date().getFullYear()}</SelectItem>
+                  <SelectItem value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Origin</Label>
+              <Select value={form.originId} onValueChange={(v) => set('originId', v)}>
+                <SelectTrigger><SelectValue placeholder="Select origin" /></SelectTrigger>
+                <SelectContent>{origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label>Quantity (MT)</Label>
+              <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => { const qty = e.target.value.replace(/,/g, ''); set('quantity', qty); const n = parseInt(qty); if (n === 3000) set('dischargeRate', '1000'); else if (n === 5000) set('dischargeRate', '1500'); }} placeholder="0" />
+            </div>
+            <div className="space-y-2">
+              <Label>Tolerance (%)</Label>
+              <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
+            </div>
           </div>
           <div className="space-y-2">
-            <Label>Crop Year</Label>
-            <Select value={form.cropYear} onValueChange={(v) => set('cropYear', v)}>
-              <SelectTrigger data-testid="crop-year-select"><SelectValue placeholder="Select crop year" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={String(new Date().getFullYear())}>{new Date().getFullYear()}</SelectItem>
-                <SelectItem value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Origin</Label>
-            <Select value={form.originId} onValueChange={(v) => set('originId', v)}>
-              <SelectTrigger><SelectValue placeholder="Select origin" /></SelectTrigger>
-              <SelectContent>{origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Quantity (MT)</Label>
-            <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => { const qty = e.target.value.replace(/,/g, ''); set('quantity', qty); const n = parseInt(qty); if (n === 3000) set('dischargeRate', '1000'); else if (n === 5000) set('dischargeRate', '1500'); }} placeholder="0" />
-          </div>
-          <div className="space-y-2">
-            <Label>Tolerance (%)</Label>
-            <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
-          </div>
-          <div className="col-span-4 space-y-2">
             <Label>Commodity Specs.</Label>
             <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" placeholder="Enter commodity specifications" />
           </div>

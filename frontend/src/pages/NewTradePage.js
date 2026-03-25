@@ -172,7 +172,7 @@ export default function NewTradePage() {
             cropYear: t.cropYear || new Date().getFullYear().toString(),
             quantity: t.quantity != null ? String(t.quantity) : '',
             tolerance: t.tolerance || '',
-            deliveryTerm: t.deliveryTerm || '',
+            deliveryTerm: t.deliveryTerm || 'CIF',
             pricePerMT: t.pricePerMT != null ? String(t.pricePerMT) : '',
             currency: t.currency || 'USD',
             paymentTerms: t.paymentTerms || '',
@@ -214,6 +214,11 @@ export default function NewTradePage() {
             brokerName: t.brokerName || 'Salih Karagoz',
           });
           setLoadingTrade(false);
+          // Auto-select CIF Marmara Ports if no base port set
+          if (!t.basePortId) {
+            const mp = po.data.find(p => p.name === 'CIF Marmara Ports');
+            if (mp) setForm(prev => ({ ...prev, basePortId: mp.id }));
+          }
         } else {
           // Auto-select Pir Grain as default Broker
           const pirGrain = pa.data.find(p => {
@@ -226,7 +231,7 @@ export default function NewTradePage() {
           // Auto-select CIF Marmara Ports as default Base Port
           const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');
           if (marmaraPorts) {
-            setForm(prev => ({ ...prev, basePortId: marmaraPorts.id }));
+            setForm(prev => prev.basePortId ? prev : ({ ...prev, basePortId: marmaraPorts.id }));
           }
         }
       } catch (err) { console.error(err); }

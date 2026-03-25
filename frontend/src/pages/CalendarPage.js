@@ -130,7 +130,7 @@ export default function CalendarPage() {
                       {isCurrentMonth && (<>
                       <div className={`text-sm font-medium mb-1 ${isToday(date) ? 'text-primary font-bold' : ''}`}>
                         {format(date, 'd')}
-                        {dayHolidays.length > 0 && <span className="ml-1 inline-flex gap-0.5">{dayHolidays.map((h, fi) => <img key={fi} src={h.flag} alt={h.country} className="inline h-3 w-4 object-cover rounded-sm" />)}</span>}
+                        {dayHolidays.length > 0 && null}
                       </div>
                       {dayHolidays.slice(0, 1).map((h, j) => (
                         <div key={`h-${j}`} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate border flex items-center gap-1 ${h.colorClass}`}><img src={h.flag} alt={h.country} className="h-3 w-4 object-cover rounded-sm shrink-0" /> {h.title}</div>

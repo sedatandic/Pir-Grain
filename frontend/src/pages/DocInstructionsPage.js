@@ -347,7 +347,7 @@ export default function DocInstructionsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-green-700">{editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction'}</DialogTitle>
+            <DialogTitle className="text-green-700 text-center">{editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5">
             {/* Contract Selection */}
@@ -356,8 +356,8 @@ export default function DocInstructionsPage() {
               <Select value={form.tradeId} onValueChange={v => set('tradeId', v)} disabled={!!editingId}>
                 <SelectTrigger data-testid="di-contract-select"><SelectValue placeholder="Select contract" /></SelectTrigger>
                 <SelectContent>
-                  {trades.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.pirContractNumber || t.contractNumber || t.id}</SelectItem>
+                  {trades.filter(t => t.pirContractNumber || t.contractNumber).map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.pirContractNumber || t.contractNumber}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

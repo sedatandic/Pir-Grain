@@ -149,7 +149,7 @@ export default function TMOTendersTab() {
                 <div className="cursor-pointer select-none" onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}>
                   <div className="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center">
                     {expandedTenders[tender.id] ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" /> : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />}
-                    <h3 className="font-bold text-lg tracking-wide text-center flex-1">
+                    <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700">
                       {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
                     </h3>
                   </div>

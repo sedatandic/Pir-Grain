@@ -303,8 +303,18 @@ export default function CommissionsPage() {
             );
             })}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={showInvoice ? 11 : 10} className="text-right">Total:</TableCell>
-              <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0), filtered.length > 0 ? getCommCurrency(filtered[0]) : 'USD')}</TableCell>
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell />
+              <TableCell className="text-right">Total:</TableCell>
+              <TableCell className="font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0), filtered.length > 0 ? getCommCurrency(filtered[0]) : 'USD')}</TableCell>
+              {showInvoice && <TableCell />}
+              <TableCell />
+              <TableCell />
             </TableRow>
           </TableBody>
         </Table>

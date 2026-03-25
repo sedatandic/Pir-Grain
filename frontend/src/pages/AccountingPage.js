@@ -463,6 +463,7 @@ export default function AccountingPage() {
                 </PopoverContent>
               </Popover>
             </div>
+            {form.direction === 'outgoing' && (
             <div className="space-y-2"><Label>Due Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -476,6 +477,7 @@ export default function AccountingPage() {
                 </PopoverContent>
               </Popover>
             </div>
+            )}
             <div className="space-y-2"><Label>Category</Label>
               <Select value={form.category} onValueChange={(v) => setForm({...form, category: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{(form.direction === 'incoming' ? INCOMING_CATEGORIES : OUTGOING_CATEGORIES).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
             </div>

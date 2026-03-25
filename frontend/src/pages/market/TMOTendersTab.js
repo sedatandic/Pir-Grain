@@ -144,15 +144,15 @@ export default function TMOTendersTab() {
           {sortedTenders.map((tender) => {
             const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
             return (
-              <Card key={tender.id} className="overflow-hidden border-2 border-gray-300" data-testid={`tender-card-${tender.id}`}>
+              <Card key={tender.id} className="overflow-hidden border-2 border-border" data-testid={`tender-card-${tender.id}`}>
                 <div className="cursor-pointer select-none" onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}>
-                  <div className="bg-gray-100 border-b border-gray-300 px-4 py-2 flex items-center">
+                  <div className="bg-muted border-b border-border px-4 py-2 flex items-center">
                     {expandedTenders[tender.id] ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" /> : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />}
                     <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700">
                       {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
                     </h3>
                   </div>
-                  <div className="bg-gray-50 border-b border-gray-300 px-4 py-1.5 text-center">
+                  <div className="bg-muted/50 border-b border-border px-4 py-1.5 text-center">
                     <p className="font-medium text-sm text-muted-foreground">
                       {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
                         ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 
@@ -164,9 +164,9 @@ export default function TMOTendersTab() {
                 {expandedTenders[tender.id] && (
                   <>
                     <CardContent className="p-0">
-                      <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300 [&_th]:align-middle [&_td]:align-middle">
+                      <Table className="border-collapse [&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border [&_th]:align-middle [&_td]:align-middle">
                         <TableHeader>
-                          <TableRow className="bg-gray-100">
+                          <TableRow className="bg-muted">
                             <TableHead className="font-bold text-green-700 text-sm text-center">Company</TableHead>
                             <TableHead className="font-bold text-green-700 text-sm text-center">Port</TableHead>
                             <TableHead className="font-bold text-green-700 text-sm text-center">Quantity (Mts)</TableHead>

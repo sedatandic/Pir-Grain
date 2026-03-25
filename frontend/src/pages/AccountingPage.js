@@ -40,7 +40,19 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
           filtered.map(inv => {
             const trade = tradeMap?.[inv.tradeId];
             const commodityName = trade?.commodityName || '-';
-            const invoiceDate = inv.createdAt ? (() => { try { return format(parseISO(inv.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-';
+            const invoiceDate = (inv.invoiceDate || inv.createdAt) ? (() => { 
+              const raw = inv.invoiceDate || inv.createdAt;
+              try { 
+                if (raw.includes('/')) return raw;
+                return format(parseISO(raw), 'dd/MM/yyyy'); 
+              } catch { return raw || '-'; }
+            })() : '-';
+            const fmtDueDate = inv.dueDate ? (() => {
+              try {
+                if (inv.dueDate.includes('/')) return inv.dueDate;
+                return format(parseISO(inv.dueDate), 'dd/MM/yyyy');
+              } catch { return inv.dueDate; }
+            })() : '-';
             return (
             <TableRow key={inv.id}>
               <TableCell><Badge className={STATUS_CONFIG[inv.status]?.color||'bg-muted'}>{STATUS_CONFIG[inv.status]?.label||inv.status?.toUpperCase()}</Badge></TableCell>
@@ -50,7 +62,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
               <TableCell className="text-sm max-w-[150px]">{commodityName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
-              <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
+              <TableCell className="text-sm">{fmtDueDate}</TableCell>
               <TableCell className="text-center">
                 {inv.tradeId ? (
                   <Button variant="outline" size="sm" onClick={() => onDownloadInvoice && onDownloadInvoice(inv)} data-testid={`invoice-pdf-${inv.id}`}>
@@ -91,7 +103,7 @@ export default function AccountingPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
+  const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', invoiceDate: '', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: '' });
@@ -175,12 +187,12 @@ export default function AccountingPage() {
 
   const openCreate = (direction) => {
     setEditingInvoice(null);
-    setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', dueDate: '', category: direction === 'incoming' ? 'Commission Payment' : 'Salary Payment', description: '', status: 'pending', direction });
+    setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', invoiceDate: '', dueDate: '', category: direction === 'incoming' ? 'Commission Payment' : 'Salary Payment', description: '', status: 'pending', direction });
     setDialogOpen(true);
   };
   const openEdit = (inv) => {
     setEditingInvoice(inv);
-    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
+    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', invoiceDate: inv.invoiceDate?.split('T')[0]||'', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
     setDialogOpen(true);
   };
 
@@ -437,6 +449,19 @@ export default function AccountingPage() {
             <div className="space-y-2"><Label>Amount *</Label><Input type="text" inputMode="decimal" value={form.amount} onChange={(e) => setForm(f => ({...f, amount: e.target.value}))} placeholder="0.00" /></div>
             <div className="space-y-2"><Label>Currency</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>
+            </div>
+            <div className="space-y-2"><Label>Invoice Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.invoiceDate && 'text-muted-foreground')}>
+                    <CalendarDays className="mr-2 h-4 w-4" />
+                    {form.invoiceDate ? (() => { try { const [y,m,d] = form.invoiceDate.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.invoiceDate; } catch { return form.invoiceDate; } })() : 'Pick a date'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={form.invoiceDate ? (() => { try { return parseISO(form.invoiceDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, invoiceDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2"><Label>Due Date</Label>
               <Popover>

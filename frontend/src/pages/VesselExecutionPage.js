@@ -384,12 +384,12 @@ export default function VesselExecutionPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-muted/50 border-b">
-              <th className="text-left px-4 py-2.5 font-medium">Contract</th>
-              <th className="text-left px-4 py-2.5 font-medium">Commodity</th>
-              <th className="text-right px-4 py-2.5 font-medium">Quantity</th>
-              <th className="text-left px-4 py-2.5 font-medium">Seller</th>
-              <th className="text-left px-4 py-2.5 font-medium">Buyer</th>
-              <th className="text-left px-4 py-2.5 font-medium">Vessel</th>
+              <th className="text-center px-4 py-2.5 font-medium">Contract</th>
+              <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
+              <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
+              <th className="text-center px-4 py-2.5 font-medium">Seller</th>
+              <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+              <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
             </tr>
           </thead>
           <tbody>
@@ -400,12 +400,12 @@ export default function VesselExecutionPage() {
                 className={`border-b cursor-pointer transition-colors hover:bg-muted/30 ${selectedTradeId === t.id ? 'bg-primary/10 border-l-4 border-l-primary' : ''}`}
                 data-testid={`ve-contract-row-${t.id}`}
               >
-                <td className="px-4 py-2.5 font-medium">{t.pirContractNumber || t.contractNumber}</td>
-                <td className="px-4 py-2.5">{t.originAdjective || t.originName} {t.commodityName}</td>
-                <td className="px-4 py-2.5 text-right">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
-                <td className="px-4 py-2.5">{t.sellerCode || t.sellerName || '-'}</td>
-                <td className="px-4 py-2.5">{t.buyerCode || t.buyerName || '-'}</td>
-                <td className="px-4 py-2.5 font-medium uppercase">{t.vesselName}</td>
+                <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber}</td>
+                <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
+                <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
               </tr>
             ))}
           </tbody>

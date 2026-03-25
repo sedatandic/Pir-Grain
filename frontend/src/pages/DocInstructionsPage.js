@@ -400,7 +400,7 @@ export default function DocInstructionsPage() {
 
             {/* Consignee & Notify */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Consignee & Notify Party</h3>
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Consignee & Notify Party</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Consignee</Label>

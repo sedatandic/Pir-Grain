@@ -254,7 +254,7 @@ export default function TurkishExchangesTab() {
   return (
     <div className="space-y-4 mt-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold" data-testid="turkish-exchanges-title">Turkish Commodity Exchange Prices</h2>
+        <h2 className="text-lg font-semibold text-green-700" data-testid="turkish-exchanges-title">Turkish Commodity Exchange Prices</h2>
         <div className="flex gap-2">
           <Button onClick={handleScrapeExchanges} disabled={scrapingKTB} size="sm" variant="outline" data-testid="fetch-prices-btn">
             {scrapingKTB ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}

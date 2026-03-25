@@ -25,6 +25,7 @@ const emptyContact = { name: '', email: '', phone: '' };
 const emptyForm = {
   companyName: '', companyCode: '', contactPerson: '', address: '', city: '', country: '',
   email: '', phone: '', whatsapp: '', type: [], origins: '', notes: '',
+  taxIdNo: '', taxOffice: '',
   tradeContacts: [], executionContacts: [],
 };
 
@@ -152,7 +153,7 @@ export default function PartnersPage({ filterType }) {
       city: p.city || '', country: p.country || '',
       email: p.email || '', phone: p.phone || '', whatsapp: p.whatsapp || '',
       type: Array.isArray(p.type) ? p.type : (p.type ? [p.type] : ['buyer']), origins: (p.origins || []).join(', '),
-      notes: p.notes || '',
+      notes: p.notes || '', taxIdNo: p.taxIdNo || '', taxOffice: p.taxOffice || '',
       tradeContacts: (p.tradeContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
       executionContacts: (p.executionContacts || []).map(c => ({ name: c.name || '', email: c.email || '', phone: c.phone || '' })),
     });
@@ -268,7 +269,7 @@ export default function PartnersPage({ filterType }) {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
-          <DialogHeader className="text-center"><DialogTitle>{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription>Fill in the details below.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle className="text-center">{editingPartner ? 'Edit Counterparty' : 'Add New Counterparty'}</DialogTitle><DialogDescription className="text-center">Fill in the details below.</DialogDescription></DialogHeader>
           <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>
@@ -299,6 +300,8 @@ export default function PartnersPage({ filterType }) {
               <div className="col-span-2 space-y-2"><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({...form, address: e.target.value})} /></div>
               <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={(e) => setForm({...form, city: e.target.value})} /></div>
               <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={(e) => setForm({...form, country: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Tax ID No</Label><Input value={form.taxIdNo} onChange={(e) => setForm({...form, taxIdNo: e.target.value})} /></div>
+              <div className="space-y-2"><Label>Tax Office</Label><Input value={form.taxOffice} onChange={(e) => setForm({...form, taxOffice: e.target.value})} /></div>
 
               <div className="col-span-2"><Separator className="my-1" /></div>
 

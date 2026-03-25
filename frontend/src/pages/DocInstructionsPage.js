@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 const DEFAULT_FORM = {
   tradeId: '', dischargePort: '', agentId: '', agentName: '', agentPhone: '', agentFax: '',
   agentMobile: '', agentEmail: '', agentWeb: '', agentAddress: '', surveyor: '',
-  originalDocsAddress: '', consigneeOption: 'to_order', consigneeCustom: '',
+  sellerSurveyor: '', originalDocsAddress: '', consigneeOption: 'to_order', consigneeCustom: '',
   consigneeBuyerId: '', notifyOption: 'buyer_details', notifyCustom: '', notifyBuyerId: '',
 };
 
@@ -74,9 +74,10 @@ export default function DocInstructionsPage() {
     }
   };
 
-  const handlePortSelect = (portName) => {
-    set('dischargePort', portName);
-    // Auto-select agent if one matches the port
+  const handlePortSelect = (portDisplay) => {
+    set('dischargePort', portDisplay);
+    // Extract port name for agent matching
+    const portName = portDisplay.split(',')[0].trim();
     const matchingAgent = agents.find(a => a.port && a.port.toLowerCase() === portName.toLowerCase());
     if (matchingAgent) {
       handleAgentSelect(matchingAgent.id);
@@ -105,13 +106,15 @@ export default function DocInstructionsPage() {
 
   const handleEdit = (di) => {
     setEditingId(di.id);
+    const trade = trades.find(t => t.id === di.tradeId);
     setForm({
       tradeId: di.tradeId || '', dischargePort: di.dischargePort || '',
       agentId: di.agentId || '', agentName: di.agentName || '',
       agentPhone: di.agentPhone || '', agentFax: di.agentFax || '',
       agentMobile: di.agentMobile || '', agentEmail: di.agentEmail || '',
       agentWeb: di.agentWeb || '', agentAddress: di.agentAddress || '',
-      surveyor: di.surveyor || '', originalDocsAddress: di.originalDocsAddress || '',
+      surveyor: di.surveyor || '', sellerSurveyor: di.sellerSurveyor || trade?.sellerSurveyor || '',
+      originalDocsAddress: di.originalDocsAddress || '',
       consigneeOption: di.consigneeOption || 'to_order', consigneeCustom: di.consigneeCustom || '',
       consigneeBuyerId: di.consigneeBuyerId || '', notifyOption: di.notifyOption || 'buyer_details',
       notifyCustom: di.notifyCustom || '', notifyBuyerId: di.notifyBuyerId || '',
@@ -209,8 +212,21 @@ export default function DocInstructionsPage() {
   const formNotify = form.notifyOption === 'buyer_details' ? getBuyerDisplay(form.notifyBuyerId) :
     form.notifyCustom || '—';
 
-  // Only discharge ports for DI
-  const portNames = [...new Set(ports.filter(p => p.type === 'discharge').map(p => p.name))].sort();
+  // Discharge ports with country for display
+  const dischargePorts = [...new Map(
+    ports.filter(p => p.type === 'discharge')
+      .map(p => [`${p.name}, ${p.country}`, { name: p.name, country: p.country, display: `${p.name}, ${p.country}` }])
+  ).values()].sort((a, b) => a.display.localeCompare(b.display));
+
+  // Handle trade selection - auto-populate seller surveyor
+  const handleTradeSelect = (tradeId) => {
+    const trade = trades.find(t => t.id === tradeId);
+    setForm(prev => ({
+      ...prev,
+      tradeId,
+      sellerSurveyor: trade?.sellerSurveyor || '',
+    }));
+  };
 
   return (
     <div className="space-y-6" data-testid="doc-instructions-page">
@@ -284,7 +300,8 @@ export default function DocInstructionsPage() {
                         ['Agent at Discharge Port', previewDi.agentName || '—'],
                         ['Agent Contacts', `Tel: ${previewDi.agentPhone || '—'}  •  Fax: ${previewDi.agentFax || '—'}  •  Mob: ${previewDi.agentMobile || '—'}`],
                         ['Agent Email / Web', `${previewDi.agentEmail || '—'}  •  ${previewDi.agentWeb || '—'}`],
-                        ['Surveyor at Load Port', previewDi.surveyor || '—'],
+                        ['Buyer Surveyor at Load Port', previewDi.surveyor || '—'],
+                        ['Seller Surveyor at Load Port', previewDi.sellerSurveyor || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); return t?.sellerSurveyor || '—'; })()],
                       ].map(([label, val], i) => (
                         <tr key={i}>
                           <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>{label}</th>
@@ -354,7 +371,7 @@ export default function DocInstructionsPage() {
             {/* Contract Selection */}
             <div className="space-y-2">
               <Label>Contract *</Label>
-              <Select value={form.tradeId} onValueChange={v => set('tradeId', v)} disabled={!!editingId}>
+              <Select value={form.tradeId} onValueChange={handleTradeSelect} disabled={!!editingId}>
                 <SelectTrigger data-testid="di-contract-select"><SelectValue placeholder="Select contract" /></SelectTrigger>
                 <SelectContent>
                   {trades.filter(t => t.pirContractNumber || t.contractNumber).map(t => (
@@ -429,7 +446,7 @@ export default function DocInstructionsPage() {
                   <Select value={form.dischargePort} onValueChange={handlePortSelect}>
                     <SelectTrigger data-testid="di-port-select"><SelectValue placeholder="Select port" /></SelectTrigger>
                     <SelectContent>
-                      {portNames.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      {dischargePorts.map(p => <SelectItem key={p.display} value={p.display}>{p.display}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -454,13 +471,23 @@ export default function DocInstructionsPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Surveyor at Load Port</Label>
+                <Label>Buyer Surveyor at Load Port</Label>
                 <Select value={form.surveyor} onValueChange={v => set('surveyor', v)}>
                   <SelectTrigger data-testid="di-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
                   <SelectContent>
                     {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Seller Surveyor at Load Port</Label>
+                <Input
+                  value={form.sellerSurveyor || ''}
+                  readOnly
+                  className="bg-muted/50 cursor-default"
+                  placeholder={form.tradeId ? 'No seller surveyor on this contract' : 'Select a contract first'}
+                  data-testid="di-seller-surveyor"
+                />
               </div>
             </div>
 

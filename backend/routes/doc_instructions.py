@@ -32,6 +32,7 @@ class DocInstructionCreate(BaseModel):
     agentWeb: str = ""
     agentAddress: str = ""
     surveyor: str = ""
+    sellerSurveyor: str = ""
     originalDocsAddress: str = ""
     consigneeOption: str = "to_order"
     consigneeCustom: str = ""
@@ -52,6 +53,7 @@ class DocInstructionUpdate(BaseModel):
     agentWeb: Optional[str] = None
     agentAddress: Optional[str] = None
     surveyor: Optional[str] = None
+    sellerSurveyor: Optional[str] = None
     originalDocsAddress: Optional[str] = None
     consigneeOption: Optional[str] = None
     consigneeCustom: Optional[str] = None
@@ -106,6 +108,10 @@ async def create_doc_instruction(data: DocInstructionCreate, user=Depends(get_cu
     doc["createdByName"] = user.get("name", user.get("username"))
     doc["createdAt"] = datetime.now(timezone.utc).isoformat()
     doc["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+    # Auto-populate seller surveyor from trade if not provided
+    if not doc.get("sellerSurveyor"):
+        doc["sellerSurveyor"] = trade.get("sellerSurveyor", "")
 
     # Store resolved buyer details
     if data.consigneeBuyerId:
@@ -187,7 +193,8 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Agent at Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('agentName', '—')}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Agent Contacts</th><td style="border: 1px solid #ccc; padding: 8px;">Tel: {doc.get('agentPhone', '—')} &bull; Fax: {doc.get('agentFax', '—')} &bull; Mob: {doc.get('agentMobile', '—')}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Agent Email / Web</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('agentEmail', '—')} &bull; {doc.get('agentWeb', '—')}</td></tr>
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('surveyor', '—')}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Buyer Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('surveyor', '—')}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>
     </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">2. Address for Original Documents</h3>

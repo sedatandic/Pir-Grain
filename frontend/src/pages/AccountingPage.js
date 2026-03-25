@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
-import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, ArrowDownLeft, ArrowUpRight, CalendarDays, X, Upload, Download } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Loader2, DollarSign, CheckCircle, Clock, Receipt, FileText, FileDown, ArrowDownLeft, ArrowUpRight, CalendarDays, X, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -26,17 +26,17 @@ const STATUS_CONFIG = {
   overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
-function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap, onPaymentDate }) {
+function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap, onPaymentDate, onDownloadInvoice }) {
   const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
   const fmtAmt = (n, cur) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0)} ${cur || 'USD'}`;
   return (
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="text-center">Invoice PDF</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {filtered.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
+          {filtered.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
           filtered.map(inv => {
             const trade = tradeMap?.[inv.tradeId];
             const commodityName = trade?.commodityName || '-';
@@ -51,6 +51,13 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{inv.dueDate ? (() => { try { return format(parseISO(inv.dueDate), 'dd/MM/yyyy'); } catch { return inv.dueDate; }})() : '-'}</TableCell>
+              <TableCell className="text-center">
+                {inv.tradeId ? (
+                  <Button variant="outline" size="sm" onClick={() => onDownloadInvoice && onDownloadInvoice(inv)} data-testid={`invoice-pdf-${inv.id}`}>
+                    <FileDown className="h-3.5 w-3.5 mr-1" />PDF
+                  </Button>
+                ) : '-'}
+              </TableCell>
               <TableCell className="text-sm">
                 <div className="flex items-center gap-1">
                   <Popover>
@@ -200,6 +207,20 @@ export default function AccountingPage() {
     } catch { toast.error('Failed to update payment date'); }
   };
 
+  const handleDownloadInvoice = async (inv) => {
+    if (!inv.tradeId) return;
+    try {
+      const res = await api.get(`/api/commission-invoice/${inv.tradeId}?account=seller`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice_${inv.invoiceNumber || inv.tradeId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded');
+    } catch { toast.error('Failed to download invoice'); }
+  };
+
   const handleSaveStmt = async () => {
     setSaving(true);
     try {
@@ -267,7 +288,7 @@ export default function AccountingPage() {
 
       <Tabs defaultValue="incoming">
         <TabsList>
-          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({filteredIncoming.length})</TabsTrigger>
+          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({filteredIncoming.filter(i => i.status === 'paid').length})</TabsTrigger>
           <TabsTrigger value="outgoing"><ArrowUpRight className="h-3.5 w-3.5 mr-1" />Outgoing Payments ({filteredOutgoing.length})</TabsTrigger>
           <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({filteredBankStatements.length})</TabsTrigger>
         </TabsList>
@@ -279,14 +300,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <h3 className="font-semibold text-sm mb-2 text-amber-700">Pending ({filteredIncoming.filter(i => i.status !== 'paid').length})</h3>
-              <InvoiceTable invoices={filteredIncoming.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
-              {filteredIncoming.filter(i => i.status === 'paid').length > 0 && (
-                <>
-                  <h3 className="font-semibold text-sm mt-6 mb-2 text-green-700">Paid ({filteredIncoming.filter(i => i.status === 'paid').length})</h3>
-                  <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
-                </>
-              )}
+              <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -299,11 +313,11 @@ export default function AccountingPage() {
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
               <h3 className="font-semibold text-sm mb-2 text-amber-700">Pending ({filteredOutgoing.filter(i => i.status !== 'paid').length})</h3>
-              <InvoiceTable invoices={filteredOutgoing.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
+              <InvoiceTable invoices={filteredOutgoing.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
               {filteredOutgoing.filter(i => i.status === 'paid').length > 0 && (
                 <>
                   <h3 className="font-semibold text-sm mt-6 mb-2 text-green-700">Paid ({filteredOutgoing.filter(i => i.status === 'paid').length})</h3>
-                  <InvoiceTable invoices={filteredOutgoing.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} />
+                  <InvoiceTable invoices={filteredOutgoing.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
                 </>
               )}
             </CardContent>

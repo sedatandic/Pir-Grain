@@ -364,15 +364,11 @@ export default function TradesPage() {
                     {trade.coBrokerName ? (
                       <>
                         <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
-                        {trade.brokerPersonName && <span className="text-[10px] text-muted-foreground">{trade.brokerPersonName}</span>}
                         <hr className="w-full border-t border-border my-0.5" />
                         <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.coBrokerName, code: trade.coBrokerCode || trade.coBrokerName }); }}>{trade.coBrokerCode || trade.coBrokerName}</span>
                       </>
                     ) : (
-                      <>
-                        <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
-                        {trade.brokerPersonName && <span className="text-[10px] text-muted-foreground">{trade.brokerPersonName}</span>}
-                      </>
+                      <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
                     )}
                   </div>
                 ) : '-'}</TableCell>
@@ -414,21 +410,15 @@ export default function TradesPage() {
                 <TableCell className="text-center font-mono text-sm whitespace-nowrap">{(() => {
                   const basePrice = trade.pricePerMT;
                   const currency = trade.currency || 'USD';
-                  const term = trade.deliveryTerm || '';
-                  const basePortLabel = trade.basePortName || '';
                   if (!basePrice) return '-';
                   const pvs = trade.portVariations || [];
-                  if (pvs.length === 0) {
-                    const portLabel = basePortLabel && basePortLabel.toLowerCase().startsWith(term.toLowerCase()) ? basePortLabel : [term, basePortLabel].filter(Boolean).join(' ');
-                    return <div className="flex flex-col items-center"><span>{basePrice.toLocaleString()} {currency}</span><span className="text-[10px] text-muted-foreground font-sans">{portLabel}</span></div>;
-                  }
+                  if (pvs.length === 0) return `${basePrice.toLocaleString()} ${currency}`;
+                  const term = trade.deliveryTerm || '';
+                  const basePortLabel = trade.basePortName || '';
                   const baseTerm = basePortLabel && basePortLabel.toLowerCase().startsWith(term.toLowerCase()) ? basePortLabel : [term, basePortLabel].filter(Boolean).join(' ');
                   const allPorts = [
-                    { name: baseTerm, price: basePrice, isMarmara: baseTerm.toLowerCase().includes('marmara') },
-                    ...pvs.map(pv => {
-                      const pvName = pv.portName || '';
-                      return { name: pvName, price: basePrice + Number(pv.difference || 0), isMarmara: pvName.toLowerCase().includes('marmara') };
-                    })
+                    { price: basePrice, isMarmara: baseTerm.toLowerCase().includes('marmara') },
+                    ...pvs.map(pv => ({ price: basePrice + Number(pv.difference || 0), isMarmara: (pv.portName || '').toLowerCase().includes('marmara') }))
                   ];
                   const marmara = allPorts.filter(p => p.isMarmara);
                   const others = allPorts.filter(p => !p.isMarmara).sort((a, b) => a.price - b.price);
@@ -439,7 +429,7 @@ export default function TradesPage() {
                   return (
                     <div className="flex flex-col items-center">
                       {sorted.map((p, i) => (
-                        <span key={i}>{i > 0 && <hr className="w-full border-t border-border my-0.5" />}<span>{p.price.toLocaleString()} {currency}</span><br/><span className="text-[10px] text-muted-foreground font-sans">{p.name}</span></span>
+                        <span key={i}>{i > 0 && <hr className="w-full border-t border-border my-0.5" />}{p.price.toLocaleString()} {currency}</span>
                       ))}
                     </div>
                   );

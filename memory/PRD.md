@@ -3,15 +3,23 @@
 ## Core Architecture
 - **Frontend**: React + Shadcn UI (port 3000)
 - **Backend**: FastAPI (port 8001, prefix /api)
-- **Database**: MongoDB
+- **Database**: MongoDB (DB: pir_grain_pulses)
 - **Auth**: JWT-based authentication
 
 ## What's Been Implemented
 
-### Market Data Module (Latest: 2026-03-25)
+### Documentary Instructions Page (Latest: 2026-03-25)
+- Full CRUD for Documentary Instructions linked to contracts
+- Port dropdown shows "Name, Country" format (e.g., "Samsun, Türkiye")
+- **Buyer Surveyor at Load Port**: Dropdown populated from surveyors collection
+- **Seller Surveyor at Load Port**: Read-only field auto-populated from linked contract's B/L data (trade.sellerSurveyor)
+- Email sending to seller with formatted HTML template including both surveyor fields
+- Preview with copy/print functionality
+
+### Market Data Module
 - **Indications Tab** (first): 4 cards (Wheat, Corn, Barley, Others) with drill-down navigation: Years > Months > Weekdays (excludes weekends), inline commenting with display name and AM/PM time
 - **Prices Tab**: Live from Barchart.com with Live badges, 15-min auto-refresh, area chart
-- **Turkish Exchanges Tab**: KTB + GTB scrapers, **NEW: Historical Data Views** (Latest/Daily/Monthly navigation with date drill-down and monthly aggregation)
+- **Turkish Exchanges Tab**: KTB + GTB scrapers, Historical Data Views (Latest/Daily/Monthly navigation with date drill-down and monthly aggregation)
 - **TMO Tenders Tab**: Collapsible cards, COMPANY/PORT/QUANTITY/CIF/EXW, Import/Export, dd/mm/yyyy date pickers
 - **Coaster Freights Tab**: Weekly freight reports from sealines.su, PDF-to-image display, English + Russian text
 - **Telegram Feed Sidebar**: 7 public channels scraped, in-app popup for messages
@@ -24,25 +32,26 @@
 ### Core Features
 - JWT Auth, Trade CRUD, Counterparties, Reference data
 - PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar, Reports
+- URL Migration Guard system
 
 ## Key API Endpoints
-- `GET /api/market/turkish-exchanges` - Get prices (optional ?date=, ?exchange= filters)
-- `GET /api/market/turkish-exchanges/dates` - Available dates grouped by exchange
-- `GET /api/market/turkish-exchanges/monthly` - Monthly aggregated data (?exchange=, &year=, &month=)
-- `GET /api/market/turkish-exchanges/scrape` - Scrape KTB + GTB
-- `GET /api/market/prices` - Live market prices
-- `GET, POST /api/market/notes` - Indications CRUD (now stores createdByName)
-- `GET, POST, PUT, DELETE /api/market/tenders` - TMO tenders
-- `GET /api/market/coaster-freights/{week}` - Freight reports with PDF images
-- `GET /api/market/telegram/messages` - Telegram feed
+- `POST /api/doc-instructions/`: Creates a new Documentary Instruction (includes sellerSurveyor)
+- `GET /api/doc-instructions/`: Retrieves all Documentary Instructions
+- `PUT /api/doc-instructions/{di_id}`: Updates a specific DI
+- `DELETE /api/doc-instructions/{di_id}`: Deletes a specific DI
+- `POST /api/doc-instructions/{di_id}/send-email`: Sends DI email to seller
+- `GET /api/config/active-url`: Public endpoint for URL migration
+- `GET /api/market/turkish-exchanges/ktb/monthly`: Monthly aggregated KTB data
+- `GET /api/prices`: Live market prices (with in-memory cache)
 
 ## Prioritized Backlog
 ### P1
 - Full Server-Side RBAC
 ### P2
 - Google Workspace Integration
-- Backend refactoring (extract scrapers.py module)
+- Backend refactoring (extract scrapers.py module from market_data.py)
 - Copy to Clipboard on TMO tender cards
 - Automatic daily scraping for KTB/GTB
+- Refactor NewTradePage.js (growing complexity)
 ### Clarifications Pending
 - Should "CBOT - Soybeans" be removed from Live Prices table?

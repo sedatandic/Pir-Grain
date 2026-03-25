@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Checkbox } from '../components/ui/checkbox';
 import { TRADE_STATUS_CONFIG } from '../lib/constants';
-import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays, Filter, X } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays, Filter, X, Trash2 } from 'lucide-react';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Link } from 'react-router-dom';
@@ -33,6 +33,8 @@ export default function CommissionsPage() {
   const [editForm, setEditForm] = useState({ brokeragePerMT: 0, brokerageCurrency: 'USD' });
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
   const [pendingInvoice, setPendingInvoice] = useState(null);
+  const [invoiceEditDialog, setInvoiceEditDialog] = useState({ open: false, trade: null });
+  const [invoiceEditForm, setInvoiceEditForm] = useState({ invoiceNo: '', invoiceDate: '', invoiceCurrency: 'USD', exchangeRate: '' });
 
   const openEdit = (t) => {
     setEditForm({ brokeragePerMT: t.brokeragePerMT || 0, brokerageCurrency: t.brokerageCurrency || 'USD' });
@@ -111,9 +113,14 @@ export default function CommissionsPage() {
     };
   }, [trades, search, filterSeller, filterBuyer, filterCommodity, filterOrigin, filterDestination]);
 
-  const fmt = (n) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)} USD`;
+  const fmt = (n, cur = 'USD') => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n)} ${cur}`;
   const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
-  const getBlCommission = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
+  const getBlCommission = (t) => {
+    const base = (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
+    if (t.invoiceCurrency === 'EUR' && t.exchangeRate) return base * t.exchangeRate;
+    return base;
+  };
+  const getCommCurrency = (t) => t.invoiceCurrency || 'USD';
 
   const toggleInvoiceStatus = async (tradeId, currentPaid) => {
     try {
@@ -137,6 +144,42 @@ export default function CommissionsPage() {
       setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, buyerPaymentDate: '', invoicePaid: false } : t));
       toast.success('Payment date cleared & marked as PENDING');
     } catch { toast.error('Failed to clear payment date'); }
+  };
+
+  const openInvoiceEdit = (t) => {
+    const autoNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
+    const autoDate = t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return ''; } })() : '';
+    setInvoiceEditForm({
+      invoiceNo: t.invoiceNo || autoNo,
+      invoiceDate: t.invoiceDate || autoDate,
+      invoiceCurrency: t.invoiceCurrency || 'USD',
+      exchangeRate: t.exchangeRate || '',
+    });
+    setInvoiceEditDialog({ open: true, trade: t });
+  };
+
+  const saveInvoiceEdit = async () => {
+    if (!invoiceEditDialog.trade) return;
+    try {
+      const data = {
+        invoiceNo: invoiceEditForm.invoiceNo,
+        invoiceDate: invoiceEditForm.invoiceDate,
+        invoiceCurrency: invoiceEditForm.invoiceCurrency,
+        exchangeRate: invoiceEditForm.exchangeRate ? parseFloat(invoiceEditForm.exchangeRate) : null,
+      };
+      await api.put(`/api/trades/${invoiceEditDialog.trade.id}`, data);
+      setTrades(prev => prev.map(t => t.id === invoiceEditDialog.trade.id ? { ...t, ...data } : t));
+      toast.success('Invoice updated');
+      setInvoiceEditDialog({ open: false, trade: null });
+    } catch { toast.error('Failed to update invoice'); }
+  };
+
+  const deleteInvoice = async (tradeId) => {
+    try {
+      await api.put(`/api/trades/${tradeId}`, { invoiceNo: '', invoiceDate: '', invoiceCurrency: 'USD', exchangeRate: null, invoicePaid: false, buyerPaymentDate: '' });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, invoiceNo: '', invoiceDate: '', invoiceCurrency: 'USD', exchangeRate: null, invoicePaid: false, buyerPaymentDate: '' } : t));
+      toast.success('Invoice deleted');
+    } catch { toast.error('Failed to delete invoice'); }
   };
 
   const openInvoiceDialog = (tradeId, account) => {
@@ -192,12 +235,14 @@ export default function CommissionsPage() {
             <TableHead>Rate/MT<hr className="my-0.5 border-muted-foreground/30"/>Commission</TableHead>
             {showInvoice && <TableHead className="text-center">Invoice</TableHead>}
             <TableHead className="text-center">Payment Date</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {filtered.map((t, idx) => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
-              const invDate = t.buyerPaymentDate ? t.buyerPaymentDate : (t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-');
-              const invNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
+              const invDate = t.invoiceDate || (t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-');
+              const invNo = t.invoiceNo || `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
+              const commCur = getCommCurrency(t);
               return (
               <TableRow key={t.id} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
                 <TableCell><Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge></TableCell>
@@ -225,7 +270,7 @@ export default function CommissionsPage() {
                 <TableCell className="text-sm">
                   <div className="cursor-pointer hover:text-primary hover:underline" onClick={() => openEdit(t)} data-testid={`edit-rate-${t.id}`}>{t.brokeragePerMT||0} {t.brokerageCurrency || 'USD'}</div>
                   <hr className="my-0.5 border-muted-foreground/20"/>
-                  <div className="font-medium">{fmt(getBlCommission(t))}</div>
+                  <div className="font-medium">{fmt(getBlCommission(t), commCur)}</div>
                 </TableCell>
                 {showInvoice && <TableCell className="text-center">
                   <Button variant="outline" size="sm" onClick={() => openInvoiceDialog(t.id, t.brokerageAccount)} data-testid={`download-invoice-${t.id}`}>
@@ -248,12 +293,18 @@ export default function CommissionsPage() {
                     {t.buyerPaymentDate && <button className="text-destructive hover:text-destructive/80 text-xs p-0.5" onClick={() => clearPaymentDate(t.id)} title="Clear date">&times;</button>}
                   </div>
                 </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openInvoiceEdit(t)} title="Edit invoice"><Pencil className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-red-500 hover:text-red-600" onClick={() => deleteInvoice(t.id)} title="Delete invoice"><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </TableCell>
               </TableRow>
             );
             })}
             <TableRow className="bg-muted/30 font-semibold">
-              <TableCell colSpan={showInvoice ? 10 : 9} className="text-right">Total:</TableCell>
-              <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0))}</TableCell>
+              <TableCell colSpan={showInvoice ? 11 : 10} className="text-right">Total:</TableCell>
+              <TableCell className="text-right font-mono">{fmt(filtered.reduce((s,t)=>s+getBlCommission(t),0), filtered.length > 0 ? getCommCurrency(filtered[0]) : 'USD')}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -336,8 +387,14 @@ export default function CommissionsPage() {
       </div>
 
       <div className="space-y-4">
-        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({stats.pendingCount})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices', true)}</CardContent></Card>
-        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid ({stats.paidCount})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid, 'No paid invoices', true)}</CardContent></Card>
+        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending USD ({applyFilters(categorized.pending.filter(t => (t.invoiceCurrency || 'USD') === 'USD')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending.filter(t => (t.invoiceCurrency || 'USD') === 'USD'), 'No pending USD invoices', true)}</CardContent></Card>
+        {applyFilters(categorized.pending.filter(t => t.invoiceCurrency === 'EUR')).length > 0 && (
+          <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Pending EUR ({applyFilters(categorized.pending.filter(t => t.invoiceCurrency === 'EUR')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending.filter(t => t.invoiceCurrency === 'EUR'), 'No pending EUR invoices', true)}</CardContent></Card>
+        )}
+        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid USD ({applyFilters(categorized.paid.filter(t => (t.invoiceCurrency || 'USD') === 'USD')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid.filter(t => (t.invoiceCurrency || 'USD') === 'USD'), 'No paid USD invoices', true)}</CardContent></Card>
+        {applyFilters(categorized.paid.filter(t => t.invoiceCurrency === 'EUR')).length > 0 && (
+          <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Paid EUR ({applyFilters(categorized.paid.filter(t => t.invoiceCurrency === 'EUR')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid.filter(t => t.invoiceCurrency === 'EUR'), 'No paid EUR invoices', true)}</CardContent></Card>
+        )}
       </div>
 
       {/* Bank Account Selection Dialog */}
@@ -395,6 +452,46 @@ export default function CommissionsPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialog({ open: false, trade: null })}>Cancel</Button>
             <Button onClick={saveEdit} data-testid="save-brokerage-btn">Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Invoice Dialog */}
+      <Dialog open={invoiceEditDialog.open} onOpenChange={(o) => !o && setInvoiceEditDialog({ open: false, trade: null })}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Pencil className="h-4 w-4" />Edit Invoice</DialogTitle>
+          </DialogHeader>
+          {invoiceEditDialog.trade && <p className="text-sm text-muted-foreground">{invoiceEditDialog.trade.pirContractNumber || invoiceEditDialog.trade.referenceNumber}</p>}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Invoice No</Label>
+              <Input value={invoiceEditForm.invoiceNo} onChange={(e) => setInvoiceEditForm(f => ({ ...f, invoiceNo: e.target.value }))} data-testid="edit-invoice-no" />
+            </div>
+            <div className="space-y-2">
+              <Label>Invoice Date</Label>
+              <Input value={invoiceEditForm.invoiceDate} onChange={(e) => setInvoiceEditForm(f => ({ ...f, invoiceDate: e.target.value }))} placeholder="dd/mm/yyyy" data-testid="edit-invoice-date" />
+            </div>
+            <div className="space-y-2">
+              <Label>Invoice Currency</Label>
+              <Select value={invoiceEditForm.invoiceCurrency} onValueChange={(v) => setInvoiceEditForm(f => ({ ...f, invoiceCurrency: v }))}>
+                <SelectTrigger data-testid="edit-invoice-currency"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {invoiceEditForm.invoiceCurrency === 'EUR' && (
+              <div className="space-y-2">
+                <Label>Exchange Rate (EUR per 1 USD)</Label>
+                <Input type="number" step="0.0001" value={invoiceEditForm.exchangeRate} onChange={(e) => setInvoiceEditForm(f => ({ ...f, exchangeRate: e.target.value }))} placeholder="e.g. 0.92" data-testid="edit-exchange-rate" />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvoiceEditDialog({ open: false, trade: null })}>Cancel</Button>
+            <Button onClick={saveInvoiceEdit} data-testid="save-invoice-btn">Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

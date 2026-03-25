@@ -458,7 +458,7 @@ export default function TradeDetailPage() {
                   <span className="font-medium text-right whitespace-pre-line">{trade.commoditySpecs || commodity?.specs || '-'}</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT` : '-'}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-medium">{trade.quantity ? `${trade.quantity.toLocaleString()} MT${trade.tolerance ? ` (+/- ${trade.tolerance}%)` : ''}` : '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Unit Price</span><span className="font-medium">{trade.pricePerMT ? `${trade.currency || 'USD'} ${trade.pricePerMT.toLocaleString()}/MT ${(() => { const port = trade.basePortName || ''; const term = trade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' '); })()}` : '-'}</span></div>
                 {trade.portVariations && trade.portVariations.length > 0 && (

@@ -294,7 +294,7 @@ export default function NewTradePage() {
         await api.post('/api/trades', data);
         toast.success('Trade created');
       }
-      navigate('/trades');
+      navigate(isEdit ? `/trades/${tradeId}` : '/trades');
     } catch (err) {
       toast.error(isEdit ? 'Failed to update trade' : 'Failed to create trade');
     } finally {

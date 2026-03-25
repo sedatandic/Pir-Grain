@@ -3,7 +3,8 @@ import api from '../../lib/api';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Send, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Send, Trash2, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function IndicationsTab() {
@@ -45,6 +46,40 @@ export default function IndicationsTab() {
       setArchiveYears(res.data);
     } catch (err) {
       console.error('Failed to load archive years');
+    }
+  };
+
+  const COMMODITIES = ['11.5% Milling Wheat', 'Corn', 'Barley', 'Wheat Bran Pellets', 'Yellow Peas', 'Chickpeas'];
+  const BASE_PORTS = ['CIF Marmara', 'CIF Mersin'];
+  const ORIGINS = ['Russia', 'Ukraine', 'Moldova'];
+
+  const defaultIndForm = { side: 'Seller', commodity: '11.5% Milling Wheat', basePort: 'CIF Marmara', origin: 'Russia', shipment: '', quantity: '', price: '' };
+  const [indForm, setIndForm] = useState({ Wheat: { ...defaultIndForm }, Corn: { ...defaultIndForm, commodity: 'Corn' }, Barley: { ...defaultIndForm, commodity: 'Barley' }, Others: { ...defaultIndForm } });
+  const [showForm, setShowForm] = useState({ Wheat: false, Corn: false, Barley: false, Others: false });
+
+  const buildIndicationText = (f) => {
+    const parts = [];
+    parts.push(f.side);
+    if (f.quantity) parts.push(`${f.quantity} Mts`);
+    if (f.origin) parts.push(f.origin);
+    if (f.commodity) parts.push(f.commodity);
+    if (f.price) parts.push(`$${f.price}`);
+    if (f.basePort) parts.push(f.basePort);
+    if (f.shipment) parts.push(f.shipment);
+    return parts.join(' ');
+  };
+
+  const handlePostIndication = async (category) => {
+    const f = indForm[category];
+    const content = buildIndicationText(f);
+    if (!content || content === f.side) { toast.error('Fill in at least some fields'); return; }
+    try {
+      await api.post('/api/market/notes', { commodity: category, period: newsPeriod, content, tags: [] });
+      setIndForm(prev => ({ ...prev, [category]: { ...defaultIndForm, commodity: category === 'Wheat' ? '11.5% Milling Wheat' : category === 'Corn' ? 'Corn' : category === 'Barley' ? 'Barley' : defaultIndForm.commodity } }));
+      setShowForm(prev => ({ ...prev, [category]: false }));
+      fetchMarketNews();
+    } catch (err) {
+      toast.error('Failed to post');
     }
   };
 
@@ -199,18 +234,68 @@ export default function IndicationsTab() {
                   ))
                 )}
               </div>
-              <div className="flex gap-2">
-                <Input
-                  data-testid={`news-input-${category.toLowerCase()}`}
-                  placeholder="Type your commentary..."
-                  value={newsInput[category] || ''}
-                  onChange={(e) => setNewsInput(prev => ({ ...prev, [category]: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handlePostComment(category); }}
-                  className="text-sm"
-                />
-                <Button size="sm" data-testid={`news-send-${category.toLowerCase()}`} onClick={() => handlePostComment(category)}>
-                  <Send className="h-4 w-4" />
-                </Button>
+              <div className="space-y-2">
+                {!showForm[category] ? (
+                  <div className="flex gap-2">
+                    <Input
+                      data-testid={`news-input-${category.toLowerCase()}`}
+                      placeholder="Type your commentary..."
+                      value={newsInput[category] || ''}
+                      onChange={(e) => setNewsInput(prev => ({ ...prev, [category]: e.target.value }))}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handlePostComment(category); }}
+                      className="text-sm"
+                    />
+                    <Button size="sm" data-testid={`news-send-${category.toLowerCase()}`} onClick={() => handlePostComment(category)}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowForm(prev => ({ ...prev, [category]: true }))} title="Structured indication">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border rounded-lg p-3 bg-muted/20 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-muted-foreground">New Indication</span>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setShowForm(prev => ({ ...prev, [category]: false }))}><X className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select value={indForm[category].side} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], side: v } }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Seller">Seller</SelectItem>
+                          <SelectItem value="Buyer">Buyer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select value={indForm[category].commodity} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], commodity: v } }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {COMMODITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={indForm[category].basePort} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], basePort: v } }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {BASE_PORTS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <Select value={indForm[category].origin} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], origin: v } }))}>
+                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {ORIGINS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input placeholder="Shipment" value={indForm[category].shipment} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], shipment: e.target.value } }))} className="h-8 text-xs" />
+                      <Input placeholder="Qty (Mts)" value={indForm[category].quantity} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], quantity: e.target.value } }))} className="h-8 text-xs" />
+                      <Input placeholder="Price $" value={indForm[category].price} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], price: e.target.value } }))} className="h-8 text-xs" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-muted-foreground truncate flex-1">{buildIndicationText(indForm[category])}</p>
+                      <Button size="sm" onClick={() => handlePostIndication(category)} className="h-7"><Send className="h-3.5 w-3.5 mr-1" />Post</Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

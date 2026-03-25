@@ -361,7 +361,7 @@ export default function MarketDataPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4 w-full max-w-lg">
-            <TabsTrigger value="news">Market News</TabsTrigger>
+            <TabsTrigger value="news">Indications</TabsTrigger>
             <TabsTrigger value="prices">Prices</TabsTrigger>
             <TabsTrigger value="turkish">Turkish Exchanges</TabsTrigger>
             <TabsTrigger value="tenders">TMO Tenders</TabsTrigger>
@@ -670,7 +670,7 @@ export default function MarketDataPage() {
           {/* MARKET NEWS TAB */}
           <TabsContent value="news" className="space-y-4 mt-4">
             <div className="text-center mb-4">
-              <h2 className="text-lg font-semibold text-green-600">MARKET NEWS</h2>
+              <h2 className="text-lg font-semibold text-green-600">INDICATIONS</h2>
               <p className="text-sm text-muted-foreground">
                 {newsPeriod === 'daily' ? 'Today\'s' : newsPeriod === 'monthly' ? 'Monthly' : ''} Market Commentary
               </p>

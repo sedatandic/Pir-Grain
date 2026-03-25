@@ -355,6 +355,6 @@ def delete_di_document(trade_id: str, user=Depends(non_accountant)):
         os.remove(filepath)
     trades_col.update_one(
         {"_id": ObjectId(trade_id)},
-        {"$unset": {"diDocumentFilename": "", "diDocumentPath": ""}}
+        {"$unset": {"diDocumentFilename": "", "diDocumentPath": ""}, "$set": {"diReceived": False}}
     )
     return {"message": "DI document deleted"}

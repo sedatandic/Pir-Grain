@@ -407,20 +407,15 @@ export default function TradesPage() {
                   const basePrice = trade.pricePerMT;
                   const currency = trade.currency || 'USD';
                   if (!basePrice) return '-';
-                  const dischargePrice = getDischargePortPrice(trade);
                   const pvs = trade.portVariations || [];
-                  if (trade.dischargePortId && pvs.length > 0) {
-                    const matchingPv = pvs.find(pv => pv.portId === trade.dischargePortId);
-                    if (matchingPv) return `${dischargePrice.toLocaleString()} ${currency}`;
-                  }
                   if (pvs.length === 0) return `${basePrice.toLocaleString()} ${currency}`;
-                  // Build same sorted order as delivery term
-                  const allPrices = [
+                  // Build all ports with prices in same sorted order as Delivery Term
+                  const allPorts = [
                     { price: basePrice, isMarmara: (trade.basePortName || '').toLowerCase().includes('marmara') },
                     ...pvs.map(pv => ({ price: basePrice + Number(pv.difference || 0), isMarmara: (pv.portName || '').toLowerCase().includes('marmara') }))
                   ];
-                  const marmara = allPrices.filter(p => p.isMarmara);
-                  const others = allPrices.filter(p => !p.isMarmara).sort((a, b) => a.price - b.price);
+                  const marmara = allPorts.filter(p => p.isMarmara);
+                  const others = allPorts.filter(p => !p.isMarmara).sort((a, b) => a.price - b.price);
                   const sorted = [];
                   if (others.length > 0) sorted.push(others[0]);
                   sorted.push(...marmara);
@@ -428,7 +423,7 @@ export default function TradesPage() {
                   return (
                     <div className="flex flex-col items-center">
                       {sorted.map((p, i) => (
-                        <span key={i}>{i > 0 && <hr className="w-full border-t border-border my-0.5" />}<span className="text-foreground">{p.price.toLocaleString()} {currency}</span></span>
+                        <span key={i}>{i > 0 && <hr className="w-full border-t border-border my-0.5" />}{p.price.toLocaleString()} {currency}</span>
                       ))}
                     </div>
                   );

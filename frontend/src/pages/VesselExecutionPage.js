@@ -423,7 +423,8 @@ export default function VesselExecutionPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor at Load Port</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor at Load Port</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>
@@ -662,9 +663,30 @@ export default function VesselExecutionPage() {
                 <SelectContent>{ports.filter(p => p.type === 'discharge').map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Seller Surveyor</Label><Input value={blForm.sellerSurveyor || ''} onChange={(e) => setBlForm(p => ({ ...p, sellerSurveyor: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>Disport Agent</Label><Input value={blForm.disportAgent || ''} onChange={(e) => setBlForm(p => ({ ...p, disportAgent: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>Load Port Agent</Label><Input value={blForm.loadportAgent || ''} onChange={(e) => setBlForm(p => ({ ...p, loadportAgent: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>Seller Surveyor at Load Port</Label>
+              <Select value={blForm.sellerSurveyor || ''} onValueChange={(v) => setBlForm(p => ({ ...p, sellerSurveyor: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2"><Label>Buyer Surveyor at Load Port</Label>
+              <Select value={blForm.buyerSurveyor || ''} onValueChange={(v) => setBlForm(p => ({ ...p, buyerSurveyor: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2"><Label>Disport Agent</Label>
+              <Select value={blForm.disportAgent || ''} onValueChange={(v) => setBlForm(p => ({ ...p, disportAgent: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{disportAgents.map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2"><Label>Load Port Agent</Label>
+              <Select value={blForm.loadportAgent || ''} onValueChange={(v) => setBlForm(p => ({ ...p, loadportAgent: v }))}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{loadportAgents.map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBlDialogOpen(false)}>Cancel</Button>

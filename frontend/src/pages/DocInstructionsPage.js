@@ -250,23 +250,12 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   // Filter DIs by trade when embedded
   const filteredDiList = filterTradeId ? diList.filter(di => di.tradeId === filterTradeId) : diList;
 
-  // In embedded mode, auto-open create dialog if no DIs exist, or auto-select first DI for preview
+  // In embedded mode, auto-select first DI for preview if exists
   useEffect(() => {
     if (!embedded || !filterTradeId || !dataLoaded) return;
     const existing = diList.filter(di => di.tradeId === filterTradeId);
     if (existing.length > 0) {
       setPreviewDi(existing[0]);
-    } else {
-      const trade = trades.find(t => t.id === filterTradeId);
-      setForm({
-        ...DEFAULT_FORM,
-        tradeId: filterTradeId,
-        sellerSurveyor: trade?.sellerSurveyor || '',
-        notifyBuyerId: trade?.buyerId || '',
-        consigneeBuyerId: trade?.buyerId || '',
-      });
-      setEditingId(null);
-      setDialogOpen(true);
     }
   }, [embedded, filterTradeId, dataLoaded, diList.length]);
 
@@ -283,11 +272,9 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       {embedded && (
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
-          {filteredDiList.length > 0 && (
-            <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
-              <Plus className="h-4 w-4 mr-2" />New DI
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+            <Plus className="h-4 w-4 mr-2" />New DI
+          </Button>
         </div>
       )}
 

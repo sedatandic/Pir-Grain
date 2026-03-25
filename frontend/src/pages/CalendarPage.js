@@ -13,6 +13,8 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMont
 import { EVENT_TYPES } from '../lib/constants';
 import { getHolidaysForDate } from '../lib/holidays';
 import { CalendarDays as CalIcon } from 'lucide-react';
+import { Calendar } from '../components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 
 export default function CalendarPage() {
   const [events, setEvents] = useState([]);
@@ -21,7 +23,7 @@ export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [form, setForm] = useState({ title: '', date: '', type: 'other', description: '' });
+  const [form, setForm] = useState({ title: '', date: '', dateTo: '', type: 'other', description: '' });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function CalendarPage() {
 
   const openCreateDialog = () => {
     setEditingEvent(null);
-    setForm({ title: '', date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'), type: 'other', description: '' });
+    setForm({ title: '', date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'), dateTo: '', type: 'other', description: '' });
     setDialogOpen(true);
   };
 
@@ -58,12 +60,13 @@ export default function CalendarPage() {
     setEditingEvent(ev);
     let dateStr = '';
     try { dateStr = format(parseISO(ev.date), 'yyyy-MM-dd'); } catch { dateStr = ev.date || ''; }
-    setForm({ title: ev.title || '', date: dateStr, type: ev.type || 'other', description: ev.description || '' });
+    setForm({ title: ev.title || '', date: dateStr, dateTo: ev.dateTo || '', type: ev.type || 'other', description: ev.description || '' });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.title || !form.date) { toast.error('Title and date required'); return; }
+    if ((form.type === 'conference' || form.type === 'staff_leave') && !form.dateTo) { toast.error('Date To is required for this type'); return; }
     setSaving(true);
     try {
       if (editingEvent) {
@@ -77,7 +80,7 @@ export default function CalendarPage() {
       }
       setDialogOpen(false);
       setEditingEvent(null);
-      setForm({ title: '', date: '', type: 'other', description: '' });
+      setForm({ title: '', date: '', dateTo: '', type: 'other', description: '' });
     } catch (err) { toast.error('Failed to save event'); } finally { setSaving(false); }
   };
 
@@ -266,38 +269,62 @@ export default function CalendarPage() {
           <DialogHeader><DialogTitle className="text-center">{editingEvent ? 'Edit Event' : 'New Event'}</DialogTitle></DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2"><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} data-testid="event-title-input" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2"><Label>Date *</Label><Input 
-                placeholder="dd/mm/yyyy" 
-                value={form.date ? (() => { const [y,m,d] = form.date.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.date; })() : ''} 
-                onChange={(e) => {
-                  let v = e.target.value.replace(/[^\d/]/g, '');
-                  // Auto-add slashes
-                  if (v.length === 2 && !v.includes('/')) v += '/';
-                  if (v.length === 5 && v.split('/').length === 2) v += '/';
-                  if (v.length > 10) v = v.slice(0, 10);
-                  // Try to parse dd/mm/yyyy to yyyy-mm-dd
-                  const parts = v.split('/');
-                  if (parts.length === 3 && parts[2].length === 4) {
-                    setForm({...form, date: `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`});
-                  } else {
-                    setForm({...form, date: v});
-                  }
-                }}
-                data-testid="event-date-input" 
-              /></div>
-              <div className="space-y-2"><Label>Type</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
-                  <SelectTrigger data-testid="event-type-select"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="payment">Payment</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="conference">Conference</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2"><Label>Type</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+                <SelectTrigger data-testid="event-type-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="payment">Payment</SelectItem>
+                  <SelectItem value="meeting">Meeting</SelectItem>
+                  <SelectItem value="conference">Conference</SelectItem>
+                  <SelectItem value="staff_leave">Staff Leave</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            {(form.type === 'conference' || form.type === 'staff_leave') ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><Label>Date From *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalIcon className="mr-2 h-4 w-4" />
+                        {form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={form.date ? parseISO(form.date) : undefined} onSelect={(d) => d && setForm({...form, date: format(d, 'yyyy-MM-dd')})} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-2"><Label>Date To *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalIcon className="mr-2 h-4 w-4" />
+                        {form.dateTo ? (() => { try { const [y,m,d] = form.dateTo.split('-'); return `${d}/${m}/${y}`; } catch { return form.dateTo; } })() : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={form.dateTo ? parseISO(form.dateTo) : undefined} onSelect={(d) => d && setForm({...form, dateTo: format(d, 'yyyy-MM-dd')})} />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2"><Label>Date *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalIcon className="mr-2 h-4 w-4" />
+                      {form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={form.date ? parseISO(form.date) : undefined} onSelect={(d) => d && setForm({...form, date: format(d, 'yyyy-MM-dd')})} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
             <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} data-testid="event-description-input" /></div>
           </div>
           <DialogFooter className="flex justify-between">

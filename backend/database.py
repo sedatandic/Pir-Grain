@@ -33,6 +33,7 @@ telegram_channels_col = db["telegram_channels"]
 market_commodities_col = db["market_commodities"]
 turkish_exchange_prices_col = db["turkish_exchange_prices"]
 app_config_col = db["app_config"]
+doc_instructions_col = db["doc_instructions"]
 
 
 def serialize_doc(doc):

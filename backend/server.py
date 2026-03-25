@@ -27,6 +27,7 @@ from routes.business_cards import router as business_cards_router
 from routes.email_sender import router as email_sender_router
 from routes.port_lineups import router as port_lineups_router
 from routes.market_data import router as market_data_router
+from routes.doc_instructions import router as doc_instructions_router
 
 
 @asynccontextmanager
@@ -74,6 +75,7 @@ app.include_router(business_cards_router)
 app.include_router(email_sender_router)
 app.include_router(port_lineups_router)
 app.include_router(market_data_router)
+app.include_router(doc_instructions_router)
 
 
 @app.get("/api/health")

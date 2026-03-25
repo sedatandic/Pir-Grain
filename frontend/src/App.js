@@ -7,7 +7,7 @@ import TradesPage from './pages/TradesPage';
 import NewTradePage from './pages/NewTradePage';
 import PartnersPage from './pages/PartnersPage';
 import VesselsPage from './pages/VesselsPage';
-import DocumentsPage from './pages/DocumentsPage';
+import VesselExecutionPage from './pages/VesselExecutionPage';
 import CalendarPage from './pages/CalendarPage';
 import CommissionsPage from './pages/CommissionsPage';
 import AccountingPage from './pages/AccountingPage';
@@ -37,7 +37,7 @@ function App() {
             <Route path="/partners/buyers" element={<PartnersPage filterType="buyer" />} />
             <Route path="/partners/co-brokers" element={<PartnersPage filterType="co-broker" />} />
             <Route path="/vessels" element={<VesselsPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/documents" element={<VesselExecutionPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/commissions" element={<CommissionsPage />} />
             <Route path="/omega" element={<AccountingPage />} />

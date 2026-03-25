@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 import { STATUS_OPTIONS } from '../lib/constants';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -10,9 +9,9 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 
 function DatePicker({ value, onChange, ...props }) {
@@ -21,8 +20,8 @@ function DatePicker({ value, onChange, ...props }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !value && 'text-muted-foreground')} {...props}>
-          <CalendarDays className="mr-2 h-4 w-4" />
+        <Button variant="outline" className={cn('w-full justify-start text-left font-normal h-7 text-xs px-2', !value && 'text-muted-foreground')} {...props}>
+          <CalendarDays className="mr-1.5 h-3 w-3" />
           {displayText || 'dd/mm/yyyy'}
         </Button>
       </PopoverTrigger>
@@ -36,14 +35,19 @@ function DatePicker({ value, onChange, ...props }) {
 const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF'];
 const CURRENCIES = ['USD', 'EUR'];
 
+const compactSelect = "h-7 text-xs";
+const compactInput = "h-7 text-xs px-2";
+const compactLabel = "text-[11px] font-medium text-muted-foreground leading-none";
+const sectionTitle = "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b pb-1 mb-1.5";
+
 function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {
   if (!contacts || contacts.length === 0) return null;
   const selectedIdx = value !== null && value !== undefined ? String(value) : '';
   return (
-    <div className="space-y-1">
-      <Label className="text-xs flex items-center gap-1 text-muted-foreground"><Icon className="h-3 w-3" />{label}</Label>
+    <div className="space-y-0.5">
+      <Label className="text-[10px] flex items-center gap-0.5 text-muted-foreground"><Icon className="h-2.5 w-2.5" />{label}</Label>
       <Select value={selectedIdx} onValueChange={(v) => onChange(v === 'none' ? null : contacts[parseInt(v)])}>
-        <SelectTrigger className="h-8 text-sm" data-testid={testId}><SelectValue placeholder="Select contact" /></SelectTrigger>
+        <SelectTrigger className="h-6 text-[11px]" data-testid={testId}><SelectValue placeholder="Select" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="none">-- None --</SelectItem>
           {contacts.map((c, i) => (
@@ -65,22 +69,14 @@ function PartyContactPickers({ partyLabel, partner, tradeContact, execContact, o
   const ecIdx = execContact ? ec.findIndex(c => c.name === execContact.name && c.email === execContact.email) : -1;
 
   return (
-    <div className="col-span-4 bg-muted/30 rounded-lg p-3 space-y-2 border border-dashed">
-      <div className="text-xs font-medium text-muted-foreground">{partyLabel} Contacts — {partner.companyName}</div>
-      <div className="grid grid-cols-2 gap-3">
+    <div className="col-span-full bg-muted/20 rounded px-2 py-1 space-y-0.5 border border-dashed border-muted-foreground/20">
+      <div className="text-[10px] font-medium text-muted-foreground">{partyLabel} — {partner.companyName}</div>
+      <div className="grid grid-cols-2 gap-2">
         {tc.length > 0 && (
-          <ContactPicker
-            label="Trade Contact" icon={Briefcase} contacts={tc}
-            value={tcIdx >= 0 ? tcIdx : null} onChange={onTradeChange}
-            testId={`${testPrefix}-trade-contact`}
-          />
+          <ContactPicker label="Trade" icon={Briefcase} contacts={tc} value={tcIdx >= 0 ? tcIdx : null} onChange={onTradeChange} testId={`${testPrefix}-trade-contact`} />
         )}
         {ec.length > 0 && (
-          <ContactPicker
-            label="Execution Contact" icon={User} contacts={ec}
-            value={ecIdx >= 0 ? ecIdx : null} onChange={onExecChange}
-            testId={`${testPrefix}-exec-contact`}
-          />
+          <ContactPicker label="Execution" icon={User} contacts={ec} value={ecIdx >= 0 ? ecIdx : null} onChange={onExecChange} testId={`${testPrefix}-exec-contact`} />
         )}
       </div>
     </div>
@@ -100,6 +96,7 @@ export default function NewTradePage() {
   const [surveyors, setSurveyors] = useState([]);
   const [vessels, setVessels] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [showExclusions, setShowExclusions] = useState(false);
 
   const [form, setForm] = useState({
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
@@ -135,7 +132,6 @@ export default function NewTradePage() {
         setPorts(po.data); setSurveyors(su.data); setVessels(ve.data);
         setAllUsers(us.data);
 
-        // Default origin to Russia for new contracts
         if (!isEdit) {
           const russia = or.data.find(o => o.name?.toLowerCase() === 'russia');
           const samsun = po.data.find(p => p.name?.toLowerCase().includes('samsun'));
@@ -154,7 +150,6 @@ export default function NewTradePage() {
           setLoadingTrade(true);
           const res = await api.get(`/api/trades/${tradeId}`);
           const t = res.data;
-          // Convert dd/MM/yyyy date to yyyy-MM-dd for DatePicker
           const convertDate = (d) => {
             if (!d) return '';
             if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
@@ -214,13 +209,11 @@ export default function NewTradePage() {
             brokerName: t.brokerName || 'Salih Karagoz',
           });
           setLoadingTrade(false);
-          // Auto-select CIF Marmara Ports if no base port set
           if (!t.basePortId) {
             const mp = po.data.find(p => p.name === 'CIF Marmara Ports');
             if (mp) setForm(prev => ({ ...prev, basePortId: mp.id }));
           }
         } else {
-          // Auto-select Pir Grain as default Broker
           const pirGrain = pa.data.find(p => {
             const t = Array.isArray(p.type) ? p.type : [p.type];
             return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
@@ -228,7 +221,6 @@ export default function NewTradePage() {
           if (pirGrain) {
             setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
           }
-          // Auto-select CIF Marmara Ports as default Base Port
           const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');
           if (marmaraPorts) {
             setForm(prev => prev.basePortId ? prev : ({ ...prev, basePortId: marmaraPorts.id }));
@@ -310,376 +302,325 @@ export default function NewTradePage() {
   if (loadingTrade) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate('/trades')}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Contract' : 'New Contract'}</h1>
-          <p className="text-muted-foreground">{isEdit ? 'Update contract details' : 'Create a new commodity contract'}</p>
+    <div className="space-y-2 max-w-[1100px]" data-testid="compact-new-trade-form">
+      {/* Header with actions */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => navigate('/trades')}>
+            <ArrowLeft className="h-3 w-3 mr-1" />Back
+          </Button>
+          <h1 className="text-lg font-bold" data-testid="new-trade-title">{isEdit ? 'Edit Contract' : 'New Contract'}</h1>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => navigate('/trades')}>Cancel</Button>
+          <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving} data-testid="save-trade-button">
+            {saving ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+            {isEdit ? 'Update' : 'Create'}
+          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle>Contract Details</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Contract Date</Label>
+      {/* CONTRACT DETAILS */}
+      <div>
+        <div className={sectionTitle}>Contract Details</div>
+        <div className="grid grid-cols-4 gap-x-3 gap-y-1">
+          <div>
+            <Label className={compactLabel}>Contract Date</Label>
             <DatePicker value={form.contractDate} onChange={(v) => set('contractDate', v)} />
           </div>
-          <div className="space-y-2">
-            <Label>Pir Grain Ref. No</Label>
-            <Input value={form.pirContractNumber} onChange={(e) => set('pirContractNumber', e.target.value)} placeholder="Auto-generated if empty" />
+          <div>
+            <Label className={compactLabel}>Pir Grain Ref. No</Label>
+            <Input className={compactInput} value={form.pirContractNumber} onChange={(e) => set('pirContractNumber', e.target.value)} placeholder="Auto-generated" />
           </div>
-          <div className="space-y-2">
-            <Label>Seller Contract Number</Label>
-            <Input value={form.sellerContractNumber} onChange={(e) => set('sellerContractNumber', e.target.value)} placeholder="N/A" />
+          <div>
+            <Label className={compactLabel}>Seller Contract No</Label>
+            <Input className={compactInput} value={form.sellerContractNumber} onChange={(e) => set('sellerContractNumber', e.target.value)} placeholder="N/A" />
           </div>
-          <div className="space-y-2">
-            <Label>Execution Handled By</Label>
+          <div>
+            <Label className={compactLabel}>Execution Handled By</Label>
             <Select value={form.executionHandledBy} onValueChange={(v) => set('executionHandledBy', v)}>
-              <SelectTrigger data-testid="execution-handled-by-select"><SelectValue placeholder="Select person" /></SelectTrigger>
+              <SelectTrigger className={compactSelect} data-testid="execution-handled-by-select"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Alena Karagoz">Alena Karagoz</SelectItem>
                 <SelectItem value="Melisa Karagoz">Melisa Karagoz</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader><CardTitle>Contract Parties</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Seller *</Label>
+      {/* CONTRACT PARTIES */}
+      <div>
+        <div className={sectionTitle}>Parties</div>
+        <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+          <div>
+            <Label className={compactLabel}>Seller *</Label>
             <Select value={form.sellerId} onValueChange={handleSellerChange}>
-              <SelectTrigger data-testid="trade-seller-select"><SelectValue placeholder="Select seller" /></SelectTrigger>
+              <SelectTrigger className={compactSelect} data-testid="trade-seller-select"><SelectValue placeholder="Select seller" /></SelectTrigger>
               <SelectContent>{sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Buyer *</Label>
+          <div>
+            <Label className={compactLabel}>Buyer *</Label>
             <Select value={form.buyerId} onValueChange={handleBuyerChange}>
-              <SelectTrigger data-testid="trade-buyer-select"><SelectValue placeholder="Select buyer" /></SelectTrigger>
+              <SelectTrigger className={compactSelect} data-testid="trade-buyer-select"><SelectValue placeholder="Select buyer" /></SelectTrigger>
               <SelectContent>{buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-
-          {/* Seller Contacts */}
-          <PartyContactPickers
-            partyLabel="Seller" partner={sellerPartner}
-            tradeContact={form.sellerTradeContact} execContact={form.sellerExecutionContact}
-            onTradeChange={(c) => set('sellerTradeContact', c)} onExecChange={(c) => set('sellerExecutionContact', c)}
-            testPrefix="seller"
-          />
-
-          {/* Buyer Contacts */}
-          <PartyContactPickers
-            partyLabel="Buyer" partner={buyerPartner}
-            tradeContact={form.buyerTradeContact} execContact={form.buyerExecutionContact}
-            onTradeChange={(c) => set('buyerTradeContact', c)} onExecChange={(c) => set('buyerExecutionContact', c)}
-            testPrefix="buyer"
-          />
-
-          <div className="space-y-2">
-            <Label>Broker</Label>
+          <div>
+            <Label className={compactLabel}>Broker</Label>
             <Select value={form.brokerId} onValueChange={handleBrokerChange}>
-              <SelectTrigger><SelectValue placeholder="Select broker" /></SelectTrigger>
+              <SelectTrigger className={compactSelect}><SelectValue placeholder="Select broker" /></SelectTrigger>
               <SelectContent>
                 {partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('broker'); }).map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Broker Name</Label>
+          <div>
+            <Label className={compactLabel}>Broker Name</Label>
             <Select value={form.brokerName || 'Salih Karagoz'} onValueChange={(v) => set('brokerName', v)}>
-              <SelectTrigger data-testid="broker-name-select"><SelectValue placeholder="Select broker name" /></SelectTrigger>
+              <SelectTrigger className={compactSelect} data-testid="broker-name-select"><SelectValue placeholder="Select" /></SelectTrigger>
               <SelectContent>
                 {allUsers.filter(u => u.username !== 'pir.accounts').map(u => <SelectItem key={u.username} value={u.name}>{u.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Co-Broker</Label>
+          <div>
+            <Label className={compactLabel}>Co-Broker</Label>
             <Select value={form.coBrokerId} onValueChange={handleCoBrokerChange}>
-              <SelectTrigger><SelectValue placeholder="Select co-broker" /></SelectTrigger>
+              <SelectTrigger className={compactSelect}><SelectValue placeholder="N/A" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="na">N/A</SelectItem>
                 {coBrokers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+          <PartyContactPickers partyLabel="Seller" partner={sellerPartner} tradeContact={form.sellerTradeContact} execContact={form.sellerExecutionContact} onTradeChange={(c) => set('sellerTradeContact', c)} onExecChange={(c) => set('sellerExecutionContact', c)} testPrefix="seller" />
+          <PartyContactPickers partyLabel="Buyer" partner={buyerPartner} tradeContact={form.buyerTradeContact} execContact={form.buyerExecutionContact} onTradeChange={(c) => set('buyerTradeContact', c)} onExecChange={(c) => set('buyerExecutionContact', c)} testPrefix="buyer" />
+          <PartyContactPickers partyLabel="Broker" partner={brokerPartner} tradeContact={form.brokerTradeContact} execContact={form.brokerExecutionContact} onTradeChange={(c) => set('brokerTradeContact', c)} onExecChange={(c) => set('brokerExecutionContact', c)} testPrefix="broker" />
+          <PartyContactPickers partyLabel="Co-Broker" partner={coBrokerPartner} tradeContact={form.coBrokerTradeContact} execContact={form.coBrokerExecutionContact} onTradeChange={(c) => set('coBrokerTradeContact', c)} onExecChange={(c) => set('coBrokerExecutionContact', c)} testPrefix="co-broker" />
+        </div>
+      </div>
 
-          {/* Broker Contacts */}
-          <PartyContactPickers
-            partyLabel="Broker" partner={brokerPartner}
-            tradeContact={form.brokerTradeContact} execContact={form.brokerExecutionContact}
-            onTradeChange={(c) => set('brokerTradeContact', c)} onExecChange={(c) => set('brokerExecutionContact', c)}
-            testPrefix="broker"
-          />
+      {/* COMMODITY */}
+      <div>
+        <div className={sectionTitle}>Commodity</div>
+        <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+          <div>
+            <Label className={compactLabel}>Commodity *</Label>
+            <Select value={form.commodityId} onValueChange={(v) => {
+              set('commodityId', v);
+              const comm = commodities.find(c => c.id === v);
+              set('commoditySpecs', comm?.specs || '');
+            }}>
+              <SelectTrigger className={compactSelect}><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className={compactLabel}>Origin</Label>
+            <Select value={form.originId} onValueChange={(v) => set('originId', v)}>
+              <SelectTrigger className={compactSelect}><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>{origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className={compactLabel}>Crop Year</Label>
+            <Select value={form.cropYear} onValueChange={(v) => set('cropYear', v)}>
+              <SelectTrigger className={compactSelect} data-testid="crop-year-select"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={String(new Date().getFullYear())}>{new Date().getFullYear()}</SelectItem>
+                <SelectItem value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className={compactLabel}>Quantity (MT)</Label>
+            <Input className={compactInput} type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => { const qty = e.target.value.replace(/,/g, ''); set('quantity', qty); const n = parseInt(qty); if (n === 3000) set('dischargeRate', '1000'); else if (n === 5000) set('dischargeRate', '1500'); }} placeholder="0" />
+          </div>
+          <div>
+            <Label className={compactLabel}>Tolerance (%)</Label>
+            <Input className={compactInput} value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
+          </div>
+        </div>
+        <div className="mt-1">
+          <Label className={compactLabel}>Commodity Specs</Label>
+          <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={2} className="font-mono text-[11px] min-h-0 py-1 px-2 resize-y" placeholder="Enter commodity specifications" />
+        </div>
+      </div>
 
-          {/* Co-Broker Contacts */}
-          <PartyContactPickers
-            partyLabel="Co-Broker" partner={coBrokerPartner}
-            tradeContact={form.coBrokerTradeContact} execContact={form.coBrokerExecutionContact}
-            onTradeChange={(c) => set('coBrokerTradeContact', c)} onExecChange={(c) => set('coBrokerExecutionContact', c)}
-            testPrefix="co-broker"
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Commodity Details</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Commodity *</Label>
-              <Select value={form.commodityId} onValueChange={(v) => {
-                set('commodityId', v);
-                const comm = commodities.find(c => c.id === v);
-                set('commoditySpecs', comm?.specs || '');
-              }}>
-                <SelectTrigger><SelectValue placeholder="Select commodity" /></SelectTrigger>
-                <SelectContent>{commodities.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Crop Year</Label>
-              <Select value={form.cropYear} onValueChange={(v) => set('cropYear', v)}>
-                <SelectTrigger data-testid="crop-year-select"><SelectValue placeholder="Select crop year" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={String(new Date().getFullYear())}>{new Date().getFullYear()}</SelectItem>
-                  <SelectItem value={String(new Date().getFullYear() - 1)}>{new Date().getFullYear() - 1}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Origin</Label>
-              <Select value={form.originId} onValueChange={(v) => set('originId', v)}>
-                <SelectTrigger><SelectValue placeholder="Select origin" /></SelectTrigger>
-                <SelectContent>{origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
+      {/* PRICING & TERMS */}
+      <div>
+        <div className={sectionTitle}>Pricing & Terms</div>
+        <div className="grid grid-cols-7 gap-x-3 gap-y-1">
+          <div>
+            <Label className={compactLabel}>Price / MT</Label>
+            <Input className={compactInput} type="number" value={form.pricePerMT} onChange={(e) => set('pricePerMT', e.target.value)} placeholder="0.00" />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Quantity (MT)</Label>
-              <Input type="text" value={form.quantity ? Number(form.quantity).toLocaleString('en-US') : ''} onChange={(e) => { const qty = e.target.value.replace(/,/g, ''); set('quantity', qty); const n = parseInt(qty); if (n === 3000) set('dischargeRate', '1000'); else if (n === 5000) set('dischargeRate', '1500'); }} placeholder="0" />
-            </div>
-            <div className="space-y-2">
-              <Label>Tolerance (%)</Label>
-              <Input value={form.tolerance} onChange={(e) => set('tolerance', e.target.value)} placeholder="e.g. 5" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Commodity Specs.</Label>
-            <Textarea value={form.commoditySpecs} onChange={(e) => set('commoditySpecs', e.target.value)} rows={5} className="font-mono text-sm" placeholder="Enter commodity specifications" />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader><CardTitle>Pricing & Terms</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-4 gap-4">
-          <div className="space-y-2">
-            <Label>Price per MT</Label>
-            <Input type="number" value={form.pricePerMT} onChange={(e) => set('pricePerMT', e.target.value)} placeholder="0.00" />
-          </div>
-          <div className="space-y-2">
-            <Label>Currency</Label>
+          <div>
+            <Label className={compactLabel}>Currency</Label>
             <Select value={form.currency} onValueChange={(v) => set('currency', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger className={compactSelect}><SelectValue /></SelectTrigger>
               <SelectContent>{CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Delivery Term</Label>
+          <div>
+            <Label className={compactLabel}>Delivery Term</Label>
             <Select value={form.deliveryTerm} onValueChange={(v) => set('deliveryTerm', v)}>
-              <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectTrigger className={compactSelect}><SelectValue /></SelectTrigger>
               <SelectContent>{DELIVERY_TERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Payment Terms</Label>
-            <Input value={form.paymentTerms} onChange={(e) => set('paymentTerms', e.target.value)} placeholder="e.g. LC at sight" />
+          <div className="col-span-2">
+            <Label className={compactLabel}>Payment Terms</Label>
+            <Input className={compactInput} value={form.paymentTerms} onChange={(e) => set('paymentTerms', e.target.value)} placeholder="e.g. LC at sight" />
           </div>
-          <div className="space-y-2">
-            <Label>Brokerage (per MT)</Label>
-            <Input type="number" value={form.brokeragePerMT} onChange={(e) => set('brokeragePerMT', e.target.value)} placeholder="0.00" />
+          <div>
+            <Label className={compactLabel}>Brokerage / MT</Label>
+            <Input className={compactInput} type="number" value={form.brokeragePerMT} onChange={(e) => set('brokeragePerMT', e.target.value)} placeholder="0" />
           </div>
-          <div className="space-y-2">
-            <Label>Brokerage Currency</Label>
-            <Select value={form.brokerageCurrency} onValueChange={(v) => set('brokerageCurrency', v)}>
-              <SelectTrigger data-testid="brokerage-currency-select"><SelectValue placeholder="Currency" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="USD">USD</SelectItem>
-                <SelectItem value="EUR">EUR</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Brokerage Payment</Label>
+          <div>
+            <Label className={compactLabel}>Brok. Payment</Label>
             <Select value={form.brokerageAccount} onValueChange={(v) => set('brokerageAccount', v)}>
-              <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+              <SelectTrigger className={compactSelect}><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="seller">Seller Account</SelectItem>
-                <SelectItem value="buyer">Buyer Account</SelectItem>
+                <SelectItem value="seller">Seller Acct</SelectItem>
+                <SelectItem value="buyer">Buyer Acct</SelectItem>
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader><CardTitle>Shipping Terms</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Base Port</Label>
-              <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
-                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Shipment Period From</Label>
-              <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Shipment Period To</Label>
-              <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
-            </div>
+      {/* SHIPPING */}
+      <div>
+        <div className={sectionTitle}>Shipping</div>
+        <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+          <div>
+            <Label className={compactLabel}>Base Port</Label>
+            <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
+              <SelectTrigger className={compactSelect}><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>{dischPorts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Discharge Rate (Mts/Day)</Label>
-              <Input type="number" value={form.dischargeRate || ''} onChange={(e) => set('dischargeRate', e.target.value)} placeholder="e.g. 5000" />
-            </div>
-            <div className="space-y-2">
-              <Label>Demurrage Rate (USD/Day)</Label>
-              <Input type="number" value={form.demurrageRate || ''} onChange={(e) => set('demurrageRate', e.target.value)} placeholder="e.g. 15000" />
-            </div>
+          <div>
+            <Label className={compactLabel}>Shipment From</Label>
+            <DatePicker value={form.shipmentWindowStart} onChange={(v) => set('shipmentWindowStart', v)} />
           </div>
+          <div>
+            <Label className={compactLabel}>Shipment To</Label>
+            <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
+          </div>
+          <div>
+            <Label className={compactLabel}>Discharge Rate (MT/Day)</Label>
+            <Input className={compactInput} type="number" value={form.dischargeRate || ''} onChange={(e) => set('dischargeRate', e.target.value)} placeholder="1500" />
+          </div>
+          <div>
+            <Label className={compactLabel}>Demurrage (USD/Day)</Label>
+            <Input className={compactInput} type="number" value={form.demurrageRate || ''} onChange={(e) => set('demurrageRate', e.target.value)} placeholder="15000" />
+          </div>
+        </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Port Options (price difference per MT)</Label>
-              <Button type="button" variant="outline" size="sm" onClick={() => set('portVariations', [...form.portVariations, { portId: '', difference: '' }])}>
-                <Plus className="h-3.5 w-3.5 mr-1" />Add Port
-              </Button>
-            </div>
-            {form.portVariations.length === 0 && (
-              <p className="text-sm text-muted-foreground">No port options added. Click "Add Port" to specify price differences for other discharge ports.</p>
-            )}
-            {form.portVariations.map((pv, idx) => (
-              <div key={idx} className="flex items-end gap-3">
-                <div className="flex-1 space-y-1">
-                  {idx === 0 && <Label className="text-xs text-muted-foreground">Discharge Port</Label>}
-                  <Select value={pv.portId} onValueChange={(v) => {
-                    const updated = [...form.portVariations];
-                    const port = dischPorts.find(p => p.id === v);
-                    updated[idx] = { ...updated[idx], portId: v, portName: port?.name || '', portCountry: port?.country || '' };
-                    set('portVariations', updated);
-                  }}>
-                    <SelectTrigger><SelectValue placeholder="Select port" /></SelectTrigger>
-                    <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="w-[130px] space-y-1">
-                  {idx === 0 && <Label className="text-xs text-muted-foreground">+/- per MT ({form.currency || 'USD'})</Label>}
-                  <Input type="text" value={pv.difference} placeholder="e.g. +5 or -3" onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9.+-]/g, '');
-                    const updated = [...form.portVariations];
-                    updated[idx] = { ...updated[idx], difference: val };
-                    set('portVariations', updated);
-                  }} />
-                </div>
-                <div className="w-[100px] space-y-1 text-center">
-                  {idx === 0 && <Label className="text-xs text-muted-foreground">Price</Label>}
-                  <div className="h-9 flex items-center justify-center text-sm font-mono font-medium">
-                    {form.pricePerMT && pv.difference !== '' ? `${(parseFloat(form.pricePerMT) + parseFloat(pv.difference || 0)).toLocaleString()} ${form.currency || 'USD'}` : <span className="text-muted-foreground">-</span>}
-                  </div>
-                </div>
-                <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-destructive shrink-0" onClick={() => {
-                  const updated = form.portVariations.filter((_, i) => i !== idx);
+        {/* Port Variations */}
+        <div className="mt-1.5">
+          <div className="flex items-center justify-between mb-1">
+            <Label className="text-[11px] font-medium text-muted-foreground">Port Options (+/- per MT)</Label>
+            <Button type="button" variant="outline" size="sm" className="h-5 text-[10px] px-2" onClick={() => set('portVariations', [...form.portVariations, { portId: '', difference: '' }])}>
+              <Plus className="h-2.5 w-2.5 mr-0.5" />Add
+            </Button>
+          </div>
+          {form.portVariations.map((pv, idx) => (
+            <div key={idx} className="flex items-center gap-2 mb-1">
+              <div className="flex-1">
+                <Select value={pv.portId} onValueChange={(v) => {
+                  const updated = [...form.portVariations];
+                  const port = dischPorts.find(p => p.id === v);
+                  updated[idx] = { ...updated[idx], portId: v, portName: port?.name || '', portCountry: port?.country || '' };
                   set('portVariations', updated);
                 }}>
-                  <X className="h-4 w-4" />
-                </Button>
+                  <SelectTrigger className="h-6 text-[11px]"><SelectValue placeholder="Select port" /></SelectTrigger>
+                  <SelectContent>{dischPorts.filter(p => p.id !== form.basePortId).map(p => <SelectItem key={p.id} value={p.id}>{p.name}{p.country ? `, ${p.country}` : ''}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Excluded Disports</Label>
-              <div className="border rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">
-                {dischPorts.filter(p => p.id !== form.basePortId).map(p => (
-                  <label key={p.id} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                    <input type="checkbox" className="rounded border-input" checked={form.excludedDisports.includes(p.id)} onChange={(e) => {
-                      if (e.target.checked) set('excludedDisports', [...form.excludedDisports, p.id]);
-                      else set('excludedDisports', form.excludedDisports.filter(id => id !== p.id));
-                    }} />
-                    {p.name}{p.country ? `, ${p.country}` : ''}
-                  </label>
-                ))}
-              </div>
-              {form.excludedDisports.length > 0 && (
-                <p className="text-xs text-muted-foreground">{form.excludedDisports.length} port(s) excluded</p>
-              )}
+              <Input className="h-6 text-[11px] w-20 px-1.5" type="text" value={pv.difference} placeholder="+/- MT" onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9.+-]/g, '');
+                const updated = [...form.portVariations];
+                updated[idx] = { ...updated[idx], difference: val };
+                set('portVariations', updated);
+              }} />
+              <span className="text-[11px] font-mono w-16 text-center">
+                {form.pricePerMT && pv.difference !== '' ? `${(parseFloat(form.pricePerMT) + parseFloat(pv.difference || 0)).toLocaleString()}` : '-'}
+              </span>
+              <Button type="button" variant="ghost" size="icon" className="h-5 w-5 text-destructive" onClick={() => set('portVariations', form.portVariations.filter((_, i) => i !== idx))}>
+                <X className="h-3 w-3" />
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Excluded Surveyors</Label>
-              <div className="border rounded-lg p-3 max-h-[200px] overflow-y-auto space-y-1">
-                {surveyors.map(s => (
-                  <label key={s.id} className="flex items-center gap-2 py-1 px-1 rounded hover:bg-muted/50 cursor-pointer text-sm">
-                    <input type="checkbox" className="rounded border-input" checked={form.excludedSurveyors.includes(s.id)} onChange={(e) => {
-                      if (e.target.checked) set('excludedSurveyors', [...form.excludedSurveyors, s.id]);
-                      else set('excludedSurveyors', form.excludedSurveyors.filter(id => id !== s.id));
-                    }} />
-                    {s.name}
-                  </label>
-                ))}
-              </div>
-              {form.excludedSurveyors.length > 0 && (
-                <p className="text-xs text-muted-foreground">{form.excludedSurveyors.length} surveyor(s) excluded</p>
-              )}
+          ))}
+        </div>
+
+        {/* Excluded - Collapsible */}
+        <button
+          type="button"
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mt-1"
+          onClick={() => setShowExclusions(!showExclusions)}
+          data-testid="toggle-exclusions"
+        >
+          <ChevronDown className={cn("h-3 w-3 transition-transform", !showExclusions && "-rotate-90")} />
+          Excluded Disports ({form.excludedDisports.length}) & Surveyors ({form.excludedSurveyors.length})
+        </button>
+        {showExclusions && (
+          <div className="grid grid-cols-2 gap-3 mt-1">
+            <div className="border rounded p-2 max-h-[120px] overflow-y-auto">
+              <div className="text-[10px] font-semibold text-muted-foreground mb-1">Disports</div>
+              {dischPorts.filter(p => p.id !== form.basePortId).map(p => (
+                <label key={p.id} className="flex items-center gap-1.5 py-0.5 text-[11px] cursor-pointer hover:bg-muted/50 rounded px-1">
+                  <input type="checkbox" className="rounded border-input h-3 w-3" checked={form.excludedDisports.includes(p.id)} onChange={(e) => {
+                    if (e.target.checked) set('excludedDisports', [...form.excludedDisports, p.id]);
+                    else set('excludedDisports', form.excludedDisports.filter(id => id !== p.id));
+                  }} />
+                  {p.name}{p.country ? `, ${p.country}` : ''}
+                </label>
+              ))}
+            </div>
+            <div className="border rounded p-2 max-h-[120px] overflow-y-auto">
+              <div className="text-[10px] font-semibold text-muted-foreground mb-1">Surveyors</div>
+              {surveyors.map(s => (
+                <label key={s.id} className="flex items-center gap-1.5 py-0.5 text-[11px] cursor-pointer hover:bg-muted/50 rounded px-1">
+                  <input type="checkbox" className="rounded border-input h-3 w-3" checked={form.excludedSurveyors.includes(s.id)} onChange={(e) => {
+                    if (e.target.checked) set('excludedSurveyors', [...form.excludedSurveyors, s.id]);
+                    else set('excludedSurveyors', form.excludedSurveyors.filter(id => id !== s.id));
+                  }} />
+                  {s.name}
+                </label>
+              ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader><CardTitle>Additional Info</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>GAFTA Term</Label>
-            <Input value={form.gaftaTerm} onChange={(e) => set('gaftaTerm', e.target.value)} placeholder="GAFTA No. 48, Arbitration Clause 125, London" data-testid="gafta-term-input" />
+      {/* ADDITIONAL */}
+      <div>
+        <div className={sectionTitle}>Additional</div>
+        <div className="grid grid-cols-5 gap-x-3 gap-y-1">
+          <div className="col-span-2">
+            <Label className={compactLabel}>GAFTA Term</Label>
+            <Input className={compactInput} value={form.gaftaTerm} onChange={(e) => set('gaftaTerm', e.target.value)} data-testid="gafta-term-input" />
           </div>
-          <div className="space-y-2">
-            <Label>3rd Party Laboratory</Label>
+          <div>
+            <Label className={compactLabel}>3rd Party Lab</Label>
             <Select value={form.thirdPartyLab} onValueChange={(v) => set('thirdPartyLab', v)}>
-              <SelectTrigger data-testid="third-party-lab-select"><SelectValue /></SelectTrigger>
+              <SelectTrigger className={compactSelect} data-testid="third-party-lab-select"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="allowed">Allowed</SelectItem>
                 <SelectItem value="not_allowed">Not Allowed</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Notes</Label>
-            <Textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Additional notes..." rows={3} />
+          <div className="col-span-2">
+            <Label className={compactLabel}>Notes</Label>
+            <Textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder="Additional notes..." rows={2} className="text-[11px] min-h-0 py-1 px-2 resize-y" />
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end gap-3 pb-6">
-        <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
-        <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {isEdit ? 'Update Contract' : 'Create Contract'}
-        </Button>
+        </div>
       </div>
     </div>
   );

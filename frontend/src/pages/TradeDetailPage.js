@@ -425,13 +425,7 @@ export default function TradeDetailPage() {
         )}
       </div>
 
-      <Tabs defaultValue="summary" onValueChange={setActiveTab}>
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Contract Summary</TabsTrigger>
-        </TabsList>
-
-        {/* Trade Summary Tab */}
-        <TabsContent value="summary">
+      {/* Trade Summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader className="pb-3"><CardTitle className="text-base">Contract Information</CardTitle></CardHeader>
@@ -510,9 +504,6 @@ export default function TradeDetailPage() {
               </CardContent>
             </Card>
           </div>
-
-        </TabsContent>
-      </Tabs>
 
       {/* B/L Edit Dialog */}
       <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>

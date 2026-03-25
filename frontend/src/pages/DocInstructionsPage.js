@@ -29,6 +29,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   const [editingId, setEditingId] = useState(null);
   const [sending, setSending] = useState(null);
   const [previewDi, setPreviewDi] = useState(null);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const previewRef = useRef(null);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
     } catch (err) {
       console.error('Failed to load data');
     }
+    setDataLoaded(true);
   };
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
@@ -250,7 +252,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
   // In embedded mode, auto-open create dialog if no DIs exist, or auto-select first DI for preview
   useEffect(() => {
-    if (!embedded || !filterTradeId || loading) return;
+    if (!embedded || !filterTradeId || !dataLoaded) return;
     const existing = diList.filter(di => di.tradeId === filterTradeId);
     if (existing.length > 0) {
       setPreviewDi(existing[0]);
@@ -266,7 +268,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       setEditingId(null);
       setDialogOpen(true);
     }
-  }, [embedded, filterTradeId, loading, diList.length]);
+  }, [embedded, filterTradeId, dataLoaded, diList.length]);
 
   return (
     <div className={embedded ? "space-y-4" : "space-y-6"} data-testid="doc-instructions-page">

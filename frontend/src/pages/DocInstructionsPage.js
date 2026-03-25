@@ -496,13 +496,12 @@ export default function DocInstructionsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Seller Surveyor at Load Port</Label>
-                <Input
-                  value={form.sellerSurveyor || ''}
-                  readOnly
-                  className="bg-muted/50 cursor-default"
-                  placeholder={form.tradeId ? 'No seller surveyor on this contract' : 'Select a contract first'}
-                  data-testid="di-seller-surveyor"
-                />
+                <Select value={form.sellerSurveyor} onValueChange={v => set('sellerSurveyor', v)}>
+                  <SelectTrigger data-testid="di-seller-surveyor"><SelectValue placeholder={form.tradeId ? 'Select surveyor' : 'Select a contract first'} /></SelectTrigger>
+                  <SelectContent>
+                    {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

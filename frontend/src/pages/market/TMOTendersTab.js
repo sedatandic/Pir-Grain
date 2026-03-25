@@ -165,7 +165,7 @@ export default function TMOTendersTab() {
                 {expandedTenders[tender.id] && (
                   <>
                     <CardContent className="p-0">
-                      <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300">
+                      <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300 [&_th]:align-middle [&_td]:align-middle">
                         <TableHeader>
                           <TableRow className="bg-gray-100">
                             <TableHead className="font-bold text-black text-sm">COMPANY</TableHead>

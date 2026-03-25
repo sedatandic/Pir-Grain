@@ -400,9 +400,9 @@ export default function VesselExecutionPage() {
             <TabsTrigger value="bc" className="py-3 text-xs sm:text-sm"><FileText className="h-4 w-4 mr-1.5 hidden sm:inline" />Business Conf.</TabsTrigger>
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nom.</TabsTrigger>
             <TabsTrigger value="di" className="py-3 text-xs sm:text-sm"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Doc. Instruction</TabsTrigger>
+            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
             <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appro.</TabsTrigger>
             <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Docs ({completedDocs}/{allDocs.length})</TabsTrigger>
-            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}

@@ -8,7 +8,13 @@
 
 ## What's Been Implemented
 
-### NewTradePage Compact Layout (Latest: 2026-03-25)
+### Brokerage Invoices Filters (Latest: 2026-03-25)
+- Added 5 filter dropdowns: Seller, Buyer, Commodity, Origin (load port country), Destination (discharge port country)
+- Filters dynamically update summary cards (Total/Pending/Paid), section counts, and table totals
+- Clear All button appears when any filter is active
+- Filters work alongside existing search
+
+### NewTradePage Compact Layout (2026-03-25)
 - Complete redesign: All form fields fit in one screen without scrolling
 - Removed Card wrappers, replaced with compact section headers (uppercase, border-bottom)
 - 6 sections: Contract Details (4-col), Parties (5-col), Commodity (5-col), Pricing & Terms (7-col), Shipping (5-col), Additional (5-col)

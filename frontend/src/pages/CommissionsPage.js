@@ -8,7 +8,7 @@ import { Input } from '../components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Checkbox } from '../components/ui/checkbox';
 import { TRADE_STATUS_CONFIG } from '../lib/constants';
-import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays, Filter, X } from 'lucide-react';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Link } from 'react-router-dom';
@@ -22,6 +22,11 @@ export default function CommissionsPage() {
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterSeller, setFilterSeller] = useState('all');
+  const [filterBuyer, setFilterBuyer] = useState('all');
+  const [filterCommodity, setFilterCommodity] = useState('all');
+  const [filterOrigin, setFilterOrigin] = useState('all');
+  const [filterDestination, setFilterDestination] = useState('all');
   const [bankAccounts, setBankAccounts] = useState([]);
   const [selectedBankIds, setSelectedBankIds] = useState([]);
   const [editDialog, setEditDialog] = useState({ open: false, trade: null });
@@ -64,20 +69,47 @@ export default function CommissionsPage() {
     paid: trades.filter(t => t.invoicePaid),
   }), [trades]);
 
-  const applySearch = (list) => {
-    if (!search) return list;
-    const q = search.toLowerCase();
-    return list.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q) || (t.buyerName||'').toLowerCase().includes(q));
+  const filterOptions = useMemo(() => {
+    const unique = (arr) => [...new Set(arr)].filter(Boolean).sort();
+    return {
+      sellers: unique(trades.map(t => t.sellerName || t.sellerCode).filter(Boolean)),
+      buyers: unique(trades.map(t => t.buyerName || t.buyerCode).filter(Boolean)),
+      commodities: unique(trades.map(t => t.commodityName).filter(Boolean)),
+      origins: unique(trades.map(t => t.loadingPortCountry).filter(Boolean)),
+      destinations: unique(trades.map(t => t.dischargePortCountry).filter(Boolean)),
+    };
+  }, [trades]);
+
+  const applyFilters = (list) => {
+    let result = list;
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q) || (t.buyerName||'').toLowerCase().includes(q));
+    }
+    if (filterSeller !== 'all') result = result.filter(t => (t.sellerName || t.sellerCode) === filterSeller);
+    if (filterBuyer !== 'all') result = result.filter(t => (t.buyerName || t.buyerCode) === filterBuyer);
+    if (filterCommodity !== 'all') result = result.filter(t => t.commodityName === filterCommodity);
+    if (filterOrigin !== 'all') result = result.filter(t => t.loadingPortCountry === filterOrigin);
+    if (filterDestination !== 'all') result = result.filter(t => t.dischargePortCountry === filterDestination);
+    return result;
   };
+
+  const hasActiveFilters = filterSeller !== 'all' || filterBuyer !== 'all' || filterCommodity !== 'all' || filterOrigin !== 'all' || filterDestination !== 'all';
+  const clearAllFilters = () => { setFilterSeller('all'); setFilterBuyer('all'); setFilterCommodity('all'); setFilterOrigin('all'); setFilterDestination('all'); setSearch(''); };
 
   const stats = useMemo(() => {
     const calcComm = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
+    const filteredAll = applyFilters(trades);
+    const filteredPending = filteredAll.filter(t => !t.invoicePaid);
+    const filteredPaid = filteredAll.filter(t => t.invoicePaid);
     return {
-      total: trades.reduce((s, t) => s + calcComm(t), 0),
-      pending: categorized.pending.reduce((s, t) => s + calcComm(t), 0),
-      paid: categorized.paid.reduce((s, t) => s + calcComm(t), 0),
+      total: filteredAll.reduce((s, t) => s + calcComm(t), 0),
+      pending: filteredPending.reduce((s, t) => s + calcComm(t), 0),
+      paid: filteredPaid.reduce((s, t) => s + calcComm(t), 0),
+      pendingCount: filteredPending.length,
+      paidCount: filteredPaid.length,
     };
-  }, [trades, categorized]);
+  }, [trades, search, filterSeller, filterBuyer, filterCommodity, filterOrigin, filterDestination]);
 
   const fmt = (n) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n)} USD`;
   const fmtQty = (q) => `${(q||0).toLocaleString()} Mts`;
@@ -137,7 +169,7 @@ export default function CommissionsPage() {
   };
 
   const renderTable = (list, empty, showInvoice = false) => {
-    const filtered = applySearch(list).sort((a, b) => {
+    const filtered = applyFilters(list).sort((a, b) => {
       const dateA = a.buyerPaymentDate || '';
       const dateB = b.buyerPaymentDate || '';
       if (!dateA && !dateB) return 0;
@@ -241,11 +273,71 @@ export default function CommissionsPage() {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle><CheckCircle className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{fmt(stats.paid)}</div></CardContent></Card>
       </div>
 
-      <div className="relative max-w-xs"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative w-48">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9" data-testid="commission-search" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Seller</Label>
+          <Select value={filterSeller} onValueChange={setFilterSeller}>
+            <SelectTrigger className="h-9 w-[160px] text-sm" data-testid="filter-seller"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sellers</SelectItem>
+              {filterOptions.sellers.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Buyer</Label>
+          <Select value={filterBuyer} onValueChange={setFilterBuyer}>
+            <SelectTrigger className="h-9 w-[160px] text-sm" data-testid="filter-buyer"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Buyers</SelectItem>
+              {filterOptions.buyers.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Commodity</Label>
+          <Select value={filterCommodity} onValueChange={setFilterCommodity}>
+            <SelectTrigger className="h-9 w-[160px] text-sm" data-testid="filter-commodity"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Commodities</SelectItem>
+              {filterOptions.commodities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Origin</Label>
+          <Select value={filterOrigin} onValueChange={setFilterOrigin}>
+            <SelectTrigger className="h-9 w-[140px] text-sm" data-testid="filter-origin"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Origins</SelectItem>
+              {filterOptions.origins.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[11px] text-muted-foreground">Destination</Label>
+          <Select value={filterDestination} onValueChange={setFilterDestination}>
+            <SelectTrigger className="h-9 w-[140px] text-sm" data-testid="filter-destination"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Destinations</SelectItem>
+              {filterOptions.destinations.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={clearAllFilters} data-testid="clear-filters">
+            <X className="h-3.5 w-3.5 mr-1" />Clear
+          </Button>
+        )}
+      </div>
 
       <div className="space-y-4">
-        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({categorized.pending.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices', true)}</CardContent></Card>
-        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid ({categorized.paid.length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid, 'No paid invoices', true)}</CardContent></Card>
+        <Card className="border-l-4 border-l-amber-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-amber-800">Pending ({stats.pendingCount})</CardTitle></CardHeader><CardContent>{renderTable(categorized.pending, 'No pending invoices', true)}</CardContent></Card>
+        <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid ({stats.paidCount})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid, 'No paid invoices', true)}</CardContent></Card>
       </div>
 
       {/* Bank Account Selection Dialog */}

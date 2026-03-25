@@ -447,8 +447,14 @@ export default function VesselExecutionPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor at Load Port</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor at Load Port</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
+                    {trade.sellerSurveyor && trade.buyerSurveyor && trade.sellerSurveyor === trade.buyerSurveyor ? (
+                      <div className="flex justify-between"><span className="text-muted-foreground">Double Nomination at Load Port</span><span className="font-medium">{trade.sellerSurveyor}</span></div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor at Load Port</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
+                        <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor at Load Port</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
+                      </>
+                    )}
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>

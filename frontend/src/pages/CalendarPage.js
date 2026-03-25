@@ -32,7 +32,7 @@ export default function CalendarPage() {
       try { const res = await api.get('/api/events'); setEvents(res.data); } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     const fetchUsers = async () => {
-      try { const res = await api.get('/api/auth/users'); setUsers(res.data); } catch (err) { console.error(err); }
+      try { const res = await api.get('/api/users'); setUsers(res.data); } catch (err) { console.error(err); }
     };
     fetch();
     fetchUsers();

@@ -361,6 +361,10 @@ export default function VesselExecutionPage() {
 
   // Computed
   const commodity = trade ? commodities.find(c => c.id === trade.commodityId) : null;
+  const getPortDisplay = (portId) => {
+    const p = ports.find(x => x.id === portId);
+    return p ? `${p.name}, ${p.country}` : '-';
+  };
   const docList = getDocChecklist(commodity);
   const allDocs = [...docList, ...additionalDocs];
   const completedDocs = allDocs.filter(d => docChecks[d]).length;
@@ -412,6 +416,8 @@ export default function VesselExecutionPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{getPortDisplay(trade.loadingPortId || trade.basePortId)}</span></div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
@@ -419,6 +425,8 @@ export default function VesselExecutionPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>
                   </div>
                 </div>
               </CardContent>
@@ -645,13 +653,13 @@ export default function VesselExecutionPage() {
             <div className="space-y-2"><Label>Load Port</Label>
               <Select value={blForm.loadPortId || ''} onValueChange={(v) => setBlForm(p => ({ ...p, loadPortId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{ports.filter(p => p.type === 'loading').map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{ports.filter(p => p.type === 'loading').map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2"><Label>Discharge Port</Label>
               <Select value={blForm.dischargePortId || ''} onValueChange={(v) => setBlForm(p => ({ ...p, dischargePortId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{ports.filter(p => p.type === 'discharge').map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{ports.filter(p => p.type === 'discharge').map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2"><Label>Seller Surveyor</Label><Input value={blForm.sellerSurveyor || ''} onChange={(e) => setBlForm(p => ({ ...p, sellerSurveyor: e.target.value }))} /></div>

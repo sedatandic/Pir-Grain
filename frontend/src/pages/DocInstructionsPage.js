@@ -378,7 +378,7 @@ export default function DocInstructionsPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-green-700 text-center">{editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction'}</DialogTitle>
           </DialogHeader>

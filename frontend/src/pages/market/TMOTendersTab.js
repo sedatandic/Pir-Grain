@@ -168,9 +168,9 @@ export default function TMOTendersTab() {
                       <Table className="border-collapse [&_th]:border [&_th]:border-gray-300 [&_td]:border [&_td]:border-gray-300 [&_th]:align-middle [&_td]:align-middle">
                         <TableHeader>
                           <TableRow className="bg-gray-100">
-                            <TableHead className="font-bold text-black text-sm text-center">COMPANY</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">PORT</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center">QUANTITY</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-center">Company</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-center">Port</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-center">Quantity (Mts)</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center">CIF</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center">EXW</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center w-20"></TableHead>

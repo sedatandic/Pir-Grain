@@ -461,22 +461,18 @@ export default function TradeDetailPage() {
                     <div>
                       <span className="text-muted-foreground">Port Options</span>
                       <div className="mt-2 space-y-1.5">
-                        {trade.portVariations.map((pv, i) => (
-                          <div key={i} className="flex items-center justify-between rounded-md border px-3 py-1.5 bg-muted/30">
-                            <span className="font-medium">{pv.portName || pv.portId}</span>
-                            <span className={`font-mono text-sm ${Number(pv.difference) < 0 ? 'text-red-600' : Number(pv.difference) > 0 ? 'text-green-600' : ''}`}>
-                              {Number(pv.difference) > 0 ? '+' : ''}{Number(pv.difference).toLocaleString()} USD
-                            </span>
-                          </div>
-                        ))}
+                        {trade.portVariations.map((pv, i) => {
+                          const diff = Number(pv.difference || 0);
+                          const portPrice = (trade.pricePerMT || 0) + diff;
+                          const portName = pv.portName || pv.portId;
+                          return (
+                            <div key={i} className="flex items-center justify-between text-sm">
+                              <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                  </>
-                )}
-                {trade.notes && (
-                  <>
-                    <Separator />
-                    <div className="flex justify-between gap-4"><span className="text-muted-foreground shrink-0">Notes</span><span className="font-medium text-right whitespace-pre-line">{trade.notes}</span></div>
                   </>
                 )}
               </CardContent>
@@ -503,6 +499,12 @@ export default function TradeDetailPage() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Execution Handled By</span><span className="font-medium">{trade.executionHandledBy || '-'}</span></div>
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">GAFTA Term</span><span className="font-medium text-right max-w-[60%]">{trade.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London'}</span></div>
+                {trade.notes && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between gap-4"><span className="text-muted-foreground shrink-0">Notes</span><span className="font-medium text-right whitespace-pre-line">{trade.notes}</span></div>
+                  </>
+                )}
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge></div>
               </CardContent>

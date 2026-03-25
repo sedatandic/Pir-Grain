@@ -66,6 +66,7 @@ export default function VesselExecutionPage() {
   const [emailSellerTo, setEmailSellerTo] = useState('');
   const [emailBuyerTo, setEmailBuyerTo] = useState('');
   const [emailSending, setEmailSending] = useState(false);
+  const [buyerPaymentSaving, setBuyerPaymentSaving] = useState(false);
 
   useEffect(() => {
     const fetchInitial = async () => {
@@ -361,6 +362,20 @@ export default function VesselExecutionPage() {
       fetchTrade(selectedTradeId);
     } catch (err) { toast.error(err.response?.data?.detail || 'Failed to send'); }
     finally { setEmailSending(false); }
+  };
+
+  const saveBuyerPaymentDate = async (dateStr) => {
+    setBuyerPaymentSaving(true);
+    try {
+      const res = await api.post(`/api/trades/${selectedTradeId}/buyer-payment`, { paymentDate: dateStr });
+      setTrade(res.data);
+      if (dateStr) {
+        toast.success('Payment date saved — contract completed & commission invoice generated');
+      } else {
+        toast.success('Payment date cleared — contract reverted');
+      }
+    } catch { toast.error('Failed to save payment date'); }
+    finally { setBuyerPaymentSaving(false); }
   };
 
   // Computed
@@ -676,6 +691,45 @@ export default function VesselExecutionPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Payment Date From Buyer */}
+          <Card className="mt-4">
+            <CardHeader><CardTitle className="text-base">Payment Date From Buyer</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-4">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={`w-[220px] justify-start text-left font-normal ${!trade.buyerPaymentDate ? 'text-muted-foreground' : ''}`} data-testid="buyer-payment-date-btn">
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      {trade.buyerPaymentDate || 'Pick payment date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={trade.buyerPaymentDate ? (() => { try { const [d,m,y] = trade.buyerPaymentDate.split('/'); return new Date(y, m-1, d); } catch { return undefined; } })() : undefined}
+                      onSelect={(d) => { if (d) saveBuyerPaymentDate(format(d, 'dd/MM/yyyy')); }}
+                    />
+                  </PopoverContent>
+                </Popover>
+                {trade.buyerPaymentDate && (
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => saveBuyerPaymentDate('')} data-testid="clear-buyer-payment">
+                    <X className="h-4 w-4 mr-1" />Clear
+                  </Button>
+                )}
+                {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+              {trade.buyerPaymentDate && (
+                <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 border-green-200">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-800">Contract Completed</p>
+                    <p className="text-sm text-green-600">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </Tabs>
       )}
 

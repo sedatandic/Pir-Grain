@@ -440,7 +440,13 @@ export default function TradeDetailPage() {
                 <Separator />
                 <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{trade.buyerName || getName(partners, trade.buyerId)}</span></div>
                 <Separator />
-                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium text-right">{trade.brokerName || getName(partners, trade.brokerId) || '-'}{trade.brokerPersonName && <div className="text-xs text-muted-foreground">{trade.brokerPersonName}</div>}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium text-right">{trade.brokerName || getName(partners, trade.brokerId) || '-'}</span></div>
+                {trade.brokerPersonName && (
+                  <>
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Broker Name</span><span className="font-medium">{trade.brokerPersonName}</span></div>
+                  </>
+                )}
                 {trade.coBrokerId && (
                   <div className="flex justify-between"><span className="text-muted-foreground text-orange-600">Co-Broker</span><span className="font-medium text-orange-600">{trade.coBrokerName || getName(partners, trade.coBrokerId) || '-'}</span></div>
                 )}
@@ -458,21 +464,20 @@ export default function TradeDetailPage() {
                 {trade.portVariations && trade.portVariations.length > 0 && (
                   <>
                     <Separator />
-                    <div>
-                      <span className="text-muted-foreground">Port Options</span>
-                      <div className="mt-2 space-y-1.5">
-                        {trade.portVariations.map((pv, i) => {
-                          const diff = Number(pv.difference || 0);
-                          const portPrice = (trade.pricePerMT || 0) + diff;
-                          const portName = pv.portName || pv.portId;
-                          return (
-                            <div key={i} className="flex items-center justify-between text-sm">
-                              <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    {trade.portVariations.map((pv, i) => {
+                      const diff = Number(pv.difference || 0);
+                      const portPrice = (trade.pricePerMT || 0) + diff;
+                      const portName = pv.portName || pv.portId;
+                      return (
+                        <div key={i}>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Port Options</span>
+                            <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
+                          </div>
+                          {i < trade.portVariations.length - 1 && <Separator />}
+                        </div>
+                      );
+                    })}
                   </>
                 )}
               </CardContent>

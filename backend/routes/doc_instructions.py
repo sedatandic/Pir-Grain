@@ -198,7 +198,7 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">2. Address for Original Documents</h3>
-    <div style="border: 1px solid #ccc; padding: 10px; background: #f9fafb; white-space: pre-wrap; margin-bottom: 16px;">{doc.get('originalDocsAddress', '—')}</div>
+    <div style="border: 1px solid #ccc; padding: 10px; background: #f9fafb; white-space: pre-wrap; margin-bottom: 16px;">{doc.get('originalDocsAddress', '') or 'To be advised later.'}</div>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">3. Required Documents</h3>
     <table style="width: 100%; border-collapse: collapse;">

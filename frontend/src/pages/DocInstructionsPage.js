@@ -328,7 +328,7 @@ export default function DocInstructionsPage() {
                     </tbody>
                   </table>
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>2. Address for Original Documents</h3>
-                  <div style={{ border: '1px solid #d1d5db', padding: '10px', background: '#f9fafb', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{previewDi.originalDocsAddress || '—'}</div>
+                  <div style={{ border: '1px solid #d1d5db', padding: '10px', background: '#f9fafb', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{previewDi.originalDocsAddress || 'To be advised later.'}</div>
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>3. Required Documents</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
@@ -494,7 +494,7 @@ export default function DocInstructionsPage() {
             {/* Original Docs Address */}
             <div className="space-y-2">
               <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Original Documents Address</h3>
-              <Textarea value={form.originalDocsAddress} onChange={e => set('originalDocsAddress', e.target.value)} rows={3} placeholder="Full multiline address" />
+              <Textarea value={form.originalDocsAddress} onChange={e => set('originalDocsAddress', e.target.value)} rows={3} placeholder="To be advised later." />
             </div>
           </div>
           <DialogFooter>

@@ -181,13 +181,13 @@ export default function TMOTendersTab() {
                             <>
                               {tender.results.map((result, idx) => (
                                 <TableRow key={idx}>
-                                  <TableCell className="font-medium py-4">{result.company || result.winner}</TableCell>
-                                  <TableCell className="py-4">{result.port}</TableCell>
-                                  <TableCell className="text-right font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-right font-mono font-bold text-red-600 py-4">
+                                  <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
+                                  <TableCell className="py-4 text-center">{result.port}</TableCell>
+                                  <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
+                                  <TableCell className="text-center font-mono font-bold text-red-600 py-4">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                   </TableCell>
-                                  <TableCell className="text-right font-mono py-4">
+                                  <TableCell className="text-center font-mono py-4">
                                     {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
                                   </TableCell>
                                   <TableCell className="text-center py-4">
@@ -214,12 +214,12 @@ export default function TMOTendersTab() {
                                 </TableRow>
                               ))}
                               <TableRow className="font-bold">
-                                <TableCell className="font-bold text-base py-4">TOTAL</TableCell>
-                                <TableCell className="py-4"></TableCell>
-                                <TableCell className="text-right font-mono font-bold text-base py-4">{totalQty.toLocaleString('de-DE')}</TableCell>
-                                <TableCell className="py-4"></TableCell>
-                                <TableCell className="py-4"></TableCell>
-                                <TableCell className="py-4"></TableCell>
+                                <TableCell className="font-bold text-base py-4 text-center">TOTAL</TableCell>
+                                <TableCell className="py-4 text-center"></TableCell>
+                                <TableCell className="text-center font-mono font-bold text-base py-4">{totalQty.toLocaleString('de-DE')}</TableCell>
+                                <TableCell className="py-4 text-center"></TableCell>
+                                <TableCell className="py-4 text-center"></TableCell>
+                                <TableCell className="py-4 text-center"></TableCell>
                               </TableRow>
                             </>
                           ) : (

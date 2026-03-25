@@ -316,7 +316,7 @@ UPLOAD_DIR = "/app/backend/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-@router.post("/trades/{trade_id}/upload-di")
+@router.post("/{trade_id}/upload-di")
 async def upload_di_document(trade_id: str, file: UploadFile = File(...), user=Depends(non_accountant)):
     if not file.filename.lower().endswith(('.pdf', '.doc', '.docx')):
         raise HTTPException(status_code=400, detail="Only PDF and Word documents are allowed")
@@ -333,7 +333,7 @@ async def upload_di_document(trade_id: str, file: UploadFile = File(...), user=D
     return {"filename": file.filename, "path": filename}
 
 
-@router.get("/trades/{trade_id}/download-di")
+@router.get("/{trade_id}/download-di")
 def download_di_document(trade_id: str, user=Depends(non_accountant)):
     from fastapi.responses import FileResponse
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})

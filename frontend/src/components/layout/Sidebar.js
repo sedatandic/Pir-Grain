@@ -20,7 +20,6 @@ const mainNavItems = [
   { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
   { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
   { title: 'Port Line-Ups', href: '/port-lineups', icon: Anchor, roles: ['admin', 'user'] },
-  { title: 'Doc. Instructions', href: '/doc-instructions', icon: ClipboardList, roles: ['admin', 'user'] },
 ];
 
 export default function Sidebar() {
@@ -46,7 +45,6 @@ export default function Sidebar() {
     { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
     { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
     { title: 'Port Line-Ups', href: '/port-lineups', icon: Anchor, roles: ['admin', 'user'] },
-    { title: 'Doc. Instructions', href: '/doc-instructions', icon: ClipboardList, roles: ['admin', 'user'] },
   ];
 
   // Close mobile sidebar on route change

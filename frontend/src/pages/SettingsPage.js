@@ -217,21 +217,21 @@ export default function SettingsPage() {
               key === 'type' && (dialogType === 'ports' || dialogType === 'loading-ports' || dialogType === 'discharge-ports') ? (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{key}</Label>
-                  <select className="w-full rounded-md border p-2 text-sm" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
+                  <select className="w-full rounded-md border p-2 text-sm bg-background text-foreground" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
                     <option value="loading">Loading</option><option value="discharge">Discharge</option>
                   </select>
                 </div>
               ) : key === 'currency' && dialogType === 'bank-accounts' ? (
                 <div key={key} className="space-y-2">
                   <Label>Currency</Label>
-                  <select className="w-full rounded-md border p-2 text-sm" data-testid="bank-account-currency-select" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
+                  <select className="w-full rounded-md border p-2 text-sm bg-background text-foreground" data-testid="bank-account-currency-select" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
                     <option value="USD">USD - US Dollar</option><option value="EUR">EUR - Euro</option><option value="GBP">GBP - British Pound</option><option value="TRY">TRY - Turkish Lira</option><option value="CHF">CHF - Swiss Franc</option><option value="AED">AED - UAE Dirham</option><option value="UAH">UAH - Ukrainian Hryvnia</option>
                   </select>
                 </div>
               ) : key === 'role' ? (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{key}</Label>
-                  <select className="w-full rounded-md border p-2 text-sm" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
+                  <select className="w-full rounded-md border p-2 text-sm bg-background text-foreground" value={val} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
                     <option value="admin">Admin</option><option value="user">User</option><option value="accountant">Accountant</option>
                   </select>
                 </div>

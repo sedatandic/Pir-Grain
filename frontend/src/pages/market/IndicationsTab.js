@@ -152,7 +152,7 @@ export default function IndicationsTab() {
   return (
     <div className="space-y-4 mt-4">
       <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-green-700" data-testid="indications-title">Indications - Market Commentary</h2>
+        <h2 className="text-lg font-semibold text-green-700 dark:text-green-400" data-testid="indications-title">Indications - Market Commentary</h2>
       </div>
 
       {/* Period Navigation - Drill Down */}
@@ -230,8 +230,8 @@ export default function IndicationsTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {['Wheat', 'Corn', 'Barley', 'Others'].map((category) => (
           <Card key={category} className="border" data-testid={`news-card-${category.toLowerCase()}`}>
-            <div className="bg-gray-100 px-4 py-2 border-b">
-              <h3 className="font-bold text-base">{category}</h3>
+            <div className="bg-muted px-4 py-2 border-b">
+              <h3 className="font-bold text-base text-foreground">{category}</h3>
             </div>
             <CardContent className="p-3 space-y-3">
               <div className="space-y-0 max-h-64 overflow-y-auto">

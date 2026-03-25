@@ -599,8 +599,8 @@ export default function TradesPage() {
       {/* Washout */}
       <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Washout Trades</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.washout.length}</Badge></div>
-          <CardDescription className="text-amber-700">Trades settled by washout</CardDescription>
+          <div className="flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-amber-600" /><CardTitle className="text-amber-800">Washout Contracts</CardTitle><Badge variant="secondary" className="bg-amber-100 text-amber-800">{filtered.washout.length}</Badge></div>
+          <CardDescription className="text-amber-700">Contracts settled by washout</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.washout, 'No washout contracts')}</CardContent>
       </Card>
@@ -608,8 +608,8 @@ export default function TradesPage() {
       {/* Cancelled */}
       <Card className="border-l-4 border-l-red-400 bg-red-50/50">
         <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><Ban className="h-5 w-5 text-red-500" /><CardTitle className="text-red-700">Cancelled Trades</CardTitle><Badge variant="secondary" className="bg-red-100 text-red-700">{filtered.cancelled.length}</Badge></div>
-          <CardDescription className="text-red-600">Cancelled or terminated trades</CardDescription>
+          <div className="flex items-center gap-2"><Ban className="h-5 w-5 text-red-500" /><CardTitle className="text-red-700">Cancelled Contracts</CardTitle><Badge variant="secondary" className="bg-red-100 text-red-700">{filtered.cancelled.length}</Badge></div>
+          <CardDescription className="text-red-600">Cancelled or terminated contracts</CardDescription>
         </CardHeader>
         <CardContent>{renderTable(filtered.cancelled, 'No cancelled contracts')}</CardContent>
       </Card>

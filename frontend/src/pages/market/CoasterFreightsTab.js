@@ -63,8 +63,11 @@ export default function CoasterFreightsTab() {
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-green-700" data-testid="coaster-freights-title">Coaster Freights - Weekly Freight Market Reports (Azov-Black Sea & Baltic)</h2>
+      <div className="flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-green-700" data-testid="coaster-freights-title">Weekly Coaster Freight Market Reports</h2>
+          <p className="text-sm text-green-700">(Azov-Black Sea & Baltic)</p>
+        </div>
       </div>
 
       {/* Year Tabs */}

@@ -380,7 +380,7 @@ export default function DocInstructionsPage() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-green-700 text-center">{editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction'}</DialogTitle>
           </DialogHeader>
@@ -446,7 +446,7 @@ export default function DocInstructionsPage() {
                   <Label>Discharge Port</Label>
                   <Select value={form.dischargePort} onValueChange={handlePortSelect}>
                     <SelectTrigger data-testid="di-port-select"><SelectValue placeholder="Select port" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom">
                       {dischargePorts.map(p => <SelectItem key={p.display} value={p.display}>{p.display}</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -455,7 +455,7 @@ export default function DocInstructionsPage() {
                   <Label>Disport Agent</Label>
                   <Select value={form.agentId} onValueChange={handleAgentSelect}>
                     <SelectTrigger data-testid="di-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent side="bottom">
                       {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name} ({a.port})</SelectItem>)}
                     </SelectContent>
                   </Select>
@@ -475,7 +475,7 @@ export default function DocInstructionsPage() {
                 <Label>Buyer Surveyor at Load Port</Label>
                 <Select value={form.surveyor} onValueChange={v => set('surveyor', v)}>
                   <SelectTrigger data-testid="di-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="bottom">
                     {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -484,7 +484,7 @@ export default function DocInstructionsPage() {
                 <Label>Seller Surveyor at Load Port</Label>
                 <Select value={form.sellerSurveyor} onValueChange={v => set('sellerSurveyor', v)}>
                   <SelectTrigger data-testid="di-seller-surveyor"><SelectValue placeholder={form.tradeId ? 'Select surveyor' : 'Select a contract first'} /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="bottom">
                     {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
                   </SelectContent>
                 </Select>

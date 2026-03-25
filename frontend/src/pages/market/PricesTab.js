@@ -103,26 +103,22 @@ export default function PricesTab() {
 
   return (
     <div className="space-y-4 mt-4">
+      <div className="flex items-center justify-center">
+        <h2 className="text-lg font-semibold text-green-700" data-testid="live-prices-title">CBOT & Exchange Rates - Live Market Prices</h2>
+      </div>
+      <div className="flex items-center justify-end gap-3">
+        {lastUpdated && (
+          <span className="text-sm text-muted-foreground">
+            Updated: {lastUpdated.toLocaleTimeString()}
+          </span>
+        )}
+        <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm" data-testid="refresh-prices-btn">
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh Now
+        </Button>
+      </div>
       <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2 text-green-700" data-testid="live-prices-title">
-              CBOT & Exchange Rates - Live Market Prices
-            </CardTitle>
-            <div className="flex items-center gap-3">
-              {lastUpdated && (
-                <span className="text-sm text-muted-foreground">
-                  Updated: {lastUpdated.toLocaleTimeString()}
-                </span>
-              )}
-              <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm" data-testid="refresh-prices-btn">
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh Now
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <Table data-testid="prices-table">
             <TableHeader>
               <TableRow>

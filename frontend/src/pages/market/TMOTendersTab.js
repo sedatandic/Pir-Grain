@@ -171,7 +171,7 @@ export default function TMOTendersTab() {
                             <TableHead className="font-bold text-black text-sm text-center">COMPANY</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center">PORT</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center">QUANTITY</TableHead>
-                            <TableHead className="font-bold text-red-600 text-sm text-center">CIF</TableHead>
+                            <TableHead className="font-bold text-black text-sm text-center">CIF</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center">EXW</TableHead>
                             <TableHead className="font-bold text-black text-sm text-center w-20"></TableHead>
                           </TableRow>
@@ -184,7 +184,7 @@ export default function TMOTendersTab() {
                                   <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
                                   <TableCell className="py-4 text-center">{result.port}</TableCell>
                                   <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-center font-mono font-bold text-red-600 py-4">
+                                  <TableCell className="text-center font-mono font-bold text-black py-4">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                   </TableCell>
                                   <TableCell className="text-center font-mono py-4">

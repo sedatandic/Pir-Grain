@@ -10,6 +10,7 @@ import { Separator } from '../components/ui/separator';
 import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import DocInstructionsPage from './DocInstructionsPage';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { format, parse } from 'date-fns';
@@ -394,14 +395,14 @@ export default function VesselExecutionPage() {
       {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
 
       {trade && !tradeLoading && (
-        <Tabs defaultValue="bl" className="mt-2">
+        <Tabs defaultValue="bc" className="mt-2">
           <TabsList className="grid w-full grid-cols-6 h-auto">
-            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
-            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
             <TabsTrigger value="bc" className="py-3 text-xs sm:text-sm"><FileText className="h-4 w-4 mr-1.5 hidden sm:inline" />Business Conf.</TabsTrigger>
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nom.</TabsTrigger>
             <TabsTrigger value="di" className="py-3 text-xs sm:text-sm"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Doc. Instruction</TabsTrigger>
             <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appro.</TabsTrigger>
+            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Docs ({completedDocs}/{allDocs.length})</TabsTrigger>
+            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}
@@ -567,8 +568,8 @@ export default function VesselExecutionPage() {
 
           {/* Documentary Instruction Tab */}
           <TabsContent value="di">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Documentary Instruction</CardTitle></CardHeader>
+            <Card className="mb-4">
+              <CardHeader><CardTitle className="text-base">Documentary Instruction Received</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">DI Received?</span>
@@ -598,6 +599,7 @@ export default function VesselExecutionPage() {
                 )}
               </CardContent>
             </Card>
+            <DocInstructionsPage filterTradeId={selectedTradeId} embedded />
           </TabsContent>
 
           {/* Shipment Appropriation Tab */}

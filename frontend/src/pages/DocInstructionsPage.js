@@ -17,7 +17,7 @@ const DEFAULT_FORM = {
   consigneeBuyerId: '', notifyOption: 'buyer_details', notifyCustom: '', notifyBuyerId: '',
 };
 
-export default function DocInstructionsPage() {
+export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   const [diList, setDiList] = useState([]);
   const [trades, setTrades] = useState([]);
   const [ports, setPorts] = useState([]);
@@ -245,23 +245,36 @@ export default function DocInstructionsPage() {
     }));
   };
 
+  // Filter DIs by trade when embedded
+  const filteredDiList = filterTradeId ? diList.filter(di => di.tradeId === filterTradeId) : diList;
+
   return (
-    <div className="space-y-6" data-testid="doc-instructions-page">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Documentary Instructions</h1>
-        <Button onClick={() => { setForm({ ...DEFAULT_FORM }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
-          <Plus className="h-4 w-4 mr-2" />New DI
-        </Button>
-      </div>
+    <div className={embedded ? "space-y-4" : "space-y-6"} data-testid="doc-instructions-page">
+      {!embedded && (
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Documentary Instructions</h1>
+          <Button onClick={() => { setForm({ ...DEFAULT_FORM }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+            <Plus className="h-4 w-4 mr-2" />New DI
+          </Button>
+        </div>
+      )}
+      {embedded && (
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
+          <Button size="sm" onClick={() => { setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '' }); if (filterTradeId) { const trade = trades.find(t => t.id === filterTradeId); setForm(prev => ({ ...prev, tradeId: filterTradeId, sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' })); } setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+            <Plus className="h-4 w-4 mr-2" />New DI
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DI List */}
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-green-700">Saved Instructions</h2>
-          {diList.length === 0 ? (
+          {filteredDiList.length === 0 ? (
             <Card><CardContent className="py-8 text-center text-muted-foreground">No documentary instructions yet. Click "New DI" to create one.</CardContent></Card>
           ) : (
-            diList.map(di => (
+            filteredDiList.map(di => (
               <Card key={di.id} className={`cursor-pointer transition-colors ${previewDi?.id === di.id ? 'border-green-500 border-2' : 'hover:border-green-300'}`}
                 onClick={() => setPreviewDi(di)} data-testid={`di-card-${di.id}`}>
                 <CardContent className="p-4">

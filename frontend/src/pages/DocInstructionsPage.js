@@ -151,8 +151,8 @@ export default function DocInstructionsPage() {
     const qty = trade.quantity ? Number(trade.quantity).toLocaleString('en-US') : '';
     const origin = trade.originAdjective || trade.originName || '';
     const commodity = trade.commodityName || '';
-    const seller = trade.sellerName || '';
-    const buyer = trade.buyerName || '';
+    const seller = trade.sellerCode || trade.sellerName || '';
+    const buyer = trade.buyerCode || trade.buyerName || '';
     const vessel = trade.vesselName || '';
     const parts = [num];
     if (qty || commodity) parts.push(`${qty} Mts ${origin} ${commodity}`.trim());

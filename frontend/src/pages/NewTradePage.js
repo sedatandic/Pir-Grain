@@ -338,7 +338,7 @@ export default function NewTradePage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Trade Parties</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Contract Parties</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Seller *</Label>

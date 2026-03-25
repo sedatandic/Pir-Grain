@@ -76,7 +76,12 @@ const HOLIDAYS = [
   { date: '12-25', title: 'Christmas Day', country: 'US' },
 ];
 
-const COUNTRY_FLAGS = { TR: '\u{1F1F9}\u{1F1F7}', RU: '\u{1F1F7}\u{1F1FA}', UA: '\u{1F1FA}\u{1F1E6}', US: '\u{1F1FA}\u{1F1F8}' };
+const COUNTRY_FLAGS = { 
+  TR: 'https://flagcdn.com/w20/tr.png', 
+  RU: 'https://flagcdn.com/w20/ru.png', 
+  UA: 'https://flagcdn.com/w20/ua.png', 
+  US: 'https://flagcdn.com/w20/us.png' 
+};
 const COUNTRY_COLORS = { 
   TR: 'bg-red-50 text-red-700 border-red-200', 
   RU: 'bg-blue-50 text-blue-700 border-blue-200', 

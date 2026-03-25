@@ -397,7 +397,7 @@ export default function DocInstructionsPage() {
               return editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction';
             })()}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-5">
+          <div className="space-y-3">
             {/* Contract Selection */}
             <div className="space-y-2">
               <Label>Contract *</Label>
@@ -453,7 +453,7 @@ export default function DocInstructionsPage() {
 
             {/* Shipment & Port */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Shipment & Port Details</h3>
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Shipment & Port Details</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Discharge Port</Label>

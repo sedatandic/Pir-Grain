@@ -239,14 +239,16 @@ export default function IndicationsTab() {
                   <p className="text-sm text-muted-foreground text-center py-2">No comments yet</p>
                 ) : (
                   (marketNews[category] || []).map((note) => (
-                    <div key={note.id} className="flex items-center gap-2 py-1.5 border-b border-muted/40 group">
-                      <p className="text-sm flex-1 truncate">{note.content}</p>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                      </span>
-                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={() => handleDeleteComment(note.id)}>
-                        <Trash2 className="h-3 w-3 text-red-500" />
-                      </Button>
+                    <div key={note.id} className="py-1.5 border-b border-muted/40 group">
+                      <p className="text-sm">{note.content}</p>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <span className="text-[11px] text-muted-foreground italic">
+                          {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </span>
+                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={() => handleDeleteComment(note.id)}>
+                          <Trash2 className="h-3 w-3 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
                   ))
                 )}

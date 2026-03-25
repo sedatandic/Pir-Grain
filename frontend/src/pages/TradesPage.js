@@ -500,7 +500,7 @@ export default function TradesPage() {
           <div className="flex items-center gap-3 overflow-x-auto">
             <div className="relative shrink-0">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input data-testid="trades-search-input" placeholder="Search trades..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 w-[200px]" />
+              <Input data-testid="trades-search-input" placeholder="Search contracts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 w-[200px]" />
             </div>
             {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters} className="shrink-0 text-destructive hover:text-destructive" data-testid="trades-clear-filter"><X className="h-4 w-4 mr-1" />Clear Filter</Button>}
             <Select value={filterYear} onValueChange={setFilterYear}>

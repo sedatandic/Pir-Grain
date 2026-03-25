@@ -382,7 +382,20 @@ export default function DocInstructionsPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-green-700 text-center">{editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction'}</DialogTitle>
+            <DialogTitle className="text-green-700 text-center">{(() => {
+              const trade = trades.find(t => t.id === form.tradeId);
+              if (trade) {
+                const num = trade.pirContractNumber || trade.contractNumber || '';
+                const qty = trade.quantity ? Number(trade.quantity).toLocaleString('en-US') : '';
+                const origin = trade.originAdjective || trade.originName || '';
+                const commodity = trade.commodityName || '';
+                const vessel = trade.vesselName || '';
+                const parts = ['Documentary Instruction', num, `${qty} Mts ${origin} ${commodity}`.trim()];
+                if (vessel) parts.push(vessel);
+                return parts.filter(Boolean).join(' - ');
+              }
+              return editingId ? 'Edit Documentary Instruction' : 'New Documentary Instruction';
+            })()}</DialogTitle>
           </DialogHeader>
           <div className="space-y-5">
             {/* Contract Selection */}

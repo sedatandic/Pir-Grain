@@ -427,7 +427,7 @@ export default function TradeDetailPage() {
 
       <Tabs defaultValue="summary" onValueChange={setActiveTab}>
         <TabsList className="flex-wrap">
-          <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Trade Summary</TabsTrigger>
+          <TabsTrigger value="summary"><FileText className="h-3.5 w-3.5 mr-1" />Contract Summary</TabsTrigger>
           <TabsTrigger value="shipment"><Ship className="h-3.5 w-3.5 mr-1" />Shipment (B/L) Details</TabsTrigger>
           <TabsTrigger value="documents"><ClipboardCheck className="h-3.5 w-3.5 mr-1" />Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
         </TabsList>

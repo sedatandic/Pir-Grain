@@ -185,10 +185,11 @@ export default function AccountingPage() {
   };
 
   const handleSave = async () => {
-    if (!form.invoiceNumber || !form.vendorName || !form.amount) { toast.error('Invoice number, vendor, and amount required'); return; }
+    const cleanAmount = String(form.amount).replace(/,/g, '');
+    if (!form.invoiceNumber || !form.vendorName || !cleanAmount || isNaN(parseFloat(cleanAmount))) { toast.error('Invoice number, vendor, and amount required'); return; }
     setSaving(true);
     try {
-      const data = { ...form, amount: parseFloat(form.amount) };
+      const data = { ...form, amount: parseFloat(cleanAmount) };
       if (editingInvoice) { await api.put(`/api/invoices/${editingInvoice.id}`, data); toast.success('Invoice updated'); }
       else { await api.post('/api/invoices', data); toast.success('Invoice created'); }
       setDialogOpen(false); fetchData();
@@ -426,14 +427,14 @@ export default function AccountingPage() {
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Invoice Number *</Label><Input value={form.invoiceNumber} onChange={(e) => setForm({...form, invoiceNumber: e.target.value})} placeholder="INV-001" /></div>
             <div className="space-y-2"><Label>{form.direction === 'incoming' ? 'Invoice To' : 'Vendor'} *</Label>
-              <Select value={form.vendorName} onValueChange={(v) => setForm({...form, vendorName: v})}>
+              <Select value={form.vendorName} onValueChange={(v) => setForm(f => ({...f, vendorName: v}))}>
                 <SelectTrigger><SelectValue placeholder={`Select ${form.direction === 'incoming' ? 'company' : 'vendor'}`} /></SelectTrigger>
                 <SelectContent>
                   {(form.direction === 'incoming' ? sellers : vendors).map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Amount *</Label><Input type="number" value={form.amount} onChange={(e) => setForm({...form, amount: e.target.value})} /></div>
+            <div className="space-y-2"><Label>Amount *</Label><Input type="text" inputMode="decimal" value={form.amount} onChange={(e) => setForm(f => ({...f, amount: e.target.value}))} placeholder="0.00" /></div>
             <div className="space-y-2"><Label>Currency</Label>
               <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>
             </div>

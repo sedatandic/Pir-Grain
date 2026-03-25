@@ -608,6 +608,14 @@ export default function VesselExecutionPage() {
                           <p className="text-xs text-muted-foreground">Uploaded document</p>
                         </div>
                         <Button size="sm" variant="outline" onClick={() => window.open(`${api.defaults.baseURL}/api/trades/${selectedTradeId}/download-di`, '_blank')}>Download</Button>
+                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={async () => {
+                          try {
+                            await api.delete(`/api/trades/${selectedTradeId}/upload-di`);
+                            const res = await api.get(`/api/trades/${selectedTradeId}`);
+                            setTrade(res.data);
+                            toast.success('DI document deleted');
+                          } catch (err) { toast.error('Failed to delete'); }
+                        }}><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     )}
                     <div className="flex items-center gap-3">

@@ -343,3 +343,18 @@ def download_di_document(trade_id: str, user=Depends(non_accountant)):
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(filepath, filename=trade.get("diDocumentFilename", "di_document"), media_type="application/octet-stream")
+
+
+@router.delete("/{trade_id}/upload-di")
+def delete_di_document(trade_id: str, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("diDocumentPath"):
+        raise HTTPException(status_code=404, detail="No DI document found")
+    filepath = os.path.join(UPLOAD_DIR, trade["diDocumentPath"])
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    trades_col.update_one(
+        {"_id": ObjectId(trade_id)},
+        {"$unset": {"diDocumentFilename": "", "diDocumentPath": ""}}
+    )
+    return {"message": "DI document deleted"}

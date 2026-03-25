@@ -264,7 +264,6 @@ export default function TurkishExchangesTab() {
           <Button onClick={() => setTurkishDialogOpen(true)} size="sm" data-testid="add-price-btn">
             <Plus className="h-4 w-4 mr-2" />Add Price
           </Button>
-        </div>
       </div>
 
       {/* Historical Navigation */}

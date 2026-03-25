@@ -106,9 +106,8 @@ export default function PricesTab() {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg flex items-center gap-2" data-testid="live-prices-title">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              Live Market Prices
+            <CardTitle className="text-lg flex items-center gap-2 text-green-700" data-testid="live-prices-title">
+              CBOT & Exchange Rates - Live Market Prices
             </CardTitle>
             <div className="flex items-center gap-3">
               {lastUpdated && (
@@ -116,13 +115,10 @@ export default function PricesTab() {
                   Updated: {lastUpdated.toLocaleTimeString()}
                 </span>
               )}
-              <div className="flex flex-col items-end">
-                <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm" data-testid="refresh-prices-btn">
-                  <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                  Refresh Now
-                </Button>
-                <span className="text-xs text-muted-foreground mt-1">Auto-refreshes every 15 minutes</span>
-              </div>
+              <Button onClick={refreshPrices} disabled={refreshing} variant="outline" size="sm" data-testid="refresh-prices-btn">
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                Refresh Now
+              </Button>
             </div>
           </div>
         </CardHeader>

@@ -98,8 +98,7 @@ export default function IndicationsTab() {
   return (
     <div className="space-y-4 mt-4">
       <div className="text-center mb-4">
-        <h2 className="text-lg font-semibold text-green-600" data-testid="indications-title">INDICATIONS</h2>
-        <p className="text-sm text-muted-foreground">Market Commentary</p>
+        <h2 className="text-lg font-semibold text-green-700" data-testid="indications-title">Indications - Market Commentary</h2>
       </div>
 
       {/* Period Navigation - Drill Down */}

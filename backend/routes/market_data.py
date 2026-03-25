@@ -29,6 +29,10 @@ router = APIRouter(prefix="/api/market", tags=["market"])
 # Alpha Vantage API key (free tier)
 ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_KEY", "demo")
 
+# In-memory price cache (avoids re-scraping on every request)
+_price_cache = {"data": None, "timestamp": None}
+PRICE_CACHE_TTL = 300  # 5 minutes in seconds
+
 # ============== MODELS ==============
 
 class MarketNote(BaseModel):
@@ -396,7 +400,36 @@ async def fetch_commodity_price(symbol: str):
 
 @router.get("/prices")
 async def get_market_prices(user=Depends(get_current_user)):
-    """Get all commodity prices"""
+    """Get all commodity prices - returns cached data if fresh, otherwise scrapes live"""
+    global _price_cache
+    now = datetime.now(timezone.utc)
+    
+    # Return cached data if still fresh
+    if _price_cache["data"] and _price_cache["timestamp"]:
+        age = (now - _price_cache["timestamp"]).total_seconds()
+        if age < PRICE_CACHE_TTL:
+            return _price_cache["data"]
+    
+    # First, return DB-cached prices instantly if available, then refresh in background
+    db_prices = []
+    for commodity in DEFAULT_COMMODITIES:
+        cached = market_prices_col.find_one({"symbol": commodity["symbol"]}, {"_id": 0})
+        if cached:
+            cached["name"] = commodity["name"]
+            cached["type"] = commodity["type"]
+            cached["unit"] = commodity["unit"]
+            cached["source"] = cached.get("source", "Cached")
+            db_prices.append(cached)
+    
+    # If we have DB-cached prices, return them and scrape fresh data async
+    if db_prices and len(db_prices) >= len(DEFAULT_COMMODITIES) // 2:
+        _price_cache["data"] = db_prices
+        _price_cache["timestamp"] = now
+        # Trigger background refresh
+        asyncio.create_task(_refresh_prices_background())
+        return db_prices
+    
+    # No cache at all - must scrape live (first load only)
     prices = []
     for commodity in DEFAULT_COMMODITIES:
         price_data = await fetch_commodity_price(commodity["symbol"])
@@ -405,7 +438,29 @@ async def get_market_prices(user=Depends(get_current_user)):
             price_data["type"] = commodity["type"]
             price_data["unit"] = commodity["unit"]
             prices.append(price_data)
+    
+    _price_cache["data"] = prices
+    _price_cache["timestamp"] = now
     return prices
+
+
+async def _refresh_prices_background():
+    """Background task to refresh prices without blocking the response"""
+    global _price_cache
+    try:
+        prices = []
+        for commodity in DEFAULT_COMMODITIES:
+            price_data = await fetch_commodity_price(commodity["symbol"])
+            if price_data:
+                price_data["name"] = commodity["name"]
+                price_data["type"] = commodity["type"]
+                price_data["unit"] = commodity["unit"]
+                prices.append(price_data)
+        if prices:
+            _price_cache["data"] = prices
+            _price_cache["timestamp"] = datetime.now(timezone.utc)
+    except Exception as e:
+        print(f"Background price refresh error: {e}")
 
 
 @router.get("/prices/{symbol}")

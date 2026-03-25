@@ -248,6 +248,26 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   // Filter DIs by trade when embedded
   const filteredDiList = filterTradeId ? diList.filter(di => di.tradeId === filterTradeId) : diList;
 
+  // In embedded mode, auto-open create dialog if no DIs exist, or auto-select first DI for preview
+  useEffect(() => {
+    if (!embedded || !filterTradeId || loading) return;
+    const existing = diList.filter(di => di.tradeId === filterTradeId);
+    if (existing.length > 0) {
+      setPreviewDi(existing[0]);
+    } else {
+      const trade = trades.find(t => t.id === filterTradeId);
+      setForm({
+        ...DEFAULT_FORM,
+        tradeId: filterTradeId,
+        sellerSurveyor: trade?.sellerSurveyor || '',
+        notifyBuyerId: trade?.buyerId || '',
+        consigneeBuyerId: trade?.buyerId || '',
+      });
+      setEditingId(null);
+      setDialogOpen(true);
+    }
+  }, [embedded, filterTradeId, loading, diList.length]);
+
   return (
     <div className={embedded ? "space-y-4" : "space-y-6"} data-testid="doc-instructions-page">
       {!embedded && (
@@ -261,9 +281,11 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       {embedded && (
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
-          <Button size="sm" onClick={() => { setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '' }); if (filterTradeId) { const trade = trades.find(t => t.id === filterTradeId); setForm(prev => ({ ...prev, tradeId: filterTradeId, sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' })); } setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
-            <Plus className="h-4 w-4 mr-2" />New DI
-          </Button>
+          {filteredDiList.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+              <Plus className="h-4 w-4 mr-2" />New DI
+            </Button>
+          )}
         </div>
       )}
 
@@ -272,7 +294,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold text-green-700">Saved Instructions</h2>
           {filteredDiList.length === 0 ? (
-            <Card><CardContent className="py-8 text-center text-muted-foreground">No documentary instructions yet. Click "New DI" to create one.</CardContent></Card>
+            <Card><CardContent className="py-8 text-center text-muted-foreground">{embedded ? 'No documentary instructions yet.' : 'No documentary instructions yet. Click "New DI" to create one.'}</CardContent></Card>
           ) : (
             filteredDiList.map(di => (
               <Card key={di.id} className={`cursor-pointer transition-colors ${previewDi?.id === di.id ? 'border-green-500 border-2' : 'hover:border-green-300'}`}

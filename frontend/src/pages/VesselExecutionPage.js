@@ -385,7 +385,7 @@ export default function VesselExecutionPage() {
         <Select value={selectedTradeId} onValueChange={handleTradeSelect}>
           <SelectTrigger data-testid="ve-contract-select"><SelectValue placeholder="Select a contract" /></SelectTrigger>
           <SelectContent>
-            {trades.filter(t => t.pirContractNumber || t.contractNumber).map(t => (
+            {trades.filter(t => (t.pirContractNumber || t.contractNumber) && t.vesselName).map(t => (
               <SelectItem key={t.id} value={t.id}>{getTradeLabel(t)}</SelectItem>
             ))}
           </SelectContent>

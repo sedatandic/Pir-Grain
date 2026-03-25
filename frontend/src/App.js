@@ -17,6 +17,7 @@ import TradeDetailPage from './pages/TradeDetailPage';
 import BusinessCardsPage from './pages/BusinessCardsPage';
 import PortLineupsPage from './pages/PortLineupsPage';
 import MarketDataPage from './pages/MarketDataPage';
+import DocInstructionsPage from './pages/DocInstructionsPage';
 import './App.css';
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
             <Route path="/business-cards" element={<BusinessCardsPage />} />
             <Route path="/port-lineups" element={<PortLineupsPage />} />
             <Route path="/market-data" element={<MarketDataPage />} />
+            <Route path="/doc-instructions" element={<DocInstructionsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/trades" replace />} />

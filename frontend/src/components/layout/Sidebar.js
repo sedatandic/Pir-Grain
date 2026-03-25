@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor, TrendingUp
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor, TrendingUp, ClipboardList
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
@@ -20,6 +20,7 @@ const mainNavItems = [
   { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
   { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
   { title: 'Port Line-Ups', href: '/port-lineups', icon: Anchor, roles: ['admin', 'user'] },
+  { title: 'Doc. Instructions', href: '/doc-instructions', icon: ClipboardList, roles: ['admin', 'user'] },
 ];
 
 export default function Sidebar() {
@@ -45,6 +46,7 @@ export default function Sidebar() {
     { title: 'Vessels', href: '/vessels', icon: Ship, roles: ['admin', 'user'] },
     { title: 'Business Cards', href: '/business-cards', icon: CreditCard, roles: ['admin', 'user'] },
     { title: 'Port Line-Ups', href: '/port-lineups', icon: Anchor, roles: ['admin', 'user'] },
+    { title: 'Doc. Instructions', href: '/doc-instructions', icon: ClipboardList, roles: ['admin', 'user'] },
   ];
 
   // Close mobile sidebar on route change

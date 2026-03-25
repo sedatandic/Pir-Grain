@@ -420,7 +420,7 @@ export default function TradeDetailPage() {
         </div>
         {activeTab !== 'documents' && (
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit Shipment (B/L) Details' : 'Edit Trade'}
+          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit Shipment (B/L) Details' : 'Edit Contract'}
         </Button>
         )}
       </div>

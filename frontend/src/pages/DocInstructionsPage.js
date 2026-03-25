@@ -146,6 +146,21 @@ export default function DocInstructionsPage() {
     }
   };
 
+  const getTradeDropdownLabel = (trade) => {
+    const num = trade.pirContractNumber || trade.contractNumber || '';
+    const qty = trade.quantity ? Number(trade.quantity).toLocaleString('en-US') : '';
+    const origin = trade.originAdjective || trade.originName || '';
+    const commodity = trade.commodityName || '';
+    const seller = trade.sellerName || '';
+    const buyer = trade.buyerName || '';
+    const vessel = trade.vesselName || '';
+    const parts = [num];
+    if (qty || commodity) parts.push(`${qty} Mts ${origin} ${commodity}`.trim());
+    if (seller || buyer) parts.push(`${seller} / ${buyer}`.trim());
+    if (vessel) parts.push(vessel);
+    return parts.filter(Boolean).join(' - ');
+  };
+
   const getTradeLabel = (tradeId) => {
     const trade = trades.find(t => t.id === tradeId);
     return trade ? (trade.pirContractNumber || trade.contractNumber || tradeId) : tradeId;
@@ -375,7 +390,7 @@ export default function DocInstructionsPage() {
                 <SelectTrigger data-testid="di-contract-select"><SelectValue placeholder="Select contract" /></SelectTrigger>
                 <SelectContent>
                   {trades.filter(t => t.pirContractNumber || t.contractNumber).map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.pirContractNumber || t.contractNumber}</SelectItem>
+                    <SelectItem key={t.id} value={t.id}>{getTradeDropdownLabel(t)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -438,26 +438,31 @@ export default function VesselExecutionPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Vessel Name</span><span className="font-medium uppercase">{trade.vesselName || '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Number</span><span className="font-medium">{trade.blNumber || '-'}</span></div>
+                    <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Date</span><span className="font-medium">{trade.blDate || '-'}</span></div>
+                    <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">B/L Quantity</span><span className="font-medium">{trade.blQuantity ? `${Number(trade.blQuantity).toLocaleString()} MT` : '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port</span><span className="font-medium">{getPortDisplay(trade.loadingPortId || trade.basePortId)}</span></div>
+                    <Separator />
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
+                    <Separator />
                     {trade.sellerSurveyor && trade.buyerSurveyor && trade.sellerSurveyor === trade.buyerSurveyor ? (
                       <div className="flex justify-between"><span className="text-muted-foreground">Double Nomination at Load Port</span><span className="font-medium">{trade.sellerSurveyor}</span></div>
                     ) : (
                       <>
                         <div className="flex justify-between"><span className="text-muted-foreground">Seller Surveyor at Load Port</span><span className="font-medium">{trade.sellerSurveyor || '-'}</span></div>
+                        <Separator />
                         <div className="flex justify-between"><span className="text-muted-foreground">Buyer Surveyor at Load Port</span><span className="font-medium">{trade.buyerSurveyor || '-'}</span></div>
                       </>
                     )}
-                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
                     <Separator />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
                   </div>
                 </div>
               </CardContent>

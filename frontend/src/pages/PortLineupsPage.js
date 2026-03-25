@@ -218,7 +218,7 @@ export default function PortLineupsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-foreground" data-testid="port-lineups-title">Port Line-Ups</h1>
+          <h1 className="text-3xl font-bold tracking-tight" data-testid="port-lineups-title">Port Line-Ups</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Daily port report summary from Fey Shipping</p>
         </div>
         <label

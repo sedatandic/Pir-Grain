@@ -430,13 +430,6 @@ async def get_price_history(
     user=Depends(get_current_user)
 ):
     """Get historical prices for charts"""
-    # Try Alpha Vantage time series
-    function_map = {
-        "daily": "TIME_SERIES_DAILY",
-        "monthly": "TIME_SERIES_MONTHLY",
-        "yearly": "TIME_SERIES_MONTHLY"  # Use monthly for yearly view
-    }
-    
     # For now, return mock historical data
     import random
     base_prices = {
@@ -613,10 +606,98 @@ async def scrape_gtb_prices():
 
 
 @router.get("/turkish-exchanges")
-async def get_turkish_exchange_prices(user=Depends(get_current_user)):
-    """Get prices from Turkish commodity exchanges (KTB, GTB)"""
-    prices = list(turkish_exchange_prices_col.find().sort("date", -1).limit(100))
+async def get_turkish_exchange_prices(
+    exchange: Optional[str] = None,
+    date: Optional[str] = None,
+    user=Depends(get_current_user)
+):
+    """Get prices from Turkish commodity exchanges (KTB, GTB), optionally filtered by exchange and date"""
+    query = {}
+    if exchange:
+        query["exchange"] = exchange
+    if date:
+        query["date"] = date
+    prices = list(turkish_exchange_prices_col.find(query).sort("date", -1).limit(100))
     return [serialize_doc(p) for p in prices]
+
+
+@router.get("/turkish-exchanges/dates")
+async def get_turkish_exchange_dates(
+    exchange: Optional[str] = None,
+    user=Depends(get_current_user)
+):
+    """Get list of dates that have exchange price data, grouped by exchange"""
+    pipeline = []
+    if exchange:
+        pipeline.append({"$match": {"exchange": exchange}})
+    pipeline.extend([
+        {"$group": {"_id": {"exchange": "$exchange", "date": "$date"}}},
+        {"$sort": {"_id.date": -1}},
+        {"$group": {
+            "_id": "$_id.exchange",
+            "dates": {"$push": "$_id.date"}
+        }}
+    ])
+    result = list(turkish_exchange_prices_col.aggregate(pipeline))
+    # Return as { "KTB": ["25.03.2026", "24.03.2026", ...], "GTB": [...] }
+    dates_by_exchange = {}
+    for item in result:
+        dates_by_exchange[item["_id"]] = item["dates"]
+    return dates_by_exchange
+
+
+@router.get("/turkish-exchanges/monthly")
+async def get_turkish_exchange_monthly(
+    exchange: str = "KTB",
+    year: int = 2026,
+    month: int = 3,
+    user=Depends(get_current_user)
+):
+    """Get monthly aggregated prices for a given exchange, year, and month"""
+    # Build date prefix pattern: "dd.MM.YYYY" where month and year match
+    month_str = f"{month:02d}"
+    year_str = str(year)
+    # Match dates like "01.03.2026" to "31.03.2026"
+    date_pattern = f"^\\d{{2}}\\.{month_str}\\.{year_str}$"
+    
+    pipeline = [
+        {"$match": {
+            "exchange": exchange,
+            "date": {"$regex": date_pattern}
+        }},
+        {"$group": {
+            "_id": "$product",
+            "avgPrice": {"$avg": "$avgPrice"},
+            "minPrice": {"$min": "$minPrice"},
+            "maxPrice": {"$max": "$maxPrice"},
+            "dataPoints": {"$sum": 1},
+            "dates": {"$addToSet": "$date"},
+            "productEn": {"$first": "$productEn"},
+            "unit": {"$first": "$unit"}
+        }},
+        {"$sort": {"_id": 1}}
+    ]
+    
+    results = list(turkish_exchange_prices_col.aggregate(pipeline))
+    months_map = {1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
+                  7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"}
+    
+    return {
+        "exchange": exchange,
+        "year": year,
+        "month": month,
+        "monthName": months_map.get(month, ""),
+        "products": [{
+            "product": r["_id"],
+            "productEn": r.get("productEn", r["_id"]),
+            "avgPrice": round(r["avgPrice"], 4) if r["avgPrice"] else None,
+            "minPrice": round(r["minPrice"], 4) if r["minPrice"] else None,
+            "maxPrice": round(r["maxPrice"], 4) if r["maxPrice"] else None,
+            "unit": r.get("unit", "TRY/KG"),
+            "dataPoints": r["dataPoints"],
+            "dates": sorted(r.get("dates", []))
+        } for r in results]
+    }
 
 
 @router.get("/turkish-exchanges/scrape")

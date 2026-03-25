@@ -22,12 +22,12 @@ export default function MarketDataPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full max-w-2xl">
-            <TabsTrigger value="news" data-testid="tab-indications">Indications</TabsTrigger>
-            <TabsTrigger value="prices" data-testid="tab-prices">CBOT & Exchange Rates</TabsTrigger>
-            <TabsTrigger value="turkish" data-testid="tab-turkish">Turkish Exchanges</TabsTrigger>
-            <TabsTrigger value="tenders" data-testid="tab-tenders">TMO Tenders</TabsTrigger>
-            <TabsTrigger value="freights" data-testid="tab-freights">Coaster Freights</TabsTrigger>
+          <TabsList className="w-full max-w-3xl flex">
+            <TabsTrigger value="news" data-testid="tab-indications" className="flex-1">Indications</TabsTrigger>
+            <TabsTrigger value="prices" data-testid="tab-prices" className="flex-1">CBOT & Exchange Rates</TabsTrigger>
+            <TabsTrigger value="turkish" data-testid="tab-turkish" className="flex-1">Turkish Exchanges</TabsTrigger>
+            <TabsTrigger value="tenders" data-testid="tab-tenders" className="flex-1">TMO Tenders</TabsTrigger>
+            <TabsTrigger value="freights" data-testid="tab-freights" className="flex-1">Coaster Freights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="news">

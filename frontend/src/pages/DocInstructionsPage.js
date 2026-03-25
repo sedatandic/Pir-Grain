@@ -177,7 +177,7 @@ export default function DocInstructionsPage() {
     let lines = [buyer.companyName || ''];
     if (buyer.address) lines.push(buyer.address);
     if (buyer.city || buyer.country) lines.push([buyer.city, buyer.country].filter(Boolean).join(' / '));
-    return lines.join('\n');
+    return lines.join('\n').toUpperCase();
   };
 
   const getConsigneeText = (di) => {

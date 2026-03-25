@@ -99,7 +99,7 @@ def create_trade(trade: TradeCreate, user=Depends(non_accountant)):
     data["totalCommission"] = round(qty * brok, 2)
     result = trades_col.insert_one(data)
     data["_id"] = result.inserted_id
-    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id), user.get("username"))
+    create_notification("trade", f"New trade created: {data.get('referenceNumber', '')}", str(result.inserted_id), user.get("username"), user.get("name"))
     return serialize_doc(data)
 
 
@@ -193,7 +193,7 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         update_ops["$unset"] = fields_to_unset
     trades_col.update_one({"_id": ObjectId(trade_id)}, update_ops)
     updated = trades_col.find_one({"_id": ObjectId(trade_id)})
-    create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"))
+    create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"), user.get("name"))
 
     # Auto-create commission invoice when trade is completed via PUT
     if data.get("status") == "completed" and old_status != "completed":
@@ -232,7 +232,7 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
                 "createdAt": datetime.utcnow(),
             }
             invoices_col.insert_one(invoice_data)
-            create_notification("accounting", f"Commission invoice auto-created for trade {contract_num}", trade_id, user.get("username"))
+            create_notification("accounting", f"Commission invoice auto-created for trade {contract_num}", trade_id, user.get("username"), user.get("name"))
 
     # Sync buyerPaymentDate to accounting invoice
     if "buyerPaymentDate" in data:
@@ -257,7 +257,7 @@ def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non
     old_status = old_trade.get("status") if old_trade else None
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
     t = trades_col.find_one({"_id": ObjectId(trade_id)})
-    create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"))
+    create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"), user.get("name"))
 
     # Auto-create commission invoice when trade is completed
     if body.status == "completed" and old_status != "completed":
@@ -297,7 +297,7 @@ def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non
                 "createdAt": datetime.utcnow(),
             }
             invoices_col.insert_one(invoice_data)
-            create_notification("accounting", f"Commission invoice auto-created for trade {contract_num}", trade_id, user.get("username"))
+            create_notification("accounting", f"Commission invoice auto-created for trade {contract_num}", trade_id, user.get("username"), user.get("name"))
 
     return serialize_doc(t)
 
@@ -308,7 +308,7 @@ def delete_trade(trade_id: str, user=Depends(non_accountant)):
     result = trades_col.delete_one({"_id": ObjectId(trade_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Trade not found")
-    create_notification("trade", f"Trade deleted: {t.get('referenceNumber', trade_id) if t else trade_id}", trade_id, user.get("username"))
+    create_notification("trade", f"Trade deleted: {t.get('referenceNumber', trade_id) if t else trade_id}", trade_id, user.get("username"), user.get("name"))
     return {"message": "Trade deleted"}
 
 

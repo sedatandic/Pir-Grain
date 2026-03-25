@@ -50,12 +50,13 @@ def serialize_doc(doc):
     return doc
 
 
-def create_notification(ntype, message, entity_ref=None, username=None):
+def create_notification(ntype, message, entity_ref=None, username=None, display_name=None):
     notifications_col.insert_one({
         "type": ntype,
         "message": message,
         "entityRef": entity_ref,
         "username": username or "system",
+        "displayName": display_name or username or "system",
         "readBy": [],
         "createdAt": datetime.now(timezone.utc).isoformat()
     })

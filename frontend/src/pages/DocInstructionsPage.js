@@ -23,6 +23,7 @@ export default function DocInstructionsPage() {
   const [ports, setPorts] = useState([]);
   const [agents, setAgents] = useState([]);
   const [buyers, setBuyers] = useState([]);
+  const [surveyors, setSurveyors] = useState([]);
   const [form, setForm] = useState({ ...DEFAULT_FORM });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -36,17 +37,19 @@ export default function DocInstructionsPage() {
 
   const fetchAll = async () => {
     try {
-      const [diRes, trRes, poRes, agRes, paRes] = await Promise.all([
+      const [diRes, trRes, poRes, agRes, paRes, svRes] = await Promise.all([
         api.get('/api/doc-instructions/'),
         api.get('/api/trades'),
         api.get('/api/ports'),
         api.get('/api/disport-agents'),
         api.get('/api/partners'),
+        api.get('/api/surveyors'),
       ]);
       setDiList(diRes.data);
       setTrades(trRes.data);
       setPorts(poRes.data);
       setAgents(agRes.data);
+      setSurveyors(svRes.data);
       setBuyers(paRes.data.filter(p => {
         const t = Array.isArray(p.type) ? p.type : [p.type];
         return t.includes('buyer');
@@ -395,7 +398,12 @@ export default function DocInstructionsPage() {
               )}
               <div className="space-y-2">
                 <Label>Surveyor at Load Port</Label>
-                <Input value={form.surveyor} onChange={e => set('surveyor', e.target.value)} placeholder="e.g., SGS, Intertek" data-testid="di-surveyor-input" />
+                <Select value={form.surveyor} onValueChange={v => set('surveyor', v)}>
+                  <SelectTrigger data-testid="di-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
+                  <SelectContent>
+                    {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

@@ -144,7 +144,7 @@ export default function AppLayout() {
                       <DropdownMenuItem key={n.id} className={cn('flex flex-col items-start gap-0.5 px-3 py-2 cursor-default', !isRead && 'bg-primary/5')}>
                         <span className={cn('text-sm', !isRead && 'font-medium')}>{n.message}</span>
                         <span className="text-xs text-muted-foreground">
-                          {n.username && n.username !== 'system' && <span className="font-medium">{n.username} · </span>}
+                          {n.username && n.username !== 'system' && <span className="font-medium">{n.displayName || n.username} · </span>}
                           {n.createdAt ? (() => { try { return formatDistanceToNow(parseISO(n.createdAt), { addSuffix: true }); } catch { return ''; }})() : ''}
                         </span>
                       </DropdownMenuItem>

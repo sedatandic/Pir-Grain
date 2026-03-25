@@ -120,7 +120,7 @@ export default function NewTradePage() {
     brokerTradeContact: null, brokerExecutionContact: null,
     coBrokerTradeContact: null, coBrokerExecutionContact: null,
     executionHandledBy: 'Alena Karagoz',
-    brokerName: 'Salih Karagoz',
+    brokerPersonName: 'Salih Karagoz',
   });
 
   useEffect(() => {
@@ -211,7 +211,7 @@ export default function NewTradePage() {
             coBrokerTradeContact: t.coBrokerTradeContact || null,
             coBrokerExecutionContact: t.coBrokerExecutionContact || null,
             executionHandledBy: t.executionHandledBy || '',
-            brokerName: t.brokerName || 'Salih Karagoz',
+            brokerPersonName: t.brokerPersonName || 'Salih Karagoz',
           });
           setLoadingTrade(false);
         } else {
@@ -387,7 +387,7 @@ export default function NewTradePage() {
           </div>
           <div className="space-y-2">
             <Label>Broker Name</Label>
-            <Select value={form.brokerName || 'Salih Karagoz'} onValueChange={(v) => set('brokerName', v)}>
+            <Select value={form.brokerPersonName || 'Salih Karagoz'} onValueChange={(v) => set('brokerPersonName', v)}>
               <SelectTrigger data-testid="broker-name-select"><SelectValue placeholder="Select broker name" /></SelectTrigger>
               <SelectContent>
                 {allUsers.filter(u => u.username !== 'pir.accounts').map(u => <SelectItem key={u.username} value={u.name}>{u.name}</SelectItem>)}

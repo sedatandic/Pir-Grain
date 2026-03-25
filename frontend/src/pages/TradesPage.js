@@ -360,13 +360,21 @@ export default function TradesPage() {
                 <TableCell className="text-center text-sm whitespace-nowrap"><span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'seller', name: trade.sellerName, code: trade.sellerCode || trade.sellerName }); }}>{trade.sellerCode || trade.sellerName || '-'}</span></TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap"><span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'buyer', name: trade.buyerName, code: trade.buyerCode || trade.buyerName }); }}>{trade.buyerCode || trade.buyerName || '-'}</span></TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{(trade.brokerCode || trade.brokerName) ? (
-                  trade.coBrokerName ? (
-                    <div className="flex flex-col items-center">
-                      <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
-                      <hr className="w-full border-t border-border my-0.5" />
-                      <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.coBrokerName, code: trade.coBrokerCode || trade.coBrokerName }); }}>{trade.coBrokerCode || trade.coBrokerName}</span>
-                    </div>
-                  ) : <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
+                  <div className="flex flex-col items-center">
+                    {trade.coBrokerName ? (
+                      <>
+                        <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
+                        {trade.brokerPersonName && <span className="text-[10px] text-muted-foreground">{trade.brokerPersonName}</span>}
+                        <hr className="w-full border-t border-border my-0.5" />
+                        <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.coBrokerName, code: trade.coBrokerCode || trade.coBrokerName }); }}>{trade.coBrokerCode || trade.coBrokerName}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="cursor-pointer text-foreground hover:underline" onClick={(e) => { e.stopPropagation(); setEntityFilter({ type: 'broker', name: trade.brokerName, code: trade.brokerCode || trade.brokerName }); }}>{trade.brokerCode || trade.brokerName}</span>
+                        {trade.brokerPersonName && <span className="text-[10px] text-muted-foreground">{trade.brokerPersonName}</span>}
+                      </>
+                    )}
+                  </div>
                 ) : '-'}</TableCell>
                 <TableCell className="text-center text-sm max-w-[160px]">{trade.commodityName || '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap">{trade.originName || '-'}</TableCell>

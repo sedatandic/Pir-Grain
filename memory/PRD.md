@@ -8,50 +8,54 @@
 
 ## What's Been Implemented
 
-### Documentary Instructions Page (Latest: 2026-03-25)
+### NewTradePage Compact Layout (Latest: 2026-03-25)
+- Complete redesign: All form fields fit in one screen without scrolling
+- Removed Card wrappers, replaced with compact section headers (uppercase, border-bottom)
+- 6 sections: Contract Details (4-col), Parties (5-col), Commodity (5-col), Pricing & Terms (7-col), Shipping (5-col), Additional (5-col)
+- Save/Cancel buttons moved to header row
+- Port Variations shown inline with +/- differences
+- Excluded Disports & Surveyors: collapsible, starts collapsed
+- Compact inputs (h-7), compact labels (text-[11px])
+
+### Documentary Instructions Page
 - Full CRUD for Documentary Instructions linked to contracts
-- Port dropdown shows "Name, Country" format (e.g., "Samsun, Türkiye")
-- **Buyer Surveyor at Load Port**: Dropdown populated from surveyors collection
-- **Seller Surveyor at Load Port**: Read-only field auto-populated from linked contract's B/L data (trade.sellerSurveyor)
-- Email sending to seller with formatted HTML template including both surveyor fields
-- Preview with copy/print functionality
+- Port dropdown shows "Name, Country" format
+- Buyer/Seller Surveyor fields, Email sending with formatted HTML
+- Works as embedded component inside VesselExecutionPage
+
+### Vessel Execution Pipeline
+- `VesselExecutionPage.js`: Unified tab system for Business Confirmations, Vessel Nominations, Documentary Instructions, B/L Details, Shipment Docs
 
 ### Market Data Module
-- **Indications Tab** (first): 4 cards (Wheat, Corn, Barley, Others) with drill-down navigation: Years > Months > Weekdays (excludes weekends), inline commenting with display name and AM/PM time
-- **Prices Tab**: Live from Barchart.com with Live badges, 15-min auto-refresh, area chart
-- **Turkish Exchanges Tab**: KTB + GTB scrapers, Historical Data Views (Latest/Daily/Monthly navigation with date drill-down and monthly aggregation)
-- **TMO Tenders Tab**: Collapsible cards, COMPANY/PORT/QUANTITY/CIF/EXW, Import/Export, dd/mm/yyyy date pickers
-- **Coaster Freights Tab**: Weekly freight reports from sealines.su, PDF-to-image display, English + Russian text
-- **Telegram Feed Sidebar**: 7 public channels scraped, in-app popup for messages
-
-### Refactoring (2026-03-25)
-- **MarketDataPage.js** refactored from 1543 lines to ~55 lines
-- Split into 6 components: IndicationsTab, PricesTab, TurkishExchangesTab, TMOTendersTab, CoasterFreightsTab, TelegramSidebar
-- All components in `/app/frontend/src/pages/market/`
+- **Indications Tab**: Structured dropdown form (Seller/Commodity/Port/Origin/Shipment/Qty/Price)
+- **Prices Tab**: Live from Barchart.com with auto-refresh
+- **Turkish Exchanges Tab**: KTB + GTB scrapers with historical data
+- **TMO Tenders Tab**: Collapsible cards with Import/Export
+- **Coaster Freights Tab**: Weekly freight reports
+- **Telegram Feed Sidebar**: 7 public channels
 
 ### Core Features
 - JWT Auth, Trade CRUD, Counterparties, Reference data
-- PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar, Reports
+- PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar (Staff Leave with date ranges), Reports
 - URL Migration Guard system
+- Partners: Tax ID No, Tax Office fields
+- Trades: Port price sorting, Marmara-anchored middle index
 
 ## Key API Endpoints
-- `POST /api/doc-instructions/`: Creates a new Documentary Instruction (includes sellerSurveyor)
-- `GET /api/doc-instructions/`: Retrieves all Documentary Instructions
-- `PUT /api/doc-instructions/{di_id}`: Updates a specific DI
-- `DELETE /api/doc-instructions/{di_id}`: Deletes a specific DI
-- `POST /api/doc-instructions/{di_id}/send-email`: Sends DI email to seller
-- `GET /api/config/active-url`: Public endpoint for URL migration
-- `GET /api/market/turkish-exchanges/ktb/monthly`: Monthly aggregated KTB data
-- `GET /api/prices`: Live market prices (with in-memory cache)
+- `POST /api/doc-instructions/`: Creates Documentary Instruction
+- `GET /api/doc-instructions/`: Retrieves all DIs
+- `GET /api/trades`: Trades list
+- `GET /api/config/active-url`: Active URL for migration guard
+- `PUT /api/config/active-url`: Update active URL
+- `GET /api/prices`: Live market prices
 
 ## Prioritized Backlog
 ### P1
 - Full Server-Side RBAC
 ### P2
-- Google Workspace Integration
-- Backend refactoring (extract scrapers.py module from market_data.py)
+- Google Workspace / Gmail Integration
+- Backend refactoring (extract scrapers.py from market_data.py)
 - Copy to Clipboard on TMO tender cards
 - Automatic daily scraping for KTB/GTB
-- Refactor NewTradePage.js (growing complexity)
 ### Clarifications Pending
 - Should "CBOT - Soybeans" be removed from Live Prices table?

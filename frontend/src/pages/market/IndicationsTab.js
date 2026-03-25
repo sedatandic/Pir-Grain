@@ -4,7 +4,8 @@ import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Send, Trash2, Plus, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
+import { Send, Trash2, Plus, X, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function IndicationsTab() {
@@ -49,19 +50,28 @@ export default function IndicationsTab() {
     }
   };
 
-  const COMMODITIES = ['11.5% Milling Wheat', 'Corn', 'Barley', 'Wheat Bran Pellets', 'Yellow Peas', 'Chickpeas'];
-  const BASE_PORTS = ['CIF Marmara', 'CIF Mersin'];
+  const MONTHS3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS31 = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  const COMMODITIES = [
+    '11.5% Pro. MW', '12.5% Pro. MW', '13.5% Pro. MW', '14.5% Pro. MW', '15.3% Pro. MW',
+    'Corn', 'Barley', 'Wheat Bran Pellets', 'Yellow Peas', 'Chickpeas'
+  ];
+  const BASE_PORTS = [
+    { value: 'CIF Marmara', label: 'Marmara' },
+    { value: 'CIF Mersin', label: 'Mersin' },
+  ];
   const ORIGINS = ['Russia', 'Ukraine', 'Moldova'];
 
-  const defaultIndForm = { side: 'Seller', commodity: '11.5% Milling Wheat', basePort: 'CIF Marmara', origin: 'Russia', shipment: '', quantity: '', price: '' };
+  const defaultIndForm = { side: 'Seller', commodity: '11.5% Pro. MW', basePort: 'CIF Marmara', origin: 'Russia', shipment: '', quantity: '', price: '' };
   const [indForm, setIndForm] = useState({ Wheat: { ...defaultIndForm }, Corn: { ...defaultIndForm, commodity: 'Corn' }, Barley: { ...defaultIndForm, commodity: 'Barley' }, Others: { ...defaultIndForm } });
   const [showForm, setShowForm] = useState({ Wheat: false, Corn: false, Barley: false, Others: false });
 
   const buildIndicationText = (f) => {
     const parts = [];
     parts.push(f.side);
-    if (f.quantity) parts.push(`${f.quantity} Mts`);
-    if (f.origin) parts.push(f.origin);
+    if (f.quantity) parts.push(`${f.quantity}`);
+    if (f.origin) parts.push(f.origin.toLowerCase().substring(0, 4));
     if (f.commodity) parts.push(f.commodity);
     if (f.price) parts.push(`$${f.price}`);
     if (f.basePort) parts.push(f.basePort);
@@ -75,7 +85,7 @@ export default function IndicationsTab() {
     if (!content || content === f.side) { toast.error('Fill in at least some fields'); return; }
     try {
       await api.post('/api/market/notes', { commodity: category, period: newsPeriod, content, tags: [] });
-      setIndForm(prev => ({ ...prev, [category]: { ...defaultIndForm, commodity: category === 'Wheat' ? '11.5% Milling Wheat' : category === 'Corn' ? 'Corn' : category === 'Barley' ? 'Barley' : defaultIndForm.commodity } }));
+      setIndForm(prev => ({ ...prev, [category]: { ...defaultIndForm, commodity: category === 'Wheat' ? '11.5% Pro. MW' : category === 'Corn' ? 'Corn' : category === 'Barley' ? 'Barley' : defaultIndForm.commodity } }));
       setShowForm(prev => ({ ...prev, [category]: false }));
       fetchMarketNews();
     } catch (err) {
@@ -215,21 +225,19 @@ export default function IndicationsTab() {
               <h3 className="font-bold text-base">{category}</h3>
             </div>
             <CardContent className="p-3 space-y-3">
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="space-y-0 max-h-64 overflow-y-auto">
                 {(marketNews[category] || []).length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-2">No comments yet</p>
                 ) : (
                   (marketNews[category] || []).map((note) => (
-                    <div key={note.id} className="p-2 bg-muted/30 rounded-md group">
-                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-muted-foreground">
-                          {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB')} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </p>
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteComment(note.id)}>
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </Button>
-                      </div>
+                    <div key={note.id} className="flex items-center gap-2 py-1.5 border-b border-muted/40 group">
+                      <p className="text-sm flex-1 truncate">{note.content}</p>
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                        {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                      </span>
+                      <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={() => handleDeleteComment(note.id)}>
+                        <Trash2 className="h-3 w-3 text-red-500" />
+                      </Button>
                     </div>
                   ))
                 )}
@@ -258,42 +266,75 @@ export default function IndicationsTab() {
                       <span className="text-xs font-semibold text-muted-foreground">New Indication</span>
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setShowForm(prev => ({ ...prev, [category]: false }))}><X className="h-3.5 w-3.5" /></Button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex flex-wrap gap-2 items-end">
                       <Select value={indForm[category].side} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], side: v } }))}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs w-[80px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Seller">Seller</SelectItem>
                           <SelectItem value="Buyer">Buyer</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Select value={indForm[category].commodity} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], commodity: v } }))}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {COMMODITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                      <Select value={indForm[category].basePort} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], basePort: v } }))}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {BASE_PORTS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
+                      <Input placeholder="Qty" value={indForm[category].quantity} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], quantity: e.target.value } }))} className="h-8 text-xs w-[60px]" />
                       <Select value={indForm[category].origin} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], origin: v } }))}>
-                        <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs w-[90px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {ORIGINS.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Input placeholder="Shipment" value={indForm[category].shipment} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], shipment: e.target.value } }))} className="h-8 text-xs" />
-                      <Input placeholder="Qty (Mts)" value={indForm[category].quantity} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], quantity: e.target.value } }))} className="h-8 text-xs" />
-                      <Input placeholder="Price $" value={indForm[category].price} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], price: e.target.value } }))} className="h-8 text-xs" />
+                      <Select value={indForm[category].commodity} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], commodity: v } }))}>
+                        <SelectTrigger className="h-8 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {COMMODITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input placeholder="Price $" value={indForm[category].price} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], price: e.target.value } }))} className="h-8 text-xs w-[70px]" />
+                      <Select value={indForm[category].basePort} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], basePort: v } }))}>
+                        <SelectTrigger className="h-8 text-xs w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {BASE_PORTS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="h-8 text-xs px-2 min-w-[110px] justify-start">
+                            <CalendarDays className="h-3 w-3 mr-1 shrink-0" />
+                            {indForm[category].shipment || 'Shipment'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-3" align="start">
+                          <div className="space-y-2">
+                            <div className="text-xs font-medium text-muted-foreground">Shipment Period</div>
+                            <div className="flex items-center gap-1.5">
+                              <Input type="number" min="1" max="31" placeholder="DD" className="h-7 w-14 text-xs"
+                                value={indForm[category]._fromDay || ''}
+                                onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _fromDay: e.target.value } }))} />
+                              <Select value={indForm[category]._fromMon || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _fromMon: v } }))}>
+                                <SelectTrigger className="h-7 w-[70px] text-xs"><SelectValue placeholder="Mon" /></SelectTrigger>
+                                <SelectContent>{MONTHS3.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                              </Select>
+                              <span className="text-xs font-medium">—</span>
+                              <Input type="number" min="1" max="31" placeholder="DD" className="h-7 w-14 text-xs"
+                                value={indForm[category]._toDay || ''}
+                                onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _toDay: e.target.value } }))} />
+                              <Select value={indForm[category]._toMon || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _toMon: v } }))}>
+                                <SelectTrigger className="h-7 w-[70px] text-xs"><SelectValue placeholder="Mon" /></SelectTrigger>
+                                <SelectContent>{MONTHS3.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div>
+                            <Button size="sm" className="h-6 text-xs w-full" onClick={() => {
+                              const f = indForm[category];
+                              if (f._fromDay && f._fromMon && f._toDay && f._toMon) {
+                                setIndForm(prev => ({ ...prev, [category]: { ...prev[category], shipment: `${f._fromDay} ${f._fromMon}-${f._toDay} ${f._toMon}` } }));
+                              } else if (f._fromDay && f._fromMon) {
+                                setIndForm(prev => ({ ...prev, [category]: { ...prev[category], shipment: `${f._fromDay} ${f._fromMon}` } }));
+                              }
+                            }}>Apply</Button>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                      <Button size="sm" onClick={() => handlePostIndication(category)} className="h-8"><Send className="h-3.5 w-3.5 mr-1" />Post</Button>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground truncate flex-1">{buildIndicationText(indForm[category])}</p>
-                      <Button size="sm" onClick={() => handlePostIndication(category)} className="h-7"><Send className="h-3.5 w-3.5 mr-1" />Post</Button>
-                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{buildIndicationText(indForm[category])}</p>
                   </div>
                 )}
               </div>

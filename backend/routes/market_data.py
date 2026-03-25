@@ -784,6 +784,7 @@ async def create_market_note(note: MarketNote, user=Depends(get_current_user)):
     doc = {
         **note.dict(),
         "createdBy": user.get("username"),
+        "createdByName": user.get("name", user.get("username")),
         "createdAt": datetime.now(timezone.utc).isoformat(),
         "updatedAt": datetime.now(timezone.utc).isoformat()
     }

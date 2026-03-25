@@ -190,7 +190,7 @@ export default function IndicationsTab() {
                       <p className="text-sm whitespace-pre-wrap">{note.content}</p>
                       <div className="flex items-center justify-between mt-1">
                         <p className="text-xs text-muted-foreground">
-                          {note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB')} {new Date(note.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                          {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB')} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
                         </p>
                         <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteComment(note.id)}>
                           <Trash2 className="h-3 w-3 text-red-500" />

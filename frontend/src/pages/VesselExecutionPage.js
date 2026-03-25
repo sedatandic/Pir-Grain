@@ -396,13 +396,13 @@ export default function VesselExecutionPage() {
 
       {trade && !tradeLoading && (
         <Tabs defaultValue="bc" className="mt-2">
-          <TabsList className="grid w-full grid-cols-6 h-auto">
-            <TabsTrigger value="bc" className="py-3 text-xs sm:text-sm"><FileText className="h-4 w-4 mr-1.5 hidden sm:inline" />Business Conf.</TabsTrigger>
-            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nom.</TabsTrigger>
-            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Doc. Instruction</TabsTrigger>
-            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
-            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appro.</TabsTrigger>
-            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Docs ({completedDocs}/{allDocs.length})</TabsTrigger>
+          <TabsList className="w-full flex h-auto flex-wrap">
+            <TabsTrigger value="bc" className="py-3 text-xs sm:text-sm flex-1"><FileText className="h-4 w-4 mr-1.5 hidden sm:inline" />Business Confirmation</TabsTrigger>
+            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>
+            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Documentary Instruction</TabsTrigger>
+            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
+            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
+            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}

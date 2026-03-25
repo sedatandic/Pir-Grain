@@ -645,7 +645,7 @@ export default function VesselExecutionPage() {
       {/* B/L Edit Dialog */}
       <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>
         <DialogContent className="sm:max-w-xl">
-          <DialogHeader><DialogTitle>Edit B/L Details</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-center">Edit B/L Details</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label>B/L Number</Label><Input value={blForm.blNumber || ''} onChange={(e) => setBlForm(p => ({ ...p, blNumber: e.target.value }))} /></div>
             <div className="space-y-2"><Label>B/L Date</Label><Input value={blForm.blDate || ''} onChange={(e) => setBlForm(p => ({ ...p, blDate: e.target.value }))} placeholder="dd/mm/yyyy" /></div>

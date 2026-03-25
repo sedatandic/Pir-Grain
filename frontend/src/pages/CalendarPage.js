@@ -133,7 +133,7 @@ export default function CalendarPage() {
                         {dayHolidays.length > 0 && null}
                       </div>
                       {dayHolidays.slice(0, 1).map((h, j) => (
-                        <div key={`h-${j}`} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate border flex items-center gap-1 ${h.colorClass}`}><img src={h.flag} alt={h.country} className="h-3 w-4 object-cover rounded-sm shrink-0" /> {h.title}</div>
+                        <div key={`h-${j}`} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate border flex items-center gap-1 ${h.colorClass}`}><img src={h.flag} alt={h.country} className="h-3 w-4 object-cover rounded-none shrink-0" /> {h.title}</div>
                       ))}
                       {dayEvents.slice(0, dayHolidays.length > 0 ? 1 : 2).map((ev, j) => (
                         <div key={j} className={`text-[10px] px-1 py-0.5 rounded mb-0.5 truncate ${EVENT_TYPES[ev.type]?.color || 'bg-muted text-muted-foreground'}`}>{ev.title}</div>
@@ -160,7 +160,7 @@ export default function CalendarPage() {
                   return hasContent ? (
                     <div className="space-y-2">
                       {holidays.map((h, i) => (
-                        <div key={`hol-${i}`} className={`p-2 rounded-lg border text-sm flex items-center gap-2 ${h.colorClass}`}><img src={h.flag} alt={h.country} className="h-4 w-5 object-cover rounded-sm shrink-0" /> {h.title}</div>
+                        <div key={`hol-${i}`} className={`p-2 rounded-lg border text-sm flex items-center gap-2 ${h.colorClass}`}><img src={h.flag} alt={h.country} className="h-4 w-5 object-cover rounded-none shrink-0" /> {h.title}</div>
                       ))}
                       {selectedDateEvents.map(ev => (
                         <div key={ev.id} className={`p-2 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
@@ -251,7 +251,7 @@ export default function CalendarPage() {
                   <div className="space-y-2">
                     {holidays.map((h, i) => (
                       <div key={i} className={`flex items-center gap-3 py-1.5 px-2 rounded-lg border ${h.colorClass || 'bg-muted/50'}`}>
-                        <span className="text-lg shrink-0"><img src={h.flag} alt={h.country} className="h-5 w-6 object-cover rounded-sm" /></span>
+                        <span className="text-lg shrink-0"><img src={h.flag} alt={h.country} className="h-5 w-6 object-cover rounded-none" /></span>
                         <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{h.title}</p><p className="text-xs text-muted-foreground">{({TR:'Turkey',RU:'Russia',UA:'Ukraine',US:'USA'})[h.country] || h.country}</p></div>
                         <span className="text-xs font-medium text-muted-foreground shrink-0">{format(h.dateObj, 'dd MMM')}</span>
                       </div>

@@ -416,7 +416,7 @@ export default function DocInstructionsPage() {
                     <Textarea value={form.consigneeCustom} onChange={e => set('consigneeCustom', e.target.value)} rows={2} placeholder="Enter custom consignee" />
                   )}
                   {form.consigneeOption === 'buyer_details' && form.consigneeBuyerId && (
-                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap font-medium">{getBuyerDisplay(form.consigneeBuyerId)}</div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-sm whitespace-pre-wrap">{getBuyerDisplay(form.consigneeBuyerId)}</div>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -432,7 +432,7 @@ export default function DocInstructionsPage() {
                     <Textarea value={form.notifyCustom} onChange={e => set('notifyCustom', e.target.value)} rows={2} placeholder="Enter custom notify party" />
                   )}
                   {form.notifyOption === 'buyer_details' && form.notifyBuyerId && (
-                    <div className="bg-muted/50 rounded p-2 text-xs whitespace-pre-wrap font-medium">{getBuyerDisplay(form.notifyBuyerId)}</div>
+                    <div className="bg-muted/50 rounded-lg p-3 text-sm whitespace-pre-wrap">{getBuyerDisplay(form.notifyBuyerId)}</div>
                   )}
                 </div>
               </div>

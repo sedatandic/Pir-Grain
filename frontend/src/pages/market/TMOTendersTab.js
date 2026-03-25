@@ -148,7 +148,7 @@ export default function TMOTendersTab() {
                 <div className="cursor-pointer select-none" onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}>
                   <div className="bg-muted border-b border-border px-4 py-2 flex items-center">
                     {expandedTenders[tender.id] ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" /> : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />}
-                    <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700">
+                    <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700 dark:text-green-400">
                       {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
                     </h3>
                   </div>
@@ -167,12 +167,12 @@ export default function TMOTendersTab() {
                       <Table className="border-collapse [&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border [&_th]:align-middle [&_td]:align-middle">
                         <TableHeader>
                           <TableRow className="bg-muted">
-                            <TableHead className="font-bold text-green-700 text-sm text-center">Company</TableHead>
-                            <TableHead className="font-bold text-green-700 text-sm text-center">Port</TableHead>
-                            <TableHead className="font-bold text-green-700 text-sm text-center">Quantity (Mts)</TableHead>
-                            <TableHead className="font-bold text-green-700 text-sm text-center">CIF</TableHead>
-                            <TableHead className="font-bold text-green-700 text-sm text-center">EXW</TableHead>
-                            <TableHead className="font-bold text-black text-sm text-center w-20"></TableHead>
+                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Company</TableHead>
+                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Port</TableHead>
+                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Quantity (Mts)</TableHead>
+                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">CIF</TableHead>
+                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">EXW</TableHead>
+                            <TableHead className="font-bold text-sm text-center w-20"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -183,7 +183,7 @@ export default function TMOTendersTab() {
                                   <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
                                   <TableCell className="py-4 text-center">{result.port}</TableCell>
                                   <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-center font-mono text-black py-4">
+                                  <TableCell className="text-center font-mono py-4">
                                     {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
                                   </TableCell>
                                   <TableCell className="text-center font-mono py-4">

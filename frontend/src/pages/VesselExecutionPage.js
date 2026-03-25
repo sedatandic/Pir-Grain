@@ -379,17 +379,37 @@ export default function VesselExecutionPage() {
     <div className="space-y-4" data-testid="vessel-execution-page">
       <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>
 
-      {/* Contract Selector */}
-      <div className="max-w-3xl">
-        <Label className="mb-1.5 block">Select Contract</Label>
-        <Select value={selectedTradeId} onValueChange={handleTradeSelect}>
-          <SelectTrigger data-testid="ve-contract-select"><SelectValue placeholder="Select a contract" /></SelectTrigger>
-          <SelectContent>
+      {/* Ongoing Contracts Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/50 border-b">
+              <th className="text-left px-4 py-2.5 font-medium">Contract</th>
+              <th className="text-left px-4 py-2.5 font-medium">Commodity</th>
+              <th className="text-right px-4 py-2.5 font-medium">Quantity</th>
+              <th className="text-left px-4 py-2.5 font-medium">Seller</th>
+              <th className="text-left px-4 py-2.5 font-medium">Buyer</th>
+              <th className="text-left px-4 py-2.5 font-medium">Vessel</th>
+            </tr>
+          </thead>
+          <tbody>
             {trades.filter(t => (t.pirContractNumber || t.contractNumber) && t.vesselName).map(t => (
-              <SelectItem key={t.id} value={t.id}>{getTradeLabel(t)}</SelectItem>
+              <tr
+                key={t.id}
+                onClick={() => handleTradeSelect(t.id)}
+                className={`border-b cursor-pointer transition-colors hover:bg-muted/30 ${selectedTradeId === t.id ? 'bg-primary/10 border-l-4 border-l-primary' : ''}`}
+                data-testid={`ve-contract-row-${t.id}`}
+              >
+                <td className="px-4 py-2.5 font-medium">{t.pirContractNumber || t.contractNumber}</td>
+                <td className="px-4 py-2.5">{t.originAdjective || t.originName} {t.commodityName}</td>
+                <td className="px-4 py-2.5 text-right">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                <td className="px-4 py-2.5">{t.sellerCode || t.sellerName || '-'}</td>
+                <td className="px-4 py-2.5">{t.buyerCode || t.buyerName || '-'}</td>
+                <td className="px-4 py-2.5 font-medium uppercase">{t.vesselName}</td>
+              </tr>
             ))}
-          </SelectContent>
-        </Select>
+          </tbody>
+        </table>
       </div>
 
       {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}

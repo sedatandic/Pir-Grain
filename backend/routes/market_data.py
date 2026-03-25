@@ -966,39 +966,72 @@ async def delete_market_commodity(commodity_id: str, user=Depends(require_roles(
 @router.get("/coaster-freights/{week_number}")
 async def get_coaster_freight(week_number: int, year: int = 2026, user=Depends(get_current_user)):
     """Scrape freight report from sealines.su for a given ISO week number and year"""
-    url = f"https://sealines.su/en/market-news/{week_number}-week-{year}/"
+    import fitz
+    import base64
+    
+    en_url = f"https://sealines.su/en/market-news/{week_number}-week-{year}/"
+    ru_url = f"https://sealines.su/market-news/{week_number}-week-{year}/"
+    
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            }
-            response = await client.get(url, headers=headers, follow_redirects=True)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Find PDF link
+        async with httpx.AsyncClient(timeout=20.0) as client:
+            headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            
+            # Fetch English content
+            en_response = await client.get(en_url, headers=headers, follow_redirects=True)
+            en_paragraphs = []
+            pdf_url = None
+            
+            if en_response.status_code == 200:
+                soup = BeautifulSoup(en_response.text, 'html.parser')
                 pdf_link = soup.find('a', string=lambda s: s and 'Download' in str(s))
                 pdf_url = pdf_link.get('href') if pdf_link else None
-                
-                # Find content - get paragraphs from article/entry-content
                 content_div = soup.find('div', class_='entry-content') or soup.find('article')
-                paragraphs = []
                 if content_div:
                     for p in content_div.find_all('p'):
                         text = p.get_text(strip=True)
                         if text and 'Download report' not in text:
-                            paragraphs.append(text)
-                
-                return {
-                    "week": week_number,
-                    "year": year,
-                    "content": "\n\n".join(paragraphs),
-                    "pdfUrl": pdf_url,
-                    "sourceUrl": url,
-                    "found": True
-                }
-            else:
-                return {"week": week_number, "year": year, "content": "", "pdfUrl": None, "sourceUrl": url, "found": False}
+                            en_paragraphs.append(text)
+            
+            # Fetch Russian content
+            ru_paragraphs = []
+            ru_response = await client.get(ru_url, headers=headers, follow_redirects=True)
+            if ru_response.status_code == 200:
+                soup_ru = BeautifulSoup(ru_response.text, 'html.parser')
+                content_ru = soup_ru.find('div', class_='entry-content') or soup_ru.find('article')
+                if content_ru:
+                    for p in content_ru.find_all('p'):
+                        text = p.get_text(strip=True)
+                        if text and 'Скачать' not in text and 'Download' not in text:
+                            ru_paragraphs.append(text)
+            
+            # Convert PDF to JPEG images
+            pdf_images = []
+            if pdf_url:
+                try:
+                    pdf_response = await client.get(pdf_url, headers=headers, follow_redirects=True)
+                    if pdf_response.status_code == 200:
+                        doc = fitz.open(stream=pdf_response.content, filetype="pdf")
+                        for page_num in range(len(doc)):
+                            page = doc[page_num]
+                            mat = fitz.Matrix(2.0, 2.0)
+                            pix = page.get_pixmap(matrix=mat)
+                            img_bytes = pix.tobytes("jpeg")
+                            img_b64 = base64.b64encode(img_bytes).decode('utf-8')
+                            pdf_images.append(f"data:image/jpeg;base64,{img_b64}")
+                        doc.close()
+                except Exception as e:
+                    print(f"PDF conversion error: {e}")
+            
+            return {
+                "week": week_number,
+                "year": year,
+                "content": "\n\n".join(en_paragraphs),
+                "contentRu": "\n\n".join(ru_paragraphs),
+                "pdfUrl": pdf_url,
+                "pdfImages": pdf_images,
+                "sourceUrl": en_url,
+                "found": len(en_paragraphs) > 0 or len(ru_paragraphs) > 0
+            }
     except Exception as e:
         print(f"Coaster freight scraping error for week {week_number}: {e}")
-        return {"week": week_number, "year": year, "content": "", "pdfUrl": None, "sourceUrl": url, "found": False, "error": str(e)}
+        return {"week": week_number, "year": year, "content": "", "contentRu": "", "pdfUrl": None, "pdfImages": [], "sourceUrl": en_url, "found": False}

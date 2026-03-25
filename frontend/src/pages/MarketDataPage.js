@@ -1132,7 +1132,7 @@ export default function MarketDataPage() {
                     <span className="text-muted-foreground">Loading freight report...</span>
                   </div>
                 ) : freightData?.found ? (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {freightData.pdfUrl && (
                       <div className="flex items-center justify-between bg-muted/50 p-3 rounded-lg">
                         <span className="text-sm font-medium">Freight Market Report - Week {freightData.week}</span>
@@ -1143,11 +1143,49 @@ export default function MarketDataPage() {
                         </a>
                       </div>
                     )}
-                    <div className="prose prose-sm max-w-none">
-                      {freightData.content?.split('\n\n').map((para, idx) => (
-                        <p key={idx} className="text-sm leading-relaxed mb-3">{para}</p>
-                      ))}
-                    </div>
+                    
+                    {/* English Commentary */}
+                    {freightData.content && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2 text-green-700">English Market Commentary</h3>
+                        <div className="prose prose-sm max-w-none">
+                          {freightData.content.split('\n\n').map((para, idx) => (
+                            <p key={idx} className="text-sm leading-relaxed mb-3">{para}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Russian Commentary */}
+                    {freightData.contentRu && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-2 text-blue-700">Russian Market Commentary</h3>
+                        <div className="prose prose-sm max-w-none">
+                          {freightData.contentRu.split('\n\n').map((para, idx) => (
+                            <p key={idx} className="text-sm leading-relaxed mb-3">{para}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* PDF Pages as Images */}
+                    {freightData.pdfImages?.length > 0 && (
+                      <div>
+                        <h3 className="font-semibold text-sm mb-3 text-green-700">Report Pages</h3>
+                        <div className="space-y-4">
+                          {freightData.pdfImages.map((imgSrc, idx) => (
+                            <div key={idx} className="border rounded-lg overflow-hidden shadow-sm">
+                              <img 
+                                src={imgSrc} 
+                                alt={`Freight Report Week ${freightData.week} - Page ${idx + 1}`}
+                                className="w-full h-auto"
+                                data-testid={`freight-pdf-page-${idx}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-12">

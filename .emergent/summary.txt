@@ -3,162 +3,150 @@
 **PRODUCT REQUIREMENTS**:
 - **Live Market Prices Dashboard**: Display real-time prices for agricultural commodities, metals, energy, and currencies, with charts.
 - **Turkish Commodity Exchange Prices**: Scrape and display prices from Konya Ticaret Borsası (KTB) and Gaziantep Ticaret Borsası (GTB).
-- **Notes System**: Allow users to write and save daily, monthly, and yearly notes for each commodity.
+- **Notes System (Indications)**: Allow users to write and save daily, monthly, and yearly notes for each commodity.
 - **Telegram Feed Integration**: Embed a feed of selected Telegram channels on the right sidebar.
 - **TMO Tender Tracking Module**: A dedicated section to track Turkish Grain Board (TMO) tenders and their results.
+- **Coaster Freights Module**: A new tab to display weekly freight market reports scraped from an external source.
 - **UI/UX**: Modern dashboard with dark mode, sidebars for navigation and the Telegram feed.
 - **Backend**: Use a database to store notes, tenders, and configurations, with APIs for all features.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The original commodity trading dashboard now includes a new, comprehensive Market Data page (). This page was built from scratch in this session and has the following features:
--   **Live Prices Table**: A redesigned table that displays live prices for commodities (Wheat, Corn, Soybeans, Gold, Crude Oil) and currencies (EUR, RUB, TRY, UAH). All data is now scraped in real-time from Barchart.com.
--   **Auto-Refresh**: The page automatically fetches fresh data every 15 minutes and displays a Last Updated timestamp. A manual Refresh Now button is also available.
--   **Turkish Exchanges Tab**: This section successfully scrapes and displays daily prices from the official Konya Ticaret Borsası (KTB) website.
--   **TMO Tenders Tab**: The UI has been completely redesigned to match a user-provided image, featuring a detailed table structure for tender results and updated forms for creating tenders and adding results.
--   **Notes & Charts**: The foundational UI for the notes system and commodity price charts is in place.
--   **Backend Support**: New API routes () and database collections (, , etc.) have been created to support all the new frontend features.
+The application is a commodity trading dashboard with a feature-rich Market Data page. This page is composed of several tabs:
+- **Indications (formerly Market News/Notes)**: A commentary section with a hierarchical date navigation (Year -> Month -> Weekday). Users can post and view comments for specific dates.
+- **Live Prices**: A table displaying real-time scraped commodity and currency prices from Barchart.com, which auto-refreshes every 15 minutes.
+- **Turkish Exchanges**: Displays scraped daily prices from both Konya Ticaret Borsası (KTB) and Gaziantep Ticaret Borsası (GTB).
+- **TMO Tenders**: A module to create, view, and manage Turkish Grain Board tenders. The UI is a collapsible card layout per the user's design, with functionality to add, edit, and delete tender results.
+- **Coaster Freights**: A new tab that scrapes weekly freight reports from . It features year/week navigation and displays the report PDF as a series of images alongside both the English and Russian text summaries.
+- **Telegram Feed**: A right-hand sidebar displays a live feed of messages from 7 configured grain market Telegram channels, scraped from public web previews. Messages can be opened in an in-app popup.
 
 **Last working item**:
-    - Last item agent was working: The agent was fixing the live price scraping for Gold from Barchart.com. The scraper was extracting an incorrect value of  due to a faulty regex pattern and data caching. The agent attempted a fix but the UI was still displaying the incorrect, cached price. The goal is to ensure the correct Gold price (e.g., ~,300) is scraped and displayed.
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? backend testing agent and screenshot tool
+    - Last item agent was working: Enhancing the Coaster Freights tab. The agent implemented the backend logic to download the weekly PDF report, convert each page to a JPEG image, and scrape both English and Russian text. The frontend was updated to display these images and the Russian text below the existing English summary.
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: Y
+    - Which testing method agent to use? screenshot tool
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: Gold price is scraped incorrectly from Barchart.com (P0)
-  
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: The agent updated the regex in  to prefer longer numbers but the UI still showed the old cached value.
-     - Next debug checklist:
-        1. In , refine the regex in  to reliably parse the JSON-like string containing . A robust method would be to extract the JSON snippet and parse it directly instead of relying on a fragile regex for the value alone.
-        2. To overcome caching during debug, add temporary logic to delete the cached Gold price from the  in MongoDB before fetching, e.g., .
-        3. Verify the fix by running a  command to the  endpoint and checking the Gold price in the JSON response.
-        4. Finally, verify the frontend UI with the screenshot tool.
-     - Why fix this issue and what will be achieved with the fix?: The dashboard's credibility depends on accurate data. Fixing this will ensure the Gold price is correct and trustworthy for the user.
-     - Status:  IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on other issue: None
+  There are no known pending issues or bugs.
 
 **In progress Task List**:
-  - Task 1: Add Live badges to commodity prices (P1)
-     - Where to resume: In , within the  table, add a  component next to the commodity prices similar to how it's done for currencies. The badge should display if the data  is Barchart.
-     - What will be achieved with this?: This provides a clear visual confirmation to the user that all prices in the table are from a live data source, not mock data.
-     - Status:  NOT STARTED
+  - Task 1: Verify the Coaster Freights PDF-to-Image and Russian text feature (P0)
+     - Where to resume: The feature is implemented. The next agent should confirm with the user if the display of the report images and the Russian text in the Coaster Freights tab meets their expectations.
+     - What will be achieved with this?: This will complete the Coaster Freights feature as requested by the user.
+     - Status: USER VERIFICATION PENDING
      - Should Test frontend/backend/both after fix? frontend
-     - Blocked on something: None
+     - Blocked on something: User feedback.
 
 **Upcoming and Future Tasks**
 Upcoming Tasks:
-- **P0: Telegram Feed Integration**: Implement the Telegram feed display on the right sidebar. This is currently blocked pending the user providing a Telegram Bot Token and the desired channel names.
-- **P1: KTB Historical Data Views**: The user requested daily, monthly, and yearly views for KTB prices. The current implementation only fetches the latest daily bulletin. This requires investigating  for historical data endpoints or archives and updating the backend scraper and frontend UI with period selectors.
-- **P1: Gaziantep (GTB) Exchange Integration**: Implement a new scraper for the Gaziantep Ticaret Borsası (GTB) and add it to the Turkish Exchanges tab, similar to the existing KTB implementation.
-- **P2: Clarify Soybeans Removal**: The user requested not to show Soybean Meal. The agent should confirm with the user if CBOT - Soybeans should also be removed from the Live Market Prices table.
+- **P1: KTB Historical Data Views**: The user requested daily, monthly, and yearly views for KTB prices. The current implementation only fetches the latest daily bulletin. This requires investigating  for historical data and updating the backend scraper and frontend UI.
+- **P2: Clarify Soybeans Removal**: The user previously requested not to show Soybean Meal. The agent should confirm if CBOT - Soybeans should also be removed from the Live Market Prices table.
 
 Future Tasks:
-- Full Server-Side RBAC
-- Refactor large frontend pages (, , etc.)
-- Google Workspace Integration
-- Price display format clarification ( over a line with )
+- **Refactor **: This file has become a monolith (over 1500 lines) and should be broken down into smaller, manageable components for each tab (Indications, Tenders, Freights, etc.).
+- **Full Server-Side RBAC**: Implement role-based access control on the backend for more granular permissions.
+- **Google Workspace Integration**: Add an email menu bar and integrate with Google Workspace as per the user's earlier request.
+- **Enhancement Suggestion**: Add a Copy to Clipboard button on each TMO tender card that formats the data for easy sharing.
+- **Enhancement Suggestion**: Implement automatic daily scraping (scheduled task) for KTB and GTB prices.
 
 **Completed work in this session**
-- **Discharge Port Price Fix**: The  page now correctly calculates and displays the price based on the selected discharge port.
-- **Calendar UI Update**: The calendar now shows country flag emojis instead of two-letter codes.
-- **Email Attachment Automation**: Shipment Appropriation emails now automatically attach any Bill of Ladings documents associated with the trade.
-- **Market Data Module (New Feature)**:
-    - **Live Price Scraping**: Implemented real-time data scraping from Barchart.com for all commodities and currencies.
-    - **UI Redesign**: Overhauled the UI for the Live Market Prices and TMO Tenders sections to match user-provided images.
-    - **Auto-Refresh**: The Market Data page now refreshes automatically every 15 minutes and displays a Last Updated timestamp.
-    - **KTB Integration**: Successfully integrated a scraper for daily prices from the Konya Ticaret Borsası (ktb.org.tr).
+- **Gold Price Fix**: Resolved a scraping bug where the Gold price was incorrectly parsed as  due to a comma in the number.
+- **TMO Tenders Redesign**: Completely overhauled the TMO Tenders UI to match user-provided images, including a collapsible card layout, custom date pickers, dropdowns, and numerous label/field updates.
+- **TMO Result CRUD**: Implemented backend and frontend functionality to add, edit, and delete individual results within a tender.
+- **Market News to Indications Redesign**: Renamed the Notes tab to Indications and redesigned it to feature hierarchical date navigation (Year -> Month -> Day) with inline commenting.
+- **Gaziantep (GTB) Exchange Integration**: Implemented a new scraper for  and integrated its data into the Turkish Exchanges tab.
+- **Telegram Feed Implementation**: Implemented a public web scraper to fetch messages from 7 user-specified Telegram channels and display them in a sidebar with an in-app popup viewer, removing the need for a bot token.
+- **Coaster Freights Tab**: Created a new tab and a backend scraper for  to display weekly freight reports with year/week navigation.
+- **PDF Report Display**: Enhanced the Coaster Freights feature to download the report PDF, convert it to images, and display them in the UI along with both English and Russian text.
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1:
-     - Google Workspace Integration: User's request to add an email menu bar and access Google Workspace has not been addressed. It is now in the future task list.
+   - Issue 1: Google Workspace Integration
      - Debug checklist:
-        1. Use  to confirm the priority and get detailed requirements.
+        1. Use  to confirm priority and get detailed requirements.
         2. Call  with Gmail API to get an integration plan.
      - Why to solve this issue and what will be achieved with this?: Fulfills a direct user requirement for email integration.
      - Should Test frontend/backend/both after fix: both
      - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
-  None.
+  - None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Web Scraping**: Implemented backend scraping using  and  to extract live data from Barchart.com (commodities, forex) and ktb.org.tr (Turkish exchange prices). This involved parsing HTML and embedded JSON-like data structures.
-- **Data Caching & Refresh**: Utilized MongoDB as a cache for scraped prices to calculate price changes. Implemented a 15-minute auto-refresh cycle on the frontend using  and .
-- **Dynamic UI from Images**: Successfully translated user-provided images into functional React components, including the live prices table and the complex TMO tenders layout.
-- **Backend Document Attachment**: Enhanced the email service to query the database for specific documents () and attach them to outgoing  emails.
+- **Web Scraping**: Extensive use of  and  to parse HTML and data from Barchart.com, ktb.org.tr, gtb.org.tr, t.me/s/*, and sealines.su.
+- **PDF Processing**: New backend capability using  (fitz) to download a PDF, iterate through its pages, and convert each page into a JPEG image for frontend display.
+- **React UI/State Management**: Heavy use of , , and  to manage the complex state of the  monolith, including hierarchical navigation, collapsible components, and multiple dialogs.
+- **Custom Date Picker**: Implemented a custom date picker using Shadcn's  and  components with  to enforce a  format.
+- **Hierarchical Data Navigation**: Implemented a multi-level drill-down UI for the Indications tab (Year -> Month -> Day) and Coaster Freights tab (Year -> Week).
 
 **key DB schema**
-- ****: 
-- ****: 
-- ****: 
-- ****: 
+- ****: The  field is now used to store specific date keys (), month keys (), or year keys () to support the new hierarchical view.
+- ****: The schema was updated to include  (e.g., 'Import' or 'Export'). The  is now stored as MTS, not KMT. The  array elements now include .
+- ****: Now stores records with .
+- ****: A new collection was implicitly created to store channel information: .
 
 **changes in tech stack**
--  and  were heavily utilized for the new web scraping functionality.
+- **** and ****: Added to the backend for converting PDF files into images.
+- ****: Used on the frontend for advanced date formatting and logic for the hierarchical navigation.
 
 **All files of reference**
-- : Core backend logic for the new market data module.
-- : Core frontend UI and logic for the new market data module.
-- : Modified to attach documents to emails.
-- : Modified for a price display bug fix.
-- : Modified for a UI update (flags).
+- : The central backend file for all new market data features. It contains all scraping logic (including the new GTB, Telegram, and Sealines scrapers), the new PDF processing endpoint, and the new CRUD endpoints for tender results.
+- : A monolithic React component that contains the entire UI and state management for the Indications, Prices, Turkish Exchanges, TMO Tenders, and Coaster Freights tabs, as well as the Telegram sidebar.
+- : Updated to include , , and .
+- : Minor label changes were applied.
 
 **Areas that need refactoring**:
-- **CRITICAL**:  is now a monolithic file exceeding 1000 lines. It must be broken down into smaller components for prices, tenders, notes, and their respective dialogs.
--  contains logic for scraping, database interactions, and API endpoints for multiple features. It should be modularized.
-- The previously identified large pages (, ) still require refactoring.
+- **CRITICAL**:  is now over 1500 lines long and handles the logic for five distinct features plus a sidebar. It urgently needs to be broken down into smaller, single-responsibility components (e.g., , , , , ).
+-  has also become very large. The various scraping functions could be abstracted into a separate  module to improve organization.
 
 **key api endpoints**
-- : Fetches all live market prices.
-- : Triggers scraping of the KTB website.
-- : CRUD endpoints for market notes.
-- : CRUD endpoints for TMO tenders.
-- : Adds a result to a specific tender.
+- : Updates a specific result in a tender.
+- : Deletes a specific result from a tender.
+- : Fetches the distinct years for which notes exist, used for the archive navigation.
+- : Scrapes weekly freight reports from . Accepts an optional  query parameter.
+- : Modified to scrape public channels without a bot token.
+- : Modified to scrape both KTB and GTB.
 
 **Critical Info for New Agent**
-- The user is providing requirements via images. Pay close attention to these images to match the UI precisely.
-- The immediate priority is to fix the Gold price scraping bug. This involves debugging the regex/parsing logic in  and handling the data cache.
-- The web scraping logic for Barchart and KTB can be brittle. If the source websites change their HTML structure, the scrapers will break and need updating.
-- The Telegram integration is blocked waiting for the user to provide a bot token. Do not proceed with it until the user provides the necessary credentials.
+- The user drives development through frequent, iterative requests accompanied by images. Be prepared to make small, precise UI adjustments.
+- The top priority should be to confirm the last implemented feature (Coaster Freights with images).
+- The  file is extremely large and complex. Any new feature or significant change will be difficult. Propose refactoring this component as a high-priority task to improve maintainability.
+- All web scraping is brittle. If a source website's layout changes, the corresponding scraper in  will need to be debugged and updated.
 
 **documents and test reports created in this job**
--  was updated to reflect the new market data module.
+-  (updated multiple times)
+- 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. **Request**: . **Status**: COMPLETED.
-2. **Request**:  (with image). **Status**: COMPLETED.
-3. **Request**:  (with image showing mock commodity data). **Status**: COMPLETED (Agent implemented live Barchart scraping).
-4. **Request**: Update commodity/currency lists and KTB views. **Status**: PARTIALLY COMPLETED (KTB historical views are pending).
-5. **Request**: Scrape KTB prices from social media. **Status**: BLOCKED/WORKAROUND (Agent used official website instead).
-6. **Request**: Take exchange rates from Barchart. **Status**: COMPLETED.
-7. **Request**:  (with image showing demo currency data). **Status**: COMPLETED (Agent switched to a working live API).
-8. **Request**: User provides initial choices for the new app. **Status**: COMPLETED.
-9. **Request**: User submits the large problem statement for the new market data application. **Status**: IN PROGRESS.
-10. **Request**: . **Status**: COMPLETED.
+1. **Request**: Display the Coaster Freight PDF report as an image and include the Russian text. **Status: USER VERIFICATION PENDING**.
+2. **Request**: Update Coaster Freights to show a Year -> Week navigation hierarchy. **Status: COMPLETED**.
+3. **Request**: Add a new Coaster Freights tab scraping data from . **Status: COMPLETED**.
+4. **Request**: Change Market News tab and title to Indications. **Status: COMPLETED**.
+5. **Report**: market data not loading. **Status: RESOLVED** (Identified as a temporary loading issue).
+6. **Request**: Remove the Today shortcut button from the Indications tab. **Status: COMPLETED**.
+7. **Report**: Commentary posted on a specific date was not being saved correctly. **Status: COMPLETED**.
+8. **Request**: Redesign the Indications date navigation to be a hierarchical drill-down (Year -> Month -> Day). **Status: COMPLETED**.
+9. **Request**: Make Telegram feed links open in an in-app popup and format the Indications date tabs. **Status: COMPLETED**.
+10. **Request**: Add Daily, Monthly, and Yearly archives to the Market News (now Indications) tab. **Status: COMPLETED**.
 
 **Project Health Check:**
-- **Broken**: The live price for Gold in the Market Data module is incorrect due to a scraping/caching bug.
-- **Mocked**: The Telegram feed is a placeholder showing No messages yet.
+- **Broken**: None
+- **Mocked**: None
 
 **3rd Party Integrations**
-- ****: Used for sending all application emails.
-- ****: Used for generating PDF documents.
-- ****: Used for Object Storage and OCR features in the original application.
-- ** & **: **Newly used** for web scraping live data from Barchart.com and ktb.org.tr.
-- ****: Used for parsing  files.
+- ****: Email sending.
+- ****: PDF generation.
+- ****: Object Storage and OCR.
+- ** & **: Used for all web scraping.
+- ****: Parsing  files.
+- ** (fitz) & **: **Newly used** for backend PDF-to-image conversion.
 
 **Testing status**
-  - Testing agent used after significant changes: NO
+  - Testing agent used after significant changes: YES (once, for the Gold price fix and TMO redesign)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
   - Known regressions: None
@@ -168,5 +156,5 @@ Future Tasks:
 - **Accountant**:  / 
 
 **What agent forgot to execute**
-- The user's request to have daily and monthly and yearly views for KTB prices was not fully implemented. Only the latest daily prices are fetched. This is now an upcoming task.
-- The agent has not yet added the Live badge to the commodity prices in the main table, only to the currencies.</analysis>
+- The original handoff mentioned implementing historical views (daily, monthly, yearly) for KTB prices. This task is still pending and is listed in the upcoming tasks.
+- The agent never clarified with the user whether CBOT - Soybeans should be removed from the live prices table, a point from the initial handoff.</analysis>

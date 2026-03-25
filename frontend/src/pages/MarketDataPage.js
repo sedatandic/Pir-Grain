@@ -24,7 +24,7 @@ export default function MarketDataPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-5 w-full max-w-2xl">
             <TabsTrigger value="news" data-testid="tab-indications">Indications</TabsTrigger>
-            <TabsTrigger value="prices" data-testid="tab-prices">Prices</TabsTrigger>
+            <TabsTrigger value="prices" data-testid="tab-prices">CBOT & Exchange Rates</TabsTrigger>
             <TabsTrigger value="turkish" data-testid="tab-turkish">Turkish Exchanges</TabsTrigger>
             <TabsTrigger value="tenders" data-testid="tab-tenders">TMO Tenders</TabsTrigger>
             <TabsTrigger value="freights" data-testid="tab-freights">Coaster Freights</TabsTrigger>

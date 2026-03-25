@@ -1058,7 +1058,7 @@ async def get_telegram_messages(user=Depends(get_current_user)):
                             all_messages.append({
                                 "channelName": channel.get("name"),
                                 "channelId": channel_id,
-                                "text": text[:500] if text else "(photo/media)",
+                                "text": text if text else "(photo/media)",
                                 "date": date_str,
                                 "hasPhoto": has_photo,
                                 "link": f"https://t.me/{channel_id}"

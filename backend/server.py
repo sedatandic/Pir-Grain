@@ -79,3 +79,37 @@ app.include_router(market_data_router)
 @app.get("/api/health")
 def health():
     return {"status": "healthy", "app": "PIR Grain & Pulses"}
+
+
+@app.get("/api/config/active-url")
+def get_active_url():
+    """Public endpoint - returns the current active app URL"""
+    from database import app_config_col
+    config = app_config_col.find_one({"key": "active_url"}, {"_id": 0})
+    if config:
+        return {"activeUrl": config.get("value", "")}
+    # If no active URL set yet, auto-initialize from APP_URL env
+    app_url = os.environ.get("APP_URL", "").rstrip("/")
+    if app_url:
+        app_config_col.update_one(
+            {"key": "active_url"},
+            {"$set": {"key": "active_url", "value": app_url}},
+            upsert=True
+        )
+    return {"activeUrl": app_url}
+
+
+@app.put("/api/config/active-url")
+def update_active_url(body: dict):
+    """Admin endpoint - updates the active app URL"""
+    from database import app_config_col
+    from auth import get_current_user
+    new_url = body.get("activeUrl", "").rstrip("/")
+    if not new_url:
+        return {"error": "activeUrl is required"}
+    app_config_col.update_one(
+        {"key": "active_url"},
+        {"$set": {"key": "active_url", "value": new_url}},
+        upsert=True
+    )
+    return {"activeUrl": new_url}

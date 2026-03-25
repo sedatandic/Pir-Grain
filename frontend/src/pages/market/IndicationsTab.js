@@ -51,19 +51,27 @@ export default function IndicationsTab() {
   };
 
   const MONTHS3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const DAYS31 = Array.from({ length: 31 }, (_, i) => i + 1);
+  const FROM_DAYS = [1, 5, 7, 10, 15, 20, 25];
+  const TO_DAYS = [5, 7, 10, 15, 20, 25, 30, 31];
+  const QUANTITIES = ['3K', '5K', '3-5K', '6K', '10K', '25K'];
 
   const COMMODITIES = [
     '11.5% Pro. MW', '12.5% Pro. MW', '13.5% Pro. MW', '14.5% Pro. MW', '15.3% Pro. MW',
     'Corn', 'Barley', 'Wheat Bran Pellets', 'Yellow Peas', 'Chickpeas'
   ];
   const BASE_PORTS = [
-    { value: 'CIF Marmara', label: 'Marmara' },
-    { value: 'CIF Mersin', label: 'Mersin' },
+    { value: 'CIF Marmara', label: 'CIF Marmara' },
+    { value: 'CIF Mersin', label: 'CIF Mersin' },
+    { value: 'FOB POC', label: 'FOB POC' },
+    { value: 'FOB Azov/Rostov', label: 'FOB Azov/Rostov' },
+    { value: 'FOB Giurgiulesti', label: 'FOB Giurgiulesti' },
+    { value: 'FOB Izmail', label: 'FOB Izmail' },
+    { value: 'FOB Novorossiysk', label: 'FOB Novorossiysk' },
+    { value: 'FOB Kavkaz', label: 'FOB Kavkaz' },
   ];
   const ORIGINS = ['Russia', 'Ukraine', 'Moldova'];
 
-  const defaultIndForm = { side: 'Seller', commodity: '11.5% Pro. MW', basePort: 'CIF Marmara', origin: 'Russia', shipment: '', quantity: '', price: '' };
+  const defaultIndForm = { side: 'Seller', commodity: '11.5% Pro. MW', basePort: 'CIF Marmara', origin: 'Russia', shipment: '', quantity: '', price: '', currency: 'USD' };
   const [indForm, setIndForm] = useState({ Wheat: { ...defaultIndForm }, Corn: { ...defaultIndForm, commodity: 'Corn' }, Barley: { ...defaultIndForm, commodity: 'Barley' }, Others: { ...defaultIndForm } });
   const [showForm, setShowForm] = useState({ Wheat: false, Corn: false, Barley: false, Others: false });
 
@@ -73,7 +81,8 @@ export default function IndicationsTab() {
     if (f.quantity) parts.push(`${f.quantity}`);
     if (f.origin) parts.push(f.origin.toLowerCase().substring(0, 4));
     if (f.commodity) parts.push(f.commodity);
-    if (f.price) parts.push(`$${f.price}`);
+    const sym = f.currency === 'EUR' ? '€' : '$';
+    if (f.price) parts.push(`${sym}${f.price}`);
     if (f.basePort) parts.push(f.basePort);
     if (f.shipment) parts.push(f.shipment);
     return parts.join(' ');
@@ -274,7 +283,12 @@ export default function IndicationsTab() {
                           <SelectItem value="Buyer">Buyer</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Input placeholder="Qty" value={indForm[category].quantity} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], quantity: e.target.value } }))} className="h-8 text-xs w-[60px]" />
+                      <Select value={indForm[category].quantity} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], quantity: v } }))}>
+                        <SelectTrigger className="h-8 text-xs w-[70px]"><SelectValue placeholder="Qty" /></SelectTrigger>
+                        <SelectContent>
+                          {QUANTITIES.map(q => <SelectItem key={q} value={q}>{q}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                       <Select value={indForm[category].origin} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], origin: v } }))}>
                         <SelectTrigger className="h-8 text-xs w-[90px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -282,14 +296,23 @@ export default function IndicationsTab() {
                         </SelectContent>
                       </Select>
                       <Select value={indForm[category].commodity} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], commodity: v } }))}>
-                        <SelectTrigger className="h-8 text-xs w-[130px]"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs w-[155px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {COMMODITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Input placeholder="Price $" value={indForm[category].price} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], price: e.target.value } }))} className="h-8 text-xs w-[70px]" />
+                      <div className="flex items-center gap-0">
+                        <Select value={indForm[category].currency || 'USD'} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], currency: v } }))}>
+                          <SelectTrigger className="h-8 text-xs w-[52px] rounded-r-none border-r-0"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="USD">$</SelectItem>
+                            <SelectItem value="EUR">€</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input placeholder="Price" value={indForm[category].price} onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], price: e.target.value } }))} className="h-8 text-xs w-[65px] rounded-l-none" />
+                      </div>
                       <Select value={indForm[category].basePort} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], basePort: v } }))}>
-                        <SelectTrigger className="h-8 text-xs w-[100px]"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-8 text-xs w-[140px]"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {BASE_PORTS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                         </SelectContent>
@@ -305,17 +328,19 @@ export default function IndicationsTab() {
                           <div className="space-y-2">
                             <div className="text-xs font-medium text-muted-foreground">Shipment Period</div>
                             <div className="flex items-center gap-1.5">
-                              <Input type="number" min="1" max="31" placeholder="DD" className="h-7 w-14 text-xs"
-                                value={indForm[category]._fromDay || ''}
-                                onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _fromDay: e.target.value } }))} />
+                              <Select value={indForm[category]._fromDay || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _fromDay: v } }))}>
+                                <SelectTrigger className="h-7 w-[56px] text-xs"><SelectValue placeholder="Day" /></SelectTrigger>
+                                <SelectContent>{FROM_DAYS.map(d => <SelectItem key={d} value={String(d)}>{d}</SelectItem>)}</SelectContent>
+                              </Select>
                               <Select value={indForm[category]._fromMon || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _fromMon: v } }))}>
                                 <SelectTrigger className="h-7 w-[70px] text-xs"><SelectValue placeholder="Mon" /></SelectTrigger>
                                 <SelectContent>{MONTHS3.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                               </Select>
                               <span className="text-xs font-medium">—</span>
-                              <Input type="number" min="1" max="31" placeholder="DD" className="h-7 w-14 text-xs"
-                                value={indForm[category]._toDay || ''}
-                                onChange={(e) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _toDay: e.target.value } }))} />
+                              <Select value={indForm[category]._toDay || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _toDay: v } }))}>
+                                <SelectTrigger className="h-7 w-[56px] text-xs"><SelectValue placeholder="Day" /></SelectTrigger>
+                                <SelectContent>{TO_DAYS.map(d => <SelectItem key={d} value={String(d)}>{d}</SelectItem>)}</SelectContent>
+                              </Select>
                               <Select value={indForm[category]._toMon || ''} onValueChange={(v) => setIndForm(prev => ({ ...prev, [category]: { ...prev[category], _toMon: v } }))}>
                                 <SelectTrigger className="h-7 w-[70px] text-xs"><SelectValue placeholder="Mon" /></SelectTrigger>
                                 <SelectContent>{MONTHS3.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>

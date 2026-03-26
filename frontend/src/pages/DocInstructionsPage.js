@@ -350,7 +350,17 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               </CardHeader>
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
-                  <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d' }}>DOCUMENTARY INSTRUCTIONS TO SELLER</h2>
+                  {(() => {
+                    const t = trades.find(tr => tr.id === previewDi.tradeId);
+                    const qty = t?.quantity ? Number(t.quantity).toLocaleString('en-US') : '';
+                    const commodity = (t?.commodityName || '').toUpperCase();
+                    const vessel = (t?.vesselName || '').toUpperCase();
+                    const titleParts = ['DOCUMENTARY INSTRUCTIONS FOR'];
+                    if (qty) titleParts.push(`${qty} MTS`);
+                    if (commodity) titleParts.push(commodity);
+                    if (vessel) titleParts.push(`- ${vessel}`);
+                    return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d' }}>{titleParts.join(' ')}</h2>;
+                  })()}
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Consignee & Notify Party</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
@@ -368,6 +378,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       {[
+                        ['Loading Port', (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const pId = t?.loadingPortId || t?.basePortId; if (!pId) return '—'; const p = ports.find(pp => pp.id === pId); return p ? `${p.name}, ${p.country}` : '—'; })()],
                         ['Discharge Port', previewDi.dischargePort || '—'],
                         ['Agent at Discharge Port', (() => {
                           const parts = [previewDi.agentName || '—'];
@@ -498,6 +509,17 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             {/* Shipment & Port */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Shipment & Port Details</h3>
+              {form.tradeId && (() => {
+                const t = trades.find(tr => tr.id === form.tradeId);
+                const pId = t?.loadingPortId || t?.basePortId;
+                const p = pId ? ports.find(pp => pp.id === pId) : null;
+                return p ? (
+                  <div className="space-y-2">
+                    <Label>Loading Port</Label>
+                    <Input value={`${p.name}, ${p.country}`} disabled className="bg-muted/50" />
+                  </div>
+                ) : null;
+              })()}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Discharge Port</Label>

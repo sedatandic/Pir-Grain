@@ -183,10 +183,35 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     if doc.get("notifyOption") == "other":
         notify_text = doc.get("notifyCustom", "—")
 
+    # Build title
+    qty = trade.get("quantity", "")
+    qty_str = f"{int(float(qty)):,}" if qty else ""
+    commodity_name = (trade.get("commodityName", "") or "").upper()
+    vessel_name = (trade.get("vesselName", "") or "").upper()
+    title_parts = ["DOCUMENTARY INSTRUCTIONS FOR"]
+    if qty_str:
+        title_parts.append(f"{qty_str} MTS")
+    if commodity_name:
+        title_parts.append(commodity_name)
+    if vessel_name:
+        title_parts.append(f"- {vessel_name}")
+    di_title = " ".join(title_parts)
+
+    # Resolve loading port
+    loading_port_display = "—"
+    lp_id = trade.get("loadingPortId") or trade.get("basePortId")
+    if lp_id:
+        try:
+            lp = ports_col.find_one({"_id": ObjectId(lp_id)})
+            if lp:
+                loading_port_display = f"{lp.get('name', '')}, {lp.get('country', '')}"
+        except Exception:
+            pass
+
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
-    <h2 style="text-align: center; color: #15803d;">DOCUMENTARY INSTRUCTIONS TO SELLER</h2>
+    <h2 style="text-align: center; color: #15803d;">{di_title}</h2>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Consignee & Notify Party</h3>
@@ -197,7 +222,8 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">1. Shipment & Port Details</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left;">Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('dischargePort', '—')}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left;">Loading Port</th><td style="border: 1px solid #ccc; padding: 8px;">{loading_port_display}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('dischargePort', '—')}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Agent at Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('agentName', '—')}<br>Tel: {doc.get('agentPhone', '—')}{f" &bull; Fax: {doc.get('agentFax')}" if doc.get('agentFax') else ''}{f" &bull; Mob: {doc.get('agentMobile')}" if doc.get('agentMobile') else ''}<br>{doc.get('agentEmail', '')}{f" &bull; {doc.get('agentWeb')}" if doc.get('agentWeb') else ''}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Buyer Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('surveyor', '—')}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>

@@ -267,7 +267,7 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
         params = {
             "from": SENDER_EMAIL,
             "to": [seller_email],
-            "subject": f"Documentary Instructions - Contract {contract_num}",
+            "subject": f"Documentary Instructions - Contract {contract_num} - {qty_str} Mts {trade.get('commodityName', '')} - {trade.get('vesselName', '')}",
             "html": html,
         }
         await asyncio.to_thread(resend.Emails.send, params)

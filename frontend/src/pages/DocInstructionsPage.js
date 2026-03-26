@@ -11,19 +11,19 @@ import { Copy, Printer, FileText, Send, Plus, Pencil, Trash2, Loader2, X } from 
 import { toast } from 'sonner';
 
 const DEFAULT_REQUIRED_DOCS = [
-  { name: 'Signed Commercial Invoice', originals: 1, copies: 0 },
-  { name: 'Bill of Lading (Clean on Board, Freight Prepaid)', originals: 3, copies: 0 },
+  { name: 'Signed Commercial Invoice', originals: 1, copies: 2 },
+  { name: 'Bill of Lading (Clean on Board, Freight Prepaid)', originals: 3, copies: 2 },
   { name: 'Certificate of Origin', originals: 1, copies: 2 },
   { name: 'Phytosanitary Certificate', originals: 1, copies: 2 },
-  { name: 'Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)', originals: 1, copies: 0 },
-  { name: 'Fumigation Certificate (if any)', originals: 1, copies: 0 },
-  { name: 'Quality Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
-  { name: 'Weight Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
-  { name: 'Holds Cleanliness Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
-  { name: 'Holds Sealing Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
-  { name: 'Insurance Certificate (GAFTA - 102% of value)', originals: 1, copies: 0 },
-  { name: "Master's Receipt", originals: 1, copies: 0 },
-  { name: 'Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate', originals: 1, copies: 0 },
+  { name: 'Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)', originals: 1, copies: 2 },
+  { name: 'Fumigation Certificate (if any)', originals: 1, copies: 2 },
+  { name: 'Quality Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 2 },
+  { name: 'Weight Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 2 },
+  { name: 'Holds Cleanliness Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 2 },
+  { name: 'Holds Sealing Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 2 },
+  { name: 'Insurance Certificate (GAFTA - 102% of value)', originals: 1, copies: 2 },
+  { name: "Master's Receipt", originals: 1, copies: 2 },
+  { name: 'Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate', originals: 1, copies: 2 },
 ];
 
 const DEFAULT_FORM = {

@@ -33,13 +33,12 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Commodity</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="text-center">Invoice</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="text-center">Invoice</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
-          {filtered.length === 0 ? <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
+          {filtered.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
           filtered.map(inv => {
             const trade = tradeMap?.[inv.tradeId];
-            const commodityName = trade?.commodityName || '-';
             const invoiceDate = (inv.invoiceDate || inv.createdAt) ? (() => { 
               const raw = inv.invoiceDate || inv.createdAt;
               try { 
@@ -59,7 +58,6 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
               <TableCell className="text-sm">{invoiceDate}</TableCell>
               <TableCell className="font-mono font-medium">{inv.invoiceNumber}</TableCell>
               <TableCell>{inv.vendorCode || inv.vendorName}</TableCell>
-              <TableCell className="text-sm max-w-[150px]">{commodityName}</TableCell>
               <TableCell><Badge variant="secondary" className="capitalize">{inv.category || 'Commission Payment'}</Badge></TableCell>
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{fmtDueDate}</TableCell>

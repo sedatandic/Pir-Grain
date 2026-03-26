@@ -246,29 +246,84 @@ monthly_col = db["monthly_lineups"]
 
 
 def parse_monthly_excel(file_bytes: bytes, filename: str):
-    """Parse monthly lineup Excel and return all sheets as structured tables."""
+    """Parse monthly lineup Excel into port-grouped vessel data (same format as daily)."""
     with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
         tmp.write(file_bytes)
         tmp_path = tmp.name
     try:
         wb = openpyxl.load_workbook(tmp_path, data_only=True, read_only=True)
-        sheets = []
+        all_vessels = []
         for sheet_name in wb.sheetnames:
             ws = wb[sheet_name]
-            rows = []
-            headers = []
+            header_row_idx = None
+            col_map = {}
             for i, row in enumerate(ws.iter_rows(values_only=True)):
                 vals = [str(c).strip() if c is not None else "" for c in row]
+                upper_vals = [v.upper() for v in vals]
+                if "GEMİ ADI" in upper_vals or "GEMI ADI" in upper_vals:
+                    header_row_idx = i
+                    for j, v in enumerate(upper_vals):
+                        if v in ("GEMİ ADI", "GEMI ADI"): col_map["vessel"] = j
+                        elif v in ("YÜKLEME LİMANI", "YUKLEME LIMANI"): col_map["loadPort"] = j
+                        elif v in ("GELİŞ TARİHİ", "GELIS TARIHI"): col_map["arrival"] = j
+                        elif v in ("TAHLİYE/YÜKLEME", "TAHLIYE/YUKLEME"): col_map["op"] = j
+                        elif v in ("YÜKÜ", "YUKU"): col_map["cargo"] = j
+                        elif v in ("B/L TONAJI",): col_map["tonnage"] = j
+                        elif v in ("ALICI",): col_map["buyer"] = j
+                        elif v in ("SATICI",): col_map["seller"] = j
+                        elif v in ("RAPOR TARIHI",): col_map["reportDate"] = j
+                        elif v in ("LIMAN",): col_map["port"] = j
+                    continue
+                if header_row_idx is None:
+                    continue
                 if not any(vals):
                     continue
-                if not headers:
-                    headers = vals
-                else:
-                    rows.append(dict(zip(headers, vals)))
-            if headers and rows:
-                sheets.append({"sheetName": sheet_name, "headers": headers, "rows": rows})
+                vessel_name = vals[col_map["vessel"]].strip() if "vessel" in col_map and col_map["vessel"] < len(vals) else ""
+                if not vessel_name:
+                    continue
+                def safe_get(key):
+                    idx = col_map.get(key)
+                    if idx is not None and idx < len(vals):
+                        return vals[idx].strip()
+                    return ""
+                def parse_date_val(val):
+                    if not val:
+                        return ""
+                    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%d.%m.%Y"):
+                        try:
+                            return datetime.strptime(val, fmt).strftime("%d.%m.%Y")
+                        except (ValueError, TypeError):
+                            continue
+                    return val
+                tonnage_str = safe_get("tonnage").replace(",", "").replace(".", "").strip()
+                try:
+                    tonnage = int(float(tonnage_str)) if tonnage_str else 0
+                except (ValueError, TypeError):
+                    tonnage = 0
+                port_name = safe_get("port") or sheet_name.upper()
+                all_vessels.append({
+                    "portName": port_name.upper(),
+                    "vesselName": vessel_name.upper(),
+                    "loadingPort": safe_get("loadPort").upper(),
+                    "arrivalDate": parse_date_val(safe_get("arrival")),
+                    "reportDate": parse_date_val(safe_get("reportDate")),
+                    "operation": safe_get("op"),
+                    "cargo": safe_get("cargo"),
+                    "blTonnage": tonnage,
+                    "buyer": safe_get("buyer"),
+                    "seller": safe_get("seller"),
+                    "status": "",
+                })
         wb.close()
-        return sheets
+        # Group by port
+        ports_map = {}
+        for v in all_vessels:
+            pn = v.pop("portName")
+            if pn not in ports_map:
+                ports_map[pn] = {"portName": pn, "vessels": []}
+            ports_map[pn]["vessels"].append(v)
+        ports = sorted(ports_map.values(), key=lambda p: len(p["vessels"]), reverse=True)
+        return {"ports": ports, "totalVessels": len(all_vessels), "totalPorts": len(ports)}
     finally:
         os.unlink(tmp_path)
 
@@ -279,10 +334,10 @@ async def upload_monthly_lineup(file: UploadFile = File(...), current_user=Depen
         raise HTTPException(status_code=400, detail="Only Excel files supported")
     file_bytes = await file.read()
     try:
-        sheets = parse_monthly_excel(file_bytes, file.filename)
+        parsed = parse_monthly_excel(file_bytes, file.filename)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse: {str(e)}")
-    if not sheets:
+    if not parsed or not parsed.get("ports"):
         raise HTTPException(status_code=400, detail="No data found in Excel file")
 
     # Store file on disk
@@ -297,7 +352,9 @@ async def upload_monthly_lineup(file: UploadFile = File(...), current_user=Depen
         "_id": doc_id,
         "fileName": file.filename,
         "storedFileName": stored_name,
-        "sheets": sheets,
+        "ports": parsed["ports"],
+        "totalVessels": parsed["totalVessels"],
+        "totalPorts": parsed["totalPorts"],
         "uploadedAt": datetime.now(timezone.utc).isoformat(),
         "uploadedBy": current_user.get("username", "unknown"),
     }
@@ -305,14 +362,14 @@ async def upload_monthly_lineup(file: UploadFile = File(...), current_user=Depen
     return {
         "id": str(doc_id),
         "fileName": file.filename,
-        "sheetCount": len(sheets),
-        "totalRows": sum(len(s["rows"]) for s in sheets),
+        "totalPorts": parsed["totalPorts"],
+        "totalVessels": parsed["totalVessels"],
     }
 
 
 @router.get("/monthly/list")
 async def list_monthly_lineups(current_user=Depends(get_current_user)):
-    docs = list(monthly_col.find({}, {"sheets": 0}).sort("uploadedAt", -1))
+    docs = list(monthly_col.find({}, {"ports": 0, "sheets": 0}).sort("uploadedAt", -1))
     for d in docs:
         d["id"] = str(d.pop("_id"))
     return docs
@@ -325,6 +382,18 @@ async def get_monthly_lineup(doc_id: str, current_user=Depends(get_current_user)
     if not doc:
         raise HTTPException(status_code=404, detail="Not found")
     doc["id"] = str(doc.pop("_id"))
+    # If old format with sheets, re-parse from file
+    if "sheets" in doc and "ports" not in doc:
+        stored = doc.get("storedFileName")
+        if stored:
+            fpath = os.path.join(UPLOAD_DIR, stored)
+            if os.path.exists(fpath):
+                with open(fpath, "rb") as f:
+                    parsed = parse_monthly_excel(f.read(), stored)
+                doc["ports"] = parsed["ports"]
+                doc["totalVessels"] = parsed["totalVessels"]
+                doc["totalPorts"] = parsed["totalPorts"]
+        doc.pop("sheets", None)
     return doc
 
 

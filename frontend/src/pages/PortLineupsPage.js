@@ -395,7 +395,7 @@ function MonthlyLineUp({ onLastUpdate }) {
   const [uploading, setUploading] = useState(false);
   const [selectedFileId, setSelectedFileId] = useState('');
   const [docData, setDocData] = useState(null);
-  const [selectedSheet, setSelectedSheet] = useState(0);
+  const [selectedPort, setSelectedPort] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
 
@@ -418,7 +418,7 @@ function MonthlyLineUp({ onLastUpdate }) {
     if (!selectedFileId) return;
     setLoading(true);
     api.get(`/api/port-lineups/monthly/${selectedFileId}`)
-      .then(res => { setDocData(res.data); setSelectedSheet(0); })
+      .then(res => { setDocData(res.data); setSelectedPort('ALL'); })
       .catch(() => setError('Failed to load document'))
       .finally(() => setLoading(false));
   }, [selectedFileId]);
@@ -446,16 +446,31 @@ function MonthlyLineUp({ onLastUpdate }) {
     } catch { setError('Failed to delete'); }
   };
 
-  const currentSheet = docData?.sheets?.[selectedSheet];
+  const allVessels = useMemo(() => {
+    if (!docData?.ports) return [];
+    return docData.ports.flatMap(p => p.vessels.map(v => ({ ...v, portName: p.portName })));
+  }, [docData]);
 
-  const filteredRows = useMemo(() => {
-    if (!currentSheet) return [];
-    if (!searchTerm) return currentSheet.rows;
-    const term = searchTerm.toLowerCase();
-    return currentSheet.rows.filter(row =>
-      currentSheet.headers.some(h => (row[h] || '').toLowerCase().includes(term))
-    );
-  }, [currentSheet, searchTerm]);
+  const filteredVessels = useMemo(() => {
+    let result = selectedPort === 'ALL' ? allVessels : allVessels.filter(v => v.portName === selectedPort);
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(v =>
+        (v.vesselName || '').toLowerCase().includes(q) ||
+        (v.loadingPort || '').toLowerCase().includes(q) ||
+        (v.cargo || '').toLowerCase().includes(q) ||
+        (v.buyer || '').toLowerCase().includes(q) ||
+        (v.seller || '').toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [allVessels, selectedPort, searchTerm]);
+
+  const vesselSummary = useMemo(() => {
+    const map = new Map();
+    filteredVessels.forEach(v => { if (v.vesselName && !map.has(v.vesselName)) map.set(v.vesselName, true); });
+    return [...map.keys()];
+  }, [filteredVessels]);
 
   return (
     <div className="space-y-4">
@@ -465,9 +480,6 @@ function MonthlyLineUp({ onLastUpdate }) {
         <div className="flex items-center gap-2">
           {selectedFileId && docData && (
             <>
-              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/port-lineups/monthly/${selectedFileId}/download`} target="_blank" rel="noopener noreferrer">
-                <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"><Download className="w-4 h-4" />Download</button>
-              </a>
               <button onClick={() => handleDelete(selectedFileId)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive border border-border hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><Trash2 className="w-4 h-4" />Delete</button>
             </>
           )}
@@ -513,13 +525,15 @@ function MonthlyLineUp({ onLastUpdate }) {
             )}
           </div>
 
-          {/* Sheet tabs */}
-          {docData?.sheets?.length > 1 && (
+          {/* Port tabs */}
+          {docData?.ports?.length > 0 && (
             <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {docData.sheets.map((s, i) => (
-                <button key={i} onClick={() => { setSelectedSheet(i); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedSheet === i ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
-                  {s.sheetName}
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedSheet === i ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{s.rows.length}</span>
+              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                ALL <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{allVessels.length}</span>
+              </button>
+              {docData.ports.map(p => (
+                <button key={p.portName} onClick={() => { setSelectedPort(p.portName); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === p.portName ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                  {p.portName} <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === p.portName ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{p.vessels.length}</span>
                 </button>
               ))}
             </div>
@@ -527,33 +541,47 @@ function MonthlyLineUp({ onLastUpdate }) {
 
           {loading && <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>}
 
-          {/* Data table */}
-          {!loading && currentSheet && (
+          {/* Data table - same style as Daily */}
+          {!loading && docData?.ports && (
             <div className="overflow-x-auto border rounded-lg" data-testid="monthly-table-container">
               <Table className="trade-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    {currentSheet.headers.map((h, i) => (
-                      <TableHead key={i} className="text-center whitespace-nowrap">{h || `Col ${i+1}`}</TableHead>
-                    ))}
+                    <TableHead className="text-center whitespace-nowrap w-[100px]">Report Date</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Vessel</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Loading Port</TableHead>
+                    <TableHead className="text-center whitespace-nowrap w-[100px]">Arrival</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Op.</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Commodity</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">B/L Tonnage</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Buyer</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Seller</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRows.length === 0 ? (
-                    <TableRow><TableCell colSpan={currentSheet.headers.length} className="text-center py-8 text-muted-foreground">{searchTerm ? 'No rows match your search' : 'No data'}</TableCell></TableRow>
-                  ) : filteredRows.map((row, ri) => (
-                    <TableRow key={ri} className={ri % 2 === 1 ? 'bg-muted/30' : ''}>
-                      {currentSheet.headers.map((h, ci) => (
-                        <TableCell key={ci} className="text-center whitespace-nowrap text-sm">{row[h] || '-'}</TableCell>
-                      ))}
+                  {filteredVessels.length === 0 ? (
+                    <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">{searchTerm ? 'No vessels match your search' : 'No data available'}</TableCell></TableRow>
+                  ) : filteredVessels.map((v, i) => (
+                    <TableRow key={i} className={i % 2 === 1 ? 'bg-muted/30' : ''}>
+                      <TableCell className="text-center whitespace-nowrap text-xs">{v.reportDate || '-'}</TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-sm font-semibold">{v.vesselName || '-'}</TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-sm">{v.loadingPort || '-'}</TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-xs">{v.arrivalDate || '-'}</TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-xs">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${v.operation === 'TAHLIYE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'}`}>{v.operation || '-'}</span>
+                      </TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-sm">{v.cargo || '-'}</TableCell>
+                      <TableCell className="text-center whitespace-nowrap text-sm font-medium">{v.blTonnage ? v.blTonnage.toLocaleString() : '-'}</TableCell>
+                      <TableCell className="text-center text-xs max-w-[180px] truncate" title={v.buyer}>{v.buyer || '-'}</TableCell>
+                      <TableCell className="text-center text-xs max-w-[180px] truncate" title={v.seller}>{v.seller || '-'}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              {filteredRows.length > 0 && (
+              {filteredVessels.length > 0 && (
                 <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{filteredRows.length} rows{searchTerm ? ` (filtered from ${currentSheet.rows.length})` : ''}</span>
-                  <span>{docData?.sheets?.length || 0} sheet(s)</span>
+                  <span>{filteredVessels.length} records ({vesselSummary.length} unique vessels)</span>
+                  <span>Total B/L: {filteredVessels.reduce((sum, v) => sum + (v.blTonnage || 0), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS</span>
                 </div>
               )}
             </div>

@@ -806,50 +806,47 @@ export default function VesselExecutionPage() {
             <Card className="mb-4">
               <CardHeader><CardTitle className="text-base">Documentary Instruction Received</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-wrap">
                   <span className="text-sm text-muted-foreground">DI Received?</span>
                   <div className="flex gap-2">
                     <Button size="sm" variant={trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(true)}>Yes</Button>
                     <Button size="sm" variant={!trade.diReceived ? 'default' : 'outline'} onClick={() => toggleDiReceived(false)}>No</Button>
                   </div>
-                </div>
-                {trade.diReceived && (
-                  <div className="space-y-3">
-                    {trade.diDocumentFilename && (
-                      <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-                        <FileText className="h-5 w-5 text-primary" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
-                          <p className="text-xs text-muted-foreground">Uploaded document</p>
-                        </div>
-                        <Button size="sm" variant="outline" onClick={async () => {
-                          try {
-                            const res = await api.get(`/api/trades/${selectedTradeId}/download-di`, { responseType: 'blob' });
-                            const url = window.URL.createObjectURL(new Blob([res.data]));
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = trade.diDocumentFilename || 'di_document.pdf';
-                            document.body.appendChild(a);
-                            a.click();
-                            a.remove();
-                            window.URL.revokeObjectURL(url);
-                          } catch { toast.error('Failed to download'); }
-                        }} data-testid="download-di-btn">Download</Button>
-                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={async () => {
-                          try {
-                            await api.delete(`/api/trades/${selectedTradeId}/upload-di`);
-                            const res = await api.get(`/api/trades/${selectedTradeId}`);
-                            setTrade(res.data);
-                            toast.success('DI document deleted');
-                          } catch (err) { toast.error('Failed to delete'); }
-                        }}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
-                    )}
+                  {trade.diReceived && (
                     <div className="flex items-center gap-3">
                       <Input type="file" accept=".pdf,.doc,.docx" className="max-w-sm" onChange={(e) => uploadDiDocument(e.target.files[0])} />
                       {diUploading && <Loader2 className="h-4 w-4 animate-spin" />}
                     </div>
-                    <p className="text-xs text-muted-foreground">Accepted: PDF, Word (.doc, .docx)</p>
+                  )}
+                </div>
+                {trade.diReceived && trade.diDocumentFilename && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
+                      <p className="text-xs text-muted-foreground">Uploaded document</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      try {
+                        const res = await api.get(`/api/trades/${selectedTradeId}/download-di`, { responseType: 'blob' });
+                        const url = window.URL.createObjectURL(new Blob([res.data]));
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = trade.diDocumentFilename || 'di_document.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
+                      } catch { toast.error('Failed to download'); }
+                    }} data-testid="download-di-btn">Download</Button>
+                    <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={async () => {
+                      try {
+                        await api.delete(`/api/trades/${selectedTradeId}/upload-di`);
+                        const res = await api.get(`/api/trades/${selectedTradeId}`);
+                        setTrade(res.data);
+                        toast.success('DI document deleted');
+                      } catch (err) { toast.error('Failed to delete'); }
+                    }}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 )}
               </CardContent>

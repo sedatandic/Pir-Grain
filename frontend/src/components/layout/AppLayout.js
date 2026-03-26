@@ -65,7 +65,7 @@ export default function AppLayout() {
     '/calendar': { title: 'Calendar', subtitle: 'Events, meetings, and deadlines' },
     '/omega': { title: 'Omega — Accounting', subtitle: 'Invoices, expenses, and bank statements' },
     '/reports': { title: 'Reports', subtitle: 'Analytics and reporting' },
-    '/commissions': { title: 'Brokerage Inv.', subtitle: 'Manage brokerage invoices' },
+    '/commissions': { title: 'Brokerage Invoices', subtitle: 'Manage brokerage invoices' },
     '/settings': { title: 'Settings', subtitle: 'System configuration' },
   };
   const currentPage = PAGE_TITLES[location.pathname] || { title: '', subtitle: '' };

@@ -123,10 +123,7 @@ export default function TradesPage() {
   }, [trades]);
   const uniqueCountries = useMemo(() => {
     const set = new Set();
-    trades.forEach(t => {
-      if (t.loadingPortCountry) set.add(t.loadingPortCountry);
-      if (t.dischargePortCountry) set.add(t.dischargePortCountry);
-    });
+    trades.forEach(t => { if (t.originName) set.add(t.originName); });
     return [...set].sort((a, b) => a.localeCompare(b, 'tr'));
   }, [trades]);
 
@@ -150,7 +147,7 @@ export default function TradesPage() {
     if (filterStatus !== 'all') result = result.filter(t => t.status === filterStatus);
     if (filterCoBroker !== 'all') result = result.filter(t => t.coBrokerId === filterCoBroker);
     if (filterBrokerName !== 'all') result = result.filter(t => t.brokerName === filterBrokerName);
-    if (filterCountry !== 'all') result = result.filter(t => t.loadingPortCountry === filterCountry || t.dischargePortCountry === filterCountry);
+    if (filterCountry !== 'all') result = result.filter(t => t.originName === filterCountry);
     if (search) {
       const q = normalizeTR(search);
       result = result.filter(t =>

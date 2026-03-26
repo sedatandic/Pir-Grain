@@ -74,8 +74,8 @@ export default function CommissionsPage() {
   const filterOptions = useMemo(() => {
     const unique = (arr) => [...new Set(arr)].filter(Boolean).sort();
     return {
-      sellers: unique(trades.map(t => t.sellerName || t.sellerCode).filter(Boolean)),
-      buyers: unique(trades.map(t => t.buyerName || t.buyerCode).filter(Boolean)),
+      sellers: unique(trades.map(t => t.sellerCode || t.sellerName).filter(Boolean)),
+      buyers: unique(trades.map(t => t.buyerCode || t.buyerName).filter(Boolean)),
       commodities: unique(trades.map(t => t.commodityName).filter(Boolean)),
       origins: unique(trades.map(t => t.loadingPortCountry).filter(Boolean)),
       destinations: unique(trades.map(t => t.dischargePortCountry).filter(Boolean)),
@@ -86,10 +86,10 @@ export default function CommissionsPage() {
     let result = list;
     if (search) {
       const q = search.toLowerCase();
-      result = result.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q) || (t.buyerName||'').toLowerCase().includes(q));
+      result = result.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerCode||t.sellerName||'').toLowerCase().includes(q) || (t.buyerCode||t.buyerName||'').toLowerCase().includes(q));
     }
-    if (filterSeller !== 'all') result = result.filter(t => (t.sellerName || t.sellerCode) === filterSeller);
-    if (filterBuyer !== 'all') result = result.filter(t => (t.buyerName || t.buyerCode) === filterBuyer);
+    if (filterSeller !== 'all') result = result.filter(t => (t.sellerCode || t.sellerName) === filterSeller);
+    if (filterBuyer !== 'all') result = result.filter(t => (t.buyerCode || t.buyerName) === filterBuyer);
     if (filterCommodity !== 'all') result = result.filter(t => t.commodityName === filterCommodity);
     if (filterOrigin !== 'all') result = result.filter(t => t.loadingPortCountry === filterOrigin);
     if (filterDestination !== 'all') result = result.filter(t => t.dischargePortCountry === filterDestination);

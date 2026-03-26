@@ -112,7 +112,7 @@ export default function TradesPage() {
   const uniqueVessels = useMemo(() => [...new Set(trades.filter(t => t.vesselName).map(t => t.vesselName))].sort(), [trades]);
   const uniqueCoBrokers = useMemo(() => {
     const map = new Map();
-    trades.forEach(t => { if (t.coBrokerId && t.coBrokerName) map.set(t.coBrokerId, t.coBrokerName); });
+    trades.forEach(t => { if (t.coBrokerId && t.coBrokerName) map.set(t.coBrokerId, t.coBrokerCode || t.coBrokerName); });
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
   }, [trades]);
   const uniqueCountries = useMemo(() => {
@@ -149,8 +149,8 @@ export default function TradesPage() {
       const q = normalizeTR(search);
       result = result.filter(t =>
         normalizeTR(t.referenceNumber).includes(q) ||
-        normalizeTR(t.sellerName).includes(q) ||
-        normalizeTR(t.buyerName).includes(q) ||
+        normalizeTR(t.sellerCode || t.sellerName).includes(q) ||
+        normalizeTR(t.buyerCode || t.buyerName).includes(q) ||
         normalizeTR(t.commodityName).includes(q) ||
         normalizeTR(t.vesselName).includes(q)
       );
@@ -558,14 +558,14 @@ export default function TradesPage() {
               <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Seller" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sellers</SelectItem>
-                {sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyName}</SelectItem>)}
+                {sellers.map(s => <SelectItem key={s.id} value={s.id}>{s.companyCode || s.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterBuyer} onValueChange={setFilterBuyer}>
               <SelectTrigger className="w-[130px] shrink-0"><SelectValue placeholder="Buyer" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Buyers</SelectItem>
-                {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyName}</SelectItem>)}
+                {buyers.map(b => <SelectItem key={b.id} value={b.id}>{b.companyCode || b.companyName}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterBrokerName} onValueChange={setFilterBrokerName}>
@@ -673,11 +673,11 @@ export default function TradesPage() {
                 <div className="border rounded-lg p-6 space-y-4">
                   <h4 className="font-semibold text-base">Trade Terms</h4>
                   <div className="space-y-5 text-base">
-                    <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{selectedTrade.sellerName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Seller</span><span className="font-medium">{selectedTrade.sellerCode || selectedTrade.sellerName || '-'}</span></div>
                     <hr />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{selectedTrade.buyerName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Buyer</span><span className="font-medium">{selectedTrade.buyerCode || selectedTrade.buyerName || '-'}</span></div>
                     <hr />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{selectedTrade.brokerName || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Broker</span><span className="font-medium">{selectedTrade.brokerCode || selectedTrade.brokerName || '-'}</span></div>
                     <hr />
                     <div className="flex justify-between"><span className="text-muted-foreground">Delivery Term</span><span className="font-medium">{(() => { const port = selectedTrade.basePortName || selectedTrade.loadingPortName || ''; const term = selectedTrade.deliveryTerm || ''; if (port && port.toLowerCase().startsWith(term.toLowerCase())) return port; return [term, port].filter(Boolean).join(' ') || '-'; })()}</span></div>
                     <hr />

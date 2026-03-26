@@ -395,37 +395,80 @@ export default function VesselExecutionPage() {
       <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>
 
       {/* Ongoing Contracts Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-muted/50 border-b">
-              <th className="text-center px-4 py-2.5 font-medium">Contract</th>
-              <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
-              <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
-              <th className="text-center px-4 py-2.5 font-medium">Seller</th>
-              <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
-              <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
-            </tr>
-          </thead>
-          <tbody>
-            {trades.filter(t => (t.pirContractNumber || t.contractNumber) && t.vesselName).map(t => (
-              <tr
-                key={t.id}
-                onClick={() => handleTradeSelect(t.id)}
-                className={`border-b cursor-pointer transition-colors hover:bg-muted/30 ${selectedTradeId === t.id ? 'bg-primary/10 border-l-4 border-l-primary' : ''}`}
-                data-testid={`ve-contract-row-${t.id}`}
-              >
-                <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber}</td>
-                <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
-                <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
-                <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
-                <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
-                <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
+      {trades.filter(t => t.vesselName && t.status !== 'completed').length > 0 && (
+      <div>
+        <h2 className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1.5">Ongoing Contracts ({trades.filter(t => t.vesselName && t.status !== 'completed').length})</h2>
+        <div className="border border-green-200 dark:border-green-900/50 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-900/50">
+                <th className="text-center px-4 py-2.5 font-medium">Contract</th>
+                <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Seller</th>
+                <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {trades.filter(t => t.vesselName && t.status !== 'completed').map(t => (
+                <tr
+                  key={t.id}
+                  onClick={() => handleTradeSelect(t.id)}
+                  className={`border-b border-green-100 dark:border-green-900/30 cursor-pointer transition-colors hover:bg-green-50/50 dark:hover:bg-green-900/10 ${selectedTradeId === t.id ? 'bg-green-100 dark:bg-green-900/30 border-l-4 border-l-green-600' : ''}`}
+                  data-testid={`ve-contract-row-${t.id}`}
+                >
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+      )}
+
+      {/* Completed Contracts Table */}
+      {trades.filter(t => t.vesselName && t.status === 'completed').length > 0 && (
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-1.5">Completed Contracts ({trades.filter(t => t.vesselName && t.status === 'completed').length})</h2>
+        <div className="border border-border rounded-lg overflow-hidden opacity-75">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-muted/50 border-b">
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Contract</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Seller</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Vessel</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trades.filter(t => t.vesselName && t.status === 'completed').map(t => (
+                <tr
+                  key={t.id}
+                  onClick={() => handleTradeSelect(t.id)}
+                  className={`border-b cursor-pointer transition-colors hover:bg-muted/30 text-muted-foreground ${selectedTradeId === t.id ? 'bg-muted/50 border-l-4 border-l-muted-foreground' : ''}`}
+                  data-testid={`ve-contract-row-${t.id}`}
+                >
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      )}
 
       {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
 

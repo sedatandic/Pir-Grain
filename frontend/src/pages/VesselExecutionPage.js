@@ -706,10 +706,10 @@ export default function VesselExecutionPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Load Port</Label>
+                      <Label>Loading Port</Label>
                       <Select value={nominationForm.loadingPortId || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, loadingPortId: v }))}>
-                        <SelectTrigger data-testid="nomination-loadport-select"><SelectValue placeholder="Select load port" /></SelectTrigger>
-                        <SelectContent>{ports.map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
+                        <SelectTrigger data-testid="nomination-loadport-select"><SelectValue placeholder="Select loading port" /></SelectTrigger>
+                        <SelectContent>{ports.filter(p => p.type === 'loading').map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
@@ -737,7 +737,7 @@ export default function VesselExecutionPage() {
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center py-2">
-                          <span className="text-sm text-muted-foreground">Load Port</span>
+                          <span className="text-sm text-muted-foreground">Loading Port</span>
                           <span className="font-medium" data-testid="nomination-loadport-value">{getPortDisplay(trade.loadingPortId || trade.basePortId)}</span>
                         </div>
                       </div>

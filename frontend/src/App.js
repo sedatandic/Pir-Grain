@@ -40,6 +40,7 @@ function App() {
             <Route path="/documents" element={<VesselExecutionPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/commissions" element={<CommissionsPage />} />
+            <Route path="/commissions/broker/:brokerName" element={<CommissionsPage />} />
             <Route path="/omega" element={<AccountingPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/business-cards" element={<BusinessCardsPage />} />

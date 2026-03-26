@@ -2,11 +2,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard, FileText, BarChart3, Ship, Users, Settings, Sun, Moon,
-  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor, TrendingUp, ClipboardList, ChevronRight
+  DollarSign, FolderOpen, CalendarDays, Calculator, PanelLeftClose, PanelLeft, Wheat, X, CreditCard, Anchor, TrendingUp, ClipboardList
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
-import api from '../../lib/api';
 
 const PIR_GREEN = '#1B7A3D';
 
@@ -26,8 +25,6 @@ const mainNavItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [brokerExpanded, setBrokerExpanded] = useState(false);
-  const [brokerNames, setBrokerNames] = useState([]);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return document.documentElement.classList.contains('dark');
@@ -36,21 +33,6 @@ export default function Sidebar() {
   });
   const location = useLocation();
   const { user } = useAuth();
-
-  // Auto-expand broker section when on commissions page
-  useEffect(() => {
-    if (location.pathname.startsWith('/commissions')) {
-      setBrokerExpanded(true);
-    }
-  }, [location.pathname]);
-
-  // Fetch broker names
-  useEffect(() => {
-    api.get('/api/trades').then(res => {
-      const brokers = [...new Set((res.data || []).map(t => t.brokerName).filter(Boolean))].sort();
-      setBrokerNames(brokers);
-    }).catch(() => {});
-  }, []);
 
   const navItems = [
     { title: 'Market Data', href: '/market-data', icon: TrendingUp, roles: ['admin', 'user'] },
@@ -141,65 +123,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-        {navItems.filter(item => !item.roles || item.roles.includes(userRole)).map((item) => {
-          // Expandable Brokerage Inv. with broker sub-items
-          if (item.href === '/commissions') {
-            const isActive = location.pathname.startsWith('/commissions');
-            return (
-              <div key={item.href}>
-                <div className="flex items-center">
-                  <NavLink
-                    to={item.href}
-                    title={collapsed ? item.title : undefined}
-                    onClick={() => setMobileOpen(false)}
-                    data-testid="sidebar-nav-brokerage-inv-link"
-                    className={cn(
-                      'flex-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors',
-                      isActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
-                    )}
-                  >
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
-                    {!collapsed && <span>{item.title}</span>}
-                    {collapsed && <span className="md:hidden">{item.title}</span>}
-                  </NavLink>
-                  {!collapsed && brokerNames.length > 0 && (
-                    <button
-                      onClick={() => setBrokerExpanded(prev => !prev)}
-                      className="p-1.5 rounded hover:bg-muted transition-colors"
-                      data-testid="broker-expand-toggle"
-                    >
-                      <ChevronRight className={cn('w-3.5 h-3.5 text-muted-foreground transition-transform', brokerExpanded && 'rotate-90')} />
-                    </button>
-                  )}
-                </div>
-                {!collapsed && brokerExpanded && brokerNames.length > 0 && (
-                  <div className="ml-4 pl-3 border-l border-border space-y-0.5 mt-0.5">
-                    {brokerNames.map(name => {
-                      const brokerPath = `/commissions/broker/${encodeURIComponent(name)}`;
-                      const isBrokerActive = location.pathname === brokerPath;
-                      return (
-                        <NavLink
-                          key={name}
-                          to={brokerPath}
-                          onClick={() => setMobileOpen(false)}
-                          data-testid={`sidebar-broker-${name.toLowerCase().replace(/\s+/g, '-')}`}
-                          className={cn(
-                            'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors',
-                            isBrokerActive ? 'bg-[#1B7A3D]/10 text-[#1B7A3D] font-medium' : 'text-muted-foreground hover:bg-muted'
-                          )}
-                        >
-                          <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', isBrokerActive ? 'bg-[#1B7A3D]' : 'bg-muted-foreground/40')} />
-                          <span className="truncate">{name}</span>
-                        </NavLink>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
+        {navItems.filter(item => !item.roles || item.roles.includes(userRole)).map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
@@ -215,8 +139,7 @@ export default function Sidebar() {
             {!collapsed && <span>{item.title}</span>}
             {collapsed && <span className="md:hidden">{item.title}</span>}
           </NavLink>
-          );
-        })}
+        ))}
 
         {/* Counterparties - single link, tabs inside the page */}
         {userRole !== 'accountant' && (

@@ -11,7 +11,7 @@ import { TRADE_STATUS_CONFIG } from '../lib/constants';
 import { DollarSign, Clock, CheckCircle, Search, Loader2, FileDown, Building2, Pencil, CalendarDays, Filter, X, Trash2 } from 'lucide-react';
 import { Label } from '../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
@@ -19,8 +19,6 @@ import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 
 export default function CommissionsPage() {
-  const { brokerName: urlBroker } = useParams();
-  const activeBroker = urlBroker ? decodeURIComponent(urlBroker) : null;
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -86,7 +84,6 @@ export default function CommissionsPage() {
 
   const applyFilters = (list) => {
     let result = list;
-    if (activeBroker) result = result.filter(t => (t.brokerName || '') === activeBroker);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(t => (t.referenceNumber||'').toLowerCase().includes(q) || (t.commodityName||'').toLowerCase().includes(q) || (t.sellerName||'').toLowerCase().includes(q) || (t.buyerName||'').toLowerCase().includes(q));
@@ -329,7 +326,7 @@ export default function CommissionsPage() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold tracking-tight">{activeBroker || 'Brokerage Invoices'}</h1><p className="text-muted-foreground">{activeBroker ? `Commission invoices for ${activeBroker}` : 'Track your brokerage earnings across all trades'}</p></div>
+      <div><h1 className="text-3xl font-bold tracking-tight">Brokerage Invoices</h1><p className="text-muted-foreground">Track your brokerage earnings across all trades</p></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Commission</CardTitle><DollarSign className="h-4 w-4 text-primary" /></CardHeader><CardContent><div className="text-2xl font-bold">{fmt(stats.total)}</div></CardContent></Card>

@@ -351,6 +351,19 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
                   <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d' }}>DOCUMENTARY INSTRUCTIONS TO SELLER</h2>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Consignee & Notify Party</h3>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
+                    <tbody>
+                      <tr>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Consignee</th>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getConsigneeText(previewDi)}</td>
+                      </tr>
+                      <tr>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Notify Party</th>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getNotifyText(previewDi)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>1. Shipment & Port Details</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>

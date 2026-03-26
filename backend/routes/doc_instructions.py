@@ -172,11 +172,28 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     seller_email = seller["email"]
     contract_num = trade.get("pirContractNumber", "N/A")
 
+    # Build consignee/notify text
+    consignee_text = "TO ORDER"
+    if doc.get("consigneeOption") == "buyer_details":
+        consignee_text = doc.get("consigneeBuyerText") or get_buyer_display(doc.get("consigneeBuyerId", "")) or "BUYER DETAILS"
+    elif doc.get("consigneeOption") == "other":
+        consignee_text = doc.get("consigneeCustom", "—")
+
+    notify_text = doc.get("notifyBuyerText") or get_buyer_display(doc.get("notifyBuyerId", "")) or "BUYER DETAILS"
+    if doc.get("notifyOption") == "other":
+        notify_text = doc.get("notifyCustom", "—")
+
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
     <h2 style="text-align: center; color: #15803d;">DOCUMENTARY INSTRUCTIONS TO SELLER</h2>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
+
+    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Consignee & Notify Party</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left; vertical-align: top;">Consignee</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{consignee_text}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Notify Party</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{notify_text}</td></tr>
+    </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">1. Shipment & Port Details</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">

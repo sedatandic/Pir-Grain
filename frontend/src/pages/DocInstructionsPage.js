@@ -356,9 +356,14 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     <tbody>
                       {[
                         ['Discharge Port', previewDi.dischargePort || '—'],
-                        ['Agent at Discharge Port', previewDi.agentName || '—'],
-                        ['Agent Contacts', `Tel: ${previewDi.agentPhone || '—'}  •  Fax: ${previewDi.agentFax || '—'}  •  Mob: ${previewDi.agentMobile || '—'}`],
-                        ['Agent Email / Web', `${previewDi.agentEmail || '—'}  •  ${previewDi.agentWeb || '—'}`],
+                        ['Agent at Discharge Port', (() => {
+                          const parts = [previewDi.agentName || '—'];
+                          const contacts = [`Tel: ${previewDi.agentPhone || '—'}`, previewDi.agentFax ? `Fax: ${previewDi.agentFax}` : null, previewDi.agentMobile ? `Mob: ${previewDi.agentMobile}` : null].filter(Boolean).join('  •  ');
+                          if (contacts) parts.push(contacts);
+                          const emailWeb = [previewDi.agentEmail, previewDi.agentWeb].filter(Boolean).join('  •  ');
+                          if (emailWeb) parts.push(emailWeb);
+                          return parts.join('\n');
+                        })()],
                         ['Buyer Surveyor at Load Port', previewDi.surveyor || '—'],
                         ['Seller Surveyor at Load Port', previewDi.sellerSurveyor || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); return t?.sellerSurveyor || '—'; })()],
                       ].map(([label, val], i) => (

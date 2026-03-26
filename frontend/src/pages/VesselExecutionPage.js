@@ -79,7 +79,7 @@ export default function VesselExecutionPage() {
           api.get('/api/disport-agents'),
           api.get('/api/loadport-agents'),
         ]);
-        setTrades(trRes.data.filter(t => t.vesselName && t.status !== 'completed'));
+        setTrades(trRes.data.filter(t => t.vesselName));
         setCommodities(comRes.data);
         setPorts(portRes.data);
         setSurveyors(surRes.data);

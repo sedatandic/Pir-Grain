@@ -12,7 +12,7 @@ from auth import get_current_user
 try:
     import resend
     resend.api_key = os.environ.get("RESEND_API_KEY", "")
-    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <onboarding@resend.dev>")
+    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <noreply@pirgrain.com>")
 except ImportError:
     resend = None
     SENDER_EMAIL = ""

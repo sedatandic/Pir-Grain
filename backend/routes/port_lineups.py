@@ -235,3 +235,122 @@ async def get_summary(current_user=Depends(get_current_user)):
         "totalVessels": total_vessels,
         "totalDates": len(dates)
     }
+
+
+# ─── Monthly Line-Up ───
+
+UPLOAD_DIR = "/app/backend/uploads/monthly_lineups"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+monthly_col = db["monthly_lineups"]
+
+
+def parse_monthly_excel(file_bytes: bytes, filename: str):
+    """Parse monthly lineup Excel and return all sheets as structured tables."""
+    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp:
+        tmp.write(file_bytes)
+        tmp_path = tmp.name
+    try:
+        wb = openpyxl.load_workbook(tmp_path, data_only=True, read_only=True)
+        sheets = []
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            rows = []
+            headers = []
+            for i, row in enumerate(ws.iter_rows(values_only=True)):
+                vals = [str(c).strip() if c is not None else "" for c in row]
+                if not any(vals):
+                    continue
+                if not headers:
+                    headers = vals
+                else:
+                    rows.append(dict(zip(headers, vals)))
+            if headers and rows:
+                sheets.append({"sheetName": sheet_name, "headers": headers, "rows": rows})
+        wb.close()
+        return sheets
+    finally:
+        os.unlink(tmp_path)
+
+
+@router.post("/monthly/upload")
+async def upload_monthly_lineup(file: UploadFile = File(...), current_user=Depends(get_current_user)):
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only Excel files supported")
+    file_bytes = await file.read()
+    try:
+        sheets = parse_monthly_excel(file_bytes, file.filename)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse: {str(e)}")
+    if not sheets:
+        raise HTTPException(status_code=400, detail="No data found in Excel file")
+
+    # Store file on disk
+    from bson import ObjectId
+    doc_id = ObjectId()
+    ext = file.filename.rsplit('.', 1)[-1] if '.' in file.filename else 'xlsx'
+    stored_name = f"monthly_{doc_id}.{ext}"
+    with open(os.path.join(UPLOAD_DIR, stored_name), "wb") as f:
+        f.write(file_bytes)
+
+    doc = {
+        "_id": doc_id,
+        "fileName": file.filename,
+        "storedFileName": stored_name,
+        "sheets": sheets,
+        "uploadedAt": datetime.now(timezone.utc).isoformat(),
+        "uploadedBy": current_user.get("username", "unknown"),
+    }
+    monthly_col.insert_one(doc)
+    return {
+        "id": str(doc_id),
+        "fileName": file.filename,
+        "sheetCount": len(sheets),
+        "totalRows": sum(len(s["rows"]) for s in sheets),
+    }
+
+
+@router.get("/monthly/list")
+async def list_monthly_lineups(current_user=Depends(get_current_user)):
+    docs = list(monthly_col.find({}, {"sheets": 0}).sort("uploadedAt", -1))
+    for d in docs:
+        d["id"] = str(d.pop("_id"))
+    return docs
+
+
+@router.get("/monthly/{doc_id}")
+async def get_monthly_lineup(doc_id: str, current_user=Depends(get_current_user)):
+    from bson import ObjectId
+    doc = monthly_col.find_one({"_id": ObjectId(doc_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found")
+    doc["id"] = str(doc.pop("_id"))
+    return doc
+
+
+@router.delete("/monthly/{doc_id}")
+async def delete_monthly_lineup(doc_id: str, current_user=Depends(get_current_user)):
+    from bson import ObjectId
+    doc = monthly_col.find_one({"_id": ObjectId(doc_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Not found")
+    stored = doc.get("storedFileName")
+    if stored:
+        fpath = os.path.join(UPLOAD_DIR, stored)
+        if os.path.exists(fpath):
+            os.remove(fpath)
+    monthly_col.delete_one({"_id": ObjectId(doc_id)})
+    return {"message": "Deleted"}
+
+
+@router.get("/monthly/{doc_id}/download")
+async def download_monthly_lineup(doc_id: str, current_user=Depends(get_current_user)):
+    from bson import ObjectId
+    from fastapi.responses import FileResponse
+    doc = monthly_col.find_one({"_id": ObjectId(doc_id)})
+    if not doc or not doc.get("storedFileName"):
+        raise HTTPException(status_code=404, detail="File not found")
+    fpath = os.path.join(UPLOAD_DIR, doc["storedFileName"])
+    if not os.path.exists(fpath):
+        raise HTTPException(status_code=404, detail="File not on disk")
+    return FileResponse(fpath, filename=doc.get("fileName", "monthly_lineup.xlsx"), media_type="application/octet-stream")

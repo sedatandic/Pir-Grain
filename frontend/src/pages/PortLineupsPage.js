@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock, X } from 'lucide-react';
+import { Upload, Ship, Anchor, Calendar, Search, ChevronDown, Loader2, AlertCircle, Clock, X, FileSpreadsheet, Trash2, Download, Eye } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { normalizeTR } from '../lib/utils-tr';
 import api from '../lib/api';
 
@@ -60,7 +64,10 @@ function translateCargo(cargo) {
   return cargo;
 }
 
-export default function PortLineupsPage() {
+/* ════════════════════════════════════════════════
+   DAILY LINE-UP (existing functionality)
+   ════════════════════════════════════════════════ */
+function DailyLineUp() {
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [reportData, setReportData] = useState(null);
@@ -82,9 +89,7 @@ export default function PortLineupsPage() {
       if (res.data.dates?.length > 0 && !selectedDate) {
         setSelectedDate(res.data.dates[0]);
       }
-    } catch {
-      // No data yet
-    }
+    } catch { /* No data yet */ }
   }, []);
 
   useEffect(() => { fetchDates(); }, [fetchDates]);
@@ -94,10 +99,7 @@ export default function PortLineupsPage() {
     setLoading(true);
     setError('');
     api.get(`/api/port-lineups/report/${encodeURIComponent(selectedDate)}`)
-      .then(res => {
-        setReportData(res.data);
-        setSelectedPort('ALL');
-      })
+      .then(res => { setReportData(res.data); setSelectedPort('ALL'); })
       .catch(() => setError('Failed to load report data'))
       .finally(() => setLoading(false));
   }, [selectedDate]);
@@ -105,39 +107,26 @@ export default function PortLineupsPage() {
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    setError('');
-    setUploadResult(null);
+    setUploading(true); setError(''); setUploadResult(null);
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const res = await api.post('/api/port-lineups/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 120000,
-      });
+      const res = await api.post('/api/port-lineups/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
       setUploadResult(res.data);
       await fetchDates();
-      if (res.data.dates?.length > 0) {
-        setSelectedDate(res.data.dates[0]);
-      }
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Upload failed');
-    } finally {
-      setUploading(false);
-      e.target.value = '';
-    }
+      if (res.data.dates?.length > 0) setSelectedDate(res.data.dates[0]);
+    } catch (err) { setError(err.response?.data?.detail || 'Upload failed'); }
+    finally { setUploading(false); e.target.value = ''; }
   };
 
   const currentPortData = useMemo(() => {
     if (!reportData) return null;
     if (selectedPort === 'ALL') {
-      const allVessels = (reportData.ports || []).flatMap(p => p.vessels);
-      return { portName: 'ALL', vessels: allVessels };
+      return { portName: 'ALL', vessels: (reportData.ports || []).flatMap(p => p.vessels) };
     }
     return reportData.ports?.find(p => p.portName === selectedPort) || null;
   }, [reportData, selectedPort]);
 
-  // Unique filter options from current port's vessels
   const filterOptions = useMemo(() => {
     if (!currentPortData) return { loadPorts: [], commodities: [], buyers: [], sellers: [] };
     const lp = new Set(), cm = new Set(), bu = new Set(), se = new Set();
@@ -161,18 +150,14 @@ export default function PortLineupsPage() {
     let result = currentPortData.vessels;
     if (term) {
       result = result.filter(v =>
-        normalizeTR(v.vesselName).includes(term) ||
-        normalizeTR(v.loadingPort).includes(term) ||
-        normalizeTR(v.cargo).includes(term) ||
-        normalizeTR(v.buyer).includes(term) ||
-        normalizeTR(v.seller).includes(term)
+        normalizeTR(v.vesselName).includes(term) || normalizeTR(v.loadingPort).includes(term) ||
+        normalizeTR(v.cargo).includes(term) || normalizeTR(v.buyer).includes(term) || normalizeTR(v.seller).includes(term)
       );
     }
     if (filterLoadPort !== 'all') result = result.filter(v => v.loadingPort?.trim() === filterLoadPort);
     if (filterCommodity !== 'all') result = result.filter(v => translateCargo(v.cargo) === filterCommodity);
     if (filterBuyer !== 'all') result = result.filter(v => v.buyer?.trim() === filterBuyer);
     if (filterSeller !== 'all') result = result.filter(v => v.seller?.trim() === filterSeller);
-    // Sort by days at port ascending (lowest first)
     return [...result].sort((a, b) => {
       const daysA = calcDaysSince(a.arrivalDate, selectedDate);
       const daysB = calcDaysSince(b.arrivalDate, selectedDate);
@@ -183,19 +168,13 @@ export default function PortLineupsPage() {
     });
   }, [currentPortData, searchTerm, selectedDate, filterLoadPort, filterCommodity, filterBuyer, filterSeller]);
 
-  // Group vessels by vesselName and aggregate tonnage
   const vesselSummary = useMemo(() => {
     if (!filteredVessels.length) return [];
     const grouped = {};
     filteredVessels.forEach(v => {
       const key = v.vesselName || '(unnamed)';
-      if (!grouped[key]) {
-        grouped[key] = { ...v, totalTonnage: v.blTonnage || 0, rowCount: 1, rows: [v] };
-      } else {
-        grouped[key].totalTonnage += (v.blTonnage || 0);
-        grouped[key].rowCount += 1;
-        grouped[key].rows.push(v);
-      }
+      if (!grouped[key]) grouped[key] = { ...v, totalTonnage: v.blTonnage || 0, rowCount: 1, rows: [v] };
+      else { grouped[key].totalTonnage += (v.blTonnage || 0); grouped[key].rowCount += 1; grouped[key].rows.push(v); }
     });
     return Object.values(grouped);
   }, [filteredVessels]);
@@ -214,121 +193,81 @@ export default function PortLineupsPage() {
   }, [reportData]);
 
   return (
-    <div className="space-y-4" data-testid="port-lineups-page">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight" data-testid="port-lineups-title">Port Line-Ups</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Daily port report summary from Fey Shipping</p>
-        </div>
-        <label
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-            uploading
-              ? 'bg-muted text-muted-foreground cursor-wait'
-              : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'
-          }`}
-          data-testid="upload-report-button"
-        >
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Daily port report summary from Fey Shipping</p>
+        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-daily-button">
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {uploading ? 'Uploading...' : 'Upload Report'}
           <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
         </label>
       </div>
 
-      {/* Upload result */}
       {uploadResult && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm text-emerald-800 dark:text-emerald-200" data-testid="upload-success-message">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3 text-sm text-emerald-800 dark:text-emerald-200">
           {uploadResult.message} - {uploadResult.totalVessels} vessel records across {uploadResult.totalPorts} port sections
         </div>
       )}
-
-      {/* Error */}
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2" data-testid="error-message">
-          <AlertCircle className="w-4 h-4" />
-          {error}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />{error}
         </div>
       )}
 
-      {/* No data state */}
       {dates.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20 text-center" data-testid="no-data-state">
+        <div className="flex flex-col items-center justify-center py-20 text-center">
           <Ship className="w-12 h-12 text-muted-foreground/40 mb-3" />
           <p className="text-muted-foreground font-medium">No port reports uploaded yet</p>
           <p className="text-sm text-muted-foreground/70 mt-1">Upload an Excel report to get started</p>
         </div>
       )}
 
-      {/* Data present */}
       {dates.length > 0 && (
         <>
           {/* Date selector + Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative" data-testid="date-selector-wrapper">
+            <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <select
-                value={selectedDate}
-                onChange={e => setSelectedDate(e.target.value)}
-                className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]"
-                data-testid="date-selector"
-              >
-                {dates.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
+              <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]" data-testid="date-selector">
+                {dates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
-
             <div className="relative max-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search vessels..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30"
-                data-testid="vessel-search-input"
-              />
+              <input type="text" placeholder="Search vessels..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30" data-testid="vessel-search-input" />
             </div>
-
             <div className="relative">
-              <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-load-port">
+              <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none min-w-[120px]">
                 <option value="all">All Load Ports</option>
                 {filterOptions.loadPorts.map(lp => <option key={lp} value={lp}>{lp}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
-
             <div className="relative">
-              <select value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[130px]" data-testid="filter-commodity">
+              <select value={filterCommodity} onChange={e => setFilterCommodity(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none min-w-[130px]">
                 <option value="all">All Commodities</option>
                 {filterOptions.commodities.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
-
             <div className="relative">
-              <select value={filterBuyer} onChange={e => setFilterBuyer(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-buyer">
+              <select value={filterBuyer} onChange={e => setFilterBuyer(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none min-w-[120px]">
                 <option value="all">All Buyers</option>
                 {filterOptions.buyers.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
-
             <div className="relative">
-              <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[120px]" data-testid="filter-seller">
+              <select value={filterSeller} onChange={e => setFilterSeller(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none min-w-[120px]">
                 <option value="all">All Sellers</option>
                 {filterOptions.sellers.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
             </div>
-
             {(searchTerm || filterLoadPort !== 'all' || filterCommodity !== 'all' || filterBuyer !== 'all' || filterSeller !== 'all') && (
-              <button
-                onClick={() => { setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
-                className="flex items-center gap-1 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
-                data-testid="clear-filters-btn"
-              >
+              <button onClick={() => { setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className="flex items-center gap-1 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors whitespace-nowrap">
                 <X className="w-3.5 h-3.5" />Clear
               </button>
             )}
@@ -337,59 +276,26 @@ export default function PortLineupsPage() {
           {/* Port tabs */}
           {reportData && (
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" data-testid="port-tabs">
-              <button
-                onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                  selectedPort === 'ALL'
-                    ? 'bg-[#1B7A3D] text-white'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-                data-testid="port-tab-all"
-              >
-                ALL
-                <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-                  selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'
-                }`}>{portVesselCounts['ALL'] || 0}</span>
+              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`} data-testid="port-tab-all">
+                ALL<span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{portVesselCounts['ALL'] || 0}</span>
               </button>
               {reportData.ports?.slice().sort((a, b) => {
                 const countA = new Set(a.vessels.map(v => v.vesselName).filter(Boolean)).size;
                 const countB = new Set(b.vessels.map(v => v.vesselName).filter(Boolean)).size;
                 return countB - countA;
               }).map(port => (
-                <button
-                  key={port.portName}
-                  onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${
-                    selectedPort === port.portName
-                      ? 'bg-[#1B7A3D] text-white'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                  data-testid={`port-tab-${port.portName.replace(/[\s/]+/g, '-').toLowerCase()}`}
-                >
-                  {port.portName}
-                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${
-                    selectedPort === port.portName
-                      ? 'bg-white/20 text-white'
-                      : 'bg-background text-muted-foreground'
-                  }`}>
-                    {portVesselCounts[port.portName] || 0}
-                  </span>
+                <button key={port.portName} onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === port.portName ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                  {port.portName}<span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === port.portName ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{portVesselCounts[port.portName] || 0}</span>
                 </button>
               ))}
             </div>
           )}
 
-          {/* Loading */}
-          {loading && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-          )}
+          {loading && <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>}
 
-          {/* Vessel table */}
           {!loading && currentPortData && (
             <div className="overflow-x-auto border rounded-lg" data-testid="vessel-table-container">
-              <Table className="trade-table" data-testid="vessel-table">
+              <Table className="trade-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="text-center">Arrival</TableHead>
@@ -406,77 +312,47 @@ export default function PortLineupsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredVessels.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                        {searchTerm ? 'No vessels match your search' : 'No vessels in this port'}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    (() => {
-                      let vesselColorIndex = 0;
-                      let lastVessel = null;
-                      const vesselGroupMap = {};
-                      filteredVessels.forEach(v => {
-                        const name = v.vesselName || '(unnamed)';
-                        if (name !== lastVessel) {
-                          if (lastVessel !== null) vesselColorIndex++;
-                          lastVessel = name;
-                        }
-                        if (!(name in vesselGroupMap)) vesselGroupMap[name] = vesselColorIndex;
-                      });
-
-                      return filteredVessels.map((v, i) => {
-                        const days = calcDaysSince(v.arrivalDate, selectedDate);
-                        const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
-                        const groupIdx = vesselGroupMap[v.vesselName || '(unnamed)'] || 0;
-                        const isAlt = groupIdx % 2 === 1;
-                        return (
-                          <TableRow
-                            key={i}
-                            className={isAlt ? 'bg-[#f0f7f1] hover:bg-[#e4efe6]' : ''}
-                            data-testid={`vessel-row-${i}`}
-                          >
-                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</TableCell>
-                            <TableCell className="text-center font-medium whitespace-nowrap" data-testid={`vessel-name-${i}`}>
-                              {v.vesselName || '-'}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</TableCell>
-                            <TableCell className="text-center" data-testid={`vessel-days-${i}`}>
-                              {days !== null ? (
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${
-                                  days > 10 ? 'bg-red-100 text-red-700'
-                                  : days > 5 ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-emerald-100 text-emerald-700'
-                                }`}>
-                                  <Clock className="w-3 h-3" />
-                                  {days}
-                                </span>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {v.status ? (
-                                <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>
-                                  {v.status}
-                                </span>
-                              ) : '-'}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground text-xs">{translateOp(v.operation)}</TableCell>
-                            <TableCell className="text-center text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</TableCell>
-                            <TableCell className="text-center font-mono text-muted-foreground whitespace-nowrap">
-                              {v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}
-                            </TableCell>
-                            <TableCell className="text-center text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</TableCell>
-                            <TableCell className="text-center text-muted-foreground" title={v.seller}>{v.seller || '-'}</TableCell>
-                          </TableRow>
-                        );
-                      });
-                    })()
-                  )}
+                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">{searchTerm ? 'No vessels match your search' : 'No vessels in this port'}</TableCell></TableRow>
+                  ) : (() => {
+                    let vesselColorIndex = 0;
+                    let lastVessel = null;
+                    const vesselGroupMap = {};
+                    filteredVessels.forEach(v => {
+                      const name = v.vesselName || '(unnamed)';
+                      if (name !== lastVessel) { if (lastVessel !== null) vesselColorIndex++; lastVessel = name; }
+                      if (!(name in vesselGroupMap)) vesselGroupMap[name] = vesselColorIndex;
+                    });
+                    return filteredVessels.map((v, i) => {
+                      const days = calcDaysSince(v.arrivalDate, selectedDate);
+                      const statusClass = STATUS_COLORS[v.status?.toUpperCase()] || 'bg-muted text-muted-foreground';
+                      const groupIdx = vesselGroupMap[v.vesselName || '(unnamed)'] || 0;
+                      const isAlt = groupIdx % 2 === 1;
+                      return (
+                        <TableRow key={i} className={isAlt ? 'bg-muted/30' : ''}>
+                          <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.arrivalDate || '-'}</TableCell>
+                          <TableCell className="text-center font-medium whitespace-nowrap">{v.vesselName || '-'}</TableCell>
+                          <TableCell className="text-center text-muted-foreground whitespace-nowrap">{v.loadingPort || '-'}</TableCell>
+                          <TableCell className="text-center">
+                            {days !== null ? (
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${days > 10 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300' : days > 5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'}`}>
+                                <Clock className="w-3 h-3" />{days}
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell className="text-center">{v.status ? <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusClass}`}>{v.status}</span> : '-'}</TableCell>
+                          <TableCell className="text-center text-muted-foreground text-xs">{translateOp(v.operation)}</TableCell>
+                          <TableCell className="text-center text-muted-foreground whitespace-nowrap">{translateCargo(v.cargo)}</TableCell>
+                          <TableCell className="text-center font-mono text-muted-foreground whitespace-nowrap">{v.blTonnage != null ? `${v.blTonnage.toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS` : '-'}</TableCell>
+                          <TableCell className="text-center text-muted-foreground" title={v.buyer}>{v.buyer || '-'}</TableCell>
+                          <TableCell className="text-center text-muted-foreground" title={v.seller}>{v.seller || '-'}</TableCell>
+                        </TableRow>
+                      );
+                    });
+                  })()}
                 </TableBody>
               </Table>
-              {/* Footer stats */}
               {filteredVessels.length > 0 && (
-                <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground" data-testid="table-footer-stats">
+                <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                   <span>{filteredVessels.length} records ({vesselSummary.length} unique vessels)</span>
                   <span>Total B/L: {filteredVessels.reduce((sum, v) => sum + (v.blTonnage || 0), 0).toLocaleString('en-US', { maximumFractionDigits: 0 })} MTS</span>
                 </div>
@@ -485,6 +361,184 @@ export default function PortLineupsPage() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   MONTHLY LINE-UP (new)
+   ════════════════════════════════════════════════ */
+function MonthlyLineUp() {
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [selectedSheet, setSelectedSheet] = useState(0);
+  const [error, setError] = useState('');
+
+  const fetchFiles = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/api/port-lineups/monthly/list');
+      setFiles(res.data || []);
+    } catch { /* empty */ }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchFiles(); }, [fetchFiles]);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true); setError('');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await api.post('/api/port-lineups/monthly/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
+      await fetchFiles();
+    } catch (err) { setError(err.response?.data?.detail || 'Upload failed'); }
+    finally { setUploading(false); e.target.value = ''; }
+  };
+
+  const handleView = async (doc) => {
+    try {
+      const res = await api.get(`/api/port-lineups/monthly/${doc.id}`);
+      setSelectedDoc(res.data);
+      setSelectedSheet(0);
+    } catch { setError('Failed to load document'); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Delete this monthly lineup?')) return;
+    try {
+      await api.delete(`/api/port-lineups/monthly/${id}`);
+      if (selectedDoc?.id === id) setSelectedDoc(null);
+      fetchFiles();
+    } catch { setError('Failed to delete'); }
+  };
+
+  const currentSheet = selectedDoc?.sheets?.[selectedSheet];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">Upload and view monthly port lineup reports</p>
+        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-monthly-button">
+          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {uploading ? 'Uploading...' : 'Upload Excel'}
+          <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
+        </label>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />{error}
+        </div>
+      )}
+
+      {/* File list */}
+      {loading ? (
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+      ) : files.length === 0 && !selectedDoc ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <FileSpreadsheet className="w-12 h-12 text-muted-foreground/40 mb-3" />
+          <p className="text-muted-foreground font-medium">No monthly lineups uploaded yet</p>
+          <p className="text-sm text-muted-foreground/70 mt-1">Upload an Excel file to get started</p>
+        </div>
+      ) : !selectedDoc ? (
+        <div className="grid gap-3">
+          {files.map(f => (
+            <Card key={f.id} className="hover:border-primary/30 transition-colors">
+              <CardContent className="flex items-center gap-4 py-4">
+                <FileSpreadsheet className="w-8 h-8 text-green-600 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{f.fileName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Uploaded {f.uploadedAt ? new Date(f.uploadedAt).toLocaleDateString('en-GB') : '-'} by {f.uploadedBy || '-'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Button variant="outline" size="sm" onClick={() => handleView(f)} data-testid={`view-monthly-${f.id}`}><Eye className="w-3.5 h-3.5 mr-1" />View</Button>
+                  <a href={`${process.env.REACT_APP_BACKEND_URL}/api/port-lineups/monthly/${f.id}/download`} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm"><Download className="w-3.5 h-3.5 mr-1" />Download</Button>
+                  </a>
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(f.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Viewing a document */}
+      {selectedDoc && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => setSelectedDoc(null)}><X className="w-3.5 h-3.5 mr-1" />Back</Button>
+            <h3 className="font-semibold truncate">{selectedDoc.fileName}</h3>
+          </div>
+
+          {/* Sheet tabs */}
+          {selectedDoc.sheets?.length > 1 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {selectedDoc.sheets.map((s, i) => (
+                <button key={i} onClick={() => setSelectedSheet(i)} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedSheet === i ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                  {s.sheetName}
+                  <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedSheet === i ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{s.rows.length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Sheet table */}
+          {currentSheet && (
+            <div className="overflow-x-auto border rounded-lg">
+              <Table className="trade-table">
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    {currentSheet.headers.map((h, i) => (
+                      <TableHead key={i} className="text-center whitespace-nowrap">{h || `Col ${i+1}`}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {currentSheet.rows.length === 0 ? (
+                    <TableRow><TableCell colSpan={currentSheet.headers.length} className="text-center py-8 text-muted-foreground">No data</TableCell></TableRow>
+                  ) : currentSheet.rows.map((row, ri) => (
+                    <TableRow key={ri}>
+                      {currentSheet.headers.map((h, ci) => (
+                        <TableCell key={ci} className="text-center whitespace-nowrap text-sm">{row[h] || '-'}</TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="px-3 py-2 bg-muted/30 border-t border-border text-xs text-muted-foreground">
+                {currentSheet.rows.length} rows
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════════════
+   MAIN PAGE
+   ════════════════════════════════════════════════ */
+export default function PortLineupsPage() {
+  return (
+    <div className="space-y-4" data-testid="port-lineups-page">
+      <h1 className="text-3xl font-bold tracking-tight" data-testid="port-lineups-title">Port Line-Ups</h1>
+      <Tabs defaultValue="daily" className="w-full">
+        <TabsList>
+          <TabsTrigger value="daily"><Ship className="w-3.5 h-3.5 mr-1.5" />Daily Line-Up</TabsTrigger>
+          <TabsTrigger value="monthly"><Calendar className="w-3.5 h-3.5 mr-1.5" />Monthly Line-Up</TabsTrigger>
+        </TabsList>
+        <TabsContent value="daily"><DailyLineUp /></TabsContent>
+        <TabsContent value="monthly"><MonthlyLineUp /></TabsContent>
+      </Tabs>
     </div>
   );
 }

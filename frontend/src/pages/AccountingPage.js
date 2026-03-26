@@ -26,7 +26,7 @@ const STATUS_CONFIG = {
   overdue: { label: 'OVERDUE', color: 'bg-red-100 text-red-800' },
 };
 
-function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap, onPaymentDate, onDownloadInvoice }) {
+function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap, onPaymentDate, onDownloadInvoice, onUploadInvoiceFile, onViewInvoiceFile, onDeleteInvoiceFile, uploadingFileId }) {
   const filtered = search ? invoices.filter(i => i.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) || i.vendorName?.toLowerCase().includes(search.toLowerCase())) : invoices;
   const fmtAmt = (n, cur) => `${new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0)} ${cur || 'USD'}`;
   return (
@@ -62,11 +62,20 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
               <TableCell className="text-right font-medium">{fmtAmt(inv.amount, inv.currency)}</TableCell>
               <TableCell className="text-sm">{fmtDueDate}</TableCell>
               <TableCell className="text-center">
-                {inv.tradeId ? (
-                  <Button variant="outline" size="sm" onClick={() => onDownloadInvoice && onDownloadInvoice(inv)} data-testid={`invoice-pdf-${inv.id}`}>
-                    <FileDown className="h-3.5 w-3.5 mr-1" />PDF
-                  </Button>
-                ) : '-'}
+                {inv.invoiceFileName ? (
+                  <div className="flex items-center justify-center gap-1">
+                    <Button variant="outline" size="sm" onClick={() => onViewInvoiceFile && onViewInvoiceFile(inv)} data-testid={`view-invoice-file-${inv.id}`}>
+                      <FileDown className="h-3.5 w-3.5 mr-1" />PDF
+                    </Button>
+                    <button className="text-destructive hover:text-destructive/80 text-xs p-0.5" onClick={() => onDeleteInvoiceFile && onDeleteInvoiceFile(inv.id)} title="Remove file">&times;</button>
+                  </div>
+                ) : (
+                  <label className="inline-flex items-center gap-1 cursor-pointer text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {uploadingFileId === inv.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                    <span>{uploadingFileId === inv.id ? '...' : 'Upload'}</span>
+                    <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden" onChange={(e) => { if (e.target.files[0]) onUploadInvoiceFile(inv.id, e.target.files[0]); e.target.value = ''; }} disabled={uploadingFileId === inv.id} />
+                  </label>
+                )}
               </TableCell>
               <TableCell className="text-sm">
                 <div className="flex items-center gap-1">
@@ -111,6 +120,7 @@ export default function AccountingPage() {
   const [vendors, setVendors] = useState([]);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [filterMonth, setFilterMonth] = useState(String(new Date().getMonth() + 1));
+  const [uploadingFileId, setUploadingFileId] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -232,6 +242,34 @@ export default function AccountingPage() {
     } catch { toast.error('Failed to download invoice'); }
   };
 
+  const handleUploadInvoiceFile = async (invoiceId, file) => {
+    setUploadingFileId(invoiceId);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post(`/api/invoices/${invoiceId}/upload-file`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setInvoices(prev => prev.map(i => i.id === invoiceId ? res.data : i));
+      toast.success('Invoice file uploaded');
+    } catch { toast.error('Failed to upload file'); }
+    finally { setUploadingFileId(null); }
+  };
+
+  const handleViewInvoiceFile = async (inv) => {
+    try {
+      const res = await api.get(`/api/invoices/${inv.id}/download-file`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch { toast.error('Failed to open file'); }
+  };
+
+  const handleDeleteInvoiceFile = async (invoiceId) => {
+    try {
+      const res = await api.delete(`/api/invoices/${invoiceId}/upload-file`);
+      setInvoices(prev => prev.map(i => i.id === invoiceId ? res.data : i));
+      toast.success('Invoice file removed');
+    } catch { toast.error('Failed to remove file'); }
+  };
+
   const handleSaveStmt = async () => {
     setSaving(true);
     try {
@@ -311,7 +349,7 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
+              <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -324,11 +362,11 @@ export default function AccountingPage() {
                 <div className="ml-auto"><Button onClick={() => openCreate('outgoing')}><Plus className="mr-2 h-4 w-4" />Add Outgoing</Button></div>
               </div>
               <h3 className="font-semibold text-sm mb-2 text-amber-700">Pending ({filteredOutgoing.filter(i => i.status !== 'paid').length})</h3>
-              <InvoiceTable invoices={filteredOutgoing.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
+              <InvoiceTable invoices={filteredOutgoing.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
               {filteredOutgoing.filter(i => i.status === 'paid').length > 0 && (
                 <>
                   <h3 className="font-semibold text-sm mt-6 mb-2 text-green-700">Paid ({filteredOutgoing.filter(i => i.status === 'paid').length})</h3>
-                  <InvoiceTable invoices={filteredOutgoing.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} />
+                  <InvoiceTable invoices={filteredOutgoing.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="outgoing" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
                 </>
               )}
             </CardContent>

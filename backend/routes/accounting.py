@@ -73,6 +73,47 @@ def update_invoice_payment_date(invoice_id: str, body: dict, user=Depends(accoun
     return serialize_doc(invoices_col.find_one({"_id": ObjectId(invoice_id)}))
 
 
+
+@router.post("/invoices/{invoice_id}/upload-file")
+async def upload_invoice_file(invoice_id: str, file: UploadFile = File(...), user=Depends(accounting_access)):
+    inv = invoices_col.find_one({"_id": ObjectId(invoice_id)})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    inv_dir = os.path.join(UPLOAD_DIR, "invoices")
+    os.makedirs(inv_dir, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1]
+    stored_name = f"{invoice_id}{ext}"
+    path = os.path.join(inv_dir, stored_name)
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$set": {"invoiceFileName": file.filename, "invoiceFilePath": path}})
+    return serialize_doc(invoices_col.find_one({"_id": ObjectId(invoice_id)}))
+
+
+@router.get("/invoices/{invoice_id}/download-file")
+def download_invoice_file(invoice_id: str, user=Depends(accounting_access)):
+    inv = invoices_col.find_one({"_id": ObjectId(invoice_id)})
+    if not inv or not inv.get("invoiceFilePath"):
+        raise HTTPException(status_code=404, detail="No file found")
+    path = inv["invoiceFilePath"]
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    return FileResponse(path, filename=inv.get("invoiceFileName", "invoice.pdf"), media_type="application/octet-stream")
+
+
+@router.delete("/invoices/{invoice_id}/upload-file")
+def delete_invoice_file(invoice_id: str, user=Depends(accounting_access)):
+    inv = invoices_col.find_one({"_id": ObjectId(invoice_id)})
+    if not inv:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    path = inv.get("invoiceFilePath")
+    if path and os.path.exists(path):
+        os.remove(path)
+    invoices_col.update_one({"_id": ObjectId(invoice_id)}, {"$unset": {"invoiceFileName": "", "invoiceFilePath": ""}})
+    return serialize_doc(invoices_col.find_one({"_id": ObjectId(invoice_id)}))
+
+
+
 # ─── Bank Statements ────────────────────────────────────────
 @router.get("/bank-statements")
 def list_bank_statements(user=Depends(accounting_access)):

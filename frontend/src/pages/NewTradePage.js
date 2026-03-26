@@ -35,6 +35,18 @@ function DatePicker({ value, onChange, ...props }) {
 
 const DELIVERY_TERMS = ['FOB', 'CFR', 'CIF'];
 const CURRENCIES = ['USD', 'EUR'];
+const PAYMENT_TERMS = [
+  '24 hours after Kerch Passage',
+  '48 hours after Kerch Passage',
+  '24 hours before Kerch Passage',
+  '48 hours before Kerch Passage',
+  '24 hours after Bosphorus Passage',
+  '48 hours after Bosphorus Passage',
+  '24 hours before Bosphorus Passage',
+  '48 hours before Bosphorus Passage',
+  '24 hours after entering Turkish Waters',
+  '48 hours after entering Turkish Waters',
+];
 
 function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {
   if (!contacts || contacts.length === 0) return null;
@@ -105,7 +117,7 @@ export default function NewTradePage() {
     sellerId: '', buyerId: '', brokerId: '', coBrokerId: 'na',
     commodityId: '', originId: '', quantity: '5000', tolerance: '10', cropYear: new Date().getFullYear().toString(),
     deliveryTerm: 'CIF', pricePerMT: '', currency: 'USD',
-    paymentTerms: '%100 TT Against Copy Docs.', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
+    paymentTerms: '48 hours after Kerch Passage', incoterms: '', basePortId: '', loadingPortId: '', dischargePortId: '',
     shipmentWindowStart: '', shipmentWindowEnd: '', vesselName: '',
     surveyorId: '', brokeragePerMT: '1', brokerageAccount: 'seller', brokerageCurrency: 'USD', contractDate: '', contractNumber: '',
     specialConditions: '', notes: '', status: 'confirmation', commoditySpecs: '',
@@ -237,6 +249,15 @@ export default function NewTradePage() {
   }, [isEdit, tradeId]);
 
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleOriginChange = (originId) => {
+    const origin = origins.find(o => o.id === originId);
+    const name = (origin?.name || '').toLowerCase();
+    const updates = { originId };
+    if (name === 'russia') updates.paymentTerms = '48 hours after Kerch Passage';
+    else if (name === 'ukraine') updates.paymentTerms = '24 hours after entering Turkish Waters';
+    setForm(prev => ({ ...prev, ...updates }));
+  };
 
   const sellers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('seller'); }), [partners]);
   const buyers = useMemo(() => partners.filter(p => { const t = Array.isArray(p.type) ? p.type : [p.type]; return t.includes('buyer'); }), [partners]);
@@ -452,7 +473,7 @@ export default function NewTradePage() {
             </div>
             <div className="space-y-2">
               <Label>Origin</Label>
-              <Select value={form.originId} onValueChange={(v) => set('originId', v)}>
+              <Select value={form.originId} onValueChange={handleOriginChange}>
                 <SelectTrigger><SelectValue placeholder="Select origin" /></SelectTrigger>
                 <SelectContent>{origins.map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
               </Select>
@@ -498,7 +519,10 @@ export default function NewTradePage() {
           </div>
           <div className="space-y-2">
             <Label>Payment Terms</Label>
-            <Input value={form.paymentTerms} onChange={(e) => set('paymentTerms', e.target.value)} placeholder="e.g. LC at sight" />
+            <Select value={form.paymentTerms} onValueChange={(v) => set('paymentTerms', v)}>
+              <SelectTrigger data-testid="payment-terms-select"><SelectValue placeholder="Select payment term" /></SelectTrigger>
+              <SelectContent>{PAYMENT_TERMS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Brokerage (per MT)</Label>

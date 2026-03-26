@@ -785,7 +785,19 @@ export default function VesselExecutionPage() {
                           <p className="text-sm font-medium">{trade.diDocumentFilename}</p>
                           <p className="text-xs text-muted-foreground">Uploaded document</p>
                         </div>
-                        <Button size="sm" variant="outline" onClick={() => window.open(`${api.defaults.baseURL}/api/trades/${selectedTradeId}/download-di`, '_blank')}>Download</Button>
+                        <Button size="sm" variant="outline" onClick={async () => {
+                          try {
+                            const res = await api.get(`/api/trades/${selectedTradeId}/download-di`, { responseType: 'blob' });
+                            const url = window.URL.createObjectURL(new Blob([res.data]));
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = trade.diDocumentFilename || 'di_document.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                            window.URL.revokeObjectURL(url);
+                          } catch { toast.error('Failed to download'); }
+                        }} data-testid="download-di-btn">Download</Button>
                         <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={async () => {
                           try {
                             await api.delete(`/api/trades/${selectedTradeId}/upload-di`);

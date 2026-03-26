@@ -37,8 +37,8 @@ export default function Sidebar() {
   const navItems = [
     { title: 'Market Data', href: '/market-data', icon: TrendingUp, roles: ['admin', 'user'] },
     { title: 'Contracts', href: '/trades', icon: FileText, roles: ['admin', 'user'] },
-    { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
     { title: 'Vessel Execution', href: '/documents', icon: FolderOpen, roles: ['admin', 'user'] },
+    { title: 'Brokerage Inv.', href: '/commissions', icon: DollarSign, roles: ['admin', 'user'] },
     { title: 'Calendar', href: '/calendar', icon: CalendarDays, roles: ['admin', 'user'] },
     { title: 'Accounting', href: '/omega', icon: Calculator, roles: ['admin', 'accountant'] },
     { title: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'user'] },

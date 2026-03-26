@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
@@ -481,6 +481,7 @@ export default function VesselExecutionPage() {
             <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
             <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
             <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
+            <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment Date From Buyer</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}
@@ -735,44 +736,46 @@ export default function VesselExecutionPage() {
             </Card>
           </TabsContent>
 
-          {/* Payment Date From Buyer */}
-          <Card className="mt-4">
-            <CardHeader><CardTitle className="text-base">Payment Date From Buyer</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={`w-[220px] justify-start text-left font-normal ${!trade.buyerPaymentDate ? 'text-muted-foreground' : ''}`} data-testid="buyer-payment-date-btn">
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      {trade.buyerPaymentDate || 'Pick payment date'}
+          {/* Payment Date From Buyer Tab */}
+          <TabsContent value="payment">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Payment Date From Buyer</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={`w-[220px] justify-start text-left font-normal ${!trade.buyerPaymentDate ? 'text-muted-foreground' : ''}`} data-testid="buyer-payment-date-btn">
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        {trade.buyerPaymentDate || 'Pick payment date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={trade.buyerPaymentDate ? (() => { try { const [d,m,y] = trade.buyerPaymentDate.split('/'); return new Date(y, m-1, d); } catch { return undefined; } })() : undefined}
+                        onSelect={(d) => { if (d) saveBuyerPaymentDate(format(d, 'dd/MM/yyyy')); }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {trade.buyerPaymentDate && (
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => saveBuyerPaymentDate('')} data-testid="clear-buyer-payment">
+                      <X className="h-4 w-4 mr-1" />Clear
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={trade.buyerPaymentDate ? (() => { try { const [d,m,y] = trade.buyerPaymentDate.split('/'); return new Date(y, m-1, d); } catch { return undefined; } })() : undefined}
-                      onSelect={(d) => { if (d) saveBuyerPaymentDate(format(d, 'dd/MM/yyyy')); }}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {trade.buyerPaymentDate && (
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => saveBuyerPaymentDate('')} data-testid="clear-buyer-payment">
-                    <X className="h-4 w-4 mr-1" />Clear
-                  </Button>
-                )}
-                {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-              </div>
-              {trade.buyerPaymentDate && (
-                <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-green-800">Contract Completed</p>
-                    <p className="text-sm text-green-600">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
-                  </div>
+                  )}
+                  {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                {trade.buyerPaymentDate && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-green-800 dark:text-green-300">Contract Completed</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       )}
 

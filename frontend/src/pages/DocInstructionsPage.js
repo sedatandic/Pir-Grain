@@ -398,9 +398,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ))}
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>2. Address for Original Documents</h3>
-                  <div style={{ border: '1px solid #d1d5db', padding: '10px', background: '#f9fafb', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{previewDi.originalDocsAddress || 'To be advised later.'}</div>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>3. Required Documents</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>2. Required Documents</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
@@ -421,6 +419,8 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ))}
                     </tbody>
                   </table>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px', marginTop: '16px' }}>3. Address for Original Documents</h3>
+                  <div style={{ border: '1px solid #d1d5db', padding: '10px', background: '#f9fafb', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{previewDi.originalDocsAddress || 'To be advised later.'}</div>
                 </div>
               </CardContent>
             </Card>

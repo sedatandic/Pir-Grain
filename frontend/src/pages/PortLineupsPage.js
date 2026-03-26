@@ -393,8 +393,10 @@ function MonthlyLineUp({ onLastUpdate }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [selectedFileId, setSelectedFileId] = useState('');
+  const [docData, setDocData] = useState(null);
   const [selectedSheet, setSelectedSheet] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
 
   const fetchFiles = useCallback(async () => {
@@ -402,14 +404,24 @@ function MonthlyLineUp({ onLastUpdate }) {
     try {
       const res = await api.get('/api/port-lineups/monthly/list');
       setFiles(res.data || []);
-      if (res.data?.length > 0 && res.data[0].uploadedAt) {
-        onLastUpdate?.(new Date(res.data[0].uploadedAt).toLocaleDateString('en-GB'));
+      if (res.data?.length > 0) {
+        if (!selectedFileId) setSelectedFileId(res.data[0].id);
+        if (res.data[0].uploadedAt) onLastUpdate?.(new Date(res.data[0].uploadedAt).toLocaleDateString('en-GB'));
       }
     } catch { /* empty */ }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchFiles(); }, [fetchFiles]);
+
+  useEffect(() => {
+    if (!selectedFileId) return;
+    setLoading(true);
+    api.get(`/api/port-lineups/monthly/${selectedFileId}`)
+      .then(res => { setDocData(res.data); setSelectedSheet(0); })
+      .catch(() => setError('Failed to load document'))
+      .finally(() => setLoading(false));
+  }, [selectedFileId]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -418,40 +430,53 @@ function MonthlyLineUp({ onLastUpdate }) {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      await api.post('/api/port-lineups/monthly/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
+      const res = await api.post('/api/port-lineups/monthly/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' }, timeout: 120000 });
       await fetchFiles();
+      if (res.data?.id) setSelectedFileId(res.data.id);
     } catch (err) { setError(err.response?.data?.detail || 'Upload failed'); }
     finally { setUploading(false); e.target.value = ''; }
-  };
-
-  const handleView = async (doc) => {
-    try {
-      const res = await api.get(`/api/port-lineups/monthly/${doc.id}`);
-      setSelectedDoc(res.data);
-      setSelectedSheet(0);
-    } catch { setError('Failed to load document'); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this monthly lineup?')) return;
     try {
       await api.delete(`/api/port-lineups/monthly/${id}`);
-      if (selectedDoc?.id === id) setSelectedDoc(null);
+      if (selectedFileId === id) { setSelectedFileId(''); setDocData(null); }
       fetchFiles();
     } catch { setError('Failed to delete'); }
   };
 
-  const currentSheet = selectedDoc?.sheets?.[selectedSheet];
+  const currentSheet = docData?.sheets?.[selectedSheet];
+
+  const filteredRows = useMemo(() => {
+    if (!currentSheet) return [];
+    if (!searchTerm) return currentSheet.rows;
+    const term = searchTerm.toLowerCase();
+    return currentSheet.rows.filter(row =>
+      currentSheet.headers.some(h => (row[h] || '').toLowerCase().includes(term))
+    );
+  }, [currentSheet, searchTerm]);
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Upload and view monthly port lineup reports</p>
-        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-monthly-button">
-          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-          {uploading ? 'Uploading...' : 'Upload Excel'}
-          <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
-        </label>
+        <p className="text-sm text-muted-foreground">Monthly port lineup reports</p>
+        <div className="flex items-center gap-2">
+          {selectedFileId && docData && (
+            <>
+              <a href={`${process.env.REACT_APP_BACKEND_URL}/api/port-lineups/monthly/${selectedFileId}/download`} target="_blank" rel="noopener noreferrer">
+                <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors"><Download className="w-4 h-4" />Download</button>
+              </a>
+              <button onClick={() => handleDelete(selectedFileId)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive border border-border hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><Trash2 className="w-4 h-4" />Delete</button>
+            </>
+          )}
+          <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-monthly-button">
+            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Uploading...' : 'Upload Excel'}
+            <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
+          </label>
+        </div>
       </div>
 
       {error && (
@@ -460,53 +485,39 @@ function MonthlyLineUp({ onLastUpdate }) {
         </div>
       )}
 
-      {/* File list */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : files.length === 0 && !selectedDoc ? (
+      {files.length === 0 && !loading ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <FileSpreadsheet className="w-12 h-12 text-muted-foreground/40 mb-3" />
           <p className="text-muted-foreground font-medium">No monthly lineups uploaded yet</p>
           <p className="text-sm text-muted-foreground/70 mt-1">Upload an Excel file to get started</p>
         </div>
-      ) : !selectedDoc ? (
-        <div className="grid gap-3">
-          {files.map(f => (
-            <Card key={f.id} className="hover:border-primary/30 transition-colors">
-              <CardContent className="flex items-center gap-4 py-4">
-                <FileSpreadsheet className="w-8 h-8 text-green-600 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{f.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Uploaded {f.uploadedAt ? new Date(f.uploadedAt).toLocaleDateString('en-GB') : '-'} by {f.uploadedBy || '-'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Button variant="outline" size="sm" onClick={() => handleView(f)} data-testid={`view-monthly-${f.id}`}><Eye className="w-3.5 h-3.5 mr-1" />View</Button>
-                  <a href={`${process.env.REACT_APP_BACKEND_URL}/api/port-lineups/monthly/${f.id}/download`} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm"><Download className="w-3.5 h-3.5 mr-1" />Download</Button>
-                  </a>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(f.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : null}
-
-      {/* Viewing a document */}
-      {selectedDoc && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={() => setSelectedDoc(null)}><X className="w-3.5 h-3.5 mr-1" />Back</Button>
-            <h3 className="font-semibold truncate">{selectedDoc.fileName}</h3>
+      ) : (
+        <>
+          {/* File selector + search */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <FileSpreadsheet className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[280px]" data-testid="monthly-file-selector">
+                {files.map(f => <option key={f.id} value={f.id}>{f.fileName}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            </div>
+            <div className="relative max-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30" />
+            </div>
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="flex items-center gap-1 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors whitespace-nowrap">
+                <X className="w-3.5 h-3.5" />Clear
+              </button>
+            )}
           </div>
 
           {/* Sheet tabs */}
-          {selectedDoc.sheets?.length > 1 && (
+          {docData?.sheets?.length > 1 && (
             <div className="flex gap-1.5 overflow-x-auto pb-1">
-              {selectedDoc.sheets.map((s, i) => (
-                <button key={i} onClick={() => setSelectedSheet(i)} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedSheet === i ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+              {docData.sheets.map((s, i) => (
+                <button key={i} onClick={() => { setSelectedSheet(i); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedSheet === i ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                   {s.sheetName}
                   <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedSheet === i ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{s.rows.length}</span>
                 </button>
@@ -514,9 +525,11 @@ function MonthlyLineUp({ onLastUpdate }) {
             </div>
           )}
 
-          {/* Sheet table */}
-          {currentSheet && (
-            <div className="overflow-x-auto border rounded-lg">
+          {loading && <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>}
+
+          {/* Data table */}
+          {!loading && currentSheet && (
+            <div className="overflow-x-auto border rounded-lg" data-testid="monthly-table-container">
               <Table className="trade-table">
                 <TableHeader>
                   <TableRow className="bg-muted/50">
@@ -526,10 +539,10 @@ function MonthlyLineUp({ onLastUpdate }) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentSheet.rows.length === 0 ? (
-                    <TableRow><TableCell colSpan={currentSheet.headers.length} className="text-center py-8 text-muted-foreground">No data</TableCell></TableRow>
-                  ) : currentSheet.rows.map((row, ri) => (
-                    <TableRow key={ri}>
+                  {filteredRows.length === 0 ? (
+                    <TableRow><TableCell colSpan={currentSheet.headers.length} className="text-center py-8 text-muted-foreground">{searchTerm ? 'No rows match your search' : 'No data'}</TableCell></TableRow>
+                  ) : filteredRows.map((row, ri) => (
+                    <TableRow key={ri} className={ri % 2 === 1 ? 'bg-muted/30' : ''}>
                       {currentSheet.headers.map((h, ci) => (
                         <TableCell key={ci} className="text-center whitespace-nowrap text-sm">{row[h] || '-'}</TableCell>
                       ))}
@@ -537,12 +550,15 @@ function MonthlyLineUp({ onLastUpdate }) {
                   ))}
                 </TableBody>
               </Table>
-              <div className="px-3 py-2 bg-muted/30 border-t border-border text-xs text-muted-foreground">
-                {currentSheet.rows.length} rows
-              </div>
+              {filteredRows.length > 0 && (
+                <div className="px-3 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{filteredRows.length} rows{searchTerm ? ` (filtered from ${currentSheet.rows.length})` : ''}</span>
+                  <span>{docData?.sheets?.length || 0} sheet(s)</span>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

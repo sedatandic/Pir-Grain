@@ -3,65 +3,78 @@
 ## Core Architecture
 - **Frontend**: React + Shadcn UI (port 3000)
 - **Backend**: FastAPI (port 8001, prefix /api)
-- **Database**: MongoDB (DB: pir_grain_pulses)
+- **Database**: MongoDB (DB: test_database)
 - **Auth**: JWT-based authentication
 
 ## What's Been Implemented
 
-### Brokerage Invoices Filters (Latest: 2026-03-25)
-- Added 5 filter dropdowns: Seller, Buyer, Commodity, Origin (load port country), Destination (discharge port country)
-- Filters dynamically update summary cards (Total/Pending/Paid), section counts, and table totals
-- Clear All button appears when any filter is active
-- Filters work alongside existing search
+### Vessel Nomination Enhancement (2026-03-26)
+- Enhanced Vessel Nomination tab to show Load Port, Seller Surveyor, Load Port Agent alongside vessel name
+- All 4 fields editable via dropdown selects (Edit/Save/Cancel flow)
+- Vessel name dropdown from 208 vessels, ports from all ports, surveyors and agents from reference data
+- Fixed active_url migration guard bug (stale URL in MongoDB)
+
+### Regression Testing (2026-03-26)
+- Full regression test after massive UI changes: Frontend 100%, Backend 82% (minor test fixture issues only)
+- All pages verified: VesselExecution, Accounting, Commissions, PortLineups, MarketData, Contracts
+
+### Brokerage Invoices Filters (2026-03-25)
+- Added 5 filter dropdowns: Seller, Buyer, Commodity, Origin, Destination
+- Filters dynamically update summary cards and table totals
+- Clear All button when filters active
 
 ### NewTradePage Compact Layout (2026-03-25)
-- Complete redesign: All form fields fit in one screen without scrolling
-- Removed Card wrappers, replaced with compact section headers (uppercase, border-bottom)
-- 6 sections: Contract Details (4-col), Parties (5-col), Commodity (5-col), Pricing & Terms (7-col), Shipping (5-col), Additional (5-col)
-- Save/Cancel buttons moved to header row
-- Port Variations shown inline with +/- differences
-- Excluded Disports & Surveyors: collapsible, starts collapsed
-- Compact inputs (h-7), compact labels (text-[11px])
+- All form fields fit in one screen without scrolling
+- 6 sections: Contract Details, Parties, Commodity, Pricing & Terms, Shipping, Additional
+
+### Commissions to Accounting Sync
+- Buyer Payment Date in Vessel Execution triggers: contract completion, invoice generation, accounting entry
+
+### Accounting Enhancements
+- Bank Statements file upload, Invoice column with PDF download
+- Due Date auto-calculates 15 days (skipping Turkey weekends)
+
+### Port Line-Ups
+- Daily and Monthly tabs with Excel upload for Monthly
+- Monthly tab matches Daily tab style (dropdown file selector, table layout)
+- Last Update labels, All Dates selection
+
+### Vessel Execution UI
+- Split into Ongoing (green) and Completed (gray) contract tables
+- Tabs: BC, Vessel Nomination, DI, B/L, Shipment Appropriation, Shipment Docs, Payment Date
+- Clickable uploaded document filenames
 
 ### Documentary Instructions Page
-- Full CRUD for Documentary Instructions linked to contracts
-- Port dropdown shows "Name, Country" format
-- Buyer/Seller Surveyor fields, Email sending with formatted HTML
-- Works as embedded component inside VesselExecutionPage
-
-### Vessel Execution Pipeline
-- `VesselExecutionPage.js`: Unified tab system for Business Confirmations, Vessel Nominations, Documentary Instructions, B/L Details, Shipment Docs
+- Full CRUD linked to contracts, PDF generation, email sending
 
 ### Market Data Module
-- **Indications Tab**: Structured dropdown form (Seller/Commodity/Port/Origin/Shipment/Qty/Price)
-- **Prices Tab**: Live from Barchart.com with auto-refresh
-- **Turkish Exchanges Tab**: KTB + GTB scrapers with historical data
-- **TMO Tenders Tab**: Collapsible cards with Import/Export
-- **Coaster Freights Tab**: Weekly freight reports
-- **Telegram Feed Sidebar**: 7 public channels
+- Indications, Live Prices, Turkish Exchanges (KTB+GTB), TMO Tenders, Coaster Freights, Telegram Feed
 
 ### Core Features
-- JWT Auth, Trade CRUD, Counterparties, Reference data
-- PDF Generation, Email via Resend, Port Line-Ups, Business Cards OCR, Calendar (Staff Leave with date ranges), Reports
-- URL Migration Guard system
-- Partners: Tax ID No, Tax Office fields
-- Trades: Port price sorting, Marmara-anchored middle index
+- JWT Auth, Trade CRUD, Counterparties, Reference data, PDF Gen, Email via Resend
+- Port Line-Ups, Business Cards OCR, Calendar, Reports, URL Migration Guard
 
 ## Key API Endpoints
-- `POST /api/doc-instructions/`: Creates Documentary Instruction
-- `GET /api/doc-instructions/`: Retrieves all DIs
-- `GET /api/trades`: Trades list
-- `GET /api/config/active-url`: Active URL for migration guard
-- `PUT /api/config/active-url`: Update active URL
-- `GET /api/prices`: Live market prices
+- `POST /api/auth/login` - JWT login
+- `GET/PUT /api/trades/{id}` - Trade CRUD (includes vessel nomination fields)
+- `POST /api/trades/{id}/buyer-payment` - Payment date trigger
+- `POST /api/accounting/bank-statements/upload` - Bank statement upload
+- `POST /api/port-lineups/monthly/upload` - Monthly lineup upload
+- `GET /api/config/active-url` - URL migration guard
+
+## Credentials
+- Admin: salih.karagoz / salih123
+- Accountant: pir.accounts / pir123
 
 ## Prioritized Backlog
+### P0
+- Full Email Client Integration (Gmail in sidebar)
 ### P1
 - Full Server-Side RBAC
 ### P2
-- Google Workspace / Gmail Integration
-- Backend refactoring (extract scrapers.py from market_data.py)
-- Copy to Clipboard on TMO tender cards
-- Automatic daily scraping for KTB/GTB
+- Refactor market_data.py (extract scrapers)
+- TMO Tender copy-to-clipboard
+- Automatic daily scraping (KTB/GTB)
+- Break down large files (VesselExecutionPage, PortLineupsPage)
 ### Clarifications Pending
 - Should "CBOT - Soybeans" be removed from Live Prices table?

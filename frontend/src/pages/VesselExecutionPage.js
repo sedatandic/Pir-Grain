@@ -59,6 +59,12 @@ export default function VesselExecutionPage() {
   const [dropTarget, setDropTarget] = useState(null);
 
   // Execution state
+  // Vessel Nomination state
+  const [vessels, setVessels] = useState([]);
+  const [nominationEditing, setNominationEditing] = useState(false);
+  const [nominationForm, setNominationForm] = useState({});
+  const [nominationSaving, setNominationSaving] = useState(false);
+
   const [sendingBC, setSendingBC] = useState(false);
   const [sendingSA, setSendingSA] = useState(false);
   const [diUploading, setDiUploading] = useState(false);
@@ -71,13 +77,14 @@ export default function VesselExecutionPage() {
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const [trRes, comRes, portRes, surRes, daRes, laRes] = await Promise.all([
+        const [trRes, comRes, portRes, surRes, daRes, laRes, vesRes] = await Promise.all([
           api.get('/api/trades'),
           api.get('/api/commodities'),
           api.get('/api/ports'),
           api.get('/api/surveyors'),
           api.get('/api/disport-agents'),
           api.get('/api/loadport-agents'),
+          api.get('/api/vessels'),
         ]);
         setTrades(trRes.data.filter(t => t.vesselName));
         setCommodities(comRes.data);
@@ -85,6 +92,7 @@ export default function VesselExecutionPage() {
         setSurveyors(surRes.data);
         setDisportAgents(daRes.data);
         setLoadportAgents(laRes.data);
+        setVessels(vesRes.data);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -378,6 +386,39 @@ export default function VesselExecutionPage() {
     finally { setBuyerPaymentSaving(false); }
   };
 
+  // --- Vessel Nomination Functions ---
+  const startNominationEdit = () => {
+    setNominationForm({
+      vesselName: trade.vesselName || '',
+      loadingPortId: trade.loadingPortId || trade.basePortId || '',
+      sellerSurveyor: trade.sellerSurveyor || '',
+      loadportAgent: trade.loadportAgent || '',
+    });
+    setNominationEditing(true);
+  };
+
+  const saveNomination = async () => {
+    setNominationSaving(true);
+    try {
+      const res = await api.put(`/api/trades/${selectedTradeId}`, {
+        vesselName: nominationForm.vesselName,
+        loadingPortId: nominationForm.loadingPortId,
+        sellerSurveyor: nominationForm.sellerSurveyor,
+        loadportAgent: nominationForm.loadportAgent,
+      });
+      setTrade(res.data);
+      setTrades(prev => prev.map(t => t.id === selectedTradeId ? { ...t, vesselName: nominationForm.vesselName } : t));
+      toast.success('Vessel nomination details saved');
+      setNominationEditing(false);
+    } catch { toast.error('Failed to save nomination details'); }
+    finally { setNominationSaving(false); }
+  };
+
+  const cancelNominationEdit = () => {
+    setNominationEditing(false);
+    setNominationForm({});
+  };
+
   // Computed
   const commodity = trade ? commodities.find(c => c.id === trade.commodityId) : null;
   const getPortDisplay = (portId) => {
@@ -639,19 +680,86 @@ export default function VesselExecutionPage() {
           {/* Vessel Nomination Tab */}
           <TabsContent value="nomination">
             <Card>
-              <CardHeader><CardTitle className="text-base">Vessel Nomination</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {trade.vesselName ? (
-                  <div className="p-4 rounded-lg border bg-muted/30 space-y-2">
-                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Vessel:</span><span className="font-semibold text-lg">{trade.vesselName}</span></div>
-                    {trade.vesselIMO && <div className="flex justify-between text-sm"><span className="text-muted-foreground">IMO:</span><span className="font-medium">{trade.vesselIMO}</span></div>}
+              <CardHeader className="pb-3 flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Vessel Nomination</CardTitle>
+                {!nominationEditing ? (
+                  <Button size="sm" variant="outline" onClick={startNominationEdit} data-testid="edit-nomination-btn"><Pencil className="h-3.5 w-3.5 mr-1" />Edit</Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={cancelNominationEdit} data-testid="cancel-nomination-btn"><X className="h-3.5 w-3.5 mr-1" />Cancel</Button>
+                    <Button size="sm" onClick={saveNomination} disabled={nominationSaving} data-testid="save-nomination-btn">
+                      {nominationSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Save className="h-3.5 w-3.5 mr-1" />}Save
+                    </Button>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                {nominationEditing ? (
+                  <div className="grid grid-cols-2 gap-4" data-testid="nomination-edit-form">
+                    <div className="space-y-2">
+                      <Label>Vessel Name</Label>
+                      <Select value={nominationForm.vesselName || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, vesselName: v }))}>
+                        <SelectTrigger data-testid="nomination-vessel-select"><SelectValue placeholder="Select vessel" /></SelectTrigger>
+                        <SelectContent>
+                          {vessels.map(v => <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Load Port</Label>
+                      <Select value={nominationForm.loadingPortId || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, loadingPortId: v }))}>
+                        <SelectTrigger data-testid="nomination-loadport-select"><SelectValue placeholder="Select load port" /></SelectTrigger>
+                        <SelectContent>{ports.map(p => <SelectItem key={p.id} value={p.id}>{p.name}, {p.country}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Seller Surveyor</Label>
+                      <Select value={nominationForm.sellerSurveyor || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, sellerSurveyor: v }))}>
+                        <SelectTrigger data-testid="nomination-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
+                        <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Load Port Agent</Label>
+                      <Select value={nominationForm.loadportAgent || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, loadportAgent: v }))}>
+                        <SelectTrigger data-testid="nomination-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
+                        <SelectContent>{loadportAgents.map(a => <SelectItem key={a.id} value={a.name}>{a.name}{a.port ? ` (${a.port})` : ''}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No vessel assigned yet</p>
+                  <div className="space-y-0" data-testid="nomination-details">
+                    <div className="grid grid-cols-2 gap-x-8">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-sm text-muted-foreground">Vessel</span>
+                          <span className="font-semibold uppercase" data-testid="nomination-vessel-value">{trade.vesselName || '-'}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-sm text-muted-foreground">Load Port</span>
+                          <span className="font-medium" data-testid="nomination-loadport-value">{getPortDisplay(trade.loadingPortId || trade.basePortId)}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-sm text-muted-foreground">Seller Surveyor</span>
+                          <span className="font-medium" data-testid="nomination-surveyor-value">{trade.sellerSurveyor || '-'}</span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-sm text-muted-foreground">Load Port Agent</span>
+                          <span className="font-medium" data-testid="nomination-agent-value">{trade.loadportAgent || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-                <Button size="lg" disabled={!trade.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')}>
-                  <Send className="h-4 w-4 mr-2" />Send Nomination
-                </Button>
+                <div className="mt-6">
+                  <Button size="lg" disabled={!trade.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')} data-testid="send-nomination-btn">
+                    <Send className="h-4 w-4 mr-2" />Send Nomination
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -443,11 +443,13 @@ export default function VesselExecutionPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-900/50">
-                <th className="text-center px-4 py-2.5 font-medium">Contract</th>
+                <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
                 <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
               </tr>
             </thead>
@@ -459,11 +461,13 @@ export default function VesselExecutionPage() {
                   className={`border-b border-green-100 dark:border-green-900/30 cursor-pointer transition-colors hover:bg-green-50/50 dark:hover:bg-green-900/10 ${selectedTradeId === t.id ? 'bg-green-100 dark:bg-green-900/30 border-l-4 border-l-green-600' : ''}`}
                   data-testid={`ve-contract-row-${t.id}`}
                 >
-                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || '-'}</td>
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
                   <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
                 </tr>
               ))}
@@ -481,11 +485,13 @@ export default function VesselExecutionPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/50 border-b">
-                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Contract</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Contract No</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Discharge Port</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Vessel</th>
               </tr>
             </thead>
@@ -497,11 +503,13 @@ export default function VesselExecutionPage() {
                   className={`border-b cursor-pointer transition-colors hover:bg-muted/30 text-muted-foreground ${selectedTradeId === t.id ? 'bg-muted/50 border-l-4 border-l-muted-foreground' : ''}`}
                   data-testid={`ve-contract-row-${t.id}`}
                 >
-                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || '-'}</td>
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
                   <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
                 </tr>
               ))}

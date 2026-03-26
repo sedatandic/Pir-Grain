@@ -199,7 +199,19 @@ export default function BusinessCardsPage() {
             {/* Table */}
             {!isCollapsed && (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" data-testid={`cards-table-${country.toLowerCase().replace(/\s+/g, '-')}`}>
+                <table className="w-full text-sm" style={{ tableLayout: 'fixed' }} data-testid={`cards-table-${country.toLowerCase().replace(/\s+/g, '-')}`}>
+                  <colgroup>
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '13%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '15%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '12%' }} />
+                    <col style={{ width: '8%' }} />
+                    <col style={{ width: '7%' }} />
+                    <col style={{ width: '6%' }} />
+                    <col style={{ width: '3%' }} />
+                  </colgroup>
                   <thead>
                     <tr className="bg-muted/50 border-b border-t border-border">
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Name</th>
@@ -211,7 +223,7 @@ export default function BusinessCardsPage() {
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
                       <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Keywords</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap w-20"></th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -222,28 +234,28 @@ export default function BusinessCardsPage() {
                         onClick={() => setDetailCard(card)}
                         data-testid={`card-row-${card.id}`}
                       >
-                        <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">{card.name || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.company || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.title || '-'}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 font-medium text-foreground truncate" title={card.name}>{card.name || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.company}>{card.company || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.title}>{card.title || '-'}</td>
+                        <td className="px-3 py-2 truncate">
                           {card.email ? (
-                            <a href={`mailto:${card.email}`} className="text-blue-600 hover:underline text-xs" onClick={e => e.stopPropagation()}>{card.email}</a>
+                            <a href={`mailto:${card.email}`} className="text-blue-600 hover:underline text-xs" title={card.email} onClick={e => e.stopPropagation()}>{card.email}</a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 truncate">
                           {card.mobile ? (
                             <a href={`https://wa.me/${card.mobile.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-green-600 hover:underline text-xs" onClick={e => e.stopPropagation()}>
-                              <MessageCircle className="w-3 h-3" />{card.mobile}
+                              <MessageCircle className="w-3 h-3 flex-shrink-0" /><span className="truncate">{card.mobile}</span>
                             </a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 truncate">
                           {card.website ? (
-                            <a href={card.website?.startsWith('http') ? card.website : `https://${card.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs max-w-[150px] truncate block" onClick={e => e.stopPropagation()}>{card.website}</a>
+                            <a href={card.website?.startsWith('http') ? card.website : `https://${card.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs truncate block" title={card.website} onClick={e => e.stopPropagation()}>{card.website}</a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.city || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{card.country || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.city}>{card.city || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.country}>{card.country || '-'}</td>
                         <td className="px-3 py-2">
                           {card.keywords?.length > 0 ? (
                             <div className="flex flex-wrap gap-1">

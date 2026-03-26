@@ -40,6 +40,7 @@ class DocInstructionCreate(BaseModel):
     notifyOption: str = "buyer_details"
     notifyCustom: str = ""
     notifyBuyerId: str = ""
+    requiredDocuments: list = []
 
 
 class DocInstructionUpdate(BaseModel):
@@ -61,6 +62,7 @@ class DocInstructionUpdate(BaseModel):
     notifyOption: Optional[str] = None
     notifyCustom: Optional[str] = None
     notifyBuyerId: Optional[str] = None
+    requiredDocuments: Optional[list] = None
 
 
 def get_buyer_display(buyer_id):
@@ -170,17 +172,6 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     seller_email = seller["email"]
     contract_num = trade.get("pirContractNumber", "N/A")
 
-    # Build consignee/notify text
-    consignee = "TO ORDER"
-    if doc.get("consigneeOption") == "buyer_details":
-        consignee = doc.get("consigneeBuyerText", "BUYER DETAILS")
-    elif doc.get("consigneeOption") == "other":
-        consignee = doc.get("consigneeCustom", "—")
-
-    notify = doc.get("notifyBuyerText", "BUYER DETAILS")
-    if doc.get("notifyOption") == "other":
-        notify = doc.get("notifyCustom", "—")
-
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
@@ -202,25 +193,27 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">3. Required Documents</h3>
     <table style="width: 100%; border-collapse: collapse;">
-      <tr><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; width: 30px; text-align: center;">#</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: left;">Document</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: left;">Details</th></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; width: 30px; text-align: center;">#</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: left;">Document</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Originals</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Copies</th></tr>
     """
-    docs_list = [
-        ("Signed Commercial Invoice (Original)", f"Consignee: {consignee}"),
-        ('3/3 Original B/L – "Clean on Board", "Freight Prepaid"', f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Certificate of Origin (Original + 2 Copies)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Phytosanitary Certificate (Original + 2 Copies)", f"Consignee: {consignee}"),
-        ("Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Fumigation Certificate (Original, if any)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Quality Certificate (GAFTA Approved Surveyor)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Weight Certificate (GAFTA Approved Surveyor)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Holds Cleanliness Certificate (GAFTA Approved Surveyor)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Holds Sealing Certificate (GAFTA Approved Surveyor)", f"Consignee: {consignee}<br>Notify: {notify}"),
-        ("Insurance Certificate (GAFTA – 102% of value)", f"Assured: {consignee}"),
-        ("Master's Receipt", "Confirming dispatch of 1 Original Phytosanitary Certificate + 1 Non-Negotiable B/L Copy"),
-        ("Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate", f"Include all PCB and Dioxin parameters.<br>Consignee: {consignee}<br>Notify: {notify}"),
-    ]
-    for i, (title, details) in enumerate(docs_list, 1):
-        html += f'<tr><td style="border: 1px solid #ccc; padding: 6px; text-align: center; font-weight: 600;">{i}</td><td style="border: 1px solid #ccc; padding: 6px; font-weight: 500;">{title}</td><td style="border: 1px solid #ccc; padding: 6px; font-size: 12px;">{details}</td></tr>'
+    req_docs = doc.get("requiredDocuments", [])
+    if not req_docs:
+        req_docs = [
+            {"name": "Signed Commercial Invoice", "originals": 1, "copies": 0},
+            {"name": 'Bill of Lading (Clean on Board, Freight Prepaid)', "originals": 3, "copies": 0},
+            {"name": "Certificate of Origin", "originals": 1, "copies": 2},
+            {"name": "Phytosanitary Certificate", "originals": 1, "copies": 2},
+            {"name": "Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)", "originals": 1, "copies": 0},
+            {"name": "Fumigation Certificate (if any)", "originals": 1, "copies": 0},
+            {"name": "Quality Certificate (GAFTA Approved Surveyor)", "originals": 1, "copies": 0},
+            {"name": "Weight Certificate (GAFTA Approved Surveyor)", "originals": 1, "copies": 0},
+            {"name": "Holds Cleanliness Certificate (GAFTA Approved Surveyor)", "originals": 1, "copies": 0},
+            {"name": "Holds Sealing Certificate (GAFTA Approved Surveyor)", "originals": 1, "copies": 0},
+            {"name": "Insurance Certificate (GAFTA - 102% of value)", "originals": 1, "copies": 0},
+            {"name": "Master's Receipt", "originals": 1, "copies": 0},
+            {"name": "Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate", "originals": 1, "copies": 0},
+        ]
+    for i, rd in enumerate(req_docs, 1):
+        html += f'<tr><td style="border: 1px solid #ccc; padding: 6px; text-align: center; font-weight: 600;">{i}</td><td style="border: 1px solid #ccc; padding: 6px; font-weight: 500;">{rd.get("name","")}</td><td style="border: 1px solid #ccc; padding: 6px; text-align: center;">{rd.get("originals",0)}</td><td style="border: 1px solid #ccc; padding: 6px; text-align: center;">{rd.get("copies",0)}</td></tr>'
 
     html += """</table>
     <br><p style="font-size: 11px; color: #999;">This email was sent from PIR Grain & Pulses Trading Platform.</p>

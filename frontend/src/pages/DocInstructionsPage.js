@@ -7,14 +7,31 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
-import { Copy, Printer, FileText, Send, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Copy, Printer, FileText, Send, Plus, Pencil, Trash2, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
+
+const DEFAULT_REQUIRED_DOCS = [
+  { name: 'Signed Commercial Invoice', originals: 1, copies: 0 },
+  { name: 'Bill of Lading (Clean on Board, Freight Prepaid)', originals: 3, copies: 0 },
+  { name: 'Certificate of Origin', originals: 1, copies: 2 },
+  { name: 'Phytosanitary Certificate', originals: 1, copies: 2 },
+  { name: 'Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)', originals: 1, copies: 0 },
+  { name: 'Fumigation Certificate (if any)', originals: 1, copies: 0 },
+  { name: 'Quality Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
+  { name: 'Weight Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
+  { name: 'Holds Cleanliness Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
+  { name: 'Holds Sealing Certificate (GAFTA Approved Surveyor)', originals: 1, copies: 0 },
+  { name: 'Insurance Certificate (GAFTA - 102% of value)', originals: 1, copies: 0 },
+  { name: "Master's Receipt", originals: 1, copies: 0 },
+  { name: 'Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate', originals: 1, copies: 0 },
+];
 
 const DEFAULT_FORM = {
   tradeId: '', dischargePort: '', agentId: '', agentName: '', agentPhone: '', agentFax: '',
   agentMobile: '', agentEmail: '', agentWeb: '', agentAddress: '', surveyor: '',
   sellerSurveyor: '', originalDocsAddress: '', consigneeOption: 'to_order', consigneeCustom: '',
   consigneeBuyerId: '', notifyOption: 'buyer_details', notifyCustom: '', notifyBuyerId: '',
+  requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
 };
 
 export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
@@ -120,6 +137,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       consigneeOption: di.consigneeOption || 'to_order', consigneeCustom: di.consigneeCustom || '',
       consigneeBuyerId: di.consigneeBuyerId || '', notifyOption: di.notifyOption || 'buyer_details',
       notifyCustom: di.notifyCustom || '', notifyBuyerId: di.notifyBuyerId || '',
+      requiredDocuments: di.requiredDocuments?.length ? di.requiredDocuments.map(d => ({ ...d })) : DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
     });
     setDialogOpen(true);
   };
@@ -272,7 +290,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       {embedded && (
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
-          <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '' }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+          <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '', requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })) }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
             <Plus className="h-4 w-4 mr-2" />New DI
           </Button>
         </div>
@@ -359,35 +377,19 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px', background: '#f3f4f6', width: '36px', textAlign: 'center' }}>#</th>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px', background: '#f3f4f6', textAlign: 'left' }}>Document</th>
-                        <th style={{ border: '1px solid #d1d5db', padding: '6px', background: '#f3f4f6', textAlign: 'left' }}>Details</th>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px', background: '#f3f4f6', textAlign: 'center', width: '80px' }}>Originals</th>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px', background: '#f3f4f6', textAlign: 'center', width: '80px' }}>Copies</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {(() => {
-                        const c = getConsigneeText(previewDi);
-                        const n = getNotifyText(previewDi);
-                        return [
-                          { num: 1, doc: 'Signed Commercial Invoice (Original)', details: `Consignee: ${c}` },
-                          { num: 2, doc: '3/3 Original B/L – "Clean on Board", "Freight Prepaid"', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 3, doc: 'Certificate of Origin (Original + 2 Copies)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 4, doc: 'Phytosanitary Certificate (Original + 2 Copies)', details: `Consignee: ${c}` },
-                          { num: 5, doc: 'Non-Radiation Certificate (CS134 & CS137 < 370 Bq/Kg)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 6, doc: 'Fumigation Certificate (Original, if any)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 7, doc: 'Quality Certificate (GAFTA Approved Surveyor)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 8, doc: 'Weight Certificate (GAFTA Approved Surveyor)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 9, doc: 'Holds Cleanliness Certificate (GAFTA Approved Surveyor)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 10, doc: 'Holds Sealing Certificate (GAFTA Approved Surveyor)', details: `Consignee: ${c}\nNotify: ${n}` },
-                          { num: 11, doc: 'Insurance Certificate (GAFTA – 102% of value)', details: `Assured: ${c}` },
-                          { num: 12, doc: "Master's Receipt", details: 'Confirming dispatch of 1 Original Phytosanitary Certificate + 1 Non-Negotiable B/L Copy' },
-                          { num: 13, doc: 'Non-Dioxin Analysis + GAFTA Non-Dioxin Certificate', details: `Include all PCB and Dioxin parameters.\nConsignee: ${c}\nNotify: ${n}` },
-                        ].map(({ num, doc, details }) => (
-                          <tr key={num}>
-                            <td style={{ border: '1px solid #d1d5db', padding: '6px', textAlign: 'center', fontWeight: 600, verticalAlign: 'top' }}>{num}</td>
-                            <td style={{ border: '1px solid #d1d5db', padding: '6px', fontWeight: 500, verticalAlign: 'top' }}>{doc}</td>
-                            <td style={{ border: '1px solid #d1d5db', padding: '6px', whiteSpace: 'pre-wrap', verticalAlign: 'top', fontSize: '12px' }}>{details}</td>
-                          </tr>
-                        ));
-                      })()}
+                      {(previewDi.requiredDocuments?.length ? previewDi.requiredDocuments : DEFAULT_REQUIRED_DOCS).map((rd, idx) => (
+                        <tr key={idx}>
+                          <td style={{ border: '1px solid #d1d5db', padding: '6px', textAlign: 'center', fontWeight: 600, verticalAlign: 'top' }}>{idx + 1}</td>
+                          <td style={{ border: '1px solid #d1d5db', padding: '6px', fontWeight: 500, verticalAlign: 'top' }}>{rd.name}</td>
+                          <td style={{ border: '1px solid #d1d5db', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>{rd.originals}</td>
+                          <td style={{ border: '1px solid #d1d5db', padding: '6px', textAlign: 'center', verticalAlign: 'top' }}>{rd.copies}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -526,6 +528,51 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Required Documents */}
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Required Documents</h3>
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    <th className="border p-1.5 bg-muted/50 text-center w-8">#</th>
+                    <th className="border p-1.5 bg-muted/50 text-left">Document Name</th>
+                    <th className="border p-1.5 bg-muted/50 text-center w-20">Originals</th>
+                    <th className="border p-1.5 bg-muted/50 text-center w-20">Copies</th>
+                    <th className="border p-1.5 bg-muted/50 text-center w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.requiredDocuments.map((doc, idx) => (
+                    <tr key={idx}>
+                      <td className="border p-1.5 text-center text-muted-foreground">{idx + 1}</td>
+                      <td className="border p-0">
+                        <Input className="border-0 h-8 rounded-none focus-visible:ring-0" value={doc.name}
+                          onChange={e => { const docs = [...form.requiredDocuments]; docs[idx] = { ...docs[idx], name: e.target.value }; set('requiredDocuments', docs); }}
+                          data-testid={`req-doc-name-${idx}`} />
+                      </td>
+                      <td className="border p-0">
+                        <Input type="number" min={0} className="border-0 h-8 rounded-none text-center focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" value={doc.originals}
+                          onChange={e => { const docs = [...form.requiredDocuments]; docs[idx] = { ...docs[idx], originals: parseInt(e.target.value) || 0 }; set('requiredDocuments', docs); }}
+                          data-testid={`req-doc-originals-${idx}`} />
+                      </td>
+                      <td className="border p-0">
+                        <Input type="number" min={0} className="border-0 h-8 rounded-none text-center focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none" value={doc.copies}
+                          onChange={e => { const docs = [...form.requiredDocuments]; docs[idx] = { ...docs[idx], copies: parseInt(e.target.value) || 0 }; set('requiredDocuments', docs); }}
+                          data-testid={`req-doc-copies-${idx}`} />
+                      </td>
+                      <td className="border p-1 text-center">
+                        <button type="button" className="text-red-400 hover:text-red-600" onClick={() => { const docs = form.requiredDocuments.filter((_, i) => i !== idx); set('requiredDocuments', docs); }}
+                          data-testid={`req-doc-remove-${idx}`}><X className="h-3.5 w-3.5" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <Button type="button" size="sm" variant="outline" onClick={() => set('requiredDocuments', [...form.requiredDocuments, { name: '', originals: 1, copies: 0 }])} data-testid="add-req-doc-btn">
+                <Plus className="h-3.5 w-3.5 mr-1" />Add Document
+              </Button>
             </div>
 
             {/* Original Docs Address */}

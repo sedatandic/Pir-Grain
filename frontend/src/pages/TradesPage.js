@@ -107,8 +107,14 @@ export default function TradesPage() {
     });
   }, [trades, filterYear, currentYear, getTradeYear]);
 
-  const sellers = useMemo(() => partners.filter(p => p.type === 'seller'), [partners]);
-  const buyers = useMemo(() => partners.filter(p => p.type === 'buyer'), [partners]);
+  const sellers = useMemo(() => {
+    const sellerIds = new Set(trades.map(t => t.sellerId).filter(Boolean));
+    return partners.filter(p => sellerIds.has(p.id));
+  }, [partners, trades]);
+  const buyers = useMemo(() => {
+    const buyerIds = new Set(trades.map(t => t.buyerId).filter(Boolean));
+    return partners.filter(p => buyerIds.has(p.id));
+  }, [partners, trades]);
   const uniqueVessels = useMemo(() => [...new Set(trades.filter(t => t.vesselName).map(t => t.vesselName))].sort(), [trades]);
   const uniqueCoBrokers = useMemo(() => {
     const map = new Map();

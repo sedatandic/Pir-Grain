@@ -8,6 +8,10 @@
 
 ## What's Been Implemented
 
+### GAFTA Extension Field (2026-03-26)
+- Added GAFTA Extension dropdown (Allowed/Not Allowed, default: Allowed) in Shipping Terms after Shipment Period To
+- Saved as `gaftaExtension` field on trade
+
 ### Vessel Nomination Enhancement (2026-03-26)
 - Enhanced Vessel Nomination tab to show Load Port, Seller Surveyor, Load Port Agent alongside vessel name
 - All 4 fields editable via dropdown selects (Edit/Save/Cancel flow)

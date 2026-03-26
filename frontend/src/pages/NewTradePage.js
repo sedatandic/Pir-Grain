@@ -113,6 +113,7 @@ export default function NewTradePage() {
     dischargeRate: '1500', demurrageRate: '',
     pirContractNumber: '', sellerContractNumber: 'N/A',
     gaftaTerm: 'GAFTA No. 48, Arbitration Clause 125, London',
+    gaftaExtension: 'allowed',
     excludedDisports: [], excludedSurveyors: [],
     portVariations: [],
     sellerTradeContact: null, sellerExecutionContact: null,
@@ -196,6 +197,7 @@ export default function NewTradePage() {
             pirContractNumber: t.pirContractNumber || '',
             sellerContractNumber: t.sellerContractNumber || 'N/A',
             gaftaTerm: t.gaftaTerm || 'GAFTA No. 48, Arbitration Clause 125, London',
+            gaftaExtension: t.gaftaExtension || 'allowed',
             thirdPartyLab: t.thirdPartyLab || 'not_allowed',
             excludedDisports: t.excludedDisports || [],
             excludedSurveyors: t.excludedSurveyors || [],
@@ -528,7 +530,7 @@ export default function NewTradePage() {
       <Card>
         <CardHeader><CardTitle>Shipping Terms</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label>Base Port</Label>
               <Select value={form.basePortId} onValueChange={(v) => set('basePortId', v)}>
@@ -543,6 +545,16 @@ export default function NewTradePage() {
             <div className="space-y-2">
               <Label>Shipment Period To</Label>
               <DatePicker value={form.shipmentWindowEnd} onChange={(v) => set('shipmentWindowEnd', v)} />
+            </div>
+            <div className="space-y-2">
+              <Label>GAFTA Extension</Label>
+              <Select value={form.gaftaExtension} onValueChange={(v) => set('gaftaExtension', v)}>
+                <SelectTrigger data-testid="gafta-extension-select"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="allowed">Allowed</SelectItem>
+                  <SelectItem value="not_allowed">Not Allowed</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Pencil, Trash2, Loader2, Ship, Anchor, X } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Loader2, Ship, Anchor, X, Upload, FileText, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function VesselsPage() {
@@ -18,6 +18,10 @@ export default function VesselsPage() {
   const [editingVessel, setEditingVessel] = useState(null);
   const [form, setForm] = useState({ name: '', imoNumber: '', flag: '', builtYear: new Date().getFullYear(), vesselType: 'Bulk Carrier' });
   const [saving, setSaving] = useState(false);
+  const [certDialogOpen, setCertDialogOpen] = useState(false);
+  const [certVessel, setCertVessel] = useState(null);
+  const [certs, setCerts] = useState([]);
+  const [certUploading, setCertUploading] = useState(false);
 
   const fetchVessels = useCallback(async () => {
     try { const res = await api.get('/api/vessels'); setVessels(res.data); } catch (err) { toast.error('Failed to load vessels'); } finally { setLoading(false); }
@@ -58,6 +62,49 @@ export default function VesselsPage() {
     try { await api.delete(`/api/vessels/${id}`); toast.success('Deleted'); fetchVessels(); } catch (err) { toast.error('Failed to delete'); }
   };
 
+  const openCerts = async (vessel) => {
+    setCertVessel(vessel);
+    setCertDialogOpen(true);
+    try { const res = await api.get(`/api/vessels/${vessel.id}/certificates`); setCerts(res.data); }
+    catch { setCerts([]); }
+  };
+
+  const handleCertUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !certVessel) return;
+    setCertUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      await api.post(`/api/vessels/${certVessel.id}/certificates`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.get(`/api/vessels/${certVessel.id}/certificates`);
+      setCerts(res.data);
+      fetchVessels();
+      toast.success('Certificate uploaded');
+    } catch { toast.error('Upload failed'); }
+    finally { setCertUploading(false); e.target.value = ''; }
+  };
+
+  const handleCertDownload = async (cert) => {
+    try {
+      const res = await api.get(`/api/vessels/${certVessel.id}/certificates/${cert.id}/download`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement('a');
+      a.href = url; a.download = cert.fileName;
+      document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch { toast.error('Download failed'); }
+  };
+
+  const handleCertDelete = async (certId) => {
+    try {
+      await api.delete(`/api/vessels/${certVessel.id}/certificates/${certId}`);
+      setCerts(prev => prev.filter(c => c.id !== certId));
+      fetchVessels();
+      toast.success('Certificate deleted');
+    } catch { toast.error('Delete failed'); }
+  };
+
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   return (
@@ -82,10 +129,10 @@ export default function VesselsPage() {
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader><TableRow className="bg-muted/50">
-                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="text-center">Certificates</TableHead><TableHead className="w-[80px]">Actions</TableHead>
               </TableRow></TableHeader>
               <TableBody>
-                {filtered.length === 0 ? <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
+                {filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
                 filtered.map(v => (
                   <TableRow key={v.id}>
                     <TableCell className="font-medium">{v.name}</TableCell>
@@ -94,6 +141,12 @@ export default function VesselsPage() {
                     <TableCell>{v.flag || '-'}</TableCell>
                     <TableCell>{v.builtYear || '-'}</TableCell>
                     <TableCell>{v.builtYear ? new Date().getFullYear() - v.builtYear : '-'}</TableCell>
+                    <TableCell className="text-center">
+                      <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => openCerts(v)} data-testid={`certs-btn-${v.id}`}>
+                        <FileText className="h-3.5 w-3.5" />
+                        <Badge variant={v.certificates?.length ? "default" : "secondary"} className="text-[10px] px-1.5">{v.certificates?.length || 0}</Badge>
+                      </Button>
+                    </TableCell>
                     <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
                   </TableRow>
                 ))}
@@ -113,6 +166,37 @@ export default function VesselsPage() {
             <div className="space-y-2"><Label>Built Year</Label><Input type="number" value={form.builtYear} onChange={(e) => setForm({...form, builtYear: e.target.value})} /></div>
           </div>
           <DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button><Button onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingVessel ? 'Update' : 'Add'}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={certDialogOpen} onOpenChange={setCertDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Certificates — {certVessel?.name}</DialogTitle>
+            <DialogDescription>Upload and manage vessel certificates.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {certs.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No certificates uploaded yet</p>
+            ) : certs.map(c => (
+              <div key={c.id} className="flex items-center justify-between p-2.5 border rounded-lg">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm truncate">{c.fileName}</span>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCertDownload(c)} data-testid={`cert-download-${c.id}`}><Eye className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleCertDelete(c.id)} data-testid={`cert-delete-${c.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors ${certUploading ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
+              {certUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {certUploading ? 'Uploading...' : 'Upload Certificate'}
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={handleCertUpload} className="hidden" disabled={certUploading} />
+            </label>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

@@ -11,14 +11,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from database import trades_col, partners_col, documents_col, db
+from database import trades_col, partners_col, documents_col, db, vessels_col
 from auth import get_current_user
 from config import UPLOAD_DIR
+
+CERT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "vessel_certs")
 
 router = APIRouter(prefix="/api", tags=["email"])
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <onboarding@resend.dev>")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <noreply@pirgrain.com>")
 def get_cc_emails():
     """Load CC emails from admin users in the database."""
     from database import db
@@ -147,6 +149,30 @@ def get_bl_documents(trade_id):
         print(f"Error fetching BL documents: {e}")
     
     return attachments
+
+
+def get_vessel_certificates(vessel_name):
+    """Fetch certificates for a vessel by name."""
+    attachments = []
+    if not vessel_name:
+        return attachments
+    try:
+        vessel = vessels_col.find_one({"name": vessel_name})
+        if not vessel:
+            return attachments
+        for cert in vessel.get("certificates", []):
+            file_path = os.path.join(CERT_DIR, cert.get("storedName", ""))
+            if os.path.exists(file_path):
+                with open(file_path, "rb") as f:
+                    content = f.read()
+                    b64_content = base64.b64encode(content).decode("utf-8")
+                    ext = os.path.splitext(cert.get("fileName", ""))[1].lower()
+                    ct_map = {'.pdf': 'application/pdf', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.doc': 'application/msword', '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}
+                    attachments.append({"filename": cert.get("fileName", "certificate"), "content": b64_content, "content_type": ct_map.get(ext, "application/octet-stream")})
+    except Exception as e:
+        print(f"Error fetching vessel certificates: {e}")
+    return attachments
+
 
 
 def build_email_body(trade, doc_name, recipient_name, recipient_role):
@@ -432,12 +458,18 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     elif req.doc_type == "vessel_nomination":
         doc_name = "Vessel Nomination"
         filename = None
+        # Attach vessel certificates
+        vessel_certs = get_vessel_certificates(trade.get("vesselName"))
+        attachments_list.extend(vessel_certs)
     elif req.doc_type == "shipment_appropriation":
         doc_name = "Shipment Appropriation"
         filename = None
         # Fetch Bill of Ladings documents for this trade
         bl_attachments = get_bl_documents(req.trade_id)
         attachments_list.extend(bl_attachments)
+        # Also attach vessel certificates
+        vessel_certs = get_vessel_certificates(trade.get("vesselName"))
+        attachments_list.extend(vessel_certs)
     elif req.doc_type == "commission_invoice":
         from routes.commission_invoice import generate_ci_pdf
         pdf_buf = generate_ci_pdf(trade)

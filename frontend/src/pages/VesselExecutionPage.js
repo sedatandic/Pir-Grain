@@ -110,6 +110,8 @@ export default function VesselExecutionPage() {
     try {
       const res = await api.get(`/api/trades/${tradeId}`);
       setTrade(res.data);
+      // Sync key fields back to the table list
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, loadingPortId: res.data.loadingPortId } : t));
       setDocChecks(res.data.docChecks || {});
       setAdditionalDocs(res.data.additionalDocuments || []);
       const filesRes = await api.get(`/api/documents?tradeId=${tradeId}`);
@@ -434,7 +436,7 @@ export default function VesselExecutionPage() {
         loadportAgent: nominationForm.loadportAgent,
       });
       setTrade(res.data);
-      setTrades(prev => prev.map(t => t.id === selectedTradeId ? { ...t, vesselName: nominationForm.vesselName } : t));
+      setTrades(prev => prev.map(t => t.id === selectedTradeId ? { ...t, vesselName: nominationForm.vesselName, loadingPortId: nominationForm.loadingPortId } : t));
       toast.success('Vessel nomination details saved');
       setNominationEditing(false);
     } catch { toast.error('Failed to save nomination details'); }

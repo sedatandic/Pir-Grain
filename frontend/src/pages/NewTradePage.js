@@ -497,7 +497,7 @@ export default function NewTradePage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Pricing & Terms</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Contract Terms</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label>Price per MT</Label>

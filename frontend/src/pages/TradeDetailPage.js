@@ -483,7 +483,7 @@ export default function TradeDetailPage() {
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="pb-3"><CardTitle className="text-base">Trade Terms</CardTitle></CardHeader>
+              <CardHeader className="pb-3"><CardTitle className="text-base">Contract Terms</CardTitle></CardHeader>
               <CardContent className="space-y-4 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Payment Terms</span><span className="font-medium">{trade.paymentTerms || '-'}</span></div>
                 <Separator />

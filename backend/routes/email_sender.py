@@ -100,13 +100,33 @@ def get_partner_email(partner_id):
             email = partner.get("email") or ""
             if email:
                 return email
-            contacts = partner.get("contacts") or []
-            for c in contacts:
-                if c.get("email"):
-                    return c["email"]
+            for key in ["tradeContacts", "executionContacts", "contacts"]:
+                for c in (partner.get(key) or []):
+                    if c.get("email"):
+                        return c["email"]
     except:
         pass
     return ""
+
+
+def get_partner_all_emails(partner_id):
+    """Get all emails for a partner: main + trade + execution contacts."""
+    emails = []
+    if not partner_id:
+        return emails
+    try:
+        partner = partners_col.find_one({"_id": ObjectId(partner_id)})
+        if not partner:
+            return emails
+        if partner.get("email"):
+            emails.append(partner["email"])
+        for key in ["tradeContacts", "executionContacts"]:
+            for c in (partner.get(key) or []):
+                if c.get("email") and c["email"] not in emails:
+                    emails.append(c["email"])
+    except:
+        pass
+    return emails
 
 
 def get_bl_documents(trade_id):
@@ -440,12 +460,12 @@ def get_email_prefill(trade_id: str, user=Depends(get_current_user)):
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
-    seller_email = get_partner_email(trade.get("sellerId"))
-    buyer_email = get_partner_email(trade.get("buyerId"))
+    seller_emails = get_partner_all_emails(trade.get("sellerId"))
+    buyer_emails = get_partner_all_emails(trade.get("buyerId"))
     pir_emails = get_cc_emails()
     return {
-        "sellerEmail": seller_email or "",
-        "buyerEmail": buyer_email or "",
+        "sellerEmails": seller_emails,
+        "buyerEmails": buyer_emails,
         "pirEmails": pir_emails,
         "sellerName": trade.get("sellerCode") or trade.get("sellerName") or "",
         "buyerName": trade.get("buyerCode") or trade.get("buyerName") or "",

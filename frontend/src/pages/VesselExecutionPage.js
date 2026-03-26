@@ -361,14 +361,17 @@ export default function VesselExecutionPage() {
     try {
       const res = await api.get(`/api/email-prefill/${selectedTradeId}`);
       const d = res.data;
-      setEmailSellerTo(d.sellerEmail || '');
-      setEmailBuyerTo(d.buyerEmail || '');
+      setEmailSellerTo(d.sellerEmails?.[0] || '');
+      setEmailBuyerTo(d.buyerEmails?.[0] || '');
       setEmailPirEmails(d.pirEmails || []);
-      setEmailSellerCc([...(d.pirEmails || [])]);
-      setEmailBuyerCc([...(d.pirEmails || [])]);
+      // CC = other seller/buyer emails + all PIR emails
+      const sellerExtraEmails = (d.sellerEmails || []).slice(1);
+      const buyerExtraEmails = (d.buyerEmails || []).slice(1);
+      setEmailSellerCc([...sellerExtraEmails, ...(d.pirEmails || [])]);
+      setEmailBuyerCc([...buyerExtraEmails, ...(d.pirEmails || [])]);
     } catch {
-      setEmailSellerTo(trade?.sellerEmail || '');
-      setEmailBuyerTo(trade?.buyerEmail || '');
+      setEmailSellerTo('');
+      setEmailBuyerTo('');
       setEmailPirEmails([]);
       setEmailSellerCc([]);
       setEmailBuyerCc([]);
@@ -1014,15 +1017,15 @@ export default function VesselExecutionPage() {
           <div className="space-y-4">
             {/* Seller Section */}
             <div className="space-y-2 border rounded-lg p-3">
-              <Label className="text-sm font-semibold">To Seller</Label>
+              <Label className="text-sm font-semibold">To Seller ({trade?.sellerCode || trade?.sellerName || ''})</Label>
               <Input value={emailSellerTo} onChange={(e) => setEmailSellerTo(e.target.value)} placeholder="seller@example.com" data-testid="email-seller-to" />
-              {emailPirEmails.length > 0 && (
+              {emailSellerCc.length > 0 && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">CC (PIR Team)</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {emailPirEmails.map(e => (
+                  <Label className="text-xs text-muted-foreground">CC</Label>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {emailSellerCc.map(e => (
                       <label key={`s-${e}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={emailSellerCc.includes(e)} onChange={() => setEmailSellerCc(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e])} className="rounded" />
+                        <input type="checkbox" checked={true} onChange={() => setEmailSellerCc(prev => prev.filter(x => x !== e))} className="rounded" />
                         {e}
                       </label>
                     ))}
@@ -1037,15 +1040,15 @@ export default function VesselExecutionPage() {
 
             {/* Buyer Section */}
             <div className="space-y-2 border rounded-lg p-3">
-              <Label className="text-sm font-semibold">To Buyer</Label>
+              <Label className="text-sm font-semibold">To Buyer ({trade?.buyerCode || trade?.buyerName || ''})</Label>
               <Input value={emailBuyerTo} onChange={(e) => setEmailBuyerTo(e.target.value)} placeholder="buyer@example.com" data-testid="email-buyer-to" />
-              {emailPirEmails.length > 0 && (
+              {emailBuyerCc.length > 0 && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">CC (PIR Team)</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {emailPirEmails.map(e => (
+                  <Label className="text-xs text-muted-foreground">CC</Label>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {emailBuyerCc.map(e => (
                       <label key={`b-${e}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
-                        <input type="checkbox" checked={emailBuyerCc.includes(e)} onChange={() => setEmailBuyerCc(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e])} className="rounded" />
+                        <input type="checkbox" checked={true} onChange={() => setEmailBuyerCc(prev => prev.filter(x => x !== e))} className="rounded" />
                         {e}
                       </label>
                     ))}

@@ -43,6 +43,8 @@ class EmailSendRequest(BaseModel):
     doc_type: str
     seller_email: Optional[str] = ""
     buyer_email: Optional[str] = ""
+    seller_cc: Optional[list] = []
+    buyer_cc: Optional[list] = []
     subject: Optional[str] = ""
 
 
@@ -431,6 +433,25 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     """
 
 
+
+@router.get("/email-prefill/{trade_id}")
+def get_email_prefill(trade_id: str, user=Depends(get_current_user)):
+    """Get pre-filled email addresses for a trade."""
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    seller_email = get_partner_email(trade.get("sellerId"))
+    buyer_email = get_partner_email(trade.get("buyerId"))
+    pir_emails = get_cc_emails()
+    return {
+        "sellerEmail": seller_email or "",
+        "buyerEmail": buyer_email or "",
+        "pirEmails": pir_emails,
+        "sellerName": trade.get("sellerCode") or trade.get("sellerName") or "",
+        "buyerName": trade.get("buyerCode") or trade.get("buyerName") or "",
+    }
+
+
 @router.post("/send-document-email")
 async def send_document_email(req: EmailSendRequest, user=Depends(get_current_user)):
     trade = trades_col.find_one({"_id": ObjectId(req.trade_id)})
@@ -495,7 +516,7 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Send to seller (separate email - no buyer info in CC)
     if seller_email:
         seller_body = build_email_body(trade, doc_name, seller_name, "seller")
-        cc_emails = get_cc_emails()
+        cc_emails = list(set(get_cc_emails() + (req.seller_cc or [])))
         seller_cc = [e for e in cc_emails if e != seller_email]
         try:
             params = {
@@ -521,7 +542,7 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Send to buyer (separate email - no seller info in CC)
     if buyer_email:
         buyer_body = build_email_body(trade, doc_name, buyer_name, "buyer")
-        cc_emails = get_cc_emails()
+        cc_emails = list(set(get_cc_emails() + (req.buyer_cc or [])))
         buyer_cc = [e for e in cc_emails if e != buyer_email]
         try:
             params = {

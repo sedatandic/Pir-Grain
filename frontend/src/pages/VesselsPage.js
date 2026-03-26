@@ -129,7 +129,7 @@ export default function VesselsPage() {
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader><TableRow className="bg-muted/50">
-                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="text-center">Certificates</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="text-center">Vessel Certificates</TableHead><TableHead className="w-[80px]">Actions</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :

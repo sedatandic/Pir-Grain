@@ -67,7 +67,7 @@ function translateCargo(cargo) {
 /* ════════════════════════════════════════════════
    DAILY LINE-UP (existing functionality)
    ════════════════════════════════════════════════ */
-function DailyLineUp() {
+function DailyLineUp({ onLastUpdate }) {
   const [dates, setDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [reportData, setReportData] = useState(null);
@@ -86,8 +86,9 @@ function DailyLineUp() {
     try {
       const res = await api.get('/api/port-lineups/dates');
       setDates(res.data.dates || []);
-      if (res.data.dates?.length > 0 && !selectedDate) {
-        setSelectedDate(res.data.dates[0]);
+      if (res.data.dates?.length > 0) {
+        if (!selectedDate) setSelectedDate(res.data.dates[0]);
+        onLastUpdate?.(res.data.dates[0]);
       }
     } catch { /* No data yet */ }
   }, []);
@@ -96,13 +97,32 @@ function DailyLineUp() {
 
   useEffect(() => {
     if (!selectedDate) return;
+    if (selectedDate === 'ALL') {
+      // Load all dates and merge vessels
+      setLoading(true); setError('');
+      Promise.all(dates.map(d => api.get(`/api/port-lineups/report/${encodeURIComponent(d)}`).then(r => r.data).catch(() => null)))
+        .then(results => {
+          const allPorts = {};
+          results.filter(Boolean).forEach(r => {
+            (r.ports || []).forEach(p => {
+              if (!allPorts[p.portName]) allPorts[p.portName] = { portName: p.portName, vessels: [] };
+              allPorts[p.portName].vessels.push(...p.vessels);
+            });
+          });
+          setReportData({ reportDate: 'ALL', ports: Object.values(allPorts) });
+          setSelectedPort('ALL');
+        })
+        .catch(() => setError('Failed to load reports'))
+        .finally(() => setLoading(false));
+      return;
+    }
     setLoading(true);
     setError('');
     api.get(`/api/port-lineups/report/${encodeURIComponent(selectedDate)}`)
       .then(res => { setReportData(res.data); setSelectedPort('ALL'); })
       .catch(() => setError('Failed to load report data'))
       .finally(() => setLoading(false));
-  }, [selectedDate]);
+  }, [selectedDate, dates]);
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -230,6 +250,7 @@ function DailyLineUp() {
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]" data-testid="date-selector">
+                <option value="ALL">All Dates</option>
                 {dates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -368,7 +389,7 @@ function DailyLineUp() {
 /* ════════════════════════════════════════════════
    MONTHLY LINE-UP (new)
    ════════════════════════════════════════════════ */
-function MonthlyLineUp() {
+function MonthlyLineUp({ onLastUpdate }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -381,6 +402,9 @@ function MonthlyLineUp() {
     try {
       const res = await api.get('/api/port-lineups/monthly/list');
       setFiles(res.data || []);
+      if (res.data?.length > 0 && res.data[0].uploadedAt) {
+        onLastUpdate?.(new Date(res.data[0].uploadedAt).toLocaleDateString('en-GB'));
+      }
     } catch { /* empty */ }
     finally { setLoading(false); }
   }, []);
@@ -528,16 +552,25 @@ function MonthlyLineUp() {
    MAIN PAGE
    ════════════════════════════════════════════════ */
 export default function PortLineupsPage() {
+  const [dailyLastUpdate, setDailyLastUpdate] = useState('');
+  const [monthlyLastUpdate, setMonthlyLastUpdate] = useState('');
+
   return (
     <div className="space-y-4" data-testid="port-lineups-page">
       <h1 className="text-3xl font-bold tracking-tight" data-testid="port-lineups-title">Port Line-Ups</h1>
       <Tabs defaultValue="daily" className="w-full">
         <TabsList>
-          <TabsTrigger value="daily"><Ship className="w-3.5 h-3.5 mr-1.5" />Daily Line-Up</TabsTrigger>
-          <TabsTrigger value="monthly"><Calendar className="w-3.5 h-3.5 mr-1.5" />Monthly Line-Up</TabsTrigger>
+          <TabsTrigger value="daily" className="flex-col items-center gap-0 py-2">
+            <span className="flex items-center"><Ship className="w-3.5 h-3.5 mr-1.5" />Daily Line-Up</span>
+            {dailyLastUpdate && <span className="text-[10px] text-muted-foreground font-normal">Last Update: {dailyLastUpdate}</span>}
+          </TabsTrigger>
+          <TabsTrigger value="monthly" className="flex-col items-center gap-0 py-2">
+            <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1.5" />Monthly Line-Up</span>
+            {monthlyLastUpdate && <span className="text-[10px] text-muted-foreground font-normal">Last Update: {monthlyLastUpdate}</span>}
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="daily"><DailyLineUp /></TabsContent>
-        <TabsContent value="monthly"><MonthlyLineUp /></TabsContent>
+        <TabsContent value="daily"><DailyLineUp onLastUpdate={setDailyLastUpdate} /></TabsContent>
+        <TabsContent value="monthly"><MonthlyLineUp onLastUpdate={setMonthlyLastUpdate} /></TabsContent>
       </Tabs>
     </div>
   );

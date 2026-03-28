@@ -36,6 +36,7 @@ def list_trades(status: Optional[str] = None, search: Optional[str] = None, user
         query["status"] = status
     if search:
         query["$or"] = [
+            {"pirContractNumber": {"$regex": search, "$options": "i"}},
             {"referenceNumber": {"$regex": search, "$options": "i"}},
             {"buyerName": {"$regex": search, "$options": "i"}},
             {"sellerName": {"$regex": search, "$options": "i"}},
@@ -186,6 +187,13 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         qty = data.get("quantity", existing.get("quantity", 0) if existing else 0) or 0
         brok = data.get("brokeragePerMT", existing.get("brokeragePerMT", 0) if existing else 0) or 0
         data["totalCommission"] = round(qty * brok, 2)
+    # Keep pirContractNumber, contractNumber, and referenceNumber in sync
+    if data.get("pirContractNumber"):
+        data["contractNumber"] = data["pirContractNumber"]
+        data["referenceNumber"] = data["pirContractNumber"]
+    elif data.get("contractNumber"):
+        data["pirContractNumber"] = data["contractNumber"]
+        data["referenceNumber"] = data["contractNumber"]
     old_trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     old_status = old_trade.get("status") if old_trade else None
     update_ops = {"$set": data}
@@ -193,7 +201,7 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         update_ops["$unset"] = fields_to_unset
     trades_col.update_one({"_id": ObjectId(trade_id)}, update_ops)
     updated = trades_col.find_one({"_id": ObjectId(trade_id)})
-    create_notification("trade", f"Trade updated: {updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"), user.get("name"))
+    create_notification("trade", f"Trade updated: {updated.get('pirContractNumber') or updated.get('referenceNumber', trade_id)}", trade_id, user.get("username"), user.get("name"))
 
     # Auto-create commission invoice when trade is completed via PUT
     if data.get("status") == "completed" and old_status != "completed":

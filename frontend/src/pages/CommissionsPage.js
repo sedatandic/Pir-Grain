@@ -60,7 +60,10 @@ export default function CommissionsPage() {
         const [tradesRes, banksRes] = await Promise.all([api.get('/api/trades'), api.get('/api/bank-accounts')]);
         setTrades(tradesRes.data);
         setBankAccounts(banksRes.data);
-        if (banksRes.data.length > 0) setSelectedBankIds(banksRes.data.map(b => b.id));
+        if (banksRes.data.length > 0) {
+          const dskUsd = banksRes.data.find(b => b.bankName?.includes('DSK') && b.currency === 'USD');
+          setSelectedBankIds(dskUsd ? [dskUsd.id] : [banksRes.data[0].id]);
+        }
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetch();
@@ -411,20 +414,20 @@ export default function CommissionsPage() {
       <Dialog open={bankDialogOpen} onOpenChange={setBankDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Select Bank Accounts</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Building2 className="h-5 w-5" />Select Bank Account</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">Choose which bank account(s) to include in the invoice:</p>
-          <div className="space-y-3 max-h-[300px] overflow-y-auto">
-            {bankAccounts.map(bank => (
-              <label key={bank.id} className="flex items-start gap-3 p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors" data-testid={`bank-select-${bank.id}`}>
-                <Checkbox checked={selectedBankIds.includes(bank.id)} onCheckedChange={() => toggleBankId(bank.id)} className="mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm">{bank.accountName || bank.beneficiary}</div>
-                  <div className="text-xs text-muted-foreground">{bank.bankName} {bank.currency ? `(${bank.currency})` : ''}</div>
-                  <div className="text-xs text-muted-foreground font-mono">{bank.iban}</div>
-                </div>
-              </label>
-            ))}
+          <div className="space-y-3">
+            <Label className="text-sm text-muted-foreground">Bank account to include in the invoice:</Label>
+            <Select value={selectedBankIds[0] || ''} onValueChange={(v) => setSelectedBankIds([v])}>
+              <SelectTrigger data-testid="bank-account-select"><SelectValue placeholder="Select bank account" /></SelectTrigger>
+              <SelectContent>
+                {bankAccounts.map(bank => (
+                  <SelectItem key={bank.id} value={bank.id}>
+                    {bank.bankName} {bank.currency ? `(${bank.currency})` : ''} — {bank.iban}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {bankAccounts.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">No bank accounts found. Default will be used.</p>
             )}

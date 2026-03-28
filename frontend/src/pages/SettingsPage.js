@@ -60,6 +60,10 @@ export default function SettingsPage() {
       const editId = dialogForm._editId;
       const formData = { ...dialogForm };
       delete formData._editId;
+      // Convert countriesServed string to array for surveyors
+      if (dialogType === 'surveyors' && typeof formData.countriesServed === 'string') {
+        formData.countriesServed = formData.countriesServed.split(',').map(c => c.trim()).filter(Boolean);
+      }
       // Apply Title Case for disport-agents and loadport-agents name field
       if ((dialogType === 'disport-agents' || dialogType === 'loadport-agents') && formData.name) {
         formData.name = toTitleCase(formData.name);
@@ -77,7 +81,11 @@ export default function SettingsPage() {
       }
       setDialogOpen(false);
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to save'); }
+    } catch (err) { 
+      const detail = err.response?.data?.detail;
+      const msg = Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : (typeof detail === 'string' ? detail : 'Failed to save');
+      toast.error(msg);
+    }
     finally { setSaving(false); }
   };
 

@@ -61,7 +61,7 @@ export default function CommissionsPage() {
         setTrades(tradesRes.data);
         setBankAccounts(banksRes.data);
         if (banksRes.data.length > 0) {
-          const dskUsd = banksRes.data.find(b => b.bankName?.includes('DSK') && b.currency === 'USD');
+          const dskUsd = banksRes.data.find(b => b.iban === 'BG47STSA93000029195856') || banksRes.data.find(b => b.bankName?.includes('DSK') && b.currency === 'USD');
           setSelectedBankIds(dskUsd ? [dskUsd.id] : [banksRes.data[0].id]);
         }
       } catch (err) { console.error(err); } finally { setLoading(false); }

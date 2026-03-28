@@ -472,7 +472,7 @@ export default function TradeDetailPage() {
                         <div key={i}>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Port Options</span>
-                            <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName} Port <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
+                            <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName}{pv.portCountry ? `, ${pv.portCountry}` : ''} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
                           </div>
                           {i < trade.portVariations.length - 1 && <Separator />}
                         </div>

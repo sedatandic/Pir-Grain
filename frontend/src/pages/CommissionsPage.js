@@ -77,7 +77,7 @@ export default function CommissionsPage() {
       sellers: unique(trades.map(t => t.sellerCode || t.sellerName).filter(Boolean)),
       buyers: unique(trades.map(t => t.buyerCode || t.buyerName).filter(Boolean)),
       commodities: unique(trades.map(t => t.commodityName).filter(Boolean)),
-      origins: unique(trades.map(t => t.loadingPortCountry).filter(Boolean)),
+      origins: unique(trades.map(t => t.originName).filter(Boolean)),
       destinations: unique(trades.map(t => t.dischargePortCountry).filter(Boolean)),
     };
   }, [trades]);
@@ -91,7 +91,7 @@ export default function CommissionsPage() {
     if (filterSeller !== 'all') result = result.filter(t => (t.sellerCode || t.sellerName) === filterSeller);
     if (filterBuyer !== 'all') result = result.filter(t => (t.buyerCode || t.buyerName) === filterBuyer);
     if (filterCommodity !== 'all') result = result.filter(t => t.commodityName === filterCommodity);
-    if (filterOrigin !== 'all') result = result.filter(t => t.loadingPortCountry === filterOrigin);
+    if (filterOrigin !== 'all') result = result.filter(t => t.originName === filterOrigin);
     if (filterDestination !== 'all') result = result.filter(t => t.dischargePortCountry === filterDestination);
     return result;
   };

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from bson import ObjectId
+from datetime import datetime, timezone, timedelta
 
 from database import notifications_col, serialize_doc
 from auth import get_current_user
@@ -9,7 +10,8 @@ router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
 @router.get("")
 def list_notifications(user=Depends(get_current_user)):
-    return [serialize_doc(n) for n in notifications_col.find().sort("createdAt", -1).limit(50)]
+    one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    return [serialize_doc(n) for n in notifications_col.find({"createdAt": {"$gte": one_week_ago}}).sort("createdAt", -1).limit(50)]
 
 
 @router.patch("/{notif_id}/read")

@@ -300,15 +300,45 @@ export default function CalendarPage() {
             {(form.type === 'conference' || form.type === 'staff_leave') ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Date From *</Label>
-                  <Input placeholder="dd/mm/yyyy" value={form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, date: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-from" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalIcon className="mr-2 h-4 w-4" />
+                        {form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" style={{ zIndex: 9999 }}>
+                      <Calendar mode="single" selected={form.date ? parseISO(form.date) : undefined} onSelect={(d) => d && setForm({...form, date: format(d, 'yyyy-MM-dd')})} />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2"><Label>Date To *</Label>
-                  <Input placeholder="dd/mm/yyyy" value={form.dateTo ? (() => { try { const [y,m,d] = form.dateTo.split('-'); return `${d}/${m}/${y}`; } catch { return form.dateTo; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, dateTo: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-to" />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <CalIcon className="mr-2 h-4 w-4" />
+                        {form.dateTo ? (() => { try { const [y,m,d] = form.dateTo.split('-'); return `${d}/${m}/${y}`; } catch { return form.dateTo; } })() : 'Pick a date'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start" style={{ zIndex: 9999 }}>
+                      <Calendar mode="single" selected={form.dateTo ? parseISO(form.dateTo) : undefined} onSelect={(d) => d && setForm({...form, dateTo: format(d, 'yyyy-MM-dd')})} />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             ) : (
               <div className="space-y-2"><Label>Date *</Label>
-                <Input placeholder="dd/mm/yyyy" value={form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, date: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-input" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalIcon className="mr-2 h-4 w-4" />
+                      {form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : 'Pick a date'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" style={{ zIndex: 9999 }}>
+                    <Calendar mode="single" selected={form.date ? parseISO(form.date) : undefined} onSelect={(d) => d && setForm({...form, date: format(d, 'yyyy-MM-dd')})} />
+                  </PopoverContent>
+                </Popover>
               </div>
             )}
             <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} data-testid="event-description-input" /></div>

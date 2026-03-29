@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays, TrendingUp, AlertCircle, DollarSign, Users, Building } from 'lucide-react';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays, TrendingUp, AlertCircle, DollarSign, Users, Building, FileText, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO, isAfter, startOfDay } from 'date-fns';
 
@@ -40,6 +40,7 @@ export default function TradesPage() {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [entityFilter, setEntityFilter] = useState(null); // { type: 'seller'|'buyer'|'broker', name: '...', code: '...' }
+  const [generatingBC, setGeneratingBC] = useState(null); // trade id being generated
 
   const fetchAll = useCallback(async () => {
     try {
@@ -79,6 +80,17 @@ export default function TradesPage() {
       window.history.replaceState({}, '');
     }
   }, [location.state, loading]);
+
+  const generateBC = async (tradeId) => {
+    setGeneratingBC(tradeId);
+    try {
+      const res = await api.get(`/api/business-confirmation/${tradeId}/pdf`, { responseType: 'blob' });
+      window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank');
+      toast.success('Business Confirmation generated');
+    } catch { toast.error('Failed to generate Business Confirmation'); }
+    finally { setGeneratingBC(null); }
+  };
+
 
   const hasActiveFilters = search || filterCommodity !== 'all' || filterSeller !== 'all' || filterBuyer !== 'all' || filterVessel !== 'all' || filterOrigin !== 'all' || filterStatus !== 'all' || filterCoBroker !== 'all' || filterCountry !== 'all' || filterBrokerName !== 'all' || filterYear !== new Date().getFullYear().toString();
   const clearFilters = () => { setSearch(''); setFilterCommodity('all'); setFilterSeller('all'); setFilterBuyer('all'); setFilterVessel('all'); setFilterOrigin('all'); setFilterStatus('all'); setFilterCoBroker('all'); setFilterCountry('all'); setFilterBrokerName('all'); setFilterYear(new Date().getFullYear().toString()); };
@@ -334,6 +346,7 @@ export default function TradesPage() {
               <TableHead className="text-center whitespace-nowrap">Unit Price</TableHead>
               <TableHead className="text-center">Shipment Period</TableHead>
               <TableHead className="text-center">Vessel</TableHead>
+              <TableHead className="text-center w-16">BC</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -439,6 +452,11 @@ export default function TradesPage() {
                 })()}</TableCell>
                 <TableCell className="text-center text-sm">{trade.shipmentWindowStart || trade.shipmentWindowEnd ? <div>{formatShipmentDate(trade.shipmentWindowStart) && <div>{formatShipmentDate(trade.shipmentWindowStart)}</div>}{formatShipmentDate(trade.shipmentWindowEnd) && <div>{formatShipmentDate(trade.shipmentWindowEnd)}</div>}</div> : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap"><VesselPicker trade={trade} /></TableCell>
+                <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                  <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => generateBC(trade.id)} disabled={generatingBC === trade.id} data-testid={`bc-btn-${trade.id}`} title="Business Confirmation">
+                    {generatingBC === trade.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

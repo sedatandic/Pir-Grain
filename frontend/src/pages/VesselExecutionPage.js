@@ -583,9 +583,8 @@ export default function VesselExecutionPage() {
       {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
 
       {trade && !tradeLoading && (
-        <Tabs defaultValue="bc" className="mt-2">
+        <Tabs defaultValue="nomination" className="mt-2">
           <TabsList className="w-full flex h-auto flex-wrap">
-            <TabsTrigger value="bc" className="py-3 text-xs sm:text-sm flex-1"><FileText className="h-4 w-4 mr-1.5 hidden sm:inline" />Business Confirmation</TabsTrigger>
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>
             <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Documentary Instruction</TabsTrigger>
             <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Draft Documents</TabsTrigger>
@@ -707,42 +706,6 @@ export default function VesselExecutionPage() {
                   <Input placeholder="Add custom document..." value={newDocInput} onChange={(e) => setNewDocInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addCustomDoc()} className="max-w-xs" />
                   <Button size="sm" variant="outline" onClick={addCustomDoc}>Add</Button>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Business Confirmation Tab */}
-          <TabsContent value="bc">
-            <Card>
-              <CardHeader><CardTitle className="text-base">Business Confirmation to Seller & Buyer</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                {trade.businessConfirmationSentAt ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 border-green-200">
-                      <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-green-800">Business Confirmation Sent</p>
-                        <p className="text-sm text-green-600">By {trade.businessConfirmationSentBy || '-'}</p>
-                        <p className="text-sm text-green-600">{(() => { try { const d = new Date(trade.businessConfirmationSentAt); return `${d.toLocaleDateString('en-GB')} ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`; } catch { return trade.businessConfirmationSentAt; } })()}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={sendBusinessConfirmation} disabled={sendingBC}>
-                        {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}Resend
-                      </Button>
-                      <Button variant="outline" className="text-destructive hover:text-destructive" onClick={reverseBusinessConfirmation} disabled={sendingBC}>
-                        <X className="h-4 w-4 mr-2" />Reverse
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <Button size="lg" onClick={sendBusinessConfirmation} disabled={sendingBC}>
-                    {sendingBC ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}Generate Business Confirmation
-                  </Button>
-                )}
-                <Button variant="outline" size="lg" onClick={() => openEmailDialog('business_confirmation', 'Business Confirmation')}>
-                  <Send className="h-4 w-4 mr-2" />Email Business Confirmation
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>

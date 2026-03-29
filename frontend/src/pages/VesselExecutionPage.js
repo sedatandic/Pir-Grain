@@ -36,6 +36,7 @@ export default function VesselExecutionPage() {
   const { tradeId: urlTradeId } = useParams();
   const navigate = useNavigate();
   const [trades, setTrades] = useState([]);
+  const [allTrades, setAllTrades] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [selectedTradeId, setSelectedTradeId] = useState('');
   const [trade, setTrade] = useState(null);
@@ -97,6 +98,7 @@ export default function VesselExecutionPage() {
           api.get('/api/vessels'),
         ]);
         setTrades(trRes.data.filter(t => t.vesselName));
+        setAllTrades(trRes.data);
         setCommodities(comRes.data);
         setPorts(portRes.data);
         setSurveyors(surRes.data);
@@ -502,6 +504,24 @@ export default function VesselExecutionPage() {
   return (
     <div className="space-y-4" data-testid="vessel-execution-page">
       {!urlTradeId && <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>}
+
+      {/* Mobile Contract Selector */}
+      {!urlTradeId && (
+        <div className="block">
+          <Select value="" onValueChange={(v) => navigate(`/documents/${v}`)}>
+            <SelectTrigger data-testid="mobile-contract-select">
+              <SelectValue placeholder="Select a contract..." />
+            </SelectTrigger>
+            <SelectContent>
+              {allTrades.map(t => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.pirContractNumber || t.contractNumber || t.referenceNumber} — {t.vesselName || 'No Vessel'} ({t.sellerName} → {t.buyerName})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       {urlTradeId && trade && (
         <div className="flex items-center gap-3 mb-2">

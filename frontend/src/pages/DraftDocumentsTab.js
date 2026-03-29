@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Upload, FileText, Trash2, Eye, CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, FileText, Trash2, Eye, CheckCircle2, XCircle, AlertCircle, Loader2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DEFAULT_REQUIRED_DOCS = [
@@ -28,7 +28,10 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
   const [draftDocs, setDraftDocs] = useState([]);
   const [diDocs, setDiDocs] = useState([]);
   const [uploading, setUploading] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dragItem, setDragItem] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
 
   const fetchDrafts = useCallback(async () => {
     if (!tradeId) return;
@@ -59,13 +62,13 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
 
   const requiredDocNames = diDocs.length > 0 ? diDocs : DEFAULT_REQUIRED_DOCS;
 
+  // Single file upload for a specific doc
   const uploadDraft = async (docName, file) => {
     if (!file || !tradeId) return;
     setUploading(docName);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('docName', docName);
       const res = await api.post(`/api/trades/${tradeId}/draft-documents?docName=${encodeURIComponent(docName)}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -73,6 +76,33 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
       toast.success(`Draft uploaded: ${docName}`);
     } catch { toast.error('Failed to upload draft'); }
     finally { setUploading(null); }
+  };
+
+  // Bulk upload - files go to "Unassigned"
+  const bulkUploadFiles = async (files) => {
+    if (!files.length || !tradeId) return;
+    setBulkUploading(true);
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        await api.post(`/api/trades/${tradeId}/draft-documents?docName=_unassigned`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } catch { toast.error(`Failed to upload: ${file.name}`); }
+    }
+    await fetchDrafts();
+    setBulkUploading(false);
+    toast.success(`${files.length} file(s) uploaded — drag to assign`);
+  };
+
+  // Reassign a draft document to a new docName
+  const reassignDraft = async (docIndex, newDocName) => {
+    try {
+      await api.put(`/api/trades/${tradeId}/draft-documents/${docIndex}/reassign`, { docName: newDocName });
+      await fetchDrafts();
+      toast.success('Document assigned');
+    } catch { toast.error('Failed to reassign'); }
   };
 
   const deleteDraft = async (idx) => {
@@ -94,17 +124,62 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
   // Build status map: docName -> uploaded draft(s)
   const draftMap = {};
   draftDocs.forEach((d, idx) => {
-    if (!draftMap[d.docName]) draftMap[d.docName] = [];
-    draftMap[d.docName].push({ ...d, index: idx });
+    const key = d.docName || '_unassigned';
+    if (!draftMap[key]) draftMap[key] = [];
+    draftMap[key].push({ ...d, index: idx });
   });
 
+  const unassigned = draftMap['_unassigned'] || [];
   const uploadedCount = requiredDocNames.filter(name => draftMap[name]?.length > 0).length;
   const missingCount = requiredDocNames.length - uploadedCount;
+
+  // Drag & Drop handlers
+  const handleDragStart = (doc) => { setDragItem(doc); };
+  const handleDragOver = (e, docName) => { e.preventDefault(); setDropTarget(docName); };
+  const handleDragLeave = () => { setDropTarget(null); };
+  const handleDrop = (e, docName) => {
+    e.preventDefault();
+    setDropTarget(null);
+    if (dragItem && dragItem.docName !== docName) {
+      reassignDraft(dragItem.index, docName);
+    }
+    setDragItem(null);
+  };
 
   if (!tradeId) return null;
 
   return (
     <div className="space-y-4">
+      {/* Bulk Upload Zone */}
+      <Card>
+        <CardContent className="pt-5 pb-4">
+          <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors" data-testid="draft-bulk-upload-zone">
+            {bulkUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
+            <span className="text-sm text-muted-foreground">{bulkUploading ? 'Uploading...' : 'Click to bulk upload draft documents, then drag to assign'}</span>
+            <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
+          </label>
+
+          {/* Unassigned Files */}
+          {unassigned.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <h4 className="text-sm font-semibold text-amber-700">Unassigned Files ({unassigned.length})</h4>
+              <div className="flex flex-wrap gap-2">
+                {unassigned.map(f => (
+                  <div key={f.index} draggable onDragStart={() => handleDragStart(f)}
+                    className="flex items-center gap-2 text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2 cursor-grab">
+                    <GripVertical className="h-3 w-3 text-amber-400" />
+                    <FileText className="h-3 w-3 text-primary" />
+                    <span className="truncate max-w-[200px]">{f.fileName}</span>
+                    <button onClick={() => viewDraft(f.index)} className="text-blue-500 hover:text-blue-700"><Eye className="h-3 w-3" /></button>
+                    <button onClick={() => deleteDraft(f.index)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Summary */}
       <div className="flex items-center gap-4">
         <Badge variant="outline" className="gap-1.5 py-1.5 px-3">
@@ -148,8 +223,14 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
                 {requiredDocNames.map((docName, i) => {
                   const drafts = draftMap[docName] || [];
                   const hasUpload = drafts.length > 0;
+                  const isDropping = dropTarget === docName;
                   return (
-                    <TableRow key={i} className={!hasUpload ? 'bg-red-50/50 dark:bg-red-900/10' : ''} data-testid={`draft-row-${i}`}>
+                    <TableRow key={i}
+                      className={`${!hasUpload ? 'bg-red-50/50 dark:bg-red-900/10' : ''} ${isDropping ? 'ring-2 ring-inset ring-primary bg-primary/5' : ''}`}
+                      data-testid={`draft-row-${i}`}
+                      onDragOver={(e) => handleDragOver(e, docName)}
+                      onDragLeave={handleDragLeave}
+                      onDrop={(e) => handleDrop(e, docName)}>
                       <TableCell className="text-center text-muted-foreground text-xs">{i + 1}</TableCell>
                       <TableCell className="text-sm font-medium">{docName}</TableCell>
                       <TableCell className="text-center">
@@ -167,7 +248,9 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
                         {hasUpload ? (
                           <div className="space-y-1">
                             {drafts.map((d, di) => (
-                              <div key={di} className="flex items-center gap-2">
+                              <div key={di} draggable onDragStart={() => handleDragStart(d)}
+                                className="flex items-center gap-2 cursor-grab">
+                                <GripVertical className="h-3 w-3 text-muted-foreground" />
                                 <FileText className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                                 <span className="text-xs truncate max-w-[200px]" title={d.fileName}>{d.fileName}</span>
                               </div>

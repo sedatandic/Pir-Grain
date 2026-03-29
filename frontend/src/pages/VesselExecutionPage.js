@@ -923,6 +923,7 @@ export default function VesselExecutionPage() {
 
           {/* Payment Date From Buyer Tab */}
           <TabsContent value="payment">
+            <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardHeader><CardTitle className="text-base">Payment Date From Buyer</CardTitle></CardHeader>
               <CardContent className="space-y-4">
@@ -949,19 +950,9 @@ export default function VesselExecutionPage() {
                   )}
                   {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
-
-                {trade.buyerPaymentDate && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                    <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-800 dark:text-green-300">Contract Completed</p>
-                      <p className="text-sm text-green-600 dark:text-green-400">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
-            <Card className="mt-4">
+            <Card>
               <CardHeader><CardTitle className="text-base">Payment / SWIFT Copy</CardTitle></CardHeader>
               <CardContent>
                   {trade.swiftFileName ? (
@@ -987,6 +978,16 @@ export default function VesselExecutionPage() {
                   )}
               </CardContent>
             </Card>
+            </div>
+            {trade.buyerPaymentDate && (
+              <div className="flex items-center gap-3 p-4 mt-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-green-800 dark:text-green-300">Contract Completed</p>
+                  <p className="text-sm text-green-600 dark:text-green-400">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       )}

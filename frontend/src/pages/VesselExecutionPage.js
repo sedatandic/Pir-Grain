@@ -950,10 +950,20 @@ export default function VesselExecutionPage() {
                   {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
 
-                {/* Payment / SWIFT Copy */}
-                <Separator />
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Payment / SWIFT Copy</Label>
+                {trade.buyerPaymentDate && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-green-800 dark:text-green-300">Contract Completed</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <Card className="mt-4">
+              <CardHeader><CardTitle className="text-base">Payment / SWIFT Copy</CardTitle></CardHeader>
+              <CardContent>
                   {trade.swiftFileName ? (
                     <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                       <FileText className="h-5 w-5 text-primary flex-shrink-0" />
@@ -969,25 +979,12 @@ export default function VesselExecutionPage() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
-                      <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md border border-dashed border-muted-foreground/30 hover:bg-muted/50 transition-colors">
-                        {swiftUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
-                        <span className="text-sm text-muted-foreground">{swiftUploading ? 'Uploading...' : 'Upload SWIFT Copy'}</span>
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={(e) => { if (e.target.files[0]) uploadSwiftCopy(e.target.files[0]); e.target.value = ''; }} disabled={swiftUploading} data-testid="swift-file-input" />
-                      </label>
-                    </div>
+                    <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md border border-dashed border-muted-foreground/30 hover:bg-muted/50 transition-colors">
+                      {swiftUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
+                      <span className="text-sm text-muted-foreground">{swiftUploading ? 'Uploading...' : 'Upload SWIFT Copy'}</span>
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={(e) => { if (e.target.files[0]) uploadSwiftCopy(e.target.files[0]); e.target.value = ''; }} disabled={swiftUploading} data-testid="swift-file-input" />
+                    </label>
                   )}
-                </div>
-
-                {trade.buyerPaymentDate && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                    <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-800 dark:text-green-300">Contract Completed</p>
-                      <p className="text-sm text-green-600 dark:text-green-400">Payment received on {trade.buyerPaymentDate}. Commission invoice auto-generated.</p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </TabsContent>

@@ -132,10 +132,8 @@ export default function TMOTendersTab() {
         {CATEGORIES.map(cat => (
           <TabsContent key={cat.value} value={cat.value}>
             <div className="space-y-4 mt-8">
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-green-700" data-testid="tenders-title">{cat.title}</h2>
-              </div>
-              <div className="flex items-center justify-end">
                 <Button data-testid="new-tender-btn" onClick={() => {
                   setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: cat.value });
                   setEditingTender(null);

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
@@ -15,7 +15,7 @@ import DraftDocumentsTab from './DraftDocumentsTab';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { format, parse } from 'date-fns';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const DEFAULT_DOCS = [
   "Bill of Ladings", "Commercial Invoice", "Phytosanitary Certificate",
@@ -34,6 +34,7 @@ function getDocChecklist(commodity) {
 
 export default function VesselExecutionPage() {
   const { tradeId: urlTradeId } = useParams();
+  const navigate = useNavigate();
   const [trades, setTrades] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [selectedTradeId, setSelectedTradeId] = useState('');
@@ -105,6 +106,7 @@ export default function VesselExecutionPage() {
         // Auto-select trade from URL
         if (urlTradeId) {
           setSelectedTradeId(urlTradeId);
+          fetchTrade(urlTradeId);
         }
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
@@ -136,8 +138,7 @@ export default function VesselExecutionPage() {
   };
 
   const handleTradeSelect = (tradeId) => {
-    setSelectedTradeId(tradeId);
-    fetchTrade(tradeId);
+    navigate(`/documents/${tradeId}`);
   };
 
   const getTradeLabel = (t) => {
@@ -500,7 +501,22 @@ export default function VesselExecutionPage() {
 
   return (
     <div className="space-y-4" data-testid="vessel-execution-page">
-      <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>
+      {!urlTradeId && <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>}
+
+      {urlTradeId && trade && (
+        <div className="flex items-center gap-3 mb-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list">
+            <ArrowLeft className="h-4 w-4 mr-1" />Back
+          </Button>
+          <h1 className="text-xl font-bold tracking-tight">
+            {trade.pirContractNumber || trade.contractNumber} — {trade.vesselName || 'No Vessel'} 
+            <span className="text-muted-foreground font-normal text-base ml-2">({trade.sellerName} → {trade.buyerName})</span>
+          </h1>
+        </div>
+      )}
+
+      {/* Contracts Tables - only show when no trade selected via URL */}
+      {!urlTradeId && (<>
 
       {/* Ongoing Contracts Table */}
       {trades.filter(t => t.vesselName && t.status !== 'completed').length > 0 && (
@@ -585,6 +601,8 @@ export default function VesselExecutionPage() {
         </div>
       </div>
       )}
+
+      </>)}
 
       {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
 

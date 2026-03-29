@@ -300,15 +300,15 @@ export default function CalendarPage() {
             {(form.type === 'conference' || form.type === 'staff_leave') ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Date From *</Label>
-                  <Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} data-testid="event-date-from" />
+                  <Input placeholder="dd/mm/yyyy" value={form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, date: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-from" />
                 </div>
                 <div className="space-y-2"><Label>Date To *</Label>
-                  <Input type="date" value={form.dateTo} onChange={(e) => setForm({...form, dateTo: e.target.value})} data-testid="event-date-to" />
+                  <Input placeholder="dd/mm/yyyy" value={form.dateTo ? (() => { try { const [y,m,d] = form.dateTo.split('-'); return `${d}/${m}/${y}`; } catch { return form.dateTo; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, dateTo: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-to" />
                 </div>
               </div>
             ) : (
               <div className="space-y-2"><Label>Date *</Label>
-                <Input type="date" value={form.date} onChange={(e) => setForm({...form, date: e.target.value})} data-testid="event-date-input" />
+                <Input placeholder="dd/mm/yyyy" value={form.date ? (() => { try { const [y,m,d] = form.date.split('-'); return `${d}/${m}/${y}`; } catch { return form.date; } })() : ''} onChange={(e) => { const v = e.target.value; const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if (m) setForm({...form, date: `${m[3]}-${m[2]}-${m[1]}`}); else { const raw = v.replace(/[^\d/]/g, ''); let formatted = raw; if (raw.length === 2 && !raw.includes('/')) formatted = raw + '/'; if (raw.length === 5 && raw.split('/').length === 2) formatted = raw + '/'; e.target.value = formatted; } }} data-testid="event-date-input" />
               </div>
             )}
             <div className="space-y-2"><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} rows={3} data-testid="event-description-input" /></div>

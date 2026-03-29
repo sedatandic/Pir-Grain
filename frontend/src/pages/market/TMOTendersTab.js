@@ -16,10 +16,10 @@ import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, Calendar as CalendarIc
 import { toast } from 'sonner';
 
 const CATEGORIES = [
-  { value: 'tmo', label: 'TMO Tenders', title: 'TMO / Turkish Grain Board - Tenders & Results' },
-  { value: 'sago', label: 'SAGO Tenders', title: 'SAGO / Saudi Grains Organization - Tenders & Results' },
-  { value: 'algeria', label: 'Algeria Tenders', title: 'Algeria (OAIC) - Tenders & Results' },
-  { value: 'jordan', label: 'Jordan Tenders', title: 'Jordan MIT (Ministry of Industry and Trade) Tenders & Results' },
+  { value: 'tmo', label: 'Turkiye - TMO Tenders', title: 'TMO / Turkish Grain Board - Tenders & Results' },
+  { value: 'sago', label: 'Saudi Arabia - SAGO Tenders', title: 'SAGO / Saudi Grains Organization - Tenders & Results' },
+  { value: 'algeria', label: 'Algeria - OAIC Tenders', title: 'Algeria (OAIC) - Tenders & Results' },
+  { value: 'jordan', label: 'Jordan - MIT Tenders', title: 'Jordan MIT (Ministry of Industry and Trade) Tenders & Results' },
 ];
 
 const TMO_PORTS = [

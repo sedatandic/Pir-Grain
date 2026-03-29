@@ -608,7 +608,7 @@ export default function VesselExecutionPage() {
 
       {trade && !tradeLoading && (
         <Tabs defaultValue="nomination" className="mt-2">
-          <TabsList className="w-full flex h-auto overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
+          <TabsList className="w-full flex h-auto overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide" style={{ scrollPaddingLeft: 0 }}>
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm shrink-0"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Nomination</TabsTrigger>
             <TabsTrigger value="di" className="py-3 text-xs sm:text-sm shrink-0"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />DI</TabsTrigger>
             <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm shrink-0"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Drafts</TabsTrigger>

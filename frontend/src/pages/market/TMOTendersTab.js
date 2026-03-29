@@ -123,7 +123,7 @@ export default function TMOTendersTab() {
   return (
     <div className="space-y-4 mt-4">
       <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-        <TabsList className="w-full max-w-3xl flex" data-testid="tender-category-tabs">
+        <TabsList className="w-full flex" data-testid="tender-category-tabs">
           {CATEGORIES.map(c => (
             <TabsTrigger key={c.value} value={c.value} className="flex-1" data-testid={`tender-cat-${c.value}`}>{c.label}</TabsTrigger>
           ))}

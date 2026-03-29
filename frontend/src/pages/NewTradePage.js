@@ -46,6 +46,7 @@ const PAYMENT_TERMS = [
   '48 hours before Bosphorus Passage',
   '24 hours after entering Turkish Waters',
   '48 hours after entering Turkish Waters',
+  'Vessel Arrives Bosphorus Strait',
 ];
 
 function ContactPicker({ label, icon: Icon, contacts, value, onChange, testId }) {

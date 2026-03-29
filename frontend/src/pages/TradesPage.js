@@ -275,13 +275,30 @@ export default function TradesPage() {
     }, [q]);
 
     if (!open) {
+      if (trade.vesselName) {
+        return (
+          <div className="flex items-center gap-1 justify-center" onClick={(e) => e.stopPropagation()}>
+            <a
+              href={`/documents/${trade.id}`}
+              data-testid={`vessel-link-${trade.id}`}
+              className="font-bold text-blue-600 hover:text-blue-800 hover:underline text-sm uppercase"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/documents/${trade.id}`); }}
+            >
+              {trade.vesselName}
+            </a>
+            <button className="text-muted-foreground hover:text-foreground ml-1 p-0.5" onClick={(e) => { e.stopPropagation(); setOpen(true); setQ(''); }} title="Change vessel">
+              <Pencil className="h-3 w-3" />
+            </button>
+          </div>
+        );
+      }
       return (
         <button
           data-testid={`vessel-picker-${trade.id}`}
           className="w-full text-center text-sm uppercase cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5 transition-colors"
           onClick={(e) => { e.stopPropagation(); setOpen(true); setQ(''); }}
         >
-          {trade.vesselName || <span className="text-muted-foreground">-</span>}
+          <span className="text-muted-foreground">-</span>
         </button>
       );
     }

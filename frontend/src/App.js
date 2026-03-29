@@ -38,6 +38,7 @@ function App() {
             <Route path="/partners/co-brokers" element={<PartnersPage filterType="co-broker" />} />
             <Route path="/vessels" element={<VesselsPage />} />
             <Route path="/documents" element={<VesselExecutionPage />} />
+            <Route path="/documents/:tradeId" element={<VesselExecutionPage />} />
             <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/commissions" element={<CommissionsPage />} />
             <Route path="/omega" element={<AccountingPage />} />

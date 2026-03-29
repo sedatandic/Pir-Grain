@@ -15,6 +15,7 @@ import DraftDocumentsTab from './DraftDocumentsTab';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { format, parse } from 'date-fns';
+import { useParams } from 'react-router-dom';
 
 const DEFAULT_DOCS = [
   "Bill of Ladings", "Commercial Invoice", "Phytosanitary Certificate",
@@ -32,6 +33,7 @@ function getDocChecklist(commodity) {
 }
 
 export default function VesselExecutionPage() {
+  const { tradeId: urlTradeId } = useParams();
   const [trades, setTrades] = useState([]);
   const [commodities, setCommodities] = useState([]);
   const [selectedTradeId, setSelectedTradeId] = useState('');
@@ -100,6 +102,10 @@ export default function VesselExecutionPage() {
         setDisportAgents(daRes.data);
         setLoadportAgents(laRes.data);
         setVessels(vesRes.data);
+        // Auto-select trade from URL
+        if (urlTradeId) {
+          setSelectedTradeId(urlTradeId);
+        }
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };

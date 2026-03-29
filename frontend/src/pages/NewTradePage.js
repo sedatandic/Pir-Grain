@@ -708,20 +708,27 @@ export default function NewTradePage() {
 
       <div className="flex justify-end gap-3 pb-6">
         <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
-        {isEdit && (
-          <Button variant="outline" onClick={async () => {
-            setGeneratingBC(true);
-            try {
-              const res = await api.get(`/api/business-confirmation/${id}/pdf`, { responseType: 'blob' });
-              window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank');
-              toast.success('Business Confirmation generated');
-            } catch { toast.error('Failed to generate Business Confirmation'); }
-            finally { setGeneratingBC(false); }
-          }} disabled={generatingBC} data-testid="bc-button">
-            {generatingBC ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
-            Business Confirmation
-          </Button>
-        )}
+        <Button variant="outline" onClick={async () => {
+          setGeneratingBC(true);
+          try {
+            let tid = tradeId;
+            if (!tid) {
+              // Save first for new contracts
+              const data = { ...form, contractNumber: form.pirContractNumber || '', portVariations: form.portVariations || [] };
+              const res = await api.post('/api/trades', data);
+              tid = res.data.id;
+              toast.success('Contract saved');
+            }
+            const res = await api.get(`/api/business-confirmation/${tid}/pdf`, { responseType: 'blob' });
+            window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank');
+            toast.success('Business Confirmation generated');
+            if (!tradeId) navigate(`/trades/${tid}/edit`);
+          } catch { toast.error('Failed to generate Business Confirmation'); }
+          finally { setGeneratingBC(false); }
+        }} disabled={generatingBC} data-testid="bc-button">
+          {generatingBC ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+          Business Confirmation
+        </Button>
         <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
           {isEdit ? 'Update Contract' : 'Create Contract'}

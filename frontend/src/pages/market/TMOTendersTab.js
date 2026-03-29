@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Badge } from '../../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
@@ -14,16 +15,35 @@ import { format, parse } from 'date-fns';
 import { Plus, Trash2, Pencil, ChevronDown, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
+const CATEGORIES = [
+  { value: 'tmo', label: 'TMO Tenders', title: 'TMO / Turkish Grain Board - Tenders & Results' },
+  { value: 'sago', label: 'SAGO Tenders', title: 'SAGO / Saudi Grains Organization - Tenders & Results' },
+  { value: 'algeria', label: 'Algeria Tenders', title: 'Algeria (OAIC) - Tenders & Results' },
+  { value: 'jordan', label: 'Jordan Tenders', title: 'Jordan (MIT) - Tenders & Results' },
+];
+
 const TMO_PORTS = [
   'Iskenderun', 'Bandirma', 'Tekirdag', 'Karasu', 'Izmir', 'Samsun', 'Mersin', 'Adana', 'Trabzon'
 ];
 
+const SAGO_PORTS = ['Jeddah', 'Dammam', 'Jubail', 'Yanbu'];
+const ALGERIA_PORTS = ['Algiers', 'Oran', 'Annaba', 'Bejaia', 'Skikda', 'Mostaganem', 'Djen Djen'];
+const JORDAN_PORTS = ['Aqaba'];
+
+const PORT_MAP = {
+  tmo: TMO_PORTS,
+  sago: SAGO_PORTS,
+  algeria: ALGERIA_PORTS,
+  jordan: JORDAN_PORTS,
+};
+
 export default function TMOTendersTab() {
+  const [activeCategory, setActiveCategory] = useState('tmo');
   const [tenders, setTenders] = useState([]);
   const [tenderDialogOpen, setTenderDialogOpen] = useState(false);
   const [tenderForm, setTenderForm] = useState({ 
     tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import',
-    shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: []
+    shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: 'tmo'
   });
   const [editingTender, setEditingTender] = useState(null);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
@@ -32,43 +52,47 @@ export default function TMOTendersTab() {
   const [editingResultIndex, setEditingResultIndex] = useState(null);
   const [expandedTenders, setExpandedTenders] = useState({});
 
-  useEffect(() => {
-    fetchTenders();
-  }, []);
+  useEffect(() => { fetchTenders(); }, []);
 
   const fetchTenders = async () => {
     try {
       const res = await api.get('/api/market/tenders');
       setTenders(res.data);
-    } catch (err) {
-      console.error('Failed to load tenders');
-    }
+    } catch (err) { console.error('Failed to load tenders'); }
   };
+
+  const categoryTenders = tenders
+    .filter(t => (t.category || 'tmo') === activeCategory)
+    .sort((a, b) => {
+      const parseDate = (d) => { if (!d) return 0; const parts = d.split('/'); if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime(); return 0; };
+      return parseDate(b.tenderDate) - parseDate(a.tenderDate);
+    });
+
+  const activeCategoryInfo = CATEGORIES.find(c => c.value === activeCategory);
+  const activePorts = PORT_MAP[activeCategory] || TMO_PORTS;
 
   const handleSaveTender = async () => {
     try {
+      const payload = { ...tenderForm, category: activeCategory };
       if (editingTender) {
-        await api.put(`/api/market/tenders/${editingTender.id}`, tenderForm);
+        await api.put(`/api/market/tenders/${editingTender.id}`, payload);
         toast.success('Tender updated');
       } else {
-        await api.post('/api/market/tenders', tenderForm);
+        await api.post('/api/market/tenders', payload);
         toast.success('Tender created');
       }
       setTenderDialogOpen(false);
-      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] });
+      setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: activeCategory });
       setEditingTender(null);
       fetchTenders();
-    } catch (err) {
-      toast.error('Failed to save tender');
-    }
+    } catch (err) { toast.error('Failed to save tender'); }
   };
 
   const handleAddResult = async () => {
     if (!selectedTenderForResult) return;
     try {
       const payload = {
-        port: resultForm.port,
-        company: resultForm.company,
+        port: resultForm.port, company: resultForm.company,
         quantity: parseFloat(resultForm.quantity) || 0,
         cifPrice: resultForm.cifPrice ? parseFloat(resultForm.cifPrice) : null,
         exwPrice: resultForm.exwPrice ? parseFloat(resultForm.exwPrice) : null,
@@ -85,189 +109,158 @@ export default function TMOTendersTab() {
       setSelectedTenderForResult(null);
       setEditingResultIndex(null);
       fetchTenders();
-    } catch (err) {
-      toast.error('Failed to save result');
-    }
+    } catch (err) { toast.error('Failed to save result'); }
   };
 
   const handleDeleteResult = async (tender, resultIdx) => {
-    try {
-      await api.delete(`/api/market/tenders/${tender.id}/results/${resultIdx}`);
-      toast.success('Result deleted');
-      fetchTenders();
-    } catch (err) {
-      toast.error('Failed to delete result');
-    }
+    try { await api.delete(`/api/market/tenders/${tender.id}/results/${resultIdx}`); toast.success('Result deleted'); fetchTenders(); } catch (err) { toast.error('Failed to delete result'); }
   };
 
   const handleDeleteTender = async (tenderId) => {
-    try {
-      await api.delete(`/api/market/tenders/${tenderId}`);
-      toast.success('Tender deleted');
-      fetchTenders();
-    } catch (err) {
-      toast.error('Failed to delete tender');
-    }
+    try { await api.delete(`/api/market/tenders/${tenderId}`); toast.success('Tender deleted'); fetchTenders(); } catch (err) { toast.error('Failed to delete tender'); }
   };
-
-  const sortedTenders = [...tenders].sort((a, b) => {
-    const parseDate = (d) => {
-      if (!d) return 0;
-      const parts = d.split('/');
-      if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
-      return 0;
-    };
-    return parseDate(b.tenderDate) - parseDate(a.tenderDate);
-  });
 
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-green-700" data-testid="tmo-tenders-title">TMO / Turkish Grain Board - Tenders & Results</h2>
-        </div>
-      </div>
-      <div className="flex items-center justify-end">
-          <Button data-testid="new-tender-btn" onClick={() => { 
-            setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [] }); 
-            setEditingTender(null); 
-            setTenderDialogOpen(true); 
-          }} size="sm">
-            <Plus className="h-4 w-4 mr-2" />New Tender
-          </Button>
-      </div>
+      <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+        <TabsList className="w-full max-w-2xl flex" data-testid="tender-category-tabs">
+          {CATEGORIES.map(c => (
+            <TabsTrigger key={c.value} value={c.value} className="flex-1" data-testid={`tender-cat-${c.value}`}>{c.label}</TabsTrigger>
+          ))}
+        </TabsList>
 
-      {tenders.length === 0 ? (
-        <Card><CardContent className="py-8"><p className="text-center text-muted-foreground">No tenders recorded yet.</p></CardContent></Card>
-      ) : (
-        <div className="space-y-6">
-          {sortedTenders.map((tender) => {
-            const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
-            return (
-              <Card key={tender.id} className="overflow-hidden border-2 border-border" data-testid={`tender-card-${tender.id}`}>
-                <div className="cursor-pointer select-none" onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}>
-                  <div className="bg-muted border-b border-border px-4 py-2 flex items-center">
-                    {expandedTenders[tender.id] ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" /> : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />}
-                    <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700 dark:text-green-400">
-                      {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
-                    </h3>
-                  </div>
-                  <div className="bg-muted border-b border-border px-4 py-1.5 text-center">
-                    <p className="font-medium text-sm text-muted-foreground">
-                      {tender.shipmentPeriodStart && tender.shipmentPeriodEnd 
-                        ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}` 
-                        : 'Shipment Period: TBD'}
-                    </p>
-                  </div>
+        {CATEGORIES.map(cat => (
+          <TabsContent key={cat.value} value={cat.value}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <h2 className="text-lg font-semibold text-green-700" data-testid="tenders-title">{cat.title}</h2>
+              </div>
+              <div className="flex items-center justify-end">
+                <Button data-testid="new-tender-btn" onClick={() => {
+                  setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: cat.value });
+                  setEditingTender(null);
+                  setTenderDialogOpen(true);
+                }} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />New Tender
+                </Button>
+              </div>
+
+              {categoryTenders.length === 0 ? (
+                <Card><CardContent className="py-8"><p className="text-center text-muted-foreground">No {cat.label.toLowerCase()} recorded yet.</p></CardContent></Card>
+              ) : (
+                <div className="space-y-6">
+                  {categoryTenders.map((tender) => {
+                    const totalQty = tender.results?.reduce((sum, r) => sum + (parseFloat(r.quantity) || parseFloat(r.sizeKMT) || 0), 0) || 0;
+                    return (
+                      <Card key={tender.id} className="overflow-hidden border-2 border-border" data-testid={`tender-card-${tender.id}`}>
+                        <div className="cursor-pointer select-none" onClick={() => setExpandedTenders(prev => ({ ...prev, [tender.id]: !prev[tender.id] }))}>
+                          <div className="bg-muted border-b border-border px-4 py-2 flex items-center">
+                            {expandedTenders[tender.id] ? <ChevronDown className="h-5 w-5 mr-2 text-muted-foreground shrink-0" /> : <ChevronRight className="h-5 w-5 mr-2 text-muted-foreground shrink-0" />}
+                            <h3 className="font-bold text-lg tracking-wide text-center flex-1 text-green-700 dark:text-green-400">
+                              {(tender.totalQuantity || 0).toLocaleString('en-US')} Mts {tender.commodity} {tender.tenderType || 'Import'} Tender - Dated: {tender.tenderDate}
+                            </h3>
+                          </div>
+                          <div className="bg-muted border-b border-border px-4 py-1.5 text-center">
+                            <p className="font-medium text-sm text-muted-foreground">
+                              {tender.shipmentPeriodStart && tender.shipmentPeriodEnd
+                                ? `Shipment Period: ${tender.shipmentPeriodStart} - ${tender.shipmentPeriodEnd}`
+                                : 'Shipment Period: TBD'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {expandedTenders[tender.id] && (
+                          <>
+                            <CardContent className="p-0">
+                              <Table className="border-collapse [&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border [&_th]:align-middle [&_td]:align-middle">
+                                <TableHeader>
+                                  <TableRow className="bg-muted">
+                                    <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Company</TableHead>
+                                    <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Port</TableHead>
+                                    <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Quantity (Mts)</TableHead>
+                                    <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">CIF</TableHead>
+                                    <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">EXW</TableHead>
+                                    <TableHead className="font-bold text-sm text-center w-20"></TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {tender.results?.length > 0 ? (
+                                    <>
+                                      {tender.results.map((result, idx) => (
+                                        <TableRow key={idx}>
+                                          <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
+                                          <TableCell className="py-4 text-center">{result.port}</TableCell>
+                                          <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
+                                          <TableCell className="text-center font-mono py-4">
+                                            {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
+                                          </TableCell>
+                                          <TableCell className="text-center font-mono py-4">
+                                            {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
+                                          </TableCell>
+                                          <TableCell className="text-center py-4">
+                                            <div className="flex items-center justify-center gap-1">
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation();
+                                                setSelectedTenderForResult(tender); setEditingResultIndex(idx);
+                                                setResultForm({ port: result.port || '', company: result.company || result.winner || '', quantity: String(result.quantity || result.sizeKMT || ''), cifPrice: result.cifPrice != null ? String(result.cifPrice) : '', exwPrice: result.exwPrice != null ? String(result.exwPrice) : '' });
+                                                setResultDialogOpen(true);
+                                              }}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></Button>
+                                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); handleDeleteResult(tender, idx); }}>
+                                                <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                              </Button>
+                                            </div>
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
+                                      <TableRow className="font-bold">
+                                        <TableCell className="font-bold text-base py-4 text-center">TOTAL</TableCell>
+                                        <TableCell className="py-4 text-center"></TableCell>
+                                        <TableCell className="text-center font-mono font-bold text-base py-4">{totalQty.toLocaleString('de-DE')}</TableCell>
+                                        <TableCell className="py-4 text-center"></TableCell>
+                                        <TableCell className="py-4 text-center"></TableCell>
+                                        <TableCell className="py-4 text-center"></TableCell>
+                                      </TableRow>
+                                    </>
+                                  ) : (
+                                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No results added yet</TableCell></TableRow>
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </CardContent>
+                            <div className="px-4 py-2 bg-muted/20 flex items-center justify-between border-t">
+                              <Badge variant={tender.status === 'awarded' ? 'default' : 'secondary'} className={tender.status === 'awarded' ? 'bg-green-600 text-white' : ''}>
+                                {tender.status?.toUpperCase()}
+                              </Badge>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" data-testid={`add-result-btn-${tender.id}`} onClick={() => {
+                                  setSelectedTenderForResult(tender); setEditingResultIndex(null);
+                                  setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
+                                  setResultDialogOpen(true);
+                                }}><Plus className="h-4 w-4 mr-1" />Add Result</Button>
+                                <Button variant="ghost" size="sm" data-testid={`edit-tender-btn-${tender.id}`} onClick={() => { setEditingTender(tender); setTenderForm(tender); setTenderDialogOpen(true); }}>
+                                  <Pencil className="h-4 w-4 mr-1" />Edit
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" data-testid={`delete-tender-btn-${tender.id}`} onClick={() => handleDeleteTender(tender.id)}>
+                                  <Trash2 className="h-4 w-4 mr-1" />Delete
+                                </Button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </Card>
+                    );
+                  })}
                 </div>
-                
-                {expandedTenders[tender.id] && (
-                  <>
-                    <CardContent className="p-0">
-                      <Table className="border-collapse [&_th]:border [&_th]:border-border [&_td]:border [&_td]:border-border [&_th]:align-middle [&_td]:align-middle">
-                        <TableHeader>
-                          <TableRow className="bg-muted">
-                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Company</TableHead>
-                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Port</TableHead>
-                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">Quantity (Mts)</TableHead>
-                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">CIF</TableHead>
-                            <TableHead className="font-bold text-green-700 dark:text-green-400 text-sm text-center">EXW</TableHead>
-                            <TableHead className="font-bold text-sm text-center w-20"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {tender.results?.length > 0 ? (
-                            <>
-                              {tender.results.map((result, idx) => (
-                                <TableRow key={idx}>
-                                  <TableCell className="font-medium py-4 text-center">{result.company || result.winner}</TableCell>
-                                  <TableCell className="py-4 text-center">{result.port}</TableCell>
-                                  <TableCell className="text-center font-mono py-4">{(parseFloat(result.quantity) || parseFloat(result.sizeKMT) || 0).toLocaleString('de-DE')}</TableCell>
-                                  <TableCell className="text-center font-mono py-4">
-                                    {result.cifPrice != null ? parseFloat(result.cifPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ''}
-                                  </TableCell>
-                                  <TableCell className="text-center font-mono py-4">
-                                    {result.exwPrice != null ? `$${parseFloat(result.exwPrice).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : ''}
-                                  </TableCell>
-                                  <TableCell className="text-center py-4">
-                                    <div className="flex items-center justify-center gap-1">
-                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => {
-                                        setSelectedTenderForResult(tender);
-                                        setEditingResultIndex(idx);
-                                        setResultForm({
-                                          port: result.port || '',
-                                          company: result.company || result.winner || '',
-                                          quantity: String(result.quantity || result.sizeKMT || ''),
-                                          cifPrice: result.cifPrice != null ? String(result.cifPrice) : '',
-                                          exwPrice: result.exwPrice != null ? String(result.exwPrice) : '',
-                                        });
-                                        setResultDialogOpen(true);
-                                      }}>
-                                        <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                                      </Button>
-                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => handleDeleteResult(tender, idx)}>
-                                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                              <TableRow className="font-bold">
-                                <TableCell className="font-bold text-base py-4 text-center">TOTAL</TableCell>
-                                <TableCell className="py-4 text-center"></TableCell>
-                                <TableCell className="text-center font-mono font-bold text-base py-4">{totalQty.toLocaleString('de-DE')}</TableCell>
-                                <TableCell className="py-4 text-center"></TableCell>
-                                <TableCell className="py-4 text-center"></TableCell>
-                                <TableCell className="py-4 text-center"></TableCell>
-                              </TableRow>
-                            </>
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center text-muted-foreground py-6">No results added yet</TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                    
-                    <div className="px-4 py-2 bg-muted/20 flex items-center justify-between border-t">
-                      <Badge variant={tender.status === 'awarded' ? 'default' : 'secondary'} className={tender.status === 'awarded' ? 'bg-green-600 text-white' : ''}>
-                        {tender.status?.toUpperCase()}
-                      </Badge>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" data-testid={`add-result-btn-${tender.id}`} onClick={() => {
-                          setSelectedTenderForResult(tender);
-                          setEditingResultIndex(null);
-                          setResultForm({ port: '', company: '', quantity: '', cifPrice: '', exwPrice: '' });
-                          setResultDialogOpen(true);
-                        }}>
-                          <Plus className="h-4 w-4 mr-1" />Add Result
-                        </Button>
-                        <Button variant="ghost" size="sm" data-testid={`edit-tender-btn-${tender.id}`} onClick={() => {
-                          setEditingTender(tender);
-                          setTenderForm(tender);
-                          setTenderDialogOpen(true);
-                        }}>
-                          <Pencil className="h-4 w-4 mr-1" />Edit
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" data-testid={`delete-tender-btn-${tender.id}`} onClick={() => handleDeleteTender(tender.id)}>
-                          <Trash2 className="h-4 w-4 mr-1" />Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      )}
+              )}
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Tender Dialog */}
       <Dialog open={tenderDialogOpen} onOpenChange={setTenderDialogOpen}>
         <DialogContent className="sm:max-w-lg mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-center">{editingTender ? 'Edit Tender' : 'New TMO Tender'}</DialogTitle>
+            <DialogTitle className="text-center">{editingTender ? 'Edit Tender' : `New ${activeCategoryInfo?.label || 'Tender'}`}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -276,17 +269,11 @@ export default function TMOTendersTab() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" data-testid="tender-date-input" className="w-full justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tenderForm.tenderDate || 'Pick a date'}
+                      <CalendarIcon className="mr-2 h-4 w-4" />{tenderForm.tenderDate || 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarPicker
-                      mode="single"
-                      selected={tenderForm.tenderDate ? parse(tenderForm.tenderDate, 'dd/MM/yyyy', new Date()) : undefined}
-                      onSelect={(date) => { if (date) setTenderForm({ ...tenderForm, tenderDate: format(date, 'dd/MM/yyyy') }); }}
-                      initialFocus
-                    />
+                    <CalendarPicker mode="single" selected={tenderForm.tenderDate ? parse(tenderForm.tenderDate, 'dd/MM/yyyy', new Date()) : undefined} onSelect={(date) => { if (date) setTenderForm({ ...tenderForm, tenderDate: format(date, 'dd/MM/yyyy') }); }} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -298,6 +285,8 @@ export default function TMOTendersTab() {
                     <SelectItem value="Feed Barley">Feed Barley</SelectItem>
                     <SelectItem value="Wheat">Wheat</SelectItem>
                     <SelectItem value="Feed Corn">Feed Corn</SelectItem>
+                    <SelectItem value="Durum Wheat">Durum Wheat</SelectItem>
+                    <SelectItem value="Milling Wheat">Milling Wheat</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -324,8 +313,7 @@ export default function TMOTendersTab() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" data-testid="tender-shipment-start" className="w-full justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tenderForm.shipmentPeriodStart || 'Pick a date'}
+                      <CalendarIcon className="mr-2 h-4 w-4" />{tenderForm.shipmentPeriodStart || 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -338,8 +326,7 @@ export default function TMOTendersTab() {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" data-testid="tender-shipment-end" className="w-full justify-start text-left font-normal">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {tenderForm.shipmentPeriodEnd || 'Pick a date'}
+                      <CalendarIcon className="mr-2 h-4 w-4" />{tenderForm.shipmentPeriodEnd || 'Pick a date'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -384,7 +371,7 @@ export default function TMOTendersTab() {
                 <Select value={resultForm.port} onValueChange={(v) => setResultForm({ ...resultForm, port: v })}>
                   <SelectTrigger data-testid="result-port-input"><SelectValue placeholder="Select port" /></SelectTrigger>
                   <SelectContent>
-                    {TMO_PORTS.map((port) => (<SelectItem key={port} value={port}>{port}</SelectItem>))}
+                    {activePorts.map((port) => (<SelectItem key={port} value={port}>{port}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>

@@ -26,7 +26,7 @@ export default function MarketDataPage() {
             <TabsTrigger value="news" data-testid="tab-indications" className="flex-1">Indications</TabsTrigger>
             <TabsTrigger value="prices" data-testid="tab-prices" className="flex-1">CBOT & Exchange Rates</TabsTrigger>
             <TabsTrigger value="turkish" data-testid="tab-turkish" className="flex-1">Turkish Exchanges</TabsTrigger>
-            <TabsTrigger value="tenders" data-testid="tab-tenders" className="flex-1">TMO Tenders</TabsTrigger>
+            <TabsTrigger value="tenders" data-testid="tab-tenders" className="flex-1">Tenders</TabsTrigger>
             <TabsTrigger value="freights" data-testid="tab-freights" className="flex-1">Coaster Freights</TabsTrigger>
           </TabsList>
 

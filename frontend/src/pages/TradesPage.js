@@ -346,7 +346,6 @@ export default function TradesPage() {
               <TableHead className="text-center whitespace-nowrap">Unit Price</TableHead>
               <TableHead className="text-center">Shipment Period</TableHead>
               <TableHead className="text-center">Vessel</TableHead>
-              <TableHead className="text-center w-16">BC</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -452,11 +451,6 @@ export default function TradesPage() {
                 })()}</TableCell>
                 <TableCell className="text-center text-sm">{trade.shipmentWindowStart || trade.shipmentWindowEnd ? <div>{formatShipmentDate(trade.shipmentWindowStart) && <div>{formatShipmentDate(trade.shipmentWindowStart)}</div>}{formatShipmentDate(trade.shipmentWindowEnd) && <div>{formatShipmentDate(trade.shipmentWindowEnd)}</div>}</div> : '-'}</TableCell>
                 <TableCell className="text-center text-sm whitespace-nowrap"><VesselPicker trade={trade} /></TableCell>
-                <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                  <Button variant="outline" size="sm" className="h-7 px-2" onClick={() => generateBC(trade.id)} disabled={generatingBC === trade.id} data-testid={`bc-btn-${trade.id}`} title="Business Confirmation">
-                    {generatingBC === trade.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
-                  </Button>
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -453,7 +453,8 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             })()}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {/* Contract Selection */}
+            {/* Contract Selection - only show when not embedded */}
+            {!filterTradeId && (
             <div className="space-y-2">
               <Label>Contract *</Label>
               <Select value={form.tradeId} onValueChange={handleTradeSelect} disabled={!!editingId}>
@@ -465,6 +466,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                 </SelectContent>
               </Select>
             </div>
+            )}
 
             {/* Consignee & Notify */}
             <div className="space-y-3">

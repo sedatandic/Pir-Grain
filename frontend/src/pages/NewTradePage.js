@@ -10,7 +10,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X, FileText, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parse } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -104,6 +104,7 @@ export default function NewTradePage() {
   const { tradeId } = useParams();
   const isEdit = Boolean(tradeId);
   const [saving, setSaving] = useState(false);
+  const [generatingBC, setGeneratingBC] = useState(false);
   const [loadingTrade, setLoadingTrade] = useState(false);
   const [partners, setPartners] = useState([]);
   const [commodities, setCommodities] = useState([]);
@@ -707,6 +708,20 @@ export default function NewTradePage() {
 
       <div className="flex justify-end gap-3 pb-6">
         <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
+        {isEdit && (
+          <Button variant="outline" onClick={async () => {
+            setGeneratingBC(true);
+            try {
+              const res = await api.get(`/api/business-confirmation/${id}/pdf`, { responseType: 'blob' });
+              window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank');
+              toast.success('Business Confirmation generated');
+            } catch { toast.error('Failed to generate Business Confirmation'); }
+            finally { setGeneratingBC(false); }
+          }} disabled={generatingBC} data-testid="bc-button">
+            {generatingBC ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+            Business Confirmation
+          </Button>
+        )}
         <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
           {isEdit ? 'Update Contract' : 'Create Contract'}

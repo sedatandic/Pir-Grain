@@ -410,6 +410,74 @@ def delete_swift_copy(trade_id: str, user=Depends(non_accountant)):
     return {"message": "SWIFT copy deleted"}
 
 
+@router.get("/{trade_id}/draft-documents")
+def get_draft_documents(trade_id: str, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    return trade.get("draftDocuments", [])
+
+
+@router.post("/{trade_id}/draft-documents")
+async def upload_draft_document(trade_id: str, file: UploadFile = File(...), docName: str = "", user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    draft_dir = os.path.join(UPLOAD_DIR, "drafts", trade_id)
+    os.makedirs(draft_dir, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1]
+    import uuid
+    stored_name = f"{uuid.uuid4().hex[:8]}{ext}"
+    path = os.path.join(draft_dir, stored_name)
+    with open(path, "wb") as f:
+        f.write(await file.read())
+    doc_entry = {
+        "docName": docName,
+        "fileName": file.filename,
+        "storedPath": path,
+        "uploadedAt": datetime.now(timezone.utc).isoformat()
+    }
+    trades_col.update_one(
+        {"_id": ObjectId(trade_id)},
+        {"$push": {"draftDocuments": doc_entry}}
+    )
+    return trades_col.find_one({"_id": ObjectId(trade_id)}).get("draftDocuments", [])
+
+
+@router.delete("/{trade_id}/draft-documents/{doc_index}")
+def delete_draft_document(trade_id: str, doc_index: int, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    drafts = trade.get("draftDocuments", [])
+    if doc_index < 0 or doc_index >= len(drafts):
+        raise HTTPException(status_code=404, detail="Document not found")
+    doc = drafts[doc_index]
+    path = doc.get("storedPath", "")
+    if path and os.path.exists(path):
+        os.remove(path)
+    drafts.pop(doc_index)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"draftDocuments": drafts}})
+    return drafts
+
+
+@router.get("/{trade_id}/draft-documents/{doc_index}/download")
+def download_draft_document(trade_id: str, doc_index: int, user=Depends(non_accountant)):
+    from fastapi.responses import FileResponse
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    drafts = trade.get("draftDocuments", [])
+    if doc_index < 0 or doc_index >= len(drafts):
+        raise HTTPException(status_code=404, detail="Document not found")
+    doc = drafts[doc_index]
+    path = doc.get("storedPath", "")
+    if not path or not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    return FileResponse(path, filename=doc.get("fileName", "document"), media_type="application/octet-stream")
+
+
+
 
 @router.post("/{trade_id}/buyer-payment")
 def set_buyer_payment(trade_id: str, body: dict, user=Depends(non_accountant)):

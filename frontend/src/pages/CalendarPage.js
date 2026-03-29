@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Plus, ChevronLeft, ChevronRight, CalendarDays, Loader2, Pencil, Trash2, DollarSign, Users } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, addDays, isSameDay, isToday, parseISO, isAfter, isBefore } from 'date-fns';
+import { format, startOfMonth, endOfMonth, startOfDay, endOfDay, eachDayOfInterval, addMonths, subMonths, addDays, isSameDay, isToday, parseISO, isAfter, isBefore } from 'date-fns';
 import { EVENT_TYPES } from '../lib/constants';
 import { getHolidaysForDate } from '../lib/holidays';
 import { CalendarDays as CalIcon } from 'lucide-react';
@@ -52,7 +52,16 @@ export default function CalendarPage() {
     return [...padding, ...days.map(d => ({ date: d, isCurrentMonth: true }))];
   }, [currentDate]);
 
-  const getEventsForDate = (date) => events.filter(e => { try { return isSameDay(parseISO(e.date), date); } catch { return false; } });
+  const getEventsForDate = (date) => events.filter(e => {
+    try {
+      const start = parseISO(e.date);
+      if (e.dateTo) {
+        const end = parseISO(e.dateTo);
+        return date >= startOfDay(start) && date <= endOfDay(end);
+      }
+      return isSameDay(start, date);
+    } catch { return false; }
+  });
   const selectedDateEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
   const openCreateDialog = () => {

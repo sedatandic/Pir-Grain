@@ -133,14 +133,17 @@ export default function TMOTendersTab() {
           <TabsContent key={cat.value} value={cat.value}>
             <div className="space-y-4 mt-8">
               <div className="flex items-center justify-between">
+                <div className="flex-1" />
                 <h2 className="text-lg font-semibold text-green-700" data-testid="tenders-title">{cat.title}</h2>
-                <Button data-testid="new-tender-btn" onClick={() => {
-                  setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: cat.value });
-                  setEditingTender(null);
-                  setTenderDialogOpen(true);
-                }} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />New Tender
-                </Button>
+                <div className="flex-1 flex justify-end">
+                  <Button data-testid="new-tender-btn" onClick={() => {
+                    setTenderForm({ tenderDate: '', commodity: 'Feed Barley', totalQuantity: 0, tenderType: 'Import', shipmentPeriodStart: '', shipmentPeriodEnd: '', status: 'open', results: [], category: cat.value });
+                    setEditingTender(null);
+                    setTenderDialogOpen(true);
+                  }} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />New Tender
+                  </Button>
+                </div>
               </div>
 
               {categoryTenders.length === 0 ? (

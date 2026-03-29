@@ -131,7 +131,7 @@ export default function TMOTendersTab() {
 
         {CATEGORIES.map(cat => (
           <TabsContent key={cat.value} value={cat.value}>
-            <div className="space-y-4">
+            <div className="space-y-4 mt-8">
               <div className="flex items-center justify-center">
                 <h2 className="text-lg font-semibold text-green-700" data-testid="tenders-title">{cat.title}</h2>
               </div>

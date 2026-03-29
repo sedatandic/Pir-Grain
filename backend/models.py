@@ -126,6 +126,7 @@ class PortCreate(BaseModel):
 class EventCreate(BaseModel):
     title: str
     date: str
+    dateTo: Optional[str] = None
     type: Optional[str] = "other"
     description: Optional[str] = None
     tradeId: Optional[str] = None

@@ -78,6 +78,7 @@ export default function VesselExecutionPage() {
   const [emailExtraBuyer, setEmailExtraBuyer] = useState('');
   const [emailSending, setEmailSending] = useState(false);
   const [buyerPaymentSaving, setBuyerPaymentSaving] = useState(false);
+  const [swiftUploading, setSwiftUploading] = useState(false);
 
   useEffect(() => {
     const fetchInitial = async () => {
@@ -413,6 +414,36 @@ export default function VesselExecutionPage() {
       }
     } catch { toast.error('Failed to save payment date'); }
     finally { setBuyerPaymentSaving(false); }
+  };
+
+  const uploadSwiftCopy = async (file) => {
+    if (!file) return;
+    setSwiftUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post(`/api/trades/${selectedTradeId}/upload-swift`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setTrade(res.data);
+      toast.success('Payment / SWIFT copy uploaded');
+    } catch { toast.error('Failed to upload SWIFT copy'); }
+    finally { setSwiftUploading(false); }
+  };
+
+  const viewSwiftCopy = async () => {
+    try {
+      const res = await api.get(`/api/trades/${selectedTradeId}/download-swift`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      window.open(url, '_blank');
+    } catch { toast.error('Failed to open SWIFT copy'); }
+  };
+
+  const deleteSwiftCopy = async () => {
+    try {
+      await api.delete(`/api/trades/${selectedTradeId}/upload-swift`);
+      const res = await api.get(`/api/trades/${selectedTradeId}`);
+      setTrade(res.data);
+      toast.success('SWIFT copy removed');
+    } catch { toast.error('Failed to remove SWIFT copy'); }
   };
 
   // --- Vessel Nomination Functions ---
@@ -918,6 +949,36 @@ export default function VesselExecutionPage() {
                   )}
                   {buyerPaymentSaving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
+
+                {/* Payment / SWIFT Copy */}
+                <Separator />
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Payment / SWIFT Copy</Label>
+                  {trade.swiftFileName ? (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                      <FileText className="h-5 w-5 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{trade.swiftFileName}</p>
+                        <p className="text-xs text-muted-foreground">Uploaded SWIFT copy</p>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={viewSwiftCopy} data-testid="view-swift-btn">
+                        <FileText className="h-3.5 w-3.5 mr-1" />View
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={deleteSwiftCopy} data-testid="delete-swift-btn">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md border border-dashed border-muted-foreground/30 hover:bg-muted/50 transition-colors">
+                        {swiftUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
+                        <span className="text-sm text-muted-foreground">{swiftUploading ? 'Uploading...' : 'Upload SWIFT Copy'}</span>
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={(e) => { if (e.target.files[0]) uploadSwiftCopy(e.target.files[0]); e.target.value = ''; }} disabled={swiftUploading} data-testid="swift-file-input" />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
                 {trade.buyerPaymentDate && (
                   <div className="flex items-center gap-3 p-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                     <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />

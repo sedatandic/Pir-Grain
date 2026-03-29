@@ -368,6 +368,49 @@ def delete_di_document(trade_id: str, user=Depends(non_accountant)):
     return {"message": "DI document deleted"}
 
 
+@router.post("/{trade_id}/upload-swift")
+async def upload_swift_copy(trade_id: str, file: UploadFile = File(...), user=Depends(non_accountant)):
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"swift_{trade_id}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    trades_col.update_one(
+        {"_id": ObjectId(trade_id)},
+        {"$set": {"swiftFileName": file.filename, "swiftFilePath": filename}}
+    )
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+
+
+@router.get("/{trade_id}/download-swift")
+def download_swift_copy(trade_id: str, user=Depends(non_accountant)):
+    from fastapi.responses import FileResponse
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("swiftFilePath"):
+        raise HTTPException(status_code=404, detail="No SWIFT copy found")
+    filepath = os.path.join(UPLOAD_DIR, trade["swiftFilePath"])
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(filepath, filename=trade.get("swiftFileName", "swift_copy"), media_type="application/octet-stream")
+
+
+@router.delete("/{trade_id}/upload-swift")
+def delete_swift_copy(trade_id: str, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("swiftFilePath"):
+        raise HTTPException(status_code=404, detail="No SWIFT copy found")
+    filepath = os.path.join(UPLOAD_DIR, trade["swiftFilePath"])
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    trades_col.update_one(
+        {"_id": ObjectId(trade_id)},
+        {"$unset": {"swiftFileName": "", "swiftFilePath": ""}}
+    )
+    return {"message": "SWIFT copy deleted"}
+
+
+
 @router.post("/{trade_id}/buyer-payment")
 def set_buyer_payment(trade_id: str, body: dict, user=Depends(non_accountant)):
     payment_date = body.get("paymentDate", "")

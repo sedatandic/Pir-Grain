@@ -571,7 +571,7 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-contract-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center max-w-[180px]"><div>{t.originAdjective || t.originName}</div><div>{t.commodityName}</div></td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
@@ -615,7 +615,7 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-pending-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center max-w-[180px]"><div>{t.originAdjective || t.originName}</div><div>{t.commodityName}</div></td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
@@ -659,7 +659,7 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-contract-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center max-w-[180px]"><div>{t.originAdjective || t.originName}</div><div>{t.commodityName}</div></td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>

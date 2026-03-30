@@ -680,14 +680,14 @@ export default function VesselExecutionPage() {
 
       {urlTradeId && trade && !tradeLoading && (
         <Tabs defaultValue="nomination" className="mt-2">
-          <TabsList className="w-full flex h-auto bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>
-            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Documentary Instruction</TabsTrigger>
-            <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Draft Documents</TabsTrigger>
-            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
-            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
-            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents</TabsTrigger>
-            <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1 text-green-700 dark:text-green-300 data-[state=active]:bg-green-600 data-[state=active]:text-white"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
+          <TabsList className="w-full flex h-auto">
+            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>
+            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Documentary Instruction</TabsTrigger>
+            <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Draft Documents</TabsTrigger>
+            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
+            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
+            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents</TabsTrigger>
+            <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1 data-[state=active]:bg-green-600 data-[state=active]:text-white"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}

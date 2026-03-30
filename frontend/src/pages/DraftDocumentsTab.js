@@ -46,7 +46,7 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
   const fetchDI = useCallback(async () => {
     if (!tradeId) return;
     try {
-      const res = await api.get(`/api/doc-instructions?tradeId=${tradeId}`);
+      const res = await api.get(`/api/doc-instructions/?tradeId=${tradeId}`);
       const dis = res.data;
       if (dis.length > 0 && dis[0].requiredDocuments?.length) {
         setDiDocs(dis[0].requiredDocuments.map(d => d.name));
@@ -116,8 +116,21 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
   const viewDraft = async (idx) => {
     try {
       const res = await api.get(`/api/trades/${tradeId}/draft-documents/${idx}/download`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      window.open(url, '_blank');
+      const contentType = res.headers['content-type'] || 'application/octet-stream';
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: contentType }));
+      const fileName = draftDocs[idx]?.fileName || 'document';
+      const ext = fileName.split('.').pop().toLowerCase();
+      if (['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+        window.open(url, '_blank');
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
     } catch { toast.error('Failed to open document'); }
   };
 

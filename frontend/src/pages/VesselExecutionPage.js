@@ -158,7 +158,13 @@ export default function VesselExecutionPage() {
   };
 
   const renderCommodity = (t) => {
-    return t.commodityName || '-';
+    const name = t.commodityName || '-';
+    const words = name.split(/\s+/);
+    if (words.length > 4) {
+      const mid = Math.ceil(words.length / 2);
+      return <><div>{words.slice(0, mid).join(' ')}</div><div>{words.slice(mid).join(' ')}</div></>;
+    }
+    return name;
   };
 
   const renderVessel = (name) => {

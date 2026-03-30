@@ -151,7 +151,7 @@ export default function CommissionsPage() {
 
   const openInvoiceEdit = (t) => {
     const autoNo = `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
-    const autoDate = t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return ''; } })() : '';
+    const autoDate = t.buyerPaymentDate || '';
     setInvoiceEditForm({
       invoiceNo: t.invoiceNo || autoNo,
       invoiceDate: t.invoiceDate || autoDate,
@@ -243,7 +243,7 @@ export default function CommissionsPage() {
           <TableBody>
             {filtered.map((t, idx) => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
-              const invDate = t.invoiceDate || (t.createdAt ? (() => { try { return new Date(t.createdAt).toLocaleDateString('en-GB'); } catch { return '-'; }})() : '-');
+              const invDate = t.invoiceDate || t.buyerPaymentDate || '-';
               const invNo = t.invoiceNo || `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
               const commCur = getCommCurrency(t);
               return (

@@ -274,6 +274,22 @@ export default function TradesPage() {
       return list.filter(n => n.toLowerCase().includes(q.toLowerCase()));
     }, [q]);
 
+    const formatVesselName = (name) => {
+      if (!name || name.length <= 17) return name;
+      const words = name.split(' ');
+      let line1 = '';
+      let line2 = '';
+      for (const w of words) {
+        if (!line2 && (line1 + (line1 ? ' ' : '') + w).length <= 17) {
+          line1 += (line1 ? ' ' : '') + w;
+        } else {
+          line2 += (line2 ? ' ' : '') + w;
+        }
+      }
+      if (!line2) return name;
+      return <>{line1}<br/>&nbsp;&nbsp;{line2}</>;
+    };
+
     if (!open) {
       if (trade.vesselName) {
         return (
@@ -281,10 +297,10 @@ export default function TradesPage() {
             <a
               href={`/documents/${trade.id}`}
               data-testid={`vessel-link-${trade.id}`}
-              className="font-bold text-blue-600 hover:text-blue-800 hover:underline text-sm uppercase"
+              className="font-bold text-blue-600 hover:text-blue-800 hover:underline text-sm uppercase leading-tight"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/documents/${trade.id}`); }}
             >
-              {trade.vesselName}
+              {formatVesselName(trade.vesselName)}
             </a>
             <button className="text-muted-foreground hover:text-foreground ml-1 p-0.5" onClick={(e) => { e.stopPropagation(); setOpen(true); setQ(''); }} title="Change vessel">
               <Pencil className="h-3 w-3" />

@@ -670,9 +670,9 @@ export default function VesselExecutionPage() {
 
       </>)}
 
-      {tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
+      {urlTradeId && tradeLoading && <div className="flex items-center justify-center h-32"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>}
 
-      {trade && !tradeLoading && (
+      {urlTradeId && trade && !tradeLoading && (
         <Tabs defaultValue="nomination" className="mt-2">
           <TabsList className="w-full flex h-auto">
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>

@@ -428,7 +428,7 @@ export default function AccountingPage() {
                                 <TableCell>{s.description || '-'}</TableCell>
                                 <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                                 <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                                <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                                <TableCell><div className="flex items-center"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -455,7 +455,7 @@ export default function AccountingPage() {
                               <TableCell>{s.description || '-'}</TableCell>
                               <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                               <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                              <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                              <TableCell><div className="flex items-center"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

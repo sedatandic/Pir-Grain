@@ -467,20 +467,19 @@ export default function TradeDetailPage() {
                 {trade.portVariations && trade.portVariations.length > 0 && (
                   <>
                     <Separator />
-                    {trade.portVariations.map((pv, i) => {
-                      const diff = Number(pv.difference || 0);
-                      const portPrice = (trade.pricePerMT || 0) + diff;
-                      const portName = pv.portName || pv.portId;
-                      return (
-                        <div key={i}>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Port Options</span>
-                            <span className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName}{pv.portCountry ? `, ${pv.portCountry}` : ''} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></span>
-                          </div>
-                          <Separator />
-                        </div>
-                      );
-                    })}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Port Options</span>
+                      <div className="text-right space-y-1">
+                        {trade.portVariations.map((pv, i) => {
+                          const diff = Number(pv.difference || 0);
+                          const portPrice = (trade.pricePerMT || 0) + diff;
+                          const portName = pv.portName || pv.portId;
+                          return (
+                            <div key={i} className="font-medium">{trade.currency || 'USD'} {portPrice.toLocaleString()}/MT {trade.deliveryTerm || ''} {portName}{pv.portCountry ? `, ${pv.portCountry}` : ''} <span className={`font-mono ${diff < 0 ? 'text-red-600' : diff > 0 ? 'text-green-600' : ''}`}>({diff > 0 ? '+' : ''}{diff} USD)</span></div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </>
                 )}
               </CardContent>

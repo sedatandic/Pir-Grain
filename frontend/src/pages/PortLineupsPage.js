@@ -246,7 +246,7 @@ function DailyLineUp({ onLastUpdate }) {
       {dates.length > 0 && (
         <>
           {/* Date selector + Filters */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]" data-testid="date-selector">

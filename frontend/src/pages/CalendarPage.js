@@ -179,7 +179,11 @@ export default function CalendarPage() {
                       {selectedDateEvents.map(ev => (
                         <div key={ev.id} className={`p-2 rounded-lg border ${EVENT_TYPES[ev.type]?.color || 'bg-muted'}`}>
                           <div className="flex items-center justify-between gap-2">
-                            <div className="flex-1 min-w-0"><p className="font-medium text-sm truncate">{ev.title}</p>{ev.description && <p className="text-xs mt-0.5 opacity-60 truncate">{ev.description}</p>}</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{ev.title}</p>
+                              {ev.dateTo && (() => { try { const s = parseISO(ev.date); const e = parseISO(ev.dateTo); if (!isSameDay(s, e)) return <p className="text-xs mt-0.5 opacity-70">({format(s, 'd')}-{format(e, 'd MMMM yyyy')})</p>; } catch {} return null; })()}
+                              {ev.description && <p className="text-xs mt-0.5 opacity-60 truncate">{ev.description}</p>}
+                            </div>
                             <div className="flex gap-0.5 shrink-0">
                               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditDialog(ev)}><Pencil className="h-3 w-3" /></Button>
                               <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(ev.id)}><Trash2 className="h-3 w-3" /></Button>

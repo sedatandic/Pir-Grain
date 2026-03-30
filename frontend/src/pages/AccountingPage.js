@@ -33,7 +33,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
     <div className="overflow-x-auto border rounded-lg">
       <Table className="trade-table">
         <TableHeader><TableRow className="bg-muted/50">
-          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="text-center">Invoice</TableHead><TableHead>Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+          <TableHead>Status</TableHead><TableHead>Invoice Date</TableHead><TableHead>Invoice No</TableHead><TableHead>{direction === 'incoming' ? 'Invoice To' : 'Vendor'}</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Due Date</TableHead><TableHead className="text-center">Invoice</TableHead><TableHead className="text-center">Payment Date</TableHead><TableHead className="w-[80px]">Actions</TableHead>
         </TableRow></TableHeader>
         <TableBody>
           {filtered.length === 0 ? <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No invoices found</TableCell></TableRow> :
@@ -78,7 +78,7 @@ function InvoiceTable({ invoices, search, onEdit, onDelete, direction, tradeMap,
                 )}
               </TableCell>
               <TableCell className="text-sm">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center justify-center gap-1">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" size="sm" className={cn('text-xs whitespace-nowrap', !inv.paymentDate && 'text-muted-foreground')}>

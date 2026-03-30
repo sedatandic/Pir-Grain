@@ -3,10 +3,23 @@
 ## Core Architecture
 - **Frontend**: React + Shadcn UI (port 3000)
 - **Backend**: FastAPI (port 8001, prefix /api)
-- **Database**: MongoDB (DB: test_database)
+- **Database**: MongoDB (DB: pir_grain_pulses)
 - **Auth**: JWT-based authentication
 
 ## What's Been Implemented
+
+### Vessel Execution Empty State Fix (2026-03-30)
+- Fixed blank page when no vessel-nominated contracts exist on /documents
+- Added "Pending Vessel Nomination" table (amber theme) showing contracts awaiting vessel assignment
+- Added empty state with ship icon when zero vessel nominations exist
+- Fixed useEffect dependency bug (urlTradeId) so detail view loads correctly when navigating from list
+- Fixed backend timezone import and decorator alignment in trades.py
+
+### Regression Testing (2026-03-30)
+- Full regression after previous session's massive untested changes
+- Backend: 95%, Frontend: 100% pass rate
+- Fixed active_url migration guard (stale URL in pir_grain_pulses.app_config)
+- All pages verified: VesselExecution (list + detail), Accounting, Commissions, Calendar, MarketData, PortLineups, Settings
 
 ### GAFTA Extension Field (2026-03-26)
 - Added GAFTA Extension dropdown (Allowed/Not Allowed, default: Allowed) in Shipping Terms after Shipment Period To
@@ -16,16 +29,10 @@
 - Enhanced Vessel Nomination tab to show Load Port, Seller Surveyor, Load Port Agent alongside vessel name
 - All 4 fields editable via dropdown selects (Edit/Save/Cancel flow)
 - Vessel name dropdown from 208 vessels, ports from all ports, surveyors and agents from reference data
-- Fixed active_url migration guard bug (stale URL in MongoDB)
-
-### Regression Testing (2026-03-26)
-- Full regression test after massive UI changes: Frontend 100%, Backend 82% (minor test fixture issues only)
-- All pages verified: VesselExecution, Accounting, Commissions, PortLineups, MarketData, Contracts
 
 ### Brokerage Invoices Filters (2026-03-25)
 - Added 5 filter dropdowns: Seller, Buyer, Commodity, Origin, Destination
 - Filters dynamically update summary cards and table totals
-- Clear All button when filters active
 
 ### NewTradePage Compact Layout (2026-03-25)
 - All form fields fit in one screen without scrolling
@@ -41,27 +48,32 @@
 ### Port Line-Ups
 - Daily and Monthly tabs with Excel upload for Monthly
 - Monthly tab matches Daily tab style (dropdown file selector, table layout)
-- Last Update labels, All Dates selection
 
 ### Vessel Execution UI
-- Split into Ongoing (green) and Completed (gray) contract tables
-- Tabs: BC, Vessel Nomination, DI, B/L, Shipment Appropriation, Shipment Docs, Payment Date
-- Clickable uploaded document filenames
+- Split into list view (/documents) and detail view (/documents/:tradeId)
+- List: Ongoing (green), Completed (gray), Pending Nomination (amber) tables
+- Detail: 7 tabs - Nomination, DI, Drafts, B/L, Appropriation, Docs, Payment
+- Draft Documents tab with drag-and-drop bulk upload
+- SWIFT copy upload on Payment tab
+- Mobile: scrollable tabs + contract selector dropdown
 
 ### Documentary Instructions Page
 - Full CRUD linked to contracts, PDF generation, email sending
 
 ### Market Data Module
-- Indications, Live Prices, Turkish Exchanges (KTB+GTB), TMO Tenders, Coaster Freights, Telegram Feed
+- Indications, Live Prices, Turkish Exchanges (KTB+GTB), TMO Tenders (4 categories: TMO, SAGO, OAIC, MIT), Coaster Freights, Telegram Feed
 
 ### Core Features
 - JWT Auth, Trade CRUD, Counterparties, Reference data, PDF Gen, Email via Resend
-- Port Line-Ups, Business Cards OCR, Calendar, Reports, URL Migration Guard
+- Port Line-Ups, Business Cards OCR, Calendar (multi-day events), Reports, URL Migration Guard
 
 ## Key API Endpoints
 - `POST /api/auth/login` - JWT login
 - `GET/PUT /api/trades/{id}` - Trade CRUD (includes vessel nomination fields)
 - `POST /api/trades/{id}/buyer-payment` - Payment date trigger
+- `POST /api/trades/{id}/draft-documents/bulk` - Draft docs bulk upload
+- `POST /api/trades/{id}/swift-copy` - SWIFT copy upload
+- `POST /api/accounting/invoices/{id}/file` - Invoice PDF upload
 - `POST /api/accounting/bank-statements/upload` - Bank statement upload
 - `POST /api/port-lineups/monthly/upload` - Monthly lineup upload
 - `GET /api/config/active-url` - URL migration guard
@@ -79,6 +91,6 @@
 - Refactor market_data.py (extract scrapers)
 - TMO Tender copy-to-clipboard
 - Automatic daily scraping (KTB/GTB)
-- Break down large files (VesselExecutionPage, PortLineupsPage)
+- Break down large files (VesselExecutionPage 1200+ lines, PortLineupsPage)
 ### Clarifications Pending
 - Should "CBOT - Soybeans" be removed from Live Prices table?

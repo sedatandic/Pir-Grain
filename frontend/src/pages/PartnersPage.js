@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe, UserPlus, Briefcase, X } from 'lucide-react';
+import { Plus, Search, Mail, Phone, Pencil, Trash2, Loader2, Eye, Building2, User, MessageCircle, Globe, UserPlus, Briefcase, X, FileText } from 'lucide-react';
 import { normalizeTR } from '../lib/utils-tr';
 import { toast } from 'sonner';
 import { Separator } from '../components/ui/separator';
@@ -379,6 +379,17 @@ export default function PartnersPage({ filterType }) {
                       <div className="text-sm text-muted-foreground">
                         {detailPartner.address && <div>{detailPartner.address}</div>}
                         <div>{[detailPartner.city, detailPartner.country].filter(Boolean).join(', ')}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tax Info */}
+                  {(detailPartner.taxIdNo || detailPartner.taxOffice) && (
+                    <div className="rounded-lg border p-3 space-y-1">
+                      <div className="flex items-center gap-2 text-sm font-medium"><FileText className="h-4 w-4 text-primary" />Tax Information</div>
+                      <div className="text-sm text-muted-foreground">
+                        {detailPartner.taxIdNo && <div>Tax ID No: {detailPartner.taxIdNo}</div>}
+                        {detailPartner.taxOffice && <div>Tax Office: {detailPartner.taxOffice}</div>}
                       </div>
                     </div>
                   )}

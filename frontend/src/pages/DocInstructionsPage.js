@@ -81,6 +81,10 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   const set = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleAgentSelect = (agentId) => {
+    if (agentId === 'TBA') {
+      setForm(prev => ({ ...prev, agentId: 'TBA', agentName: 'TBA', agentPhone: '', agentFax: '', agentMobile: '', agentEmail: '', agentWeb: '', agentAddress: '' }));
+      return;
+    }
     const agent = agents.find(a => a.id === agentId);
     if (agent) {
       setForm(prev => ({
@@ -95,6 +99,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
   const handlePortSelect = (portDisplay) => {
     set('dischargePort', portDisplay);
+    if (portDisplay === 'TBA') return;
     // Extract port name for agent matching
     const portName = portDisplay.split(',')[0].trim();
     const matchingAgent = agents.find(a => a.port && a.port.toLowerCase() === portName.toLowerCase());
@@ -528,15 +533,17 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   <Select value={form.dischargePort} onValueChange={handlePortSelect}>
                     <SelectTrigger data-testid="di-port-select"><SelectValue placeholder="Select port" /></SelectTrigger>
                     <SelectContent side="bottom">
+                      <SelectItem value="TBA">TBA (To be advised)</SelectItem>
                       {dischargePorts.map(p => <SelectItem key={p.display} value={p.display}>{p.display}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Disport Agent</Label>
+                  <Label>Discharge Port Agent</Label>
                   <Select value={form.agentId} onValueChange={handleAgentSelect}>
                     <SelectTrigger data-testid="di-agent-select"><SelectValue placeholder="Select agent" /></SelectTrigger>
                     <SelectContent side="bottom">
+                      <SelectItem value="TBA">TBA (To be advised)</SelectItem>
                       {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
                     </SelectContent>
                   </Select>

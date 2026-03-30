@@ -694,7 +694,7 @@ export default function VesselExecutionPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between"><span className="text-muted-foreground">Load Port Agent</span><span className="font-medium">{trade.loadportAgent || '-'}</span></div>
                     <Separator />
-                    <div className="flex justify-between"><span className="text-muted-foreground">Disport Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port Agent</span><span className="font-medium">{trade.disportAgent || '-'}</span></div>
                     <Separator />
                     {trade.sellerSurveyor && trade.buyerSurveyor && trade.sellerSurveyor === trade.buyerSurveyor ? (
                       <div className="flex justify-between"><span className="text-muted-foreground">Double Nomination at Load Port</span><span className="font-medium">{trade.sellerSurveyor}</span></div>
@@ -1095,7 +1095,7 @@ export default function VesselExecutionPage() {
                 <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Disport Agent</Label>
+            <div className="space-y-2"><Label>Discharge Port Agent</Label>
               <Select value={blForm.disportAgent || ''} onValueChange={(v) => setBlForm(p => ({ ...p, disportAgent: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>{disportAgents.map(a => <SelectItem key={a.id} value={a.name}>{a.name}</SelectItem>)}</SelectContent>

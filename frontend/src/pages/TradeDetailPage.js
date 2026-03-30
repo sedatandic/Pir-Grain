@@ -611,7 +611,7 @@ export default function TradeDetailPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Disport Agent</Label>
+              <Label>Discharge Port Agent</Label>
               <Select value={blForm.disportAgent || ''} onValueChange={(v) => setBlForm({...blForm, disportAgent: v})}>
                 <SelectTrigger><SelectValue placeholder="Select disport agent" /></SelectTrigger>
                 <SelectContent>

@@ -168,7 +168,8 @@ export default function VesselExecutionPage() {
   const renderVessel = (name) => {
     if (!name) return '-';
     if (name.length > 18 && name.startsWith('MV ')) {
-      return <><div>MV</div><div>{name.slice(3)}</div></>;
+      const parts = name.slice(3).split(/\s+/);
+      return <><div>MV {parts[0]}</div><div>{parts.slice(1).join(' ')}</div></>;
     }
     return name;
   };

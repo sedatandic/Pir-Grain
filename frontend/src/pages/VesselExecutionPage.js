@@ -685,7 +685,7 @@ export default function VesselExecutionPage() {
             <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Draft Documents</TabsTrigger>
             <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L Details</TabsTrigger>
             <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
-            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents ({completedDocs}/{allDocs.length})</TabsTrigger>
+            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents</TabsTrigger>
             <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
           </TabsList>
 

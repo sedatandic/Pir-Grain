@@ -472,6 +472,7 @@ def delete_draft_document(trade_id: str, doc_index: int, user=Depends(non_accoun
 @router.get("/{trade_id}/draft-documents/{doc_index}/download")
 def download_draft_document(trade_id: str, doc_index: int, user=Depends(non_accountant)):
     from fastapi.responses import FileResponse
+    import mimetypes
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
@@ -482,7 +483,11 @@ def download_draft_document(trade_id: str, doc_index: int, user=Depends(non_acco
     path = doc.get("storedPath", "")
     if not path or not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File not found on disk")
-    return FileResponse(path, filename=doc.get("fileName", "document"), media_type="application/octet-stream")
+    filename = doc.get("fileName", "document")
+    content_type, _ = mimetypes.guess_type(filename)
+    if not content_type:
+        content_type = "application/octet-stream"
+    return FileResponse(path, filename=filename, media_type=content_type)
 
 
 @router.put("/{trade_id}/draft-documents/{doc_index}/reassign")

@@ -412,11 +412,9 @@ export default function TradeDetailPage() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/trades')}><ArrowLeft className="h-5 w-5" /></Button>
         <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{trade.pirContractNumber || trade.referenceNumber || trade.contractNumber || 'Trade Detail'}</h1>
-            <Badge className={statusColor.color || 'bg-muted'}>{statusConfig?.label || trade.status}</Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">Contract #{trade.sellerContractNumber || trade.pirContractNumber || trade.contractNumber || '-'}</p>
+          <h1 className="text-center text-lg font-bold text-green-700 dark:text-green-400">
+            {trade.pirContractNumber || trade.referenceNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName ? `${trade.vesselName} ` : ''}({(trade.sellerName || '').split(' ').slice(0, 2).join(' ')} → {(trade.buyerName || '').split(' ').slice(0, 2).join(' ')})
+          </h1>
         </div>
         {activeTab !== 'documents' && (
         <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>

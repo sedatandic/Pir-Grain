@@ -85,6 +85,9 @@ export default function VesselExecutionPage() {
   const [buyerPaymentSaving, setBuyerPaymentSaving] = useState(false);
   const [swiftUploading, setSwiftUploading] = useState(false);
 
+  // DI documents state
+  const [diDocNames, setDiDocNames] = useState([]);
+
   useEffect(() => {
     const fetchInitial = async () => {
       try {
@@ -127,6 +130,16 @@ export default function VesselExecutionPage() {
       setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, loadingPortId: res.data.loadingPortId } : t));
       setDocChecks(res.data.docChecks || {});
       setAdditionalDocs(res.data.additionalDocuments || []);
+      // Fetch DI document names for this trade
+      try {
+        const diRes = await api.get(`/api/doc-instructions/?tradeId=${tradeId}`);
+        const dis = diRes.data || [];
+        if (dis.length > 0 && Array.isArray(dis[0].requiredDocuments) && dis[0].requiredDocuments.length > 0) {
+          setDiDocNames(dis[0].requiredDocuments.map(d => d.name));
+        } else {
+          setDiDocNames([]);
+        }
+      } catch { setDiDocNames([]); }
       const filesRes = await api.get(`/api/documents?tradeId=${tradeId}`);
       const fileMap = {};
       (filesRes.data || []).forEach(f => {
@@ -496,7 +509,7 @@ export default function VesselExecutionPage() {
     const p = ports.find(x => x.id === portId);
     return p ? `${p.name}, ${p.country}` : '-';
   };
-  const docList = getDocChecklist(commodity);
+  const docList = diDocNames.length > 0 ? diDocNames : getDocChecklist(commodity);
   const allDocs = [...docList, ...additionalDocs];
   const completedDocs = allDocs.filter(d => docChecks[d]).length;
 

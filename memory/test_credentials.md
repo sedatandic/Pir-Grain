@@ -6,10 +6,10 @@
 - Role: admin
 
 ## Accountant User
-- Username: piraccount
-- Password: piraccount123
+- Username: pir.accounts
+- Password: pir123
 - Role: accountant
-- Note: pir.accounts user exists but password may have been changed
+- Note: piraccount user does NOT exist - use pir.accounts
 
 ## Other Admin Users (in DB)
 - alena.karagoz (admin)

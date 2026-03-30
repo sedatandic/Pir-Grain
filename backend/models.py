@@ -141,7 +141,8 @@ class InvoiceCreate(BaseModel):
     vendorName: str
     amount: float
     currency: Optional[str] = "USD"
-    dueDate: str
+    invoiceDate: Optional[str] = ""
+    dueDate: Optional[str] = ""
     category: Optional[str] = "other"
     description: Optional[str] = None
     status: Optional[str] = "pending"

@@ -516,7 +516,7 @@ export default function VesselExecutionPage() {
             <SelectContent>
               {allTrades.map(t => (
                 <SelectItem key={t.id} value={t.id}>
-                  {t.pirContractNumber || t.contractNumber || t.referenceNumber} — {t.vesselName || 'No Vessel'} ({t.sellerName} → {t.buyerName})
+                  {t.pirContractNumber || t.contractNumber || t.referenceNumber} — {t.vesselName || 'No Vessel'} ({t.sellerCode || t.sellerName} → {t.buyerCode || t.buyerName})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -532,7 +532,7 @@ export default function VesselExecutionPage() {
             </Button>
           </div>
           <h1 className="text-center text-lg font-bold text-green-700 dark:text-green-400">
-            {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({(trade.sellerName || '').split(' ').slice(0, 2).join(' ')} → {(trade.buyerName || '').split(' ').slice(0, 2).join(' ')})
+            {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({trade.sellerCode || trade.sellerName || '-'} → {trade.buyerCode || trade.buyerName || '-'})
           </h1>
         </div>
       )}

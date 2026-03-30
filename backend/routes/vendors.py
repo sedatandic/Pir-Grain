@@ -6,12 +6,13 @@ from database import vendors_col, serialize_doc
 from auth import require_roles
 
 non_accountant = require_roles("admin", "user")
+any_role = require_roles("admin", "user", "accountant")
 
 router = APIRouter(prefix="/api/vendors", tags=["vendors"])
 
 
 @router.get("")
-def list_vendors(user=Depends(non_accountant)):
+def list_vendors(user=Depends(any_role)):
     return [serialize_doc(v) for v in vendors_col.find().sort("name", 1)]
 
 

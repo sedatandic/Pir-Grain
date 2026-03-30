@@ -6,12 +6,13 @@ from database import bank_accounts_col, serialize_doc
 from auth import require_roles
 
 non_accountant = require_roles("admin", "user")
+any_role = require_roles("admin", "user", "accountant")
 
 router = APIRouter(prefix="/api/bank-accounts", tags=["bank-accounts"])
 
 
 @router.get("")
-def list_bank_accounts(user=Depends(non_accountant)):
+def list_bank_accounts(user=Depends(any_role)):
     return [serialize_doc(b) for b in bank_accounts_col.find().sort("createdAt", -1)]
 
 

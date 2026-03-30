@@ -131,7 +131,7 @@ export default function AccountingPage() {
       setTrades(tradesRes.data);
       setBankStatements(stmtRes.data);
       setBankAccounts(bankRes.data);
-      setSellers((partnersRes.data || []).map(p => p.companyName).filter(Boolean).sort());
+      setSellers((partnersRes.data || []).map(p => p.companyCode || p.companyName).filter(Boolean).sort());
       setVendors((vendorsRes.data || []).map(v => v.name).filter(Boolean));
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
@@ -200,7 +200,7 @@ export default function AccountingPage() {
   };
   const openEdit = (inv) => {
     setEditingInvoice(inv);
-    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorName||'', amount: inv.amount||'', currency: inv.currency||'USD', invoiceDate: inv.invoiceDate?.split('T')[0]||'', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
+    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorCode||inv.vendorName||'', amount: inv.amount ? Number(inv.amount).toLocaleString('en-US') : '', currency: inv.currency||'USD', invoiceDate: inv.invoiceDate?.split('T')[0]||'', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
     setDialogOpen(true);
   };
 

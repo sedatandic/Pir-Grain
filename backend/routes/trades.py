@@ -216,6 +216,8 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
             currency = updated.get("currency") or "USD"
             seller_name = updated.get("sellerName") or ""
             buyer_name = updated.get("buyerName") or ""
+            seller_code = updated.get("sellerCode") or ""
+            buyer_code = updated.get("buyerCode") or ""
             brokerage_account = updated.get("brokerageAccount") or "seller"
             payer_name = buyer_name if brokerage_account == "buyer" else seller_name
             payer_id = updated.get("buyerId") if brokerage_account == "buyer" else updated.get("sellerId")
@@ -226,8 +228,8 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
                     payer_code = partner.get("companyCode", "")
             invoice_data = {
                 "invoiceNumber": f"COMM-{contract_num}",
-                "vendorName": seller_name or payer_name or broker_name,
-                "vendorCode": payer_code,
+                "vendorName": payer_code or seller_code or seller_name or payer_name or broker_name,
+                "vendorCode": payer_code or seller_code,
                 "amount": commission_amount,
                 "currency": currency,
                 "dueDate": datetime.utcnow().strftime("%Y-%m-%d"),
@@ -281,6 +283,8 @@ def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non
             currency = t.get("currency") or "USD"
             seller_name = t.get("sellerName") or ""
             buyer_name = t.get("buyerName") or ""
+            seller_code = t.get("sellerCode") or ""
+            buyer_code = t.get("buyerCode") or ""
             brokerage_account = t.get("brokerageAccount") or "seller"
             payer_name = buyer_name if brokerage_account == "buyer" else seller_name
             payer_id = t.get("buyerId") if brokerage_account == "buyer" else t.get("sellerId")
@@ -292,8 +296,8 @@ def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non
 
             invoice_data = {
                 "invoiceNumber": f"COMM-{contract_num}",
-                "vendorName": seller_name or payer_name or broker_name,
-                "vendorCode": payer_code,
+                "vendorName": payer_code or seller_code or seller_name or payer_name or broker_name,
+                "vendorCode": payer_code or seller_code,
                 "amount": commission_amount,
                 "currency": currency,
                 "dueDate": datetime.utcnow().strftime("%Y-%m-%d"),

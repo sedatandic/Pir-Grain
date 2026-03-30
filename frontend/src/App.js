@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './lib/auth';
-import UrlMigrationGuard from './components/UrlMigrationGuard';
+
 import AppLayout from './components/layout/AppLayout';
 import LoginPage from './pages/LoginPage';
 import TradesPage from './pages/TradesPage';
@@ -22,8 +22,7 @@ import './App.css';
 
 function App() {
   return (
-    <UrlMigrationGuard>
-      <BrowserRouter>
+    <BrowserRouter>
         <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -53,7 +52,6 @@ function App() {
         </Routes>
       </AuthProvider>
     </BrowserRouter>
-    </UrlMigrationGuard>
   );
 }
 

@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
@@ -248,6 +248,16 @@ export default function VesselExecutionPage() {
       setDocFiles(prev => ({ ...prev, [docName]: (prev[docName] || []).filter(f => f.id !== fileId) }));
       toast.success('File removed');
     } catch { toast.error('Delete failed'); }
+  };
+
+  const viewShipmentDoc = async (fileUrl) => {
+    try {
+      const res = await api.get(fileUrl, { responseType: 'blob' });
+      const contentType = res.headers['content-type'] || 'application/octet-stream';
+      const blob = new Blob([res.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch { toast.error('Failed to open document'); }
   };
 
   const bulkUploadFiles = async (files) => {
@@ -750,7 +760,8 @@ export default function VesselExecutionPage() {
                       {docFiles._unassigned.map(f => (
                         <div key={f.id} draggable onDragStart={() => handleDragStart(f, '_unassigned')} className="flex items-center gap-2 text-xs bg-amber-50 border border-amber-200 rounded px-3 py-2 cursor-grab">
                           <GripVertical className="h-3 w-3 text-amber-400" /><FileText className="h-3 w-3 text-primary" />
-                          <a href={`${api.defaults.baseURL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="truncate max-w-[200px] text-primary hover:underline cursor-pointer" onClick={(e) => e.stopPropagation()}>{f.fileName}</a>
+                          <span className="truncate max-w-[200px]">{f.fileName}</span>
+                          <button onClick={() => viewShipmentDoc(f.fileUrl)} className="text-blue-500 hover:text-blue-700" title="View"><Eye className="h-3 w-3" /></button>
                           <button onClick={() => deleteDocFile('_unassigned', f.id)} className="text-red-400 hover:text-red-600 ml-1"><Trash2 className="h-3 w-3" /></button>
                         </div>
                       ))}
@@ -789,8 +800,9 @@ export default function VesselExecutionPage() {
                           {docFiles[doc].map(f => (
                             <div key={f.id} draggable onDragStart={() => handleDragStart(f, doc)} className="flex items-center gap-2 text-xs bg-muted/50 rounded px-2 py-1.5 cursor-grab">
                               <GripVertical className="h-3 w-3 text-muted-foreground" /><FileText className="h-3 w-3 text-primary" />
-                              <a href={`${api.defaults.baseURL}${f.fileUrl}`} target="_blank" rel="noopener noreferrer" className="truncate max-w-[200px] text-primary hover:underline cursor-pointer" onClick={(e) => e.stopPropagation()}>{f.fileName}</a>
-                              <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600 ml-auto"><Trash2 className="h-3 w-3" /></button>
+                              <span className="truncate max-w-[200px]">{f.fileName}</span>
+                              <button onClick={(e) => { e.stopPropagation(); viewShipmentDoc(f.fileUrl); }} className="text-blue-500 hover:text-blue-700 ml-auto" title="View"><Eye className="h-3 w-3" /></button>
+                              <button onClick={() => deleteDocFile(doc, f.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3 w-3" /></button>
                             </div>
                           ))}
                         </div>

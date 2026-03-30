@@ -8,6 +8,16 @@
 
 ## What's Been Implemented
 
+### Shipment Documents View Button (2026-03-30)
+- Added Eye (View) button to all files in Shipment Documents tab
+- Uses blob-based window.open to view files in new tab without downloading
+- Applied to both unassigned files and assigned document checklist files
+
+### Regression Testing Pass (2026-03-30)
+- Full regression after previous session's massive untested changes (iteration_17)
+- Backend: 100% (25/25), Frontend: 100% pass rate
+- All pages verified working: VesselExecution, Accounting (RBAC), Commissions, Calendar, MarketData, PortLineups, Settings
+
 ### Vessel Execution Empty State Fix (2026-03-30)
 - Fixed blank page when no vessel-nominated contracts exist on /documents
 - Added "Pending Vessel Nomination" table (amber theme) showing contracts awaiting vessel assignment

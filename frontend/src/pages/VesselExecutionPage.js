@@ -524,13 +524,14 @@ export default function VesselExecutionPage() {
       )}
 
       {urlTradeId && trade && (
-        <div className="flex items-center gap-3 mb-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list">
-            <ArrowLeft className="h-4 w-4 mr-1" />Back
-          </Button>
-          <h1 className="text-xl font-bold tracking-tight">
-            {trade.pirContractNumber || trade.contractNumber} — {trade.vesselName || 'No Vessel'} 
-            <span className="text-muted-foreground font-normal text-base ml-2">({trade.sellerName} → {trade.buyerName})</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list">
+              <ArrowLeft className="h-4 w-4 mr-1" />Back
+            </Button>
+          </div>
+          <h1 className="text-center text-lg font-bold text-green-700 dark:text-green-400">
+            {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({(trade.sellerName || '').split(' ').slice(0, 2).join(' ')} → {(trade.buyerName || '').split(' ').slice(0, 2).join(' ')})
           </h1>
         </div>
       )}
@@ -628,14 +629,14 @@ export default function VesselExecutionPage() {
 
       {trade && !tradeLoading && (
         <Tabs defaultValue="nomination" className="mt-2">
-          <TabsList className="w-full flex h-auto overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide" style={{ scrollPaddingLeft: 0 }}>
-            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm shrink-0"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Nomination</TabsTrigger>
-            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm shrink-0"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />DI</TabsTrigger>
-            <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm shrink-0"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Drafts</TabsTrigger>
-            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm shrink-0"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L</TabsTrigger>
-            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm shrink-0"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Appropriation</TabsTrigger>
-            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm shrink-0"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Docs ({completedDocs}/{allDocs.length})</TabsTrigger>
-            <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm shrink-0"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
+          <TabsList className="w-full flex h-auto">
+            <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Nomination</TabsTrigger>
+            <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />DI</TabsTrigger>
+            <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Drafts</TabsTrigger>
+            <TabsTrigger value="bl" className="py-3 text-xs sm:text-sm flex-1"><Ship className="h-4 w-4 mr-1.5 hidden sm:inline" />B/L</TabsTrigger>
+            <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Appropriation</TabsTrigger>
+            <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Docs ({completedDocs}/{allDocs.length})</TabsTrigger>
+            <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}

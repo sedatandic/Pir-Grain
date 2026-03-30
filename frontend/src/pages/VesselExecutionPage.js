@@ -158,11 +158,7 @@ export default function VesselExecutionPage() {
   };
 
   const renderCommodity = (t) => {
-    const full = `${t.originAdjective || t.originName || ''} ${t.commodityName || ''}`.trim();
-    if (full.split(/\s+/).length > 5) {
-      return <><div>{t.originAdjective || t.originName}</div><div>{t.commodityName}</div></>;
-    }
-    return full;
+    return t.commodityName || '-';
   };
 
   const renderVessel = (name) => {
@@ -569,10 +565,10 @@ export default function VesselExecutionPage() {
             <thead>
               <tr className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-900/50">
                 <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-medium">Origin</th>
                 <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-medium">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
@@ -588,10 +584,10 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-contract-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{renderCommodity(t)}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
@@ -613,10 +609,10 @@ export default function VesselExecutionPage() {
             <thead>
               <tr className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-900/50">
                 <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-medium">Origin</th>
                 <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-medium">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
@@ -632,10 +628,10 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-pending-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{renderCommodity(t)}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
@@ -657,10 +653,10 @@ export default function VesselExecutionPage() {
             <thead>
               <tr className="bg-muted/50 border-b">
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Origin</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Discharge Port</th>
@@ -676,10 +672,10 @@ export default function VesselExecutionPage() {
                   data-testid={`ve-contract-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{renderCommodity(t)}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
-                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>

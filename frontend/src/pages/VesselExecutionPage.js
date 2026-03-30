@@ -1052,12 +1052,6 @@ export default function VesselExecutionPage() {
         </Tabs>
       )}
 
-      {!trade && !tradeLoading && !loading && (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">
-          <Ship className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>Select a contract above to manage vessel execution</p>
-        </CardContent></Card>
-      )}
 
       {/* B/L Edit Dialog */}
       <Dialog open={blDialogOpen} onOpenChange={setBlDialogOpen}>

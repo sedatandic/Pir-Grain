@@ -128,15 +128,16 @@ export default function AccountingPage() {
 
   const fetchData = async () => {
     try {
-      const [invRes, stmtRes, bankRes, partnersRes, vendorsRes, tradesRes] = await Promise.all([
-        api.get('/api/invoices'), api.get('/api/bank-statements'), api.get('/api/bank-accounts'), api.get('/api/partners'), api.get('/api/vendors'), api.get('/api/trades')
+      const [invRes, stmtRes] = await Promise.all([
+        api.get('/api/invoices'), api.get('/api/bank-statements')
       ]);
       setInvoices(invRes.data);
-      setTrades(tradesRes.data);
       setBankStatements(stmtRes.data);
-      setBankAccounts(bankRes.data);
-      setSellers((partnersRes.data || []).map(p => p.companyCode || p.companyName).filter(Boolean).sort());
-      setVendors((vendorsRes.data || []).map(v => v.name).filter(Boolean));
+      // These may 403 for accountant role - fetch independently
+      try { const r = await api.get('/api/bank-accounts'); setBankAccounts(r.data); } catch {}
+      try { const r = await api.get('/api/partners'); setSellers((r.data || []).map(p => p.companyCode || p.companyName).filter(Boolean).sort()); } catch {}
+      try { const r = await api.get('/api/vendors'); setVendors((r.data || []).map(v => v.name).filter(Boolean)); } catch {}
+      try { const r = await api.get('/api/trades'); setTrades(r.data); } catch {}
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
@@ -335,7 +336,7 @@ export default function AccountingPage() {
 
       <Tabs defaultValue="incoming">
         <TabsList>
-          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({filteredIncoming.filter(i => i.status === 'paid').length})</TabsTrigger>
+          <TabsTrigger value="incoming"><ArrowDownLeft className="h-3.5 w-3.5 mr-1" />Incoming Payments ({filteredIncoming.length})</TabsTrigger>
           <TabsTrigger value="outgoing"><ArrowUpRight className="h-3.5 w-3.5 mr-1" />Outgoing Payments ({filteredOutgoing.length})</TabsTrigger>
           <TabsTrigger value="bank-statements"><FileText className="h-3.5 w-3.5 mr-1" />Bank Statements ({filteredBankStatements.length})</TabsTrigger>
         </TabsList>
@@ -347,7 +348,14 @@ export default function AccountingPage() {
                 <div className="relative max-w-xs flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Search incoming..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
                 <div className="ml-auto"><Button onClick={() => openCreate('incoming')}><Plus className="mr-2 h-4 w-4" />Add Incoming</Button></div>
               </div>
-              <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
+              <h3 className="font-semibold text-sm mb-2 text-amber-700">Pending ({filteredIncoming.filter(i => i.status !== 'paid').length})</h3>
+              <InvoiceTable invoices={filteredIncoming.filter(i => i.status !== 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
+              {filteredIncoming.filter(i => i.status === 'paid').length > 0 && (
+                <>
+                  <h3 className="font-semibold text-sm mt-6 mb-2 text-green-700">Paid ({filteredIncoming.filter(i => i.status === 'paid').length})</h3>
+                  <InvoiceTable invoices={filteredIncoming.filter(i => i.status === 'paid')} search={search} onEdit={openEdit} onDelete={handleDelete} direction="incoming" tradeMap={tradeMap} onPaymentDate={handlePaymentDate} onDownloadInvoice={handleDownloadInvoice} onUploadInvoiceFile={handleUploadInvoiceFile} onViewInvoiceFile={handleViewInvoiceFile} onDeleteInvoiceFile={handleDeleteInvoiceFile} uploadingFileId={uploadingFileId} />
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

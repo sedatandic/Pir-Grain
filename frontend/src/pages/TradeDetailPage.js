@@ -417,9 +417,14 @@ export default function TradeDetailPage() {
           </h1>
         </div>
         {activeTab !== 'documents' && (
-        <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit Shipment (B/L) Details' : 'Edit Contract'}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" data-testid="edit-trade-detail-btn" onClick={() => activeTab === 'shipment' ? openBlDialog() : navigate(`/trades/${tradeId}/edit`)}>
+            <Pencil className="h-4 w-4 mr-2" />{activeTab === 'shipment' ? 'Edit Shipment (B/L) Details' : 'Edit Contract'}
+          </Button>
+          <Button variant="destructive" data-testid="delete-trade-btn" onClick={async () => { if (window.confirm('Are you sure you want to delete this contract? This action cannot be undone.')) { try { await api.delete(`/api/trades/${tradeId}`); navigate('/trades'); } catch { toast.error('Failed to delete contract'); } } }}>
+            <Trash2 className="h-4 w-4 mr-2" />Delete Contract
+          </Button>
+        </div>
         )}
       </div>
 

@@ -165,6 +165,39 @@ async def upload_bank_statement(
     return serialize_doc(data)
 
 
+@router.put("/bank-statements/{stmt_id}")
+def update_bank_statement(stmt_id: str, data: dict, user=Depends(accounting_access)):
+    data.pop("id", None)
+    data.pop("_id", None)
+    data.pop("createdAt", None)
+    data["updatedAt"] = datetime.utcnow()
+    bank_statements_col.update_one({"_id": ObjectId(stmt_id)}, {"$set": data})
+    return serialize_doc(bank_statements_col.find_one({"_id": ObjectId(stmt_id)}))
+
+
+@router.put("/bank-statements/{stmt_id}/upload")
+async def update_bank_statement_upload(
+    stmt_id: str,
+    file: UploadFile = File(...),
+    month: int = Form(...),
+    year: int = Form(...),
+    description: str = Form(""),
+    bankAccountId: str = Form(""),
+    user=Depends(accounting_access),
+):
+    update_data = {"month": month, "year": year, "description": description, "bankAccountId": bankAccountId, "fileName": file.filename, "updatedAt": datetime.utcnow()}
+    ext = file.filename.rsplit('.', 1)[-1] if '.' in file.filename else 'pdf'
+    stored_name = f"stmt_{stmt_id}.{ext}"
+    filepath = os.path.join(UPLOAD_DIR, stored_name)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    update_data["storedFileName"] = stored_name
+    bank_statements_col.update_one({"_id": ObjectId(stmt_id)}, {"$set": update_data})
+    return serialize_doc(bank_statements_col.find_one({"_id": ObjectId(stmt_id)}))
+
+
+
 @router.get("/bank-statements/{stmt_id}/download")
 def download_bank_statement(stmt_id: str, user=Depends(accounting_access)):
     stmt = bank_statements_col.find_one({"_id": ObjectId(stmt_id)})

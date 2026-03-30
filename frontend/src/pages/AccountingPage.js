@@ -119,6 +119,7 @@ export default function AccountingPage() {
   const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', invoiceDate: '', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
   const [saving, setSaving] = useState(false);
   const [stmtDialogOpen, setStmtDialogOpen] = useState(false);
+  const [editingStmt, setEditingStmt] = useState(null);
   const [stmtForm, setStmtForm] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: '' });
   const [stmtFile, setStmtFile] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
@@ -281,22 +282,45 @@ export default function AccountingPage() {
   const handleSaveStmt = async () => {
     setSaving(true);
     try {
-      if (stmtFile) {
-        const formData = new FormData();
-        formData.append('file', stmtFile);
-        formData.append('month', stmtForm.month);
-        formData.append('year', stmtForm.year);
-        formData.append('description', stmtForm.description || '');
-        formData.append('bankAccountId', stmtForm.bankAccountId || '');
-        await api.post('/api/bank-statements/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      if (editingStmt) {
+        if (stmtFile) {
+          const formData = new FormData();
+          formData.append('file', stmtFile);
+          formData.append('month', stmtForm.month);
+          formData.append('year', stmtForm.year);
+          formData.append('description', stmtForm.description || '');
+          formData.append('bankAccountId', stmtForm.bankAccountId || '');
+          await api.put(`/api/bank-statements/${editingStmt.id}/upload`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        } else {
+          await api.put(`/api/bank-statements/${editingStmt.id}`, stmtForm);
+        }
+        toast.success('Bank statement updated');
       } else {
-        await api.post('/api/bank-statements', stmtForm);
+        if (stmtFile) {
+          const formData = new FormData();
+          formData.append('file', stmtFile);
+          formData.append('month', stmtForm.month);
+          formData.append('year', stmtForm.year);
+          formData.append('description', stmtForm.description || '');
+          formData.append('bankAccountId', stmtForm.bankAccountId || '');
+          await api.post('/api/bank-statements/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        } else {
+          await api.post('/api/bank-statements', stmtForm);
+        }
+        toast.success('Bank statement added');
       }
-      toast.success('Bank statement added');
       setStmtDialogOpen(false);
       setStmtFile(null);
+      setEditingStmt(null);
       fetchData();
     } catch (err) { toast.error('Failed'); } finally { setSaving(false); }
+  };
+
+  const openEditStmt = (s) => {
+    setEditingStmt(s);
+    setStmtForm({ month: String(s.month || 1), year: String(s.year || 2026), description: s.description || '', bankAccountId: s.bankAccountId || '' });
+    setStmtFile(null);
+    setStmtDialogOpen(true);
   };
 
   const handleDeleteStmt = async (id) => {
@@ -389,7 +413,7 @@ export default function AccountingPage() {
                           <h3 className="font-semibold">{bank.accountName || bank.beneficiary}</h3>
                           <p className="text-xs text-muted-foreground">{bank.bankName} {bank.currency ? `(${bank.currency})` : ''} — {bank.iban}</p>
                         </div>
-                        <Button size="sm" onClick={() => { setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: bank.id }); setStmtFile(null); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
+                        <Button size="sm" onClick={() => { setEditingStmt(null); setStmtForm({ month: new Date().getMonth()+1, year: new Date().getFullYear(), description: '', fileName: '', bankAccountId: bank.id }); setStmtFile(null); setStmtDialogOpen(true); }}><Plus className="h-3.5 w-3.5 mr-1" />Add Statement</Button>
                       </div>
                       <div className="overflow-x-auto border rounded-lg">
                         <Table>
@@ -404,7 +428,7 @@ export default function AccountingPage() {
                                 <TableCell>{s.description || '-'}</TableCell>
                                 <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                                 <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                                <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                                <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -431,7 +455,7 @@ export default function AccountingPage() {
                               <TableCell>{s.description || '-'}</TableCell>
                               <TableCell>{s.fileName ? <a href={`${process.env.REACT_APP_BACKEND_URL}/api/bank-statements/${s.id}/download`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline"><Download className="h-3 w-3" />{s.fileName}</a> : '-'}</TableCell>
                               <TableCell className="text-sm text-muted-foreground">{s.createdAt ? (() => { try { return format(parseISO(s.createdAt), 'dd/MM/yyyy'); } catch { return '-'; }})() : '-'}</TableCell>
-                              <TableCell><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
+                              <TableCell><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStmt(s)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStmt(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button></TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -446,7 +470,7 @@ export default function AccountingPage() {
       </Tabs>
 
       <Dialog open={stmtDialogOpen} onOpenChange={setStmtDialogOpen}>
-        <DialogContent><DialogHeader><DialogTitle className="text-center">Add Bank Statement</DialogTitle><DialogDescription className="text-center">Upload monthly bank statement.</DialogDescription></DialogHeader>
+        <DialogContent><DialogHeader><DialogTitle className="text-center">{editingStmt ? 'Edit Bank Statement' : 'Add Bank Statement'}</DialogTitle><DialogDescription className="text-center">{editingStmt ? 'Update statement details.' : 'Upload monthly bank statement.'}</DialogDescription></DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2"><Label>Month</Label>
               <Select value={String(stmtForm.month)} onValueChange={(v) => setStmtForm({...stmtForm, month: parseInt(v)})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MONTHS.map((m,i) => <SelectItem key={i} value={String(i+1)}>{m}</SelectItem>)}</SelectContent></Select>
@@ -467,7 +491,7 @@ export default function AccountingPage() {
               </div>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setStmtDialogOpen(false)}>Cancel</Button><Button onClick={handleSaveStmt} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Add</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => { setStmtDialogOpen(false); setEditingStmt(null); }}>Cancel</Button><Button onClick={handleSaveStmt} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}{editingStmt ? 'Update' : 'Add'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 

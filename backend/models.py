@@ -74,6 +74,8 @@ class PartnerCreate(BaseModel):
     executionContacts: Optional[list] = []
     departments: Optional[list] = []
     notes: Optional[str] = None
+    taxIdNo: Optional[str] = None
+    taxOffice: Optional[str] = None
 
 
 class VesselCreate(BaseModel):

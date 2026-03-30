@@ -572,7 +572,7 @@ export default function VesselExecutionPage() {
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
-                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
@@ -616,7 +616,7 @@ export default function VesselExecutionPage() {
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
-                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
@@ -660,7 +660,7 @@ export default function VesselExecutionPage() {
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
-                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>

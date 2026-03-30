@@ -8,6 +8,10 @@
 
 ## What's Been Implemented
 
+### Vessel Execution B/L Quantity Display (2026-03-30)
+- Quantity column in contract list tables now shows B/L Quantity when entered, falling back to contract quantity
+- Applied to all 3 tables: Ongoing, Pending Vessel Nomination, Completed
+
 ### Shipment Documents View Button (2026-03-30)
 - Added Eye (View) button to all files in Shipment Documents tab
 - Uses blob-based window.open to view files in new tab without downloading

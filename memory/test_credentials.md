@@ -16,8 +16,8 @@
 - melisa.karagoz (admin)
 
 ## App URL
-- Frontend: https://trade-dashboard-128.preview.emergentagent.com
-- Backend API: https://trade-dashboard-128.preview.emergentagent.com/api
+- Frontend: https://market-exchange-79.preview.emergentagent.com
+- Backend API: https://market-exchange-79.preview.emergentagent.com/api
 
 ## Database
 - DB Name: pir_grain_pulses (actual, despite .env saying test_database)

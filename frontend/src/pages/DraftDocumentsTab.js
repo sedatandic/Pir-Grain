@@ -117,20 +117,9 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
     try {
       const res = await api.get(`/api/trades/${tradeId}/draft-documents/${idx}/download`, { responseType: 'blob' });
       const contentType = res.headers['content-type'] || 'application/octet-stream';
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: contentType }));
-      const fileName = draftDocs[idx]?.fileName || 'document';
-      const ext = fileName.split('.').pop().toLowerCase();
-      if (['pdf', 'jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
-        window.open(url, '_blank');
-      } else {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-      }
+      const blob = new Blob([res.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
     } catch { toast.error('Failed to open document'); }
   };
 

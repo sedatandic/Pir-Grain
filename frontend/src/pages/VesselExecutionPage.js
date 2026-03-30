@@ -546,6 +546,7 @@ export default function VesselExecutionPage() {
                 <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
@@ -564,6 +565,7 @@ export default function VesselExecutionPage() {
                   <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
@@ -588,6 +590,7 @@ export default function VesselExecutionPage() {
                 <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
                 <th className="text-center px-4 py-2.5 font-medium">Status</th>
@@ -606,6 +609,7 @@ export default function VesselExecutionPage() {
                   <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 text-center"><span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Awaiting Vessel</span></td>
@@ -630,6 +634,7 @@ export default function VesselExecutionPage() {
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Quantity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Seller</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Broker</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Loading Port</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Discharge Port</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Vessel</th>
@@ -648,6 +653,7 @@ export default function VesselExecutionPage() {
                   <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.brokerCode || t.brokerName || '-'}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>

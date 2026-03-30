@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import random
 import string
@@ -463,21 +463,6 @@ def delete_draft_document(trade_id: str, doc_index: int, user=Depends(non_accoun
 
 
 @router.get("/{trade_id}/draft-documents/{doc_index}/download")
-
-@router.put("/{trade_id}/draft-documents/{doc_index}/reassign")
-def reassign_draft_document(trade_id: str, doc_index: int, body: dict, user=Depends(non_accountant)):
-    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
-    if not trade:
-        raise HTTPException(status_code=404, detail="Trade not found")
-    drafts = trade.get("draftDocuments", [])
-    if doc_index < 0 or doc_index >= len(drafts):
-        raise HTTPException(status_code=404, detail="Document not found")
-    new_name = body.get("docName", "_unassigned")
-    drafts[doc_index]["docName"] = new_name
-    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"draftDocuments": drafts}})
-    return drafts
-
-
 def download_draft_document(trade_id: str, doc_index: int, user=Depends(non_accountant)):
     from fastapi.responses import FileResponse
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})
@@ -491,6 +476,20 @@ def download_draft_document(trade_id: str, doc_index: int, user=Depends(non_acco
     if not path or not os.path.exists(path):
         raise HTTPException(status_code=404, detail="File not found on disk")
     return FileResponse(path, filename=doc.get("fileName", "document"), media_type="application/octet-stream")
+
+
+@router.put("/{trade_id}/draft-documents/{doc_index}/reassign")
+def reassign_draft_document(trade_id: str, doc_index: int, body: dict, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+    drafts = trade.get("draftDocuments", [])
+    if doc_index < 0 or doc_index >= len(drafts):
+        raise HTTPException(status_code=404, detail="Document not found")
+    new_name = body.get("docName", "_unassigned")
+    drafts[doc_index]["docName"] = new_name
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"draftDocuments": drafts}})
+    return drafts
 
 
 

@@ -114,7 +114,8 @@ export default function VesselExecutionPage() {
       finally { setLoading(false); }
     };
     fetchInitial();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlTradeId]);
 
   const fetchTrade = async (tradeId) => {
     if (!tradeId) { setTrade(null); return; }
@@ -615,6 +616,57 @@ export default function VesselExecutionPage() {
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
                   <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
                   <td className="px-4 py-2.5 font-medium uppercase text-center">{t.vesselName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      )}
+
+      {/* Empty state when no vessel-nominated contracts exist */}
+      {trades.filter(t => t.vesselName).length === 0 && (
+        <div className="border border-dashed border-muted-foreground/30 rounded-lg p-8 text-center" data-testid="ve-empty-state">
+          <Ship className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+          <h3 className="text-base font-semibold text-muted-foreground mb-1">No Vessel Nominations Yet</h3>
+          <p className="text-sm text-muted-foreground/70">Contracts will appear here once a vessel has been nominated. Use the dropdown above to select any contract directly.</p>
+        </div>
+      )}
+
+      {/* Pending Vessel Nomination */}
+      {allTrades.filter(t => !t.vesselName && t.status !== 'completed').length > 0 && (
+      <div>
+        <h2 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-1.5">Pending Vessel Nomination ({allTrades.filter(t => !t.vesselName && t.status !== 'completed').length})</h2>
+        <div className="border border-amber-200 dark:border-amber-900/50 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-900/50">
+                <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Seller</th>
+                <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
+                <th className="text-center px-4 py-2.5 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allTrades.filter(t => !t.vesselName && t.status !== 'completed').map(t => (
+                <tr
+                  key={t.id}
+                  onClick={() => handleTradeSelect(t.id)}
+                  className="border-b border-amber-100 dark:border-amber-900/30 cursor-pointer transition-colors hover:bg-amber-50/50 dark:hover:bg-amber-900/10"
+                  data-testid={`ve-pending-row-${t.id}`}
+                >
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originAdjective || t.originName} {t.commodityName}</td>
+                  <td className="px-4 py-2.5 text-center">{t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
+                  <td className="px-4 py-2.5 text-center"><span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">Awaiting Vessel</span></td>
                 </tr>
               ))}
             </tbody>

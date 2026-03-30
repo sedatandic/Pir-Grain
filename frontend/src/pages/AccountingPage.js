@@ -202,9 +202,10 @@ export default function AccountingPage() {
     setForm({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', invoiceDate: '', dueDate: '', category: direction === 'incoming' ? 'Commission Payment' : 'Salary Payment', description: '', status: 'pending', direction });
     setDialogOpen(true);
   };
+  const toIsoDate = (d) => { if (!d) return ''; if (/^\d{4}-\d{2}-\d{2}/.test(d)) return d.split('T')[0]; const parts = d.split('/'); if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`; return d; };
   const openEdit = (inv) => {
     setEditingInvoice(inv);
-    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorCode||inv.vendorName||'', amount: inv.amount ? Number(inv.amount).toLocaleString('en-US') : '', currency: inv.currency||'USD', invoiceDate: inv.invoiceDate?.split('T')[0]||'', dueDate: inv.dueDate?.split('T')[0]||'', category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
+    setForm({ invoiceNumber: inv.invoiceNumber||'', vendorName: inv.vendorCode||inv.vendorName||'', amount: inv.amount ? Number(inv.amount).toLocaleString('en-US') : '', currency: inv.currency||'USD', invoiceDate: toIsoDate(inv.invoiceDate), dueDate: toIsoDate(inv.dueDate), category: inv.category||'Commission Payment', description: inv.description||'', status: inv.status||'pending', direction: inv.direction||'outgoing' });
     setDialogOpen(true);
   };
 
@@ -491,7 +492,7 @@ export default function AccountingPage() {
                     {form.invoiceDate ? (() => { try { const [y,m,d] = form.invoiceDate.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.invoiceDate; } catch { return form.invoiceDate; } })() : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                   <Calendar mode="single" selected={form.invoiceDate ? (() => { try { return parseISO(form.invoiceDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, invoiceDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
                 </PopoverContent>
               </Popover>
@@ -505,7 +506,7 @@ export default function AccountingPage() {
                     {form.dueDate ? (() => { try { const [y,m,d] = form.dueDate.split('-'); return d && m && y ? `${d}/${m}/${y}` : form.dueDate; } catch { return form.dueDate; } })() : 'Pick a date'}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-[9999]" align="start">
                   <Calendar mode="single" selected={form.dueDate ? (() => { try { return parseISO(form.dueDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, dueDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
                 </PopoverContent>
               </Popover>

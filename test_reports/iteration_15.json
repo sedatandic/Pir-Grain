@@ -63,5 +63,5 @@
   "retest_needed": false,
   "should_main_agent_self_test": false,
   "context_for_next_testing_agent": "All major UI pages tested after regression. VesselExecutionPage at /documents, AccountingPage at /omega, CommissionsPage at /commissions, PortLineupsPage at /port-lineups, MarketDataPage at /market-data, ContractsPage at /trades. Backend market data routes use /api/market prefix not /api/market-data. Active URL was updated from commodity-dash-2 to vessel-exec-staging domain.",
-  "url_migration_note": "Updated active URL from https://commodity-trader-6.preview.emergentagent.com to https://commodity-trader-6.preview.emergentagent.com via PUT /api/config/active-url"
+  "url_migration_note": "Updated active URL from https://trade-dashboard-128.preview.emergentagent.com to https://trade-dashboard-128.preview.emergentagent.com via PUT /api/config/active-url"
 }

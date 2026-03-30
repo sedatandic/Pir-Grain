@@ -156,7 +156,7 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
           <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors" data-testid="draft-bulk-upload-zone">
             {bulkUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
             <span className="text-sm text-muted-foreground">{bulkUploading ? 'Uploading...' : 'Click to bulk upload draft documents, then drag to assign'}</span>
-            <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
+            <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
           </label>
 
           {/* Unassigned Files */}
@@ -274,7 +274,7 @@ export default function DraftDocumentsTab({ trade, tradeId }) {
                           ))}
                           <label className="cursor-pointer inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-muted transition-colors" title="Upload">
                             {uploading === docName ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5 text-muted-foreground" />}
-                            <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden"
+                            <input type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" className="hidden"
                               onChange={(e) => { if (e.target.files[0]) uploadDraft(docName, e.target.files[0]); e.target.value = ''; }}
                               disabled={uploading === docName} />
                           </label>

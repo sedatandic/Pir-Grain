@@ -741,7 +741,7 @@ export default function VesselExecutionPage() {
                 <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-muted/30 transition-colors" data-testid="bulk-upload-zone">
                   {bulkUploading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
                   <span className="text-sm text-muted-foreground">{bulkUploading ? 'Uploading...' : 'Click to bulk upload documents, then drag to assign'}</span>
-                  <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
+                  <input type="file" className="hidden" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onChange={(e) => { bulkUploadFiles(Array.from(e.target.files)); e.target.value = ''; }} />
                 </label>
                 {docFiles._unassigned && docFiles._unassigned.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -780,7 +780,7 @@ export default function VesselExecutionPage() {
                         <span className={docChecks[doc] ? 'line-through text-muted-foreground flex-1' : 'text-sm flex-1'}>{doc}</span>
                         <label className="cursor-pointer text-muted-foreground hover:text-primary" onClick={(e) => e.stopPropagation()}>
                           {uploadingDoc === doc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={(e) => { uploadDocFile(doc, e.target.files[0]); e.target.value = ''; }} />
+                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onChange={(e) => { uploadDocFile(doc, e.target.files[0]); e.target.value = ''; }} />
                         </label>
                         {additionalDocs.includes(doc) && <button onClick={(e) => { e.stopPropagation(); removeAdditionalDoc(doc); }} className="text-red-400 hover:text-red-600"><X className="h-3.5 w-3.5" /></button>}
                       </div>
@@ -906,7 +906,7 @@ export default function VesselExecutionPage() {
                   </div>
                   {trade.diReceived && (
                     <div className="flex items-center gap-3">
-                      <Input type="file" accept=".pdf,.doc,.docx" className="max-w-sm" onChange={(e) => uploadDiDocument(e.target.files[0])} />
+                      <Input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" className="max-w-sm" onChange={(e) => uploadDiDocument(e.target.files[0])} />
                       {diUploading && <Loader2 className="h-4 w-4 animate-spin" />}
                     </div>
                   )}
@@ -1039,7 +1039,7 @@ export default function VesselExecutionPage() {
                     <label className="inline-flex items-center gap-2 cursor-pointer px-4 py-2 rounded-md border border-dashed border-muted-foreground/30 hover:bg-muted/50 transition-colors">
                       {swiftUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4 text-muted-foreground" />}
                       <span className="text-sm text-muted-foreground">{swiftUploading ? 'Uploading...' : 'Upload SWIFT Copy'}</span>
-                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={(e) => { if (e.target.files[0]) uploadSwiftCopy(e.target.files[0]); e.target.value = ''; }} disabled={swiftUploading} data-testid="swift-file-input" />
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" className="hidden" onChange={(e) => { if (e.target.files[0]) uploadSwiftCopy(e.target.files[0]); e.target.value = ''; }} disabled={swiftUploading} data-testid="swift-file-input" />
                     </label>
                   )}
               </CardContent>

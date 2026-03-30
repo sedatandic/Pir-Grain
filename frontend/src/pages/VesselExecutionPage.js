@@ -525,13 +525,11 @@ export default function VesselExecutionPage() {
       )}
 
       {urlTradeId && trade && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list">
-              <ArrowLeft className="h-4 w-4 mr-1" />Back
-            </Button>
-          </div>
-          <h1 className="text-center text-lg font-bold text-green-700 dark:text-green-400">
+        <div className="flex items-center">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list" className="shrink-0">
+            <ArrowLeft className="h-4 w-4 mr-1" />Back
+          </Button>
+          <h1 className="flex-1 text-center text-lg font-bold text-green-700 dark:text-green-400 pr-16">
             {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({trade.sellerCode || trade.sellerName || '-'} → {trade.buyerCode || trade.buyerName || '-'})
           </h1>
         </div>

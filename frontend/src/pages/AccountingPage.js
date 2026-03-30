@@ -112,6 +112,8 @@ export default function AccountingPage() {
   const [bankStatements, setBankStatements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [invoiceDateOpen, setInvoiceDateOpen] = useState(false);
+  const [dueDateOpen, setDueDateOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ invoiceNumber: '', vendorName: '', amount: '', currency: 'USD', invoiceDate: '', dueDate: '', category: 'Commission Payment', description: '', status: 'pending', direction: 'outgoing' });
@@ -486,7 +488,7 @@ export default function AccountingPage() {
               <Select value={form.currency} onValueChange={(v) => setForm({...form, currency: v})}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select>
             </div>
             <div className="space-y-2"><Label>Invoice Date</Label>
-              <Popover>
+              <Popover open={invoiceDateOpen} onOpenChange={setInvoiceDateOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.invoiceDate && 'text-muted-foreground')}>
                     <CalendarDays className="mr-2 h-4 w-4" />
@@ -494,13 +496,13 @@ export default function AccountingPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                  <Calendar mode="single" selected={form.invoiceDate ? (() => { try { return parseISO(form.invoiceDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, invoiceDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
+                  <Calendar mode="single" selected={form.invoiceDate ? (() => { try { return parseISO(form.invoiceDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) { setForm({...form, invoiceDate: format(d, 'yyyy-MM-dd')}); setInvoiceDateOpen(false); } }} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>
             {form.direction === 'outgoing' && (
             <div className="space-y-2"><Label>Due Date</Label>
-              <Popover>
+              <Popover open={dueDateOpen} onOpenChange={setDueDateOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn('w-full justify-start text-left font-normal', !form.dueDate && 'text-muted-foreground')}>
                     <CalendarDays className="mr-2 h-4 w-4" />
@@ -508,7 +510,7 @@ export default function AccountingPage() {
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 z-[9999]" align="start">
-                  <Calendar mode="single" selected={form.dueDate ? (() => { try { return parseISO(form.dueDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) setForm({...form, dueDate: format(d, 'yyyy-MM-dd')}); }} initialFocus />
+                  <Calendar mode="single" selected={form.dueDate ? (() => { try { return parseISO(form.dueDate); } catch { return undefined; } })() : undefined} onSelect={(d) => { if (d) { setForm({...form, dueDate: format(d, 'yyyy-MM-dd')}); setDueDateOpen(false); } }} initialFocus />
                 </PopoverContent>
               </Popover>
             </div>

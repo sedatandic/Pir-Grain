@@ -737,6 +737,16 @@ export default function VesselExecutionPage() {
                     <Separator />
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Quantity</span><span className="font-medium">{trade.dischargeQuantity ? `${Number(trade.dischargeQuantity).toLocaleString()} MT` : '-'}</span></div>
                     <Separator />
+                    {trade.blQuantity && trade.dischargeQuantity ? (() => {
+                      const shortage = Number(trade.blQuantity) - Number(trade.dischargeQuantity);
+                      const pct = ((shortage / Number(trade.blQuantity)) * 100).toFixed(3);
+                      return (
+                        <>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Shortage</span><span className={`font-medium ${shortage > 0 ? 'text-red-600' : shortage < 0 ? 'text-green-600' : ''}`}>{shortage > 0 ? '' : shortage < 0 ? '+' : ''}{Math.abs(shortage).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT ({pct}%)</span></div>
+                          <Separator />
+                        </>
+                      );
+                    })() : null}
                     <div className="flex justify-between"><span className="text-muted-foreground">Discharge Port</span><span className="font-medium">{getPortDisplay(trade.dischargePortId)}</span></div>
                   </div>
                 </div>
@@ -1096,6 +1106,16 @@ export default function VesselExecutionPage() {
             </div>
             <div className="space-y-2"><Label>B/L Quantity (MT)</Label><Input type="number" value={blForm.blQuantity || ''} onChange={(e) => setBlForm(p => ({ ...p, blQuantity: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Discharge Quantity (MT)</Label><Input type="number" value={blForm.dischargeQuantity || ''} onChange={(e) => setBlForm(p => ({ ...p, dischargeQuantity: e.target.value }))} /></div>
+            {blForm.blQuantity && blForm.dischargeQuantity && (() => {
+              const shortage = parseFloat(blForm.blQuantity) - parseFloat(blForm.dischargeQuantity);
+              const pct = ((shortage / parseFloat(blForm.blQuantity)) * 100).toFixed(3);
+              return (
+                <div className="col-span-2 px-3 py-2 rounded-md bg-muted/50 border text-sm flex justify-between items-center">
+                  <span className="text-muted-foreground font-medium">Shortage</span>
+                  <span className={`font-semibold ${shortage > 0 ? 'text-red-600' : shortage < 0 ? 'text-green-600' : ''}`}>{shortage > 0 ? '' : shortage < 0 ? '+' : ''}{Math.abs(shortage).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT ({pct}%)</span>
+                </div>
+              );
+            })()}
             <div className="space-y-2"><Label>Load Port</Label>
               <Select value={blForm.loadPortId || ''} onValueChange={(v) => setBlForm(p => ({ ...p, loadPortId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>

@@ -202,7 +202,9 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
     let lines = [buyer.companyName || ''];
     if (buyer.address) lines.push(buyer.address);
     if (buyer.city || buyer.country) lines.push([buyer.city, buyer.country].filter(Boolean).join(' / '));
-    return lines.join('\n').toUpperCase();
+    // Transliterate Turkish chars to English and uppercase
+    const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' };
+    return lines.join('\n').split('').map(c => trMap[c] || c).join('').toUpperCase();
   };
 
   const getConsigneeText = (di) => {
@@ -376,6 +378,10 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Notify Party</th>
                         <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getNotifyText(previewDi)}</td>
+                      </tr>
+                      <tr>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Description of Goods</th>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{(() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity].filter(Boolean).join(' '); return crop ? `${parts}, Crop ${crop}` : parts; })()}</td>
                       </tr>
                     </tbody>
                   </table>

@@ -1033,7 +1033,7 @@ export default function VesselExecutionPage() {
                   </Button>
                   {trade.vessel_nominationSent && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Sent by <strong>{trade.vessel_nominationSentBy || '-'}</strong> on {trade.vessel_nominationSentAt ? new Date(trade.vessel_nominationSentAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                      Sent to <strong>{trade.buyerCode || trade.buyerName || '-'}</strong> by <strong>{(trade.vessel_nominationSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {trade.vessel_nominationSentAt ? new Date(trade.vessel_nominationSentAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-'}
                     </p>
                   )}
                 </div>

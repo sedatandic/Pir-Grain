@@ -825,7 +825,7 @@ export default function VesselExecutionPage() {
           <TabsContent value="bl">
             <Card>
               <CardHeader className="pb-3 flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Bill of Lading Details</CardTitle>
+                <CardTitle className="text-base">Bill of Lading (B/L) Details</CardTitle>
                 <Button size="sm" variant="outline" onClick={openBlDialog}><Pencil className="h-3.5 w-3.5 mr-1" />Edit B/L Details</Button>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">

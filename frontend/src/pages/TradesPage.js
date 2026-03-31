@@ -113,7 +113,12 @@ export default function TradesPage() {
       if (filterYear === currentYear) {
         const isIncomplete = !COMPLETED_STATUSES.includes(t.status) &&
                              !CANCELLED_STATUSES.includes(t.status);
-        return isIncomplete;
+        if (isIncomplete) return true;
+        // Also include completed trades with unpaid brokerage
+        if (COMPLETED_STATUSES.includes(t.status) && !t.invoicePaid &&
+            (t.brokerName || (t.brokeragePerMT && t.brokeragePerMT > 0))) {
+          return true;
+        }
       }
       return false;
     });
@@ -181,18 +186,18 @@ export default function TradesPage() {
     cancelled: yearFilteredTrades.filter(t => CANCELLED_STATUSES.includes(t.status)),
   }), [yearFilteredTrades]);
 
-  // Match pending commissions from invoices
-  const pendingCommissionTradeIds = useMemo(() => {
-    const ids = new Set();
-    invoices.filter(i => ((i.invoiceNumber || '').startsWith('COMM-') || i.category === 'Commission Payment') && i.status !== 'paid').forEach(i => {
-      if (i.tradeId) ids.add(i.tradeId);
-    });
-    return ids;
-  }, [invoices]);
-
+  // Match pending commissions from trade's own invoicePaid field (consistent with CommissionsPage)
   const awaitingBrokerage = useMemo(() =>
-    yearFilteredTrades.filter(t => pendingCommissionTradeIds.has(t.id)),
-  [yearFilteredTrades, pendingCommissionTradeIds]);
+    yearFilteredTrades.filter(t =>
+      COMPLETED_STATUSES.includes(t.status) &&
+      !t.invoicePaid &&
+      (t.brokerName || (t.brokeragePerMT && t.brokeragePerMT > 0))
+    ),
+  [yearFilteredTrades]);
+
+  const pendingCommissionTradeIds = useMemo(() => {
+    return new Set(awaitingBrokerage.map(t => t.id));
+  }, [awaitingBrokerage]);
 
   // Remove awaiting brokerage from ongoing
   const filteredOngoing = useMemo(() =>

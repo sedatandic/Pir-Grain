@@ -383,7 +383,7 @@ export default function TradesPage() {
     );
   };
 
-  const renderTable = (list, empty) => {
+  const renderTable = (list, empty, overrideStatus = null) => {
     if (list.length === 0) return <div className="text-center py-8 text-muted-foreground text-sm">{search || hasActiveFilters ? 'No contracts match your search or filters' : empty}</div>;
     return (
       <div className="overflow-x-auto border rounded-lg">
@@ -411,8 +411,8 @@ export default function TradesPage() {
                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
                   <Select value={trade.status} onValueChange={(v) => handleStatusChange(trade.id, v)}>
                     <SelectTrigger className="w-full h-8 justify-center border-0 shadow-none focus:ring-0">
-                      <Badge className={`${TRADE_STATUS_CONFIG[trade.status]?.color || 'bg-muted text-muted-foreground'} status-badge truncate`}>
-                        {(TRADE_STATUS_CONFIG[trade.status]?.label || trade.status).toUpperCase()}
+                      <Badge className={`${TRADE_STATUS_CONFIG[overrideStatus || trade.status]?.color || 'bg-muted text-muted-foreground'} status-badge truncate`}>
+                        {(TRADE_STATUS_CONFIG[overrideStatus || trade.status]?.label || overrideStatus || trade.status).toUpperCase()}
                       </Badge>
                     </SelectTrigger>
                     <SelectContent>
@@ -692,7 +692,7 @@ export default function TradesPage() {
             <div className="flex items-center gap-2"><Banknote className="h-5 w-5 text-orange-600" /><CardTitle className="text-orange-800">Awaiting Brokerage Payment</CardTitle><Badge variant="secondary" className="bg-orange-100 text-orange-800">{filtered.awaitingBrokerage.length}</Badge></div>
             <CardDescription className="text-orange-700">Payment received from buyer — pending broker commission payment</CardDescription>
           </CardHeader>
-          <CardContent>{renderTable(filtered.awaitingBrokerage, 'No contracts awaiting brokerage')}</CardContent>
+          <CardContent>{renderTable(filtered.awaitingBrokerage, 'No contracts awaiting brokerage', 'brokerage')}</CardContent>
         </Card>
       )}
 

@@ -27,7 +27,7 @@ def get_cc_emails():
     users = db.users.find({"role": {"$in": ["admin"]}})
     return [u["email"] for u in users if u.get("email")]
 
-LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo-transparent.png")
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo-transparent-sm.png")
 LOGO_B64 = ""
 if os.path.exists(LOGO_PATH):
     with open(LOGO_PATH, "rb") as f:

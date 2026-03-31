@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import html2pdf from 'html2pdf.js';
 import { Copy, Printer, FileText, Send, Plus, Pencil, Trash2, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -244,20 +245,15 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   };
 
   const handleGeneratePdf = () => {
-    const content = previewRef.current?.innerHTML;
-    if (!content) return;
-    const win = window.open('', '_blank');
-    win.document.write(`<html><head><title>Documentary Instructions</title><style>
-      body { font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 30px; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-      th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
-      th { background: #f3f4f6; font-weight: 600; width: 200px; }
-      h2 { text-align: center; color: #15803d; }
-      h3 { color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px; }
-      @media print { @page { margin: 20mm; } }
-    </style></head><body>${content}</body></html>`);
-    win.document.close();
-    win.print();
+    if (!previewRef.current) return;
+    const contractLabel = getContractLabel(previewDi.tradeId);
+    html2pdf().set({
+      margin: [15, 15, 15, 15],
+      filename: `Documentary_Instructions_${contractLabel}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    }).from(previewRef.current).save();
   };
 
   const handlePrint = () => {

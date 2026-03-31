@@ -64,7 +64,7 @@ export default function AppLayout() {
     '/vessels': { title: 'Vessels' },
     '/documents': { title: 'Vessel Execution' },
     '/calendar': { title: 'Calendar' },
-    '/omega': { title: 'Accounting' },
+    '/omega': { title: 'Omega — Accounting' },
     '/reports': { title: 'Reports' },
     '/commissions': { title: 'Brokerage Invoices' },
     '/settings': { title: 'Settings' },
@@ -110,7 +110,7 @@ export default function AppLayout() {
           </Button>
 
           {/* Page Title */}
-          {currentPage.title && <h1 className="text-xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
+          {currentPage.title && <h1 className="text-2xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
 
           {/* Spacer to push content right */}
           <div className="flex-1" />

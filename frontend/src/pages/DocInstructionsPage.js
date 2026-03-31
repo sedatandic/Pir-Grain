@@ -549,7 +549,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   </Select>
                 </div>
               </div>
-              {form.agentName && (
+              {form.agentName && form.agentName !== 'TBA' && (
                 <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
                   <p className="font-medium">{form.agentName}</p>
                   {form.agentPhone && <p>Tel: {form.agentPhone}</p>}

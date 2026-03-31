@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays, TrendingUp, AlertCircle, DollarSign, Users, Building, FileText, Send } from 'lucide-react';
+import { Plus, Search, Ship, Clock, CheckCircle, Filter, X, AlertTriangle, Ban, Loader2, Pencil, CalendarDays, TrendingUp, AlertCircle, DollarSign, Users, Building, FileText, Send, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO, isAfter, startOfDay } from 'date-fns';
 
@@ -181,13 +181,31 @@ export default function TradesPage() {
     cancelled: yearFilteredTrades.filter(t => CANCELLED_STATUSES.includes(t.status)),
   }), [yearFilteredTrades]);
 
+  // Split completed into awaiting brokerage and fully completed
+  const commissionByTradeId = useMemo(() => {
+    const map = {};
+    invoices.filter(i => (i.invoiceNumber || '').startsWith('COMM-') || i.category === 'Commission Payment').forEach(i => {
+      if (i.tradeId) map[i.tradeId] = i.status;
+    });
+    return map;
+  }, [invoices]);
+
+  const awaitingBrokerage = useMemo(() =>
+    categorized.completed.filter(t => commissionByTradeId[t.id] && commissionByTradeId[t.id] !== 'paid'),
+  [categorized.completed, commissionByTradeId]);
+
+  const fullyCompleted = useMemo(() =>
+    categorized.completed.filter(t => !commissionByTradeId[t.id] || commissionByTradeId[t.id] === 'paid'),
+  [categorized.completed, commissionByTradeId]);
+
   const filtered = useMemo(() => ({
     ongoing: applyFilters(categorized.ongoing),
     pending: applyFilters(categorized.pending),
-    completed: applyFilters(categorized.completed),
+    awaitingBrokerage: applyFilters(awaitingBrokerage),
+    completed: applyFilters(fullyCompleted),
     washout: applyFilters(categorized.washout),
     cancelled: applyFilters(categorized.cancelled),
-  }), [categorized, applyFilters]);
+  }), [categorized, applyFilters, awaitingBrokerage, fullyCompleted]);
 
   const upcomingItems = useMemo(() => {
     const today = startOfDay(new Date());
@@ -661,6 +679,17 @@ export default function TradesPage() {
         </CardHeader>
         <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
       </Card>
+
+      {/* Awaiting Brokerage Payment */}
+      {filtered.awaitingBrokerage.length > 0 && (
+        <Card id="trades-awaiting-brokerage" className="border-l-4 border-l-orange-400 bg-orange-50/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2"><Banknote className="h-5 w-5 text-orange-600" /><CardTitle className="text-orange-800">Awaiting Brokerage Payment</CardTitle><Badge variant="secondary" className="bg-orange-100 text-orange-800">{filtered.awaitingBrokerage.length}</Badge></div>
+            <CardDescription className="text-orange-700">Payment received from buyer — pending broker commission payment</CardDescription>
+          </CardHeader>
+          <CardContent>{renderTable(filtered.awaitingBrokerage, 'No contracts awaiting brokerage')}</CardContent>
+        </Card>
+      )}
 
       {/* Washout */}
       <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">

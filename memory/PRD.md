@@ -8,6 +8,23 @@
 
 ## What's Been Implemented
 
+### Brokerage Payment Workflow (2026-03-31)
+- Split completed contracts: "Awaiting Brokerage Payment" (commission unpaid) vs "Completed" (fully done)
+- Contract stays in Awaiting Brokerage on Contracts page until commission invoice is paid
+- Orange-themed table section between Completed and Washout
+
+### Contract Completion Validation (2026-03-30)
+- Payment Date and SWIFT Copy required before marking contract completed
+
+### Global Search (2026-03-31)
+- Full search across contracts, counterparties, vessels
+- Turkish character transliteration (English → Turkish matching)
+- 700px dropdown with grouped results and status badges
+
+### Header & Layout Updates (2026-03-31)
+- Page titles in content area, search box in header bar
+- Subtitles removed from all pages
+
 ### Vessel Execution B/L Quantity Display (2026-03-30)
 - Quantity column in contract list tables now shows B/L Quantity when entered, falling back to contract quantity
 - Applied to all 3 tables: Ongoing, Pending Vessel Nomination, Completed

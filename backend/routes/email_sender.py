@@ -20,7 +20,7 @@ CERT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "
 router = APIRouter(prefix="/api", tags=["email"])
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <noreply@pirgrain.com>")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain - Execution <noreply@pirgrain.com>")
 def get_cc_emails():
     """Load CC emails from admin users in the database."""
     from database import db

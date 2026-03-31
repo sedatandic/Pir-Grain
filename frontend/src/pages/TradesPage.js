@@ -497,10 +497,6 @@ export default function TradesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Contracts</h1>
-        <p className="text-muted-foreground">Manage all your commodity contracts</p>
-      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">

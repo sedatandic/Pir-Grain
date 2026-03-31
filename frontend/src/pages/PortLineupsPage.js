@@ -601,7 +601,6 @@ export default function PortLineupsPage() {
 
   return (
     <div className="space-y-4" data-testid="port-lineups-page">
-      <h1 className="text-3xl font-bold tracking-tight" data-testid="port-lineups-title">Port Line-Ups</h1>
       <Tabs defaultValue="daily" className="w-full">
         <TabsList>
           <TabsTrigger value="daily" className="flex-col items-center gap-0 py-2">

@@ -1,14 +1,15 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../lib/auth';
 import Sidebar from './Sidebar';
 import { Toaster } from 'sonner';
-import { Bell, LogOut, ChevronDown, CheckCheck, Menu } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, CheckCheck, Menu, Search } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '../ui/input';
 import { cn } from '../../lib/utils';
 import api from '../../lib/api';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -57,18 +58,22 @@ export default function AppLayout() {
   const initials = firstName.charAt(0).toUpperCase() + (lastName ? lastName.charAt(0).toUpperCase() : '');
 
   const PAGE_TITLES = {
-    '/': { title: 'Dashboard', subtitle: 'Welcome back! Here is your trading overview.' },
-    '/trades': { title: 'Trades', subtitle: 'Manage your commodity trades' },
-    '/partners': { title: 'Counterparties', subtitle: 'Manage your trading partners' },
-    '/vessels': { title: 'Vessels', subtitle: 'Manage your fleet of vessels' },
-    '/documents': { title: 'Shipment Docs.', subtitle: 'Manage shipment documents' },
-    '/calendar': { title: 'Calendar', subtitle: 'Events, meetings, and deadlines' },
-    '/omega': { title: 'Omega — Accounting', subtitle: 'Invoices, expenses, and bank statements' },
-    '/reports': { title: 'Reports', subtitle: 'Analytics and reporting' },
-    '/commissions': { title: 'Brokerage Invoices', subtitle: 'Manage brokerage invoices' },
-    '/settings': { title: 'Settings', subtitle: 'System configuration' },
+    '/': { title: 'Dashboard' },
+    '/trades': { title: 'Contracts' },
+    '/partners': { title: 'Counterparties' },
+    '/vessels': { title: 'Vessels' },
+    '/documents': { title: 'Vessel Execution' },
+    '/calendar': { title: 'Calendar' },
+    '/omega': { title: 'Accounting' },
+    '/reports': { title: 'Reports' },
+    '/commissions': { title: 'Brokerage Invoices' },
+    '/settings': { title: 'Settings' },
+    '/market-data': { title: 'Market Data' },
+    '/doc-instructions': { title: 'Documentary Instructions' },
+    '/port-lineups': { title: 'Port Line-Ups' },
+    '/business-cards': { title: 'Business Cards' },
   };
-  const currentPage = PAGE_TITLES[location.pathname] || { title: '', subtitle: '' };
+  const currentPage = PAGE_TITLES[location.pathname] || (location.pathname.startsWith('/trades/') ? { title: location.pathname.includes('/edit') ? 'Edit Contract' : 'New Contract' } : location.pathname.startsWith('/documents/') ? { title: 'Vessel Execution' } : { title: '' });
 
   const unreadCount = notifications.filter(n => !(n.readBy || []).includes(user?.username)).length;
 
@@ -92,7 +97,7 @@ export default function AppLayout() {
       <Sidebar />
       <div className={cn('transition-all duration-200', sidebarCollapsed ? 'md:ml-[60px]' : 'md:ml-[200px]')}>
         {/* Header Bar */}
-        <header className="flex h-14 items-center gap-2 border-b border-border bg-card px-4 sticky top-0 z-40">
+        <header className="flex h-14 items-center gap-3 border-b border-border bg-card px-4 sticky top-0 z-40">
           {/* Mobile hamburger */}
           <Button
             variant="ghost"
@@ -103,7 +108,21 @@ export default function AppLayout() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex-1" />
+
+          {/* Page Title */}
+          <h1 className="text-base font-semibold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>
+
+          {/* Universal Search */}
+          <div className="flex-1 max-w-md mx-auto">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contracts, partners, vessels..."
+                className="pl-9 h-9 bg-muted/50 border-0 focus-visible:ring-1"
+                data-testid="header-search-input"
+              />
+            </div>
+          </div>
 
           {/* Notifications Bell - Admin only */}
           {isAdmin && <DropdownMenu>

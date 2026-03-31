@@ -546,7 +546,7 @@ export default function VesselExecutionPage() {
 
   return (
     <div className="space-y-4" data-testid="vessel-execution-page">
-      {!urlTradeId && <h1 className="text-3xl font-bold tracking-tight">Vessel Execution</h1>}
+      {!urlTradeId && <div></div>}
 
       {urlTradeId && trade && (
         <div className="flex items-center">
@@ -569,7 +569,7 @@ export default function VesselExecutionPage() {
         <div className="border border-green-200 dark:border-green-900/50 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-green-50 dark:bg-green-900/20 border-b border-green-200 dark:border-green-900/50">
+              <tr className="bg-green-100 dark:bg-green-900/40 border-b border-green-200 dark:border-green-900/50">
                 <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
                 <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
@@ -613,7 +613,7 @@ export default function VesselExecutionPage() {
         <div className="border border-amber-200 dark:border-amber-900/50 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-900/50">
+              <tr className="bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-900/50">
                 <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
                 <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium">Seller</th>
@@ -657,7 +657,7 @@ export default function VesselExecutionPage() {
         <div className="border border-border rounded-lg overflow-hidden opacity-75">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-muted/50 border-b">
+              <tr className="bg-muted border-b">
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Contract No</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Commodity</th>
                 <th className="text-center px-4 py-2.5 font-medium text-muted-foreground">Seller</th>

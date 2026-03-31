@@ -329,7 +329,7 @@ export default function CommissionsPage() {
 
   return (
     <div className="space-y-6">
-      <div><h1 className="text-3xl font-bold tracking-tight">Brokerage Invoices</h1><p className="text-muted-foreground">Track your brokerage earnings across all trades</p></div>
+      <div></div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Total Commission</CardTitle><DollarSign className="h-4 w-4 text-primary" /></CardHeader><CardContent><div className="text-2xl font-bold">{fmt(stats.total)}</div></CardContent></Card>

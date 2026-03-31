@@ -333,10 +333,6 @@ export default function AccountingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Accounting</h1>
-        <p className="text-muted-foreground">Manage incoming and outgoing payments</p>
-      </div>
 
       {/* Year & Month Filter */}
       <Card>

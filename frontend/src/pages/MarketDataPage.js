@@ -14,12 +14,7 @@ export default function MarketDataPage() {
     <div className="flex gap-4 h-[calc(100vh-120px)]" data-testid="market-data-page">
       {/* Main Content */}
       <div className="flex-1 space-y-4 overflow-y-auto pr-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Market Data</h1>
-            <p className="text-muted-foreground">Live commodity prices, notes, and tender tracking</p>
-          </div>
-        </div>
+        <div></div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="w-full max-w-3xl flex">

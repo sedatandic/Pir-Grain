@@ -112,7 +112,7 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h1 className="text-3xl font-bold tracking-tight">Calendar</h1><p className="text-muted-foreground">Track events, deadlines, and meetings</p></div>
+        <div></div>
         <Button onClick={openCreateDialog} data-testid="calendar-add-event"><Plus className="mr-2 h-4 w-4" />Add Event</Button>
       </div>
 

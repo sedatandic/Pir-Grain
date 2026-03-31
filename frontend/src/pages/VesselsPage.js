@@ -110,7 +110,7 @@ export default function VesselsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h1 className="text-3xl font-bold tracking-tight">Vessels</h1><p className="text-muted-foreground">Manage your fleet of vessels</p></div>
+        <div></div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

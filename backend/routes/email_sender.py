@@ -234,10 +234,10 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     discharge_port_full = f"{discharge_port}, {discharge_country}" if discharge_country else discharge_port
     specs_html = commodity_specs.replace("\n", "<br/>") if commodity_specs else "-"
 
-    # Build commodity display: "Yellow Corn, Crop 2025" (no origin adjective)
-    commodity_with_crop = commodity
+    # Build commodity display with origin adjective: "Ukrainian Yellow Corn, Crop 2025"
+    commodity_with_crop = f"{origin_adj} {commodity}".strip() if origin_adj else commodity
     if crop_year:
-        commodity_with_crop = f"{commodity}, Crop {crop_year}"
+        commodity_with_crop = f"{commodity_with_crop}, Crop {crop_year}"
 
     # Format date as DD-MM-YYYY
     formatted_date = fmt_date_ddmmyyyy(contract_date)
@@ -422,9 +422,9 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             row_html("BUILT", str(vessel_built)),
             row_html("LOADING PORT", load_port_full),
             row_html("LOAD PORT AGENT", lpa_details),
-            row_html("SELLER SURVEY", surveyor_name),
+            row_html("SELLER SURVEYOR", surveyor_name),
         ])
-        closing = "Please confirm acceptance of the above vessel nomination."
+        closing = "Please find the vessel certificates attached and confirm your acceptance of the vessel nomination."
 
     else:
         rows = ""
@@ -437,7 +437,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">
             <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
-            <p style="font-size: 15px; color: #333;">Please find below the <strong>{doc_name}</strong> details:</p>
+            {"<p style='font-size: 15px; color: #333;'>Please find below the vessel nomination details for the subject contract.</p>" if doc_name == "Vessel Nomination" else f"<p style='font-size: 15px; color: #333;'>Please find below the <strong>{doc_name}</strong> details:</p>"}
 
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
                 {rows}
@@ -519,7 +519,16 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     else:
         raise HTTPException(status_code=400, detail="Invalid document type")
 
-    subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
+    # Build subject line
+    if req.doc_type == "vessel_nomination":
+        origin_adj_sub = trade.get("originAdjective") or ""
+        commodity_sub = trade.get("commodityName") or ""
+        commodity_full = f"{origin_adj_sub} {commodity_sub}".strip() if origin_adj_sub else commodity_sub
+        qty = trade.get("quantity") or 0
+        vessel_name = trade.get("vesselName") or ""
+        subject = req.subject or f"Vessel Nomination - {contract_label} ({fmt_qty(qty)} Mts {commodity_full}) - {vessel_name}"
+    else:
+        subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
 
     if filename and req.doc_type not in ("business_confirmation", "vessel_nomination"):
         pdf_bytes = pdf_buf.getvalue()
@@ -533,8 +542,12 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     sent_to = []
     errors = []
 
+    # For CIF/CFR vessel nominations, skip seller (buyer is responsible for vessel)
+    delivery_term = trade.get("deliveryTerm") or ""
+    skip_seller = req.doc_type == "vessel_nomination" and delivery_term.upper().startswith(("CIF", "CFR"))
+
     # Send to seller (separate email - no buyer info in CC)
-    if seller_email:
+    if seller_email and not skip_seller:
         seller_body = build_email_body(trade, doc_name, seller_name, "seller")
         cc_emails = list(set(get_cc_emails() + (req.seller_cc or [])))
         seller_cc = [e for e in cc_emails if e != seller_email]

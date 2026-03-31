@@ -384,6 +384,9 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         vessel_flag = (vessel_doc or {}).get("flag") or trade.get("vesselFlag") or "-"
         vessel_built = (vessel_doc or {}).get("builtYear") or trade.get("vesselBuilt") or "-"
         surveyor_name = trade.get("sellerSurveyor") or trade.get("surveyorName") or "-"
+        origin_country = trade.get("originCountry") or ""
+        if surveyor_name != "-" and origin_country:
+            surveyor_name = f"{surveyor_name} {origin_country}"
         # Look up load port agent full details
         lpa_name = trade.get("loadportAgent") or ""
         lpa_details = "-"

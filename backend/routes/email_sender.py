@@ -253,19 +253,11 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     price_display = f"{currency} {float(price):,.2f}/MT {delivery_term} {base_port_full}".strip() if price else "-"
 
     logo_html = ""
-    if LOGO_URL:
+    if LOGO_B64:
         logo_html = f'''
             <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
                 <td style="text-align: center; padding: 10px 0;">
-                    <img src="{LOGO_URL}" style="height: 50px; vertical-align: middle;" alt="PIR" />
-                    <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">PIR Grain &amp; Pulses Ltd</span>
-                </td>
-            </tr></table>'''
-    elif LOGO_B64:
-        logo_html = f'''
-            <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
-                <td style="text-align: center; padding: 10px 0;">
-                    <img src="data:image/jpeg;base64,{LOGO_B64}" style="height: 50px; vertical-align: middle;" alt="PIR" />
+                    <img src="cid:pirlogo" style="height: 50px; vertical-align: middle;" alt="PIR" />
                     <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">PIR Grain &amp; Pulses Ltd</span>
                 </td>
             </tr></table>'''
@@ -538,6 +530,15 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Combine single attachment with attachments list
     if attachment:
         attachments_list.insert(0, attachment)
+
+    # Add inline logo attachment for CID reference in email body
+    if LOGO_B64:
+        attachments_list.append({
+            "filename": "pir-logo.jpeg",
+            "content": LOGO_B64,
+            "content_type": "image/jpeg",
+            "content_id": "pirlogo",
+        })
 
     sent_to = []
     errors = []

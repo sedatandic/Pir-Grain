@@ -526,7 +526,7 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
         commodity_full = f"{origin_adj_sub} {commodity_sub}".strip() if origin_adj_sub else commodity_sub
         qty = trade.get("quantity") or 0
         vessel_name = trade.get("vesselName") or ""
-        subject = req.subject or f"Vessel Nomination - {contract_label} ({fmt_qty(qty)} Mts {commodity_full}) - {vessel_name}"
+        subject = req.subject or f"Vessel Nomination - {contract_label} - {fmt_qty(qty)} Mts {commodity_full} - {vessel_name}"
     else:
         subject = req.subject or f"{doc_name} - {contract_label} ({commodity})"
 

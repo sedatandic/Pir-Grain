@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -107,16 +108,26 @@ export default function PartnersPage({ filterType }) {
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
   const [detailPartner, setDetailPartner] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const fetchPartners = useCallback(async () => {
     try {
       const res = await api.get('/api/partners');
       setPartners(res.data);
-    } catch (err) { toast.error('Failed to load partners'); }
+      return res.data;
+    } catch (err) { toast.error('Failed to load partners'); return []; }
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchPartners(); }, [fetchPartners]);
+  useEffect(() => {
+    fetchPartners().then(data => {
+      const detailId = searchParams.get('detail');
+      if (detailId && data.length) {
+        const p = data.find(x => x.id === detailId);
+        if (p) { setDetailPartner(p); setSearchParams({}, { replace: true }); }
+      }
+    });
+  }, [fetchPartners, searchParams, setSearchParams]);
   useEffect(() => { if (filterType) setTab(filterType); }, [filterType]);
 
   const filtered = useMemo(() => {

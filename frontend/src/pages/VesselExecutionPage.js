@@ -1031,6 +1031,11 @@ export default function VesselExecutionPage() {
                   <Button size="lg" disabled={!trade.vesselName} onClick={() => openEmailDialog('vessel_nomination', 'Vessel Nomination')} data-testid="send-nomination-btn">
                     <Send className="h-4 w-4 mr-2" />Send Nomination
                   </Button>
+                  {trade.vessel_nominationSent && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Sent by <strong>{trade.vessel_nominationSentBy || '-'}</strong> on {trade.vessel_nominationSentAt ? new Date(trade.vessel_nominationSentAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>

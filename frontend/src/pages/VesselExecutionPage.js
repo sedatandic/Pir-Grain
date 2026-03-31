@@ -1284,7 +1284,7 @@ export default function VesselExecutionPage() {
       {/* Email Dialog */}
       <Dialog open={emailDialog.open} onOpenChange={(open) => !open && setEmailDialog({ open: false, docType: '', docLabel: '' })}>
         <DialogContent className="sm:max-w-lg mx-auto">
-          <DialogHeader><DialogTitle>Send {emailDialog.docLabel}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="text-center">Send {emailDialog.docLabel}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             {/* Seller Section - hidden for CIF/CFR vessel nominations (buyer responsibility) */}
             {!(emailDialog.docType === 'vessel_nomination' && /^(CIF|CFR)/i.test(trade?.deliveryTerm || '')) && (

@@ -79,7 +79,7 @@ export default function AppLayout() {
         matchField(p.companyName) || matchField(p.companyCode)
       ).slice(0, 10);
       const vessels = (vesselsRes.data || []).filter(v =>
-        matchField(v.name) || matchField(v.imo)
+        matchField(v.name) || matchField(v.imo) || matchField(v.imoNumber)
       ).slice(0, 10);
       setSearchResults({ trades, partners, vessels });
     } catch {}
@@ -229,7 +229,7 @@ export default function AppLayout() {
                               <Ship className="h-4 w-4 text-blue-600 shrink-0" />
                               <div className="flex-1 min-w-0 grid grid-cols-[1fr_100px_100px] gap-2 items-center">
                                 <div className="text-sm font-semibold">{v.name}</div>
-                                <div className="text-xs text-muted-foreground">IMO: {v.imo || '-'}</div>
+                                <div className="text-xs text-muted-foreground">IMO: {v.imoNumber || v.imo || '-'}</div>
                                 <div className="text-xs text-right">{v.flag || '-'}</div>
                               </div>
                             </div>

@@ -384,9 +384,10 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     <tbody>
                       {[
                         ['Loading Port', (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const pId = t?.loadingPortId || t?.basePortId; if (!pId) return '—'; const p = ports.find(pp => pp.id === pId); return p ? `${p.name}, ${p.country}` : '—'; })()],
-                        ['Discharge Port', previewDi.dischargePort || '—'],
+                        ['Discharge Port', previewDi.dischargePort || 'TBA (To be advised)'],
                         ['Agent at Discharge Port', (() => {
-                          const parts = [previewDi.agentName || '—'];
+                          if (!previewDi.agentName || previewDi.agentName === 'TBA' || previewDi.agentId === 'TBA') return 'TBA (To be advised)';
+                          const parts = [previewDi.agentName];
                           const contacts = [`Tel: ${previewDi.agentPhone || '—'}`, previewDi.agentFax ? `Fax: ${previewDi.agentFax}` : null, previewDi.agentMobile ? `Mob: ${previewDi.agentMobile}` : null].filter(Boolean).join('  •  ');
                           if (contacts) parts.push(contacts);
                           const emailWeb = [previewDi.agentEmail, previewDi.agentWeb].filter(Boolean).join('  •  ');

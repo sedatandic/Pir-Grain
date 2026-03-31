@@ -418,7 +418,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       </tr>
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>1. Shipment & Port Details</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipment & Port Details</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       {[
@@ -442,7 +442,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ))}
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>2. Required Documents</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Required Documents</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>

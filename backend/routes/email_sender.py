@@ -318,7 +318,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         # Custom SA body matching PDF
         return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
-        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0; background-color: #fafaf8;">
+        <div style="padding: 20px 20px 0 20px; text-align: center; background-color: #fafaf8;">
             <img src="cid:pirlogo" style="height: 80px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">
@@ -424,7 +424,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
 
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
-        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0; background-color: #fafaf8;">
+        <div style="padding: 20px 20px 0 20px; text-align: center; background-color: #fafaf8;">
             <img src="cid:pirlogo" style="height: 80px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">

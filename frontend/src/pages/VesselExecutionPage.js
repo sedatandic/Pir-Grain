@@ -13,6 +13,7 @@ import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
 import DraftDocumentsTab from './DraftDocumentsTab';
 import { Calendar } from '../components/ui/calendar';
+import { toIstanbulTime } from '../lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 import { format, parse } from 'date-fns';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -1033,7 +1034,7 @@ export default function VesselExecutionPage() {
                   </Button>
                   {trade.vessel_nominationSent && (
                     <p className="text-sm text-muted-foreground">
-                      Sent to <strong>{trade.buyerCode || trade.buyerName || '-'}</strong> by <strong>{(trade.vessel_nominationSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {trade.vessel_nominationSentAt ? (() => { const d = new Date(trade.vessel_nominationSentAt); const dd = String(d.getDate()).padStart(2,'0'); const mm = String(d.getMonth()+1).padStart(2,'0'); const yyyy = d.getFullYear(); let h = d.getHours(); const min = String(d.getMinutes()).padStart(2,'0'); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${dd}/${mm}/${yyyy}, ${String(h).padStart(2,'0')}:${min} ${ampm}`; })() : '-'}
+                      Sent to <strong>{trade.buyerCode || trade.buyerName || '-'}</strong> by <strong>{(trade.vessel_nominationSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {toIstanbulTime(trade.vessel_nominationSentAt)}
                     </p>
                   )}
                 </div>

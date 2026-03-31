@@ -27,7 +27,7 @@ def get_cc_emails():
     users = db.users.find({"role": {"$in": ["admin"]}})
     return [u["email"] for u in users if u.get("email")]
 
-LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo-transparent.png")
 LOGO_B64 = ""
 if os.path.exists(LOGO_PATH):
     with open(LOGO_PATH, "rb") as f:
@@ -534,9 +534,9 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
     # Add inline logo attachment for CID reference in email body
     if LOGO_B64:
         attachments_list.append({
-            "filename": "pir-logo.jpeg",
+            "filename": "pir-logo.png",
             "content": LOGO_B64,
-            "content_type": "image/jpeg",
+            "content_type": "image/png",
             "content_id": "pirlogo",
         })
 

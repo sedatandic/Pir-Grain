@@ -206,7 +206,8 @@ export default function TradesPage() {
       await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
       setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus } : t));
     } catch (err) {
-      toast.error('Failed to update status');
+      const msg = err.response?.data?.detail || 'Failed to update status';
+      toast.error(msg);
     }
   };
 

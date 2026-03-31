@@ -196,6 +196,15 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
         data["referenceNumber"] = data["contractNumber"]
     old_trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     old_status = old_trade.get("status") if old_trade else None
+
+    # Validate completion requirements
+    if data.get("status") == "completed" and old_status != "completed":
+        check_trade = {**old_trade, **data} if old_trade else data
+        if not check_trade.get("buyerPaymentDate"):
+            raise HTTPException(status_code=400, detail="Cannot complete: Payment Date From Buyer is required")
+        if not check_trade.get("swiftFilePath"):
+            raise HTTPException(status_code=400, detail="Cannot complete: SWIFT Copy upload is required")
+
     update_ops = {"$set": data}
     if fields_to_unset:
         update_ops["$unset"] = fields_to_unset
@@ -267,6 +276,14 @@ def update_trade(trade_id: str, body: dict, user=Depends(non_accountant)):
 def update_trade_status(trade_id: str, body: TradeStatusUpdate, user=Depends(non_accountant)):
     old_trade = trades_col.find_one({"_id": ObjectId(trade_id)})
     old_status = old_trade.get("status") if old_trade else None
+
+    # Validate completion requirements
+    if body.status == "completed" and old_status != "completed":
+        if not old_trade.get("buyerPaymentDate"):
+            raise HTTPException(status_code=400, detail="Cannot complete: Payment Date From Buyer is required")
+        if not old_trade.get("swiftFilePath"):
+            raise HTTPException(status_code=400, detail="Cannot complete: SWIFT Copy upload is required")
+
     trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"status": body.status, "updatedAt": datetime.utcnow()}})
     t = trades_col.find_one({"_id": ObjectId(trade_id)})
     create_notification("trade", f"Trade {t.get('referenceNumber', trade_id)} status changed to {body.status}", trade_id, user.get("username"), user.get("name"))

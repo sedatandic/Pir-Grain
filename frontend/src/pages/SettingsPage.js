@@ -268,6 +268,16 @@ export default function SettingsPage() {
                   <Label>WhatsApp</Label>
                   <Input value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})} placeholder="e.g. +90 530 000 0000" />
                 </div>
+              ) : key === 'port' && (dialogType === 'disport-agents' || dialogType === 'loadport-agents') ? (
+                <div key={key} className="space-y-2">
+                  <Label>{dialogType === 'disport-agents' ? 'Discharge Ports' : 'Loading Ports'}</Label>
+                  <select className="w-full rounded-md border p-2 text-sm bg-background text-foreground" value={val || ''} onChange={(e) => setDialogForm({...dialogForm, [key]: e.target.value})}>
+                    <option value="">Select port...</option>
+                    {ports.filter(p => dialogType === 'disport-agents' ? p.type === 'discharge' : p.type === 'loading').map(p => (
+                      <option key={p.id} value={p.name}>{p.name}{p.country ? `, ${p.country}` : ''}</option>
+                    ))}
+                  </select>
+                </div>
               ) : (
                 <div key={key} className="space-y-2">
                   <Label className="capitalize">{dialogType === 'vendors' ? (key === 'name' ? 'Vendor Name' : key === 'type' ? 'Vendor Type' : key.replace(/([A-Z])/g, ' $1')) : dialogType === 'bank-accounts' ? (key === 'accountName' ? 'Account Name' : key === 'bankName' ? 'Bank Name' : key === 'iban' ? 'IBAN' : key === 'bic' ? 'BIC / SWIFT' : key.replace(/([A-Z])/g, ' $1')) : key.replace(/([A-Z])/g, ' $1')}</Label>

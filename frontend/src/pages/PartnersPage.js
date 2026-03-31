@@ -228,24 +228,24 @@ export default function PartnersPage({ filterType }) {
                     <TableHead>Company</TableHead>
                     <TableHead>Company Code</TableHead>
                     <TableHead>Address</TableHead>
-                    <TableHead>City</TableHead>
-                    <TableHead>Country</TableHead>
+                    <TableHead>Tax ID No</TableHead>
+                    <TableHead>Tax Office</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No partners found</TableCell></TableRow>
                   ) : filtered.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
                         <div className="font-medium">{p.companyName}</div>
                       </TableCell>
                       <TableCell className="text-sm">{p.companyCode || '-'}</TableCell>
-                      <TableCell className="text-sm">{p.address || '-'}</TableCell>
-                      <TableCell className="text-sm">{p.city || '-'}</TableCell>
-                      <TableCell className="text-sm">{p.country || '-'}</TableCell>
+                      <TableCell className="text-sm"><div>{p.address || '-'}</div>{(p.city || p.country) && <div className="text-muted-foreground">{[p.city, p.country].filter(Boolean).join(', ')}</div>}</TableCell>
+                      <TableCell className="text-sm">{p.taxIdNo || '-'}</TableCell>
+                      <TableCell className="text-sm">{p.taxOffice || '-'}</TableCell>
                       <TableCell><div className="flex flex-wrap gap-1">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>
                       <TableCell>
                         <div className="flex gap-1">

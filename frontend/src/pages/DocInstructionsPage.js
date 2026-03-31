@@ -243,6 +243,23 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
     }
   };
 
+  const handleGeneratePdf = () => {
+    const content = previewRef.current?.innerHTML;
+    if (!content) return;
+    const win = window.open('', '_blank');
+    win.document.write(`<html><head><title>Documentary Instructions</title><style>
+      body { font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 30px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+      th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
+      th { background: #f3f4f6; font-weight: 600; width: 200px; }
+      h2 { text-align: center; color: #15803d; }
+      h3 { color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px; }
+      @media print { @page { margin: 20mm; } }
+    </style></head><body>${content}</body></html>`);
+    win.document.close();
+    win.print();
+  };
+
   const handlePrint = () => {
     const content = previewRef.current?.innerHTML;
     if (!content) return;
@@ -363,6 +380,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   <CardTitle className="text-green-700">Preview - {getTradeLabel(previewDi.tradeId)}</CardTitle>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCopy}><Copy className="h-4 w-4 mr-1" />Copy</Button>
+                    <Button variant="outline" size="sm" onClick={handleGeneratePdf}><FileText className="h-4 w-4 mr-1" />Generate PDF</Button>
                     <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="h-4 w-4 mr-1" />Print</Button>
                   </div>
                 </div>

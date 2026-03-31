@@ -162,9 +162,6 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Page Title */}
-          {currentPage.title && <h1 className="text-3xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
-
           {/* Spacer to push content right */}
           <div className="flex-1" />
 
@@ -319,6 +316,7 @@ export default function AppLayout() {
           </DropdownMenu>
         </header>
         <main className="p-3 md:p-6 animate-fade-in">
+          {currentPage.title && <h1 className="text-3xl font-bold text-foreground mb-4 hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
           <Outlet />
         </main>
       </div>

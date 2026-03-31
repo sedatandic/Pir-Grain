@@ -174,35 +174,43 @@ export default function TradesPage() {
   }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, filterBrokerName, filterCountry, search]);
 
   const categorized = useMemo(() => ({
-    ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout', 'brokerage'].includes(t.status) && t.vesselName),
-    pending: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout', 'brokerage'].includes(t.status) && !t.vesselName),
+    ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
+    pending: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && !t.vesselName),
     completed: yearFilteredTrades.filter(t => COMPLETED_STATUSES.includes(t.status)),
     washout: yearFilteredTrades.filter(t => WASHOUT_STATUSES.includes(t.status)),
     cancelled: yearFilteredTrades.filter(t => CANCELLED_STATUSES.includes(t.status)),
-    brokerage: yearFilteredTrades.filter(t => t.status === 'brokerage'),
   }), [yearFilteredTrades]);
 
-  // Split completed into awaiting brokerage and fully completed
-  const commissionByTradeId = useMemo(() => {
-    const map = {};
-    invoices.filter(i => (i.invoiceNumber || '').startsWith('COMM-') || i.category === 'Commission Payment').forEach(i => {
-      if (i.tradeId) map[i.tradeId] = i.status;
+  // Match pending commissions from invoices
+  const pendingCommissionTradeIds = useMemo(() => {
+    const ids = new Set();
+    invoices.filter(i => ((i.invoiceNumber || '').startsWith('COMM-') || i.category === 'Commission Payment') && i.status !== 'paid').forEach(i => {
+      if (i.tradeId) ids.add(i.tradeId);
     });
-    return map;
+    return ids;
   }, [invoices]);
 
-  const awaitingBrokerage = categorized.brokerage;
+  const awaitingBrokerage = useMemo(() =>
+    yearFilteredTrades.filter(t => pendingCommissionTradeIds.has(t.id)),
+  [yearFilteredTrades, pendingCommissionTradeIds]);
 
-  const fullyCompleted = categorized.completed;
+  // Remove awaiting brokerage from ongoing
+  const filteredOngoing = useMemo(() =>
+    categorized.ongoing.filter(t => !pendingCommissionTradeIds.has(t.id)),
+  [categorized.ongoing, pendingCommissionTradeIds]);
+
+  const fullyCompleted = useMemo(() =>
+    categorized.completed.filter(t => !pendingCommissionTradeIds.has(t.id)),
+  [categorized.completed, pendingCommissionTradeIds]);
 
   const filtered = useMemo(() => ({
-    ongoing: applyFilters(categorized.ongoing),
+    ongoing: applyFilters(filteredOngoing),
     pending: applyFilters(categorized.pending),
     awaitingBrokerage: applyFilters(awaitingBrokerage),
     completed: applyFilters(fullyCompleted),
     washout: applyFilters(categorized.washout),
     cancelled: applyFilters(categorized.cancelled),
-  }), [categorized, applyFilters, awaitingBrokerage, fullyCompleted]);
+  }), [categorized, applyFilters, awaitingBrokerage, fullyCompleted, filteredOngoing]);
 
   const upcomingItems = useMemo(() => {
     const today = startOfDay(new Date());

@@ -372,6 +372,10 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       <tr>
+                        <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Shipper</th>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{(() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()}</td>
+                      </tr>
+                      <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Consignee</th>
                         <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getConsigneeText(previewDi)}</td>
                       </tr>

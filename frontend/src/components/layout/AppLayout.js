@@ -49,6 +49,16 @@ export default function AppLayout() {
     }
   }, [isAuthenticated, isAdmin, fetchNotifications]);
 
+  // Turkish character normalization for search
+  const normalizeTurkish = (str) => {
+    if (!str) return '';
+    return str.toLowerCase()
+      .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's')
+      .replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .replace(/İ/g, 'i').replace(/Ğ/g, 'g').replace(/Ü/g, 'u')
+      .replace(/Ş/g, 's').replace(/Ö/g, 'o').replace(/Ç/g, 'c');
+  };
+
   // Global search
   const performSearch = useCallback(async (q) => {
     if (!q || q.length < 2) { setSearchResults({ trades: [], partners: [], vessels: [] }); return; }
@@ -58,22 +68,18 @@ export default function AppLayout() {
         api.get('/api/partners').catch(() => ({ data: [] })),
         api.get('/api/vessels').catch(() => ({ data: [] })),
       ]);
-      const lq = q.toLowerCase();
+      const lq = normalizeTurkish(q);
+      const matchField = (val) => normalizeTurkish(val).includes(lq);
       const trades = (tradesRes.data || []).filter(t =>
-        (t.pirContractNumber || '').toLowerCase().includes(lq) ||
-        (t.contractNumber || '').toLowerCase().includes(lq) ||
-        (t.commodityName || '').toLowerCase().includes(lq) ||
-        (t.sellerName || '').toLowerCase().includes(lq) ||
-        (t.buyerName || '').toLowerCase().includes(lq) ||
-        (t.vesselName || '').toLowerCase().includes(lq)
+        matchField(t.pirContractNumber) || matchField(t.contractNumber) ||
+        matchField(t.commodityName) || matchField(t.sellerName) ||
+        matchField(t.buyerName) || matchField(t.vesselName)
       ).slice(0, 10);
       const partners = (partnersRes.data || []).filter(p =>
-        (p.companyName || '').toLowerCase().includes(lq) ||
-        (p.companyCode || '').toLowerCase().includes(lq)
+        matchField(p.companyName) || matchField(p.companyCode)
       ).slice(0, 10);
       const vessels = (vesselsRes.data || []).filter(v =>
-        (v.name || '').toLowerCase().includes(lq) ||
-        (v.imo || '').toLowerCase().includes(lq)
+        matchField(v.name) || matchField(v.imo)
       ).slice(0, 10);
       setSearchResults({ trades, partners, vessels });
     } catch {}
@@ -166,7 +172,7 @@ export default function AppLayout() {
           <div className="flex-1" />
 
           {/* Universal Search */}
-          <div className="w-full max-w-md relative" ref={searchRef}>
+          <div className="w-[700px] relative" ref={searchRef}>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -179,7 +185,7 @@ export default function AppLayout() {
               />
             </div>
             {showResults && searchQuery.length >= 2 && (
-              <div className="absolute top-full mt-1 right-0 w-[700px] bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">
+              <div className="absolute top-full mt-1 w-full bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">
                 <ScrollArea className="max-h-[450px]">
                   {searchResults.trades.length === 0 && searchResults.partners.length === 0 && searchResults.vessels.length === 0 ? (
                     <div className="px-4 py-6 text-center text-sm text-muted-foreground">No results found</div>

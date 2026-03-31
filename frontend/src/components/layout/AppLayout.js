@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../lib/auth';
 import Sidebar from './Sidebar';
 import { Toaster } from 'sonner';
-import { Bell, LogOut, ChevronDown, CheckCheck, Menu, Search, FileText, Users, Ship } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, CheckCheck, Menu, Search, FileText, Users, Ship, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
@@ -177,12 +177,17 @@ export default function AppLayout() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search contracts, partners, vessels..."
-                className="pl-9 h-9 bg-muted/50 border-0 focus-visible:ring-1"
+                className="pl-9 pr-8 h-9 bg-muted/50 border-0 focus-visible:ring-1"
                 data-testid="header-search-input"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setShowResults(true); }}
                 onFocus={() => { if (searchQuery.length >= 2) setShowResults(true); }}
               />
+              {searchQuery && (
+                <button onClick={() => { setSearchQuery(''); setShowResults(false); setSearchResults({ trades: [], partners: [], vessels: [] }); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" data-testid="header-search-clear">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             {showResults && searchQuery.length >= 2 && (
               <div className="absolute top-full mt-1 w-full bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">

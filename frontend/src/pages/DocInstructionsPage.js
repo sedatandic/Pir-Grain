@@ -246,7 +246,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
   const handleGeneratePdf = () => {
     if (!previewRef.current) return;
-    const contractLabel = getContractLabel(previewDi.tradeId);
+    const contractLabel = getTradeLabel(previewDi.tradeId);
     html2pdf().set({
       margin: [15, 15, 15, 15],
       filename: `Documentary_Instructions_${contractLabel}.pdf`,

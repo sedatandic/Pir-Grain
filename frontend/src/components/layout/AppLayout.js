@@ -110,7 +110,7 @@ export default function AppLayout() {
           </Button>
 
           {/* Page Title */}
-          {currentPage.title && <h1 className="text-2xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
+          {currentPage.title && <h1 className="text-3xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
 
           {/* Spacer to push content right */}
           <div className="flex-1" />

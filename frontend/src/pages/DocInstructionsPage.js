@@ -395,7 +395,6 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                           return parts.join('\n');
                         })()],
                         ['Buyer Surveyor at Load Port', (() => { const s = previewDi.surveyor || '—'; const t = trades.find(tr => tr.id === previewDi.tradeId); const pId = t?.loadingPortId || t?.basePortId; const p = pId ? ports.find(pp => pp.id === pId) : null; return s !== '—' && p?.country ? `${s} ${p.country}` : s; })()],
-                        ['Seller Surveyor at Load Port', (() => { const s = previewDi.sellerSurveyor || ((() => { const t = trades.find(tr => tr.id === previewDi.tradeId); return t?.sellerSurveyor || '—'; })()); const t = trades.find(tr => tr.id === previewDi.tradeId); const pId = t?.loadingPortId || t?.basePortId; const p = pId ? ports.find(pp => pp.id === pId) : null; return s !== '—' && p?.country ? `${s} ${p.country}` : s; })()],
                       ].map(([label, val], i) => (
                         <tr key={i}>
                           <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>{label}</th>

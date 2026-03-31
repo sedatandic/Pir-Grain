@@ -681,15 +681,6 @@ export default function TradesPage() {
         <CardContent>{renderTable(filtered.pending, 'No pending contracts')}</CardContent>
       </Card>
 
-      {/* Completed */}
-      <Card id="trades-completed" className="border-l-4 border-l-slate-400 bg-slate-50/50">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Contracts</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
-          <CardDescription className="text-slate-600">Successfully completed contracts</CardDescription>
-        </CardHeader>
-        <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
-      </Card>
-
       {/* Awaiting Brokerage Payment */}
       {filtered.awaitingBrokerage.length > 0 && (
         <Card id="trades-awaiting-brokerage" className="border-l-4 border-l-orange-400 bg-orange-50/50">
@@ -700,6 +691,15 @@ export default function TradesPage() {
           <CardContent>{renderTable(filtered.awaitingBrokerage, 'No contracts awaiting brokerage', 'brokerage')}</CardContent>
         </Card>
       )}
+
+      {/* Completed */}
+      <Card id="trades-completed" className="border-l-4 border-l-slate-400 bg-slate-50/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2"><CheckCircle className="h-5 w-5 text-slate-500" /><CardTitle className="text-slate-700">Completed Contracts</CardTitle><Badge variant="secondary" className="bg-slate-200 text-slate-700">{filtered.completed.length}</Badge></div>
+          <CardDescription className="text-slate-600">Successfully completed contracts</CardDescription>
+        </CardHeader>
+        <CardContent>{renderTable(filtered.completed, 'No completed contracts')}</CardContent>
+      </Card>
 
       {/* Washout */}
       <Card className="border-l-4 border-l-amber-500 bg-amber-50/50">

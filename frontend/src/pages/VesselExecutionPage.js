@@ -1283,10 +1283,11 @@ export default function VesselExecutionPage() {
 
       {/* Email Dialog */}
       <Dialog open={emailDialog.open} onOpenChange={(open) => !open && setEmailDialog({ open: false, docType: '', docLabel: '' })}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg mx-auto">
           <DialogHeader><DialogTitle>Send {emailDialog.docLabel}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            {/* Seller Section */}
+            {/* Seller Section - hidden for CIF/CFR vessel nominations (buyer responsibility) */}
+            {!(emailDialog.docType === 'vessel_nomination' && /^(CIF|CFR)/i.test(trade?.deliveryTerm || '')) && (
             <div className="space-y-2 border rounded-lg p-3">
               <Label className="text-sm font-semibold">To Seller ({trade?.sellerCode || trade?.sellerName || ''})</Label>
               <Input value={emailSellerTo} onChange={(e) => setEmailSellerTo(e.target.value)} placeholder="seller@example.com" data-testid="email-seller-to" />
@@ -1308,6 +1309,7 @@ export default function VesselExecutionPage() {
                 <Input value={emailExtraSeller} onChange={e => setEmailExtraSeller(e.target.value)} placeholder="email1@example.com, email2@example.com" className="text-xs h-8" data-testid="email-seller-extra-cc" />
               </div>
             </div>
+            )}
 
             {/* Buyer Section */}
             <div className="space-y-2 border rounded-lg p-3">

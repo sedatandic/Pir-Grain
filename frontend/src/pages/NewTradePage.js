@@ -334,7 +334,6 @@ export default function NewTradePage() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => navigate('/trades')}><ArrowLeft className="h-4 w-4 mr-2" />Back</Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{isEdit ? 'Edit Contract' : 'New Contract'}</h1>
           <p className="text-muted-foreground">{isEdit ? 'Update contract details' : 'Create a new commodity contract'}</p>
         </div>
       </div>

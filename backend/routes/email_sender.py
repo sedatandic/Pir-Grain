@@ -321,7 +321,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         <div style="padding: 10px 20px 0 20px; text-align: center; background-color: #fafaf8;">
             <img src="cid:pirlogo" style="height: 200px;" alt="PIR Grain and Pulses" />
         </div>
-        <div style="padding: 30px 28px; background-color: #fafaf8;">
+        <div style="padding: 8px 28px; background-color: #fafaf8;">
             <h2 style="text-align:center;color:#1B7A3D;font-size:18px;margin:0 0 16px 0;border-bottom:2px solid #1B7A3D;padding-bottom:8px;">Shipment Appropriation</h2>
             
             <table style="width:100%;margin-bottom:16px;font-size:14px;"><tr>
@@ -427,7 +427,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         <div style="padding: 10px 20px 0 20px; text-align: center; background-color: #fafaf8;">
             <img src="cid:pirlogo" style="height: 200px;" alt="PIR Grain and Pulses" />
         </div>
-        <div style="padding: 30px 28px; background-color: #fafaf8;">
+        <div style="padding: 8px 28px; background-color: #fafaf8;">
             <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
             {"<p style='font-size: 15px; color: #333;'>Please find below the vessel nomination details for the subject contract.</p>" if doc_name == "Vessel Nomination" else f"<p style='font-size: 15px; color: #333;'>Please find below the <strong>{doc_name}</strong> details:</p>"}
 

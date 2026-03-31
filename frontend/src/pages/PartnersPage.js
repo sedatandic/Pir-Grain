@@ -240,7 +240,7 @@ export default function PartnersPage({ filterType }) {
                     <TableHead>Company Code</TableHead>
                     <TableHead>Address</TableHead>
                     <TableHead>Tax ID No</TableHead>
-                    <TableHead>Tax Office</TableHead>
+                    <TableHead className="whitespace-nowrap">Tax Office</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead className="w-[80px]">Actions</TableHead>
                   </TableRow>

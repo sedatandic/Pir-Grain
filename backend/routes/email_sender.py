@@ -319,7 +319,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
         <div style="padding: 2px 20px 0 20px; text-align: center; background-color: #fafaf8;">
-            <img src="cid:pirlogo" style="height: 120px;" alt="PIR Grain and Pulses" />
+            <img src="cid:pirlogo" style="height: 240px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 4px 28px; background-color: #fafaf8;">
             <h2 style="text-align:center;color:#1B7A3D;font-size:18px;margin:0 0 16px 0;border-bottom:2px solid #1B7A3D;padding-bottom:8px;">Shipment Appropriation</h2>
@@ -428,7 +428,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
         <div style="padding: 2px 20px 0 20px; text-align: center; background-color: #fafaf8;">
-            <img src="cid:pirlogo" style="height: 120px;" alt="PIR Grain and Pulses" />
+            <img src="cid:pirlogo" style="height: 240px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 4px 28px; background-color: #fafaf8;">
             <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>

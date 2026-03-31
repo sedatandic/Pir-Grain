@@ -383,6 +383,9 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               </CardHeader>
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
+                  <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                    <img src="/pir-logo-new.jpeg" alt="PIR Grain & Pulses" style={{ height: '60px', margin: '0 auto' }} />
+                  </div>
                   {(() => {
                     const t = trades.find(tr => tr.id === previewDi.tradeId);
                     const qty = t?.quantity ? Number(t.quantity).toLocaleString('en-US') : '';

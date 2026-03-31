@@ -64,7 +64,7 @@ export default function AppLayout() {
     '/vessels': { title: 'Vessels' },
     '/documents': { title: 'Vessel Execution' },
     '/calendar': { title: 'Calendar' },
-    '/omega': { title: 'Omega — Accounting' },
+    '/omega': { title: 'Accounting' },
     '/reports': { title: 'Reports' },
     '/commissions': { title: 'Brokerage Invoices' },
     '/settings': { title: 'Settings' },

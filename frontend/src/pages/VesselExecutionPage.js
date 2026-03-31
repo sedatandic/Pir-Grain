@@ -1193,6 +1193,21 @@ export default function VesselExecutionPage() {
               </CardContent>
             </Card>
             </div>
+            <Card className="mt-4">
+              <CardHeader><CardTitle className="text-base">Courier for Original Documents</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Courier Name</Label>
+                    <Input placeholder="e.g. DHL, FedEx, UPS..." value={trade.courierName || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, courierName: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { courierName: e.target.value })} data-testid="courier-name-input" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Tracking Number</Label>
+                    <Input placeholder="Tracking number..." value={trade.courierTrackingNo || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, courierTrackingNo: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { courierTrackingNo: e.target.value })} data-testid="courier-tracking-input" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             {trade.buyerPaymentDate && (
               <div className="flex items-center gap-3 p-4 mt-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                 <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />

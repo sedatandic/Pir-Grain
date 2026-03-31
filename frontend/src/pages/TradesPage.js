@@ -174,11 +174,12 @@ export default function TradesPage() {
   }, [filterCommodity, filterSeller, filterBuyer, filterVessel, filterOrigin, filterStatus, filterCoBroker, filterBrokerName, filterCountry, search]);
 
   const categorized = useMemo(() => ({
-    ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && t.vesselName),
-    pending: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout'].includes(t.status) && !t.vesselName),
+    ongoing: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout', 'brokerage'].includes(t.status) && t.vesselName),
+    pending: yearFilteredTrades.filter(t => !['completed', 'cancelled', 'washout', 'brokerage'].includes(t.status) && !t.vesselName),
     completed: yearFilteredTrades.filter(t => COMPLETED_STATUSES.includes(t.status)),
     washout: yearFilteredTrades.filter(t => WASHOUT_STATUSES.includes(t.status)),
     cancelled: yearFilteredTrades.filter(t => CANCELLED_STATUSES.includes(t.status)),
+    brokerage: yearFilteredTrades.filter(t => t.status === 'brokerage'),
   }), [yearFilteredTrades]);
 
   // Split completed into awaiting brokerage and fully completed
@@ -190,13 +191,9 @@ export default function TradesPage() {
     return map;
   }, [invoices]);
 
-  const awaitingBrokerage = useMemo(() =>
-    categorized.completed.filter(t => commissionByTradeId[t.id] && commissionByTradeId[t.id] !== 'paid'),
-  [categorized.completed, commissionByTradeId]);
+  const awaitingBrokerage = categorized.brokerage;
 
-  const fullyCompleted = useMemo(() =>
-    categorized.completed.filter(t => !commissionByTradeId[t.id] || commissionByTradeId[t.id] === 'paid'),
-  [categorized.completed, commissionByTradeId]);
+  const fullyCompleted = categorized.completed;
 
   const filtered = useMemo(() => ({
     ongoing: applyFilters(categorized.ongoing),

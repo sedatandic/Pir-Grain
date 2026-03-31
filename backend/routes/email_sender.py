@@ -347,9 +347,6 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             <p style="font-size:14px;color:#555;">Please find attached the set of B/Ls. We will revert with the balance documents as soon as possible.</p>
             <p style="font-size:14px;color:#333;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
         </div>
-        <div style="padding: 12px; text-align: center; border-top: 1px solid #e0e0e0;">
-            <p style="color: #999; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
-        </div>
     </div>
     """
 
@@ -440,9 +437,6 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
 
             <p style="font-size: 14px; color: #555; margin-top: 24px;">{closing}</p>
             <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
-        </div>
-        <div style="padding: 12px; text-align: center; border-top: 1px solid #e0e0e0;">
-            <p style="color: #999; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
         </div>
     </div>
     """

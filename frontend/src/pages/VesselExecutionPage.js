@@ -208,6 +208,15 @@ export default function VesselExecutionPage() {
   const filteredAllTrades = useMemo(() => applyVeFilter(allTrades), [allTrades, veSearch, veCommodity, veSeller, veBuyer, veOrigin, veVessel]);
   const hasVeFilters = veSearch || veCommodity !== 'all' || veSeller !== 'all' || veBuyer !== 'all' || veOrigin !== 'all' || veVessel !== 'all';
 
+  // Unified brokerage check: uses invoicePaid field (consistent with CommissionsPage & TradesPage)
+  const isAwaitingBrokerage = (t) =>
+    ['completed', 'brokerage'].includes(t.status) &&
+    !t.invoicePaid &&
+    (t.brokerName || (t.brokeragePerMT && t.brokeragePerMT > 0));
+  const isEffectivelyCompleted = (t) =>
+    ['completed', 'brokerage'].includes(t.status) && !isAwaitingBrokerage(t);
+
+
   const getTradeLabel = (t) => {
     const num = t.pirContractNumber || t.contractNumber || '';
     const qty = t.quantity ? Number(t.quantity).toLocaleString('en-US') : '';
@@ -700,9 +709,9 @@ export default function VesselExecutionPage() {
 
 
       {/* Awaiting Brokerage Payment */}
-      {filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').length > 0 && (
+      {filteredTrades.filter(t => t.vesselName && isAwaitingBrokerage(t)).length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1.5">Awaiting Brokerage Payment ({filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').length})</h2>
+        <h2 className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1.5">Awaiting Brokerage Payment ({filteredTrades.filter(t => t.vesselName && isAwaitingBrokerage(t)).length})</h2>
         <div className="border border-orange-200 dark:border-orange-900/30 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -719,7 +728,7 @@ export default function VesselExecutionPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').map(t => (
+              {filteredTrades.filter(t => t.vesselName && isAwaitingBrokerage(t)).map(t => (
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
@@ -744,9 +753,9 @@ export default function VesselExecutionPage() {
       )}
 
       {/* Completed Contracts Table */}
-      {filteredTrades.filter(t => t.vesselName && t.status === 'completed').length > 0 && (
+      {filteredTrades.filter(t => t.vesselName && isEffectivelyCompleted(t)).length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground mb-1.5">Completed Contracts ({filteredTrades.filter(t => t.vesselName && t.status === 'completed').length})</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-1.5">Completed Contracts ({filteredTrades.filter(t => t.vesselName && isEffectivelyCompleted(t)).length})</h2>
         <div className="border border-border rounded-lg overflow-hidden opacity-75">
           <table className="w-full text-sm">
             <thead>
@@ -763,7 +772,7 @@ export default function VesselExecutionPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredTrades.filter(t => t.vesselName && t.status === 'completed').map(t => (
+              {filteredTrades.filter(t => t.vesselName && isEffectivelyCompleted(t)).map(t => (
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
@@ -788,7 +797,7 @@ export default function VesselExecutionPage() {
       )}
 
       {/* Empty state when no vessel-nominated contracts exist */}
-      {filteredTrades.filter(t => t.vesselName).length === 0 && filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length === 0 && (
+      {filteredTrades.filter(t => t.vesselName).length === 0 && filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout'].includes(t.status) && !isAwaitingBrokerage(t)).length === 0 && (
         <div className="border border-dashed border-muted-foreground/30 rounded-lg p-8 text-center" data-testid="ve-empty-state">
           <Ship className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
           <h3 className="text-base font-semibold text-muted-foreground mb-1">No Vessel Nominations Yet</h3>

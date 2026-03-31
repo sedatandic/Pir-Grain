@@ -8,11 +8,13 @@
 
 ## What's Been Implemented
 
-### Pending Commissions Mismatch Fix (2026-04-01)
-- Fixed mismatch between CommissionsPage (Brokerage) and TradesPage (Contracts)
-- Both pages now use `trade.invoicePaid` field as unified source of truth
-- Year filter updated to include older completed trades with unpaid brokerage
-- Verified: BEK446 appears correctly in both "Awaiting Brokerage Payment" (TradesPage) and "Pending USD" (CommissionsPage)
+### Unified Brokerage Payment Logic (2026-04-01)
+- Fixed mismatch between CommissionsPage, TradesPage, and VesselExecutionPage
+- All 3 pages now use `trade.invoicePaid` field as unified source of truth for pending brokerage
+- VesselExecutionPage: `isAwaitingBrokerage()` helper checks completed/brokerage status + !invoicePaid + has broker
+- TradesPage: Year filter includes older completed trades with unpaid brokerage
+- DB cleanup: MW1002, PIR-26-AZ8304, RC190126 status updated from 'brokerage' to 'completed' (all paid)
+- Verified: BEK446 is the only pending brokerage contract across all pages
 
 ### Brokerage Payment Workflow (2026-03-31)
 - Split completed contracts: "Awaiting Brokerage Payment" (commission unpaid) vs "Completed" (fully done)
@@ -36,15 +38,6 @@
 
 ### Shipment Documents View Button (2026-03-30)
 - Added Eye (View) button to all files in Shipment Documents tab
-- Uses blob-based window.open to view files in new tab
-
-### Regression Testing Pass (2026-04-01)
-- Full regression after brokerage fix: Backend 97% (34/35), Frontend 100%
-- Previous regression (2026-03-30): Backend 100% (25/25), Frontend 100%
-
-### Vessel Execution Empty State Fix (2026-03-30)
-- Fixed blank page when no vessel-nominated contracts exist
-- Added "Pending Vessel Nomination" table
 
 ### GAFTA Extension Field (2026-03-26)
 - Added GAFTA Extension dropdown in Shipping Terms
@@ -67,14 +60,14 @@
 
 ## Key API Endpoints
 - `POST /api/auth/login` - JWT login
-- `GET/PUT /api/trades/{id}` - Trade CRUD (includes vessel nomination fields)
+- `GET/PUT /api/trades/{id}` - Trade CRUD
+- `PATCH /api/trades/{id}/status` - Status change (validates payment date + SWIFT for completion)
 - `POST /api/trades/{id}/buyer-payment` - Payment date trigger
 - `POST /api/trades/{id}/draft-documents/bulk` - Draft docs bulk upload
 - `POST /api/trades/{id}/swift-copy` - SWIFT copy upload
-- `POST /api/accounting/invoices/{id}/file` - Invoice PDF upload
+- `GET /api/invoices` - Invoice list (accounting)
 - `POST /api/accounting/bank-statements/upload` - Bank statement upload
 - `POST /api/port-lineups/monthly/upload` - Monthly lineup upload
-- `GET /api/config/active-url` - URL migration guard
 
 ## Credentials
 - Admin: salih.karagoz / salih123

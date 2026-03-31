@@ -213,9 +213,21 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
     return di.consigneeCustom || '—';
   };
 
+  const trToEn = (str) => {
+    const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' };
+    return str.split('').map(c => trMap[c] || c).join('').toUpperCase();
+  };
+
   const getNotifyText = (di) => {
-    if (di.notifyOption === 'buyer_details') return di.notifyBuyerText || getBuyerDisplay(di.notifyBuyerId);
-    return di.notifyCustom || '—';
+    if (di.notifyOption === 'buyer_details') {
+      const buyer = buyers.find(b => b.id === di.notifyBuyerId);
+      if (!buyer) return di.notifyBuyerText ? trToEn(di.notifyBuyerText) : '—';
+      let lines = [buyer.companyName || ''];
+      if (buyer.address) lines.push(buyer.address);
+      if (buyer.city || buyer.country) lines.push([buyer.city, buyer.country].filter(Boolean).join(' / '));
+      return trToEn(lines.join('\n'));
+    }
+    return di.notifyCustom ? trToEn(di.notifyCustom) : '—';
   };
 
   const handleCopy = () => {

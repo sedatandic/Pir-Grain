@@ -110,7 +110,7 @@ export default function AppLayout() {
           </Button>
 
           {/* Page Title */}
-          <h1 className="text-base font-semibold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>
+          <h1 className="text-2xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>
 
           {/* Universal Search */}
           <div className="flex-1 max-w-md mx-auto">

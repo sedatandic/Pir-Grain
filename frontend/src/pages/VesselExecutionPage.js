@@ -1033,7 +1033,7 @@ export default function VesselExecutionPage() {
                   </Button>
                   {trade.vessel_nominationSent && (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Sent to <strong>{trade.buyerCode || trade.buyerName || '-'}</strong> by <strong>{(trade.vessel_nominationSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {trade.vessel_nominationSentAt ? new Date(trade.vessel_nominationSentAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : '-'}
+                      Sent to <strong>{trade.buyerCode || trade.buyerName || '-'}</strong> by <strong>{(trade.vessel_nominationSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {trade.vessel_nominationSentAt ? (() => { const d = new Date(trade.vessel_nominationSentAt); const dd = String(d.getDate()).padStart(2,'0'); const mm = String(d.getMonth()+1).padStart(2,'0'); const yyyy = d.getFullYear(); let h = d.getHours(); const min = String(d.getMinutes()).padStart(2,'0'); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${dd}/${mm}/${yyyy}, ${String(h).padStart(2,'0')}:${min} ${ampm}`; })() : '-'}
                     </p>
                   )}
                 </div>

@@ -10,7 +10,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Calendar } from '../components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
-import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X, FileText, Send } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Briefcase, User, CalendarDays, Plus, X, FileText, Send, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parse } from 'date-fns';
 import { cn } from '../lib/utils';
@@ -708,6 +708,11 @@ export default function NewTradePage() {
       </Card>
 
       <div className="flex justify-end gap-3 pb-6">
+        {isEdit && (
+          <Button variant="destructive" data-testid="delete-trade-edit-btn" onClick={async () => { if (window.confirm('Are you sure you want to delete this contract? This action cannot be undone.')) { try { await api.delete(`/api/trades/${tradeId}`); toast.success('Contract deleted'); navigate('/trades'); } catch { toast.error('Failed to delete contract'); } } }}>
+            <Trash2 className="h-4 w-4 mr-2" />Delete Contract
+          </Button>
+        )}
         <Button variant="outline" onClick={() => navigate('/trades')}>Cancel</Button>
         <Button onClick={handleSave} disabled={saving} data-testid="save-trade-button">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}

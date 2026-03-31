@@ -132,7 +132,7 @@ export default function AppLayout() {
     '/port-lineups': { title: 'Port Line-Ups' },
     '/business-cards': { title: 'Business Cards' },
   };
-  const currentPage = PAGE_TITLES[location.pathname] || (location.pathname.startsWith('/trades/') ? { title: location.pathname.includes('/edit') ? 'Edit Contract' : 'New Contract' } : location.pathname.startsWith('/documents/') ? { title: 'Vessel Execution' } : { title: '' });
+  const currentPage = PAGE_TITLES[location.pathname] || (location.pathname.startsWith('/trades/') ? { title: location.pathname.includes('/edit') ? 'Edit Contract' : location.pathname === '/trades/new' ? 'New Contract' : 'Contract Details' } : location.pathname.startsWith('/documents/') ? { title: 'Vessel Execution' } : { title: '' });
 
   const unreadCount = notifications.filter(n => !(n.readBy || []).includes(user?.username)).length;
 

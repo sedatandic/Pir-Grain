@@ -109,11 +109,11 @@ export default function AppLayout() {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Page Title */}
-          <h1 className="text-2xl font-bold text-foreground whitespace-nowrap hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>
+          {/* Spacer to push content right */}
+          <div className="flex-1" />
 
           {/* Universal Search */}
-          <div className="flex-1 max-w-md mx-auto">
+          <div className="w-full max-w-md">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -203,6 +203,7 @@ export default function AppLayout() {
           </DropdownMenu>
         </header>
         <main className="p-3 md:p-6 animate-fade-in">
+          {currentPage.title && <h1 className="text-4xl font-bold text-foreground mb-4 hidden sm:block" data-testid="header-page-title">{currentPage.title}</h1>}
           <Outlet />
         </main>
       </div>

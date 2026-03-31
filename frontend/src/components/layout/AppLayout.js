@@ -66,15 +66,15 @@ export default function AppLayout() {
         (t.sellerName || '').toLowerCase().includes(lq) ||
         (t.buyerName || '').toLowerCase().includes(lq) ||
         (t.vesselName || '').toLowerCase().includes(lq)
-      ).slice(0, 5);
+      ).slice(0, 10);
       const partners = (partnersRes.data || []).filter(p =>
         (p.companyName || '').toLowerCase().includes(lq) ||
         (p.companyCode || '').toLowerCase().includes(lq)
-      ).slice(0, 5);
+      ).slice(0, 10);
       const vessels = (vesselsRes.data || []).filter(v =>
         (v.name || '').toLowerCase().includes(lq) ||
         (v.imo || '').toLowerCase().includes(lq)
-      ).slice(0, 5);
+      ).slice(0, 10);
       setSearchResults({ trades, partners, vessels });
     } catch {}
   }, []);
@@ -182,21 +182,22 @@ export default function AppLayout() {
               />
             </div>
             {showResults && searchQuery.length >= 2 && (
-              <div className="absolute top-full mt-1 w-full bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">
-                <ScrollArea className="max-h-[350px]">
+              <div className="absolute top-full mt-1 right-0 w-[700px] bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">
+                <ScrollArea className="max-h-[450px]">
                   {searchResults.trades.length === 0 && searchResults.partners.length === 0 && searchResults.vessels.length === 0 ? (
                     <div className="px-4 py-6 text-center text-sm text-muted-foreground">No results found</div>
                   ) : (
                     <>
                       {searchResults.trades.length > 0 && (
                         <>
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Contracts</div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Contracts ({searchResults.trades.length})</div>
                           {searchResults.trades.map(t => (
                             <div key={t.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate(`/trades/${t.id}/edit`); setShowResults(false); }}>
                               <FileText className="h-4 w-4 text-primary shrink-0" />
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium truncate">{t.pirContractNumber || t.contractNumber}</div>
-                                <div className="text-xs text-muted-foreground truncate">{t.commodityName} · {t.sellerName} → {t.buyerName}</div>
+                              <div className="flex-1 min-w-0 grid grid-cols-[120px_1fr_100px] gap-2 items-center">
+                                <div className="text-sm font-semibold">{t.pirContractNumber || t.contractNumber}</div>
+                                <div className="text-xs text-muted-foreground">{t.commodityName} · {t.sellerName} → {t.buyerName}{t.vesselName ? ` · ${t.vesselName}` : ''}</div>
+                                <div className="text-xs text-right"><Badge variant="outline" className="text-[10px] px-1.5">{t.status || 'ongoing'}</Badge></div>
                               </div>
                             </div>
                           ))}
@@ -204,13 +205,14 @@ export default function AppLayout() {
                       )}
                       {searchResults.partners.length > 0 && (
                         <>
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Counterparties</div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Counterparties ({searchResults.partners.length})</div>
                           {searchResults.partners.map(p => (
                             <div key={p.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate('/partners'); setShowResults(false); }}>
                               <Users className="h-4 w-4 text-green-600 shrink-0" />
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium truncate">{p.companyName}</div>
-                                <div className="text-xs text-muted-foreground truncate">{p.companyCode} · {p.city}, {p.country}</div>
+                              <div className="flex-1 min-w-0 grid grid-cols-[1fr_120px_120px] gap-2 items-center">
+                                <div><div className="text-sm font-semibold">{p.companyName}</div><div className="text-xs text-muted-foreground">{p.companyCode}{p.city ? ` · ${p.city}` : ''}{p.country ? `, ${p.country}` : ''}</div></div>
+                                <div className="text-xs text-muted-foreground">{p.taxIdNo || ''}</div>
+                                <div className="text-xs text-right">{(Array.isArray(p.type) ? p.type : [p.type]).filter(Boolean).join(', ')}</div>
                               </div>
                             </div>
                           ))}
@@ -218,13 +220,14 @@ export default function AppLayout() {
                       )}
                       {searchResults.vessels.length > 0 && (
                         <>
-                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Vessels</div>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Vessels ({searchResults.vessels.length})</div>
                           {searchResults.vessels.map(v => (
                             <div key={v.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate('/vessels'); setShowResults(false); }}>
                               <Ship className="h-4 w-4 text-blue-600 shrink-0" />
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium truncate">{v.name}</div>
-                                <div className="text-xs text-muted-foreground truncate">IMO: {v.imo || '-'} · {v.flag || '-'}</div>
+                              <div className="flex-1 min-w-0 grid grid-cols-[1fr_100px_100px] gap-2 items-center">
+                                <div className="text-sm font-semibold">{v.name}</div>
+                                <div className="text-xs text-muted-foreground">IMO: {v.imo || '-'}</div>
+                                <div className="text-xs text-right">{v.flag || '-'}</div>
                               </div>
                             </div>
                           ))}

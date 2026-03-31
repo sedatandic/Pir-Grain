@@ -621,7 +621,7 @@ async def send_document_email(req: EmailSendRequest, user=Depends(get_current_us
         {"_id": ObjectId(req.trade_id)},
         {"$set": {
             sent_field: True,
-            f"{sent_field}At": datetime.utcnow().isoformat(),
+            f"{sent_field}At": datetime.utcnow().isoformat() + "Z",
             f"{sent_field}By": user.get("username") or user.get("name") or "",
             f"{sent_field}SentTo": sent_to,
         }}

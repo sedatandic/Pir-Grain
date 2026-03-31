@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft, Eye } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft, Eye, Filter, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
@@ -52,6 +52,15 @@ export default function VesselExecutionPage() {
   const [disportAgents, setDisportAgents] = useState([]);
   const [loadportAgents, setLoadportAgents] = useState([]);
 
+  // Filter state
+  const [veSearch, setVeSearch] = useState('');
+  const [veCommodity, setVeCommodity] = useState('all');
+  const [veSeller, setVeSeller] = useState('all');
+  const [veBuyer, setVeBuyer] = useState('all');
+  const [veOrigin, setVeOrigin] = useState('all');
+  const [veVessel, setVeVessel] = useState('all');
+  const [partners, setPartners] = useState([]);
+  const [origins, setOrigins] = useState([]);
   // Documents state
   const [docChecks, setDocChecks] = useState({});
   const [additionalDocs, setAdditionalDocs] = useState([]);
@@ -91,7 +100,7 @@ export default function VesselExecutionPage() {
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const [trRes, comRes, portRes, surRes, daRes, laRes, vesRes] = await Promise.all([
+        const [trRes, comRes, portRes, surRes, daRes, laRes, vesRes, partRes, origRes] = await Promise.all([
           api.get('/api/trades'),
           api.get('/api/commodities'),
           api.get('/api/ports'),
@@ -99,6 +108,8 @@ export default function VesselExecutionPage() {
           api.get('/api/disport-agents'),
           api.get('/api/loadport-agents'),
           api.get('/api/vessels'),
+          api.get('/api/partners'),
+          api.get('/api/origins'),
         ]);
         setTrades(trRes.data.filter(t => t.vesselName));
         setAllTrades(trRes.data);
@@ -108,6 +119,8 @@ export default function VesselExecutionPage() {
         setDisportAgents(daRes.data);
         setLoadportAgents(laRes.data);
         setVessels(vesRes.data);
+        setPartners(partRes.data);
+        setOrigins(origRes.data);
         // Auto-select trade from URL
         if (urlTradeId) {
           setSelectedTradeId(urlTradeId);
@@ -175,6 +188,25 @@ export default function VesselExecutionPage() {
     }
     return name;
   };
+
+  // Filter logic
+  const applyVeFilter = (list) => {
+    let r = list;
+    if (veSearch) {
+      const q = veSearch.toLowerCase();
+      r = r.filter(t => (t.pirContractNumber || '').toLowerCase().includes(q) || (t.commodityName || '').toLowerCase().includes(q) || (t.vesselName || '').toLowerCase().includes(q) || (t.sellerName || '').toLowerCase().includes(q) || (t.buyerName || '').toLowerCase().includes(q));
+    }
+    if (veCommodity !== 'all') r = r.filter(t => t.commodityId === veCommodity);
+    if (veSeller !== 'all') r = r.filter(t => t.sellerId === veSeller);
+    if (veBuyer !== 'all') r = r.filter(t => t.buyerId === veBuyer);
+    if (veOrigin !== 'all') r = r.filter(t => t.originId === veOrigin);
+    if (veVessel !== 'all') r = r.filter(t => t.vesselId === veVessel);
+    return r;
+  };
+
+  const filteredTrades = useMemo(() => applyVeFilter(trades), [trades, veSearch, veCommodity, veSeller, veBuyer, veOrigin, veVessel]);
+  const filteredAllTrades = useMemo(() => applyVeFilter(allTrades), [allTrades, veSearch, veCommodity, veSeller, veBuyer, veOrigin, veVessel]);
+  const hasVeFilters = veSearch || veCommodity !== 'all' || veSeller !== 'all' || veBuyer !== 'all' || veOrigin !== 'all' || veVessel !== 'all';
 
   const getTradeLabel = (t) => {
     const num = t.pirContractNumber || t.contractNumber || '';
@@ -548,6 +580,22 @@ export default function VesselExecutionPage() {
     <div className="space-y-4" data-testid="vessel-execution-page">
       {!urlTradeId && <div></div>}
 
+      {/* Filters */}
+      {!urlTradeId && (
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="relative flex-1 min-w-[200px] max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search..." className="pl-9 h-8 text-sm" value={veSearch} onChange={e => setVeSearch(e.target.value)} data-testid="ve-search" />
+          </div>
+          <Select value={veCommodity} onValueChange={setVeCommodity}><SelectTrigger className="h-8 w-[150px] text-xs"><SelectValue placeholder="Commodity" /></SelectTrigger><SelectContent>{[{id:'all',name:'All Commodities'},...commodities].map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={veSeller} onValueChange={setVeSeller}><SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Seller" /></SelectTrigger><SelectContent>{[{id:'all',companyName:'All Sellers'},...partners.filter(p => (Array.isArray(p.type) ? p.type : [p.type]).includes('seller'))].map(p => <SelectItem key={p.id} value={p.id}>{p.companyName}</SelectItem>)}</SelectContent></Select>
+          <Select value={veBuyer} onValueChange={setVeBuyer}><SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Buyer" /></SelectTrigger><SelectContent>{[{id:'all',companyName:'All Buyers'},...partners.filter(p => (Array.isArray(p.type) ? p.type : [p.type]).includes('buyer'))].map(p => <SelectItem key={p.id} value={p.id}>{p.companyName}</SelectItem>)}</SelectContent></Select>
+          <Select value={veOrigin} onValueChange={setVeOrigin}><SelectTrigger className="h-8 w-[130px] text-xs"><SelectValue placeholder="Origin" /></SelectTrigger><SelectContent>{[{id:'all',name:'All Origins'},...origins].map(o => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={veVessel} onValueChange={setVeVessel}><SelectTrigger className="h-8 w-[140px] text-xs"><SelectValue placeholder="Vessel" /></SelectTrigger><SelectContent>{[{id:'all',name:'All Vessels'},...vessels].map(v => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+          {hasVeFilters && <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setVeSearch(''); setVeCommodity('all'); setVeSeller('all'); setVeBuyer('all'); setVeOrigin('all'); setVeVessel('all'); }}><X className="h-3 w-3 mr-1" />Clear</Button>}
+        </div>
+      )}
+
       {urlTradeId && trade && (
         <div className="flex items-center">
           <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list" className="shrink-0">
@@ -563,9 +611,9 @@ export default function VesselExecutionPage() {
       {!urlTradeId && (<>
 
       {/* Ongoing Contracts Table */}
-      {trades.filter(t => t.vesselName && !['completed','cancelled','washout'].includes(t.status)).length > 0 && (
+      {filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1.5">Ongoing Contracts ({trades.filter(t => t.vesselName && !['completed','cancelled','washout'].includes(t.status)).length})</h2>
+        <h2 className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1.5">Ongoing Contracts ({filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length})</h2>
         <div className="border border-green-200 dark:border-green-900/50 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -582,7 +630,7 @@ export default function VesselExecutionPage() {
               </tr>
             </thead>
             <tbody>
-              {trades.filter(t => t.vesselName && !['completed','cancelled','washout'].includes(t.status)).map(t => (
+              {filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).map(t => (
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
@@ -607,9 +655,9 @@ export default function VesselExecutionPage() {
       )}
 
       {/* Pending Vessel Nomination - between Ongoing and Completed */}
-      {allTrades.filter(t => !t.vesselName && !['completed','cancelled','washout'].includes(t.status)).length > 0 && (
+      {filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-1.5">Pending Vessel Nomination ({allTrades.filter(t => !t.vesselName && !['completed','cancelled','washout'].includes(t.status)).length})</h2>
+        <h2 className="text-sm font-semibold text-amber-600 dark:text-amber-400 mb-1.5">Pending Vessel Nomination ({filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length})</h2>
         <div className="border border-amber-200 dark:border-amber-900/50 rounded-lg overflow-hidden">
           <table className="w-full text-sm">
             <thead>
@@ -626,7 +674,7 @@ export default function VesselExecutionPage() {
               </tr>
             </thead>
             <tbody>
-              {allTrades.filter(t => !t.vesselName && !['completed','cancelled','washout'].includes(t.status)).map(t => (
+              {filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).map(t => (
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
@@ -650,10 +698,55 @@ export default function VesselExecutionPage() {
       </div>
       )}
 
-      {/* Completed Contracts Table */}
-      {trades.filter(t => t.vesselName && t.status === 'completed').length > 0 && (
+
+      {/* Awaiting Brokerage Payment */}
+      {filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-muted-foreground mb-1.5">Completed Contracts ({trades.filter(t => t.vesselName && t.status === 'completed').length})</h2>
+        <h2 className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1.5">Awaiting Brokerage Payment ({filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').length})</h2>
+        <div className="border border-orange-200 dark:border-orange-900/30 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-orange-100 dark:bg-orange-900/40 border-b border-orange-200 dark:border-orange-900/50">
+                <th className="text-center px-4 py-2.5 font-medium">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-medium">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Seller</th>
+                <th className="text-center px-4 py-2.5 font-medium">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-medium">Origin</th>
+                <th className="text-center px-4 py-2.5 font-medium">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-medium">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-medium">Discharge Port</th>
+                <th className="text-center px-4 py-2.5 font-medium">Vessel</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTrades.filter(t => t.vesselName && t.status === 'brokerage').map(t => (
+                <tr
+                  key={t.id}
+                  onClick={() => handleTradeSelect(t.id)}
+                  className={`border-b border-orange-100 dark:border-orange-900/30 cursor-pointer transition-colors hover:bg-orange-50/50 dark:hover:bg-orange-900/10 ${selectedTradeId === t.id ? 'bg-orange-100 dark:bg-orange-900/30 border-l-4 border-l-orange-600' : ''}`}
+                  data-testid={`ve-brokerage-row-${t.id}`}
+                >
+                  <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{renderCommodity(t)}</td>
+                  <td className="px-4 py-2.5 text-center">{t.sellerCode || t.sellerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.buyerCode || t.buyerName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{t.originName || '-'}</td>
+                  <td className="px-4 py-2.5 text-center">{(t.blQuantity ? `${Number(t.blQuantity).toLocaleString('en-US')} MT` : t.quantity ? `${Number(t.quantity).toLocaleString('en-US')} MT` : '-')}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.loadingPortId || t.basePortId)}</td>
+                  <td className="px-4 py-2.5 text-center">{getPortDisplay(t.dischargePortId)}</td>
+                  <td className="px-4 py-2.5 font-medium uppercase text-center">{renderVessel(t.vesselName)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      )}
+
+      {/* Completed Contracts Table */}
+      {filteredTrades.filter(t => t.vesselName && t.status === 'completed').length > 0 && (
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-1.5">Completed Contracts ({filteredTrades.filter(t => t.vesselName && t.status === 'completed').length})</h2>
         <div className="border border-border rounded-lg overflow-hidden opacity-75">
           <table className="w-full text-sm">
             <thead>
@@ -670,7 +763,7 @@ export default function VesselExecutionPage() {
               </tr>
             </thead>
             <tbody>
-              {trades.filter(t => t.vesselName && t.status === 'completed').map(t => (
+              {filteredTrades.filter(t => t.vesselName && t.status === 'completed').map(t => (
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
@@ -695,7 +788,7 @@ export default function VesselExecutionPage() {
       )}
 
       {/* Empty state when no vessel-nominated contracts exist */}
-      {trades.filter(t => t.vesselName).length === 0 && allTrades.filter(t => !t.vesselName && !['completed','cancelled','washout'].includes(t.status)).length === 0 && (
+      {filteredTrades.filter(t => t.vesselName).length === 0 && filteredAllTrades.filter(t => !t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length === 0 && (
         <div className="border border-dashed border-muted-foreground/30 rounded-lg p-8 text-center" data-testid="ve-empty-state">
           <Ship className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
           <h3 className="text-base font-semibold text-muted-foreground mb-1">No Vessel Nominations Yet</h3>

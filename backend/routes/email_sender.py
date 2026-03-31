@@ -318,8 +318,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         # Custom SA body matching PDF
         return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
-        <div style="background-color: #1B7A3D; padding: 20px; text-align: center;">
-            {logo_html if logo_html else '<h1 style="color: #ffffff; margin: 0; font-size: 22px;">PIR Grain &amp; Pulses Ltd</h1>'}
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+            <img src="cid:pirlogo" style="height: 80px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">
             <h2 style="text-align:center;color:#1B7A3D;font-size:18px;margin:0 0 16px 0;border-bottom:2px solid #1B7A3D;padding-bottom:8px;">Shipment Appropriation</h2>
@@ -347,8 +347,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             <p style="font-size:14px;color:#555;">Please find attached the set of B/Ls. We will revert with the balance documents as soon as possible.</p>
             <p style="font-size:14px;color:#333;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
         </div>
-        <div style="background-color: #1B7A3D; padding: 12px; text-align: center;">
-            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
+        <div style="padding: 12px; text-align: center; border-top: 1px solid #e0e0e0;">
+            <p style="color: #999; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
         </div>
     </div>
     """
@@ -424,8 +424,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
 
     return f"""
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
-        <div style="background-color: #1B7A3D; padding: 20px; text-align: center;">
-            {logo_html if logo_html else '<h1 style="color: #ffffff; margin: 0; font-size: 22px;">PIR Grain &amp; Pulses Ltd</h1>'}
+        <div style="padding: 20px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+            <img src="cid:pirlogo" style="height: 80px;" alt="PIR Grain and Pulses" />
         </div>
         <div style="padding: 30px 28px; background-color: #fafaf8;">
             <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
@@ -438,8 +438,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             <p style="font-size: 14px; color: #555; margin-top: 24px;">{closing}</p>
             <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
         </div>
-        <div style="background-color: #1B7A3D; padding: 12px; text-align: center;">
-            <p style="color: rgba(255,255,255,0.7); font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
+        <div style="padding: 12px; text-align: center; border-top: 1px solid #e0e0e0;">
+            <p style="color: #999; font-size: 11px; margin: 0;">PIR Grain &amp; Pulses Ltd. | Confidential</p>
         </div>
     </div>
     """

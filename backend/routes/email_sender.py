@@ -431,7 +431,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             <div style="text-align: center;">
                 <img src="cid:pirlogo" style="height: 180px; display: block; margin: 0 auto;" alt="PIR Grain and Pulses" />
             </div>
-            <p style="font-size: 15px; color: #333;">Dear {recipient_name},</p>
+            <p style="font-size: 15px; color: #333; margin-top: 0;">Dear {recipient_name},</p>
             {"<p style='font-size: 15px; color: #333;'>Please find below the vessel nomination details for the subject contract.</p>" if doc_name == "Vessel Nomination" else f"<p style='font-size: 15px; color: #333;'>Please find below the <strong>{doc_name}</strong> details:</p>"}
 
             <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">

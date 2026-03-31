@@ -852,10 +852,12 @@ async def create_market_note(note: MarketNote, user=Depends(get_current_user)):
 async def update_market_note(note_id: str, note: MarketNote, user=Depends(get_current_user)):
     """Update a market note"""
     update_data = {
-        **note.dict(),
+        "content": note.content,
         "updatedAt": datetime.now(timezone.utc).isoformat(),
         "updatedBy": user.get("username")
     }
+    if note.tags:
+        update_data["tags"] = note.tags
     market_notes_col.update_one(
         {"_id": ObjectId(note_id)},
         {"$set": update_data}

@@ -5,12 +5,14 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
-import { Send, Trash2, Plus, X, CalendarDays } from 'lucide-react';
+import { Send, Trash2, Plus, X, CalendarDays, Pencil, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function IndicationsTab() {
   const [marketNews, setMarketNews] = useState({ Wheat: [], Corn: [], Barley: [], Others: [] });
   const [newsInput, setNewsInput] = useState({ Wheat: '', Corn: '', Barley: '', Others: '' });
+  const [editingNote, setEditingNote] = useState(null);
+  const [editContent, setEditContent] = useState('');
   const [newsPeriod, setNewsPeriod] = useState(() => {
     const now = new Date();
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -121,6 +123,19 @@ export default function IndicationsTab() {
       fetchMarketNews();
     } catch (err) {
       toast.error('Failed to delete comment');
+    }
+  };
+
+  const handleEditComment = async (noteId) => {
+    if (!editContent.trim()) return;
+    try {
+      await api.put(`/api/market/notes/${noteId}`, { content: editContent.trim(), commodity: '', period: '', tags: [] });
+      toast.success('Comment updated');
+      setEditingNote(null);
+      setEditContent('');
+      fetchMarketNews();
+    } catch (err) {
+      toast.error('Failed to update comment');
     }
   };
 
@@ -240,15 +255,30 @@ export default function IndicationsTab() {
                 ) : (
                   (marketNews[category] || []).map((note) => (
                     <div key={note.id} className="py-1.5 border-b border-border group">
-                      <p className="text-sm">{note.content}</p>
-                      <div className="flex items-center justify-between mt-0.5">
-                        <span className="text-[11px] text-muted-foreground italic">
-                          {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        </span>
-                        <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" onClick={() => handleDeleteComment(note.id)}>
-                          <Trash2 className="h-3 w-3 text-red-500" />
-                        </Button>
-                      </div>
+                      {editingNote === note.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <Input value={editContent} onChange={(e) => setEditContent(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleEditComment(note.id); if (e.key === 'Escape') { setEditingNote(null); setEditContent(''); } }} className="text-sm h-7" autoFocus />
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => handleEditComment(note.id)}><Check className="h-3.5 w-3.5 text-green-600" /></Button>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => { setEditingNote(null); setEditContent(''); }}><X className="h-3.5 w-3.5 text-muted-foreground" /></Button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm">{note.content}</p>
+                          <div className="flex items-center justify-between mt-0.5">
+                            <span className="text-[11px] text-muted-foreground italic">
+                              {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                            </span>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0" onClick={() => { setEditingNote(note.id); setEditContent(note.content); }}>
+                                <Pencil className="h-3 w-3 text-blue-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0" onClick={() => handleDeleteComment(note.id)}>
+                                <Trash2 className="h-3 w-3 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))
                 )}

@@ -1,9 +1,9 @@
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../../lib/auth';
 import Sidebar from './Sidebar';
 import { Toaster } from 'sonner';
-import { Bell, LogOut, ChevronDown, CheckCheck, Menu, Search } from 'lucide-react';
+import { Bell, LogOut, ChevronDown, CheckCheck, Menu, Search, FileText, Users, Ship } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
@@ -17,8 +17,14 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 export default function AppLayout() {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ trades: [], partners: [], vessels: [] });
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef(null);
+  const searchTimerRef = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -42,6 +48,53 @@ export default function AppLayout() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, isAdmin, fetchNotifications]);
+
+  // Global search
+  const performSearch = useCallback(async (q) => {
+    if (!q || q.length < 2) { setSearchResults({ trades: [], partners: [], vessels: [] }); return; }
+    try {
+      const [tradesRes, partnersRes, vesselsRes] = await Promise.all([
+        api.get('/api/trades').catch(() => ({ data: [] })),
+        api.get('/api/partners').catch(() => ({ data: [] })),
+        api.get('/api/vessels').catch(() => ({ data: [] })),
+      ]);
+      const lq = q.toLowerCase();
+      const trades = (tradesRes.data || []).filter(t =>
+        (t.pirContractNumber || '').toLowerCase().includes(lq) ||
+        (t.contractNumber || '').toLowerCase().includes(lq) ||
+        (t.commodityName || '').toLowerCase().includes(lq) ||
+        (t.sellerName || '').toLowerCase().includes(lq) ||
+        (t.buyerName || '').toLowerCase().includes(lq) ||
+        (t.vesselName || '').toLowerCase().includes(lq)
+      ).slice(0, 5);
+      const partners = (partnersRes.data || []).filter(p =>
+        (p.companyName || '').toLowerCase().includes(lq) ||
+        (p.companyCode || '').toLowerCase().includes(lq)
+      ).slice(0, 5);
+      const vessels = (vesselsRes.data || []).filter(v =>
+        (v.name || '').toLowerCase().includes(lq) ||
+        (v.imo || '').toLowerCase().includes(lq)
+      ).slice(0, 5);
+      setSearchResults({ trades, partners, vessels });
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => performSearch(searchQuery), 300);
+    return () => { if (searchTimerRef.current) clearTimeout(searchTimerRef.current); };
+  }, [searchQuery, performSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setShowResults(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close search on navigation
+  useEffect(() => { setShowResults(false); setSearchQuery(''); }, [location.pathname]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -116,15 +169,72 @@ export default function AppLayout() {
           <div className="flex-1" />
 
           {/* Universal Search */}
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md relative" ref={searchRef}>
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search contracts, partners, vessels..."
                 className="pl-9 h-9 bg-muted/50 border-0 focus-visible:ring-1"
                 data-testid="header-search-input"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setShowResults(true); }}
+                onFocus={() => { if (searchQuery.length >= 2) setShowResults(true); }}
               />
             </div>
+            {showResults && searchQuery.length >= 2 && (
+              <div className="absolute top-full mt-1 w-full bg-card border rounded-lg shadow-lg z-50 overflow-hidden" data-testid="search-results-dropdown">
+                <ScrollArea className="max-h-[350px]">
+                  {searchResults.trades.length === 0 && searchResults.partners.length === 0 && searchResults.vessels.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-muted-foreground">No results found</div>
+                  ) : (
+                    <>
+                      {searchResults.trades.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Contracts</div>
+                          {searchResults.trades.map(t => (
+                            <div key={t.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate(`/trades/${t.id}/edit`); setShowResults(false); }}>
+                              <FileText className="h-4 w-4 text-primary shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium truncate">{t.pirContractNumber || t.contractNumber}</div>
+                                <div className="text-xs text-muted-foreground truncate">{t.commodityName} · {t.sellerName} → {t.buyerName}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                      {searchResults.partners.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Counterparties</div>
+                          {searchResults.partners.map(p => (
+                            <div key={p.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate('/partners'); setShowResults(false); }}>
+                              <Users className="h-4 w-4 text-green-600 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium truncate">{p.companyName}</div>
+                                <div className="text-xs text-muted-foreground truncate">{p.companyCode} · {p.city}, {p.country}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                      {searchResults.vessels.length > 0 && (
+                        <>
+                          <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 uppercase tracking-wider">Vessels</div>
+                          {searchResults.vessels.map(v => (
+                            <div key={v.id} className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 cursor-pointer" onClick={() => { navigate('/vessels'); setShowResults(false); }}>
+                              <Ship className="h-4 w-4 text-blue-600 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium truncate">{v.name}</div>
+                                <div className="text-xs text-muted-foreground truncate">IMO: {v.imo || '-'} · {v.flag || '-'}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </>
+                  )}
+                </ScrollArea>
+              </div>
+            )}
           </div>
 
           {/* Notifications Bell - Admin only */}

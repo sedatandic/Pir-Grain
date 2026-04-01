@@ -580,20 +580,19 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
     qty_str = f"{bl_qty:,.3f}" if bl_qty else ""
     subject = f"Commission Invoice - {contract_num} - {qty_str} Mts {commodity_display} - {vessel_name}"
 
-    # Load logo for CID
+    # Load logo as base64 data URI (not CID - avoids Gmail showing it as attachment)
     logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
     attachments = []
-    logo_cid = ""
+    logo_html = ""
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
-        attachments.append({"filename": "pir-logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo", "disposition": "inline"})
-        logo_cid = '<img src="cid:pirlogo" style="max-width:300px;height:auto;pointer-events:none;" />'
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-width:300px;height:auto;" />'
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="text-align: center; margin-bottom: 5px;">{logo_cid}</div>
-        <p>Dear {recipient_name},</p>
+        <div style="text-align: center; margin-bottom: 0;">{logo_html}</div>
+        <p style="margin-top: 4px;">Dear {recipient_name},</p>
         <p>Please find attached the Commission Invoice for contract <b>{contract_num}</b>, vessel <b>{vessel_name}</b>.</p>
         <p>We also take this opportunity to thank you for your continued business and cooperation.</p>
         <p style="margin-top:8px;">Best Regards,</p>

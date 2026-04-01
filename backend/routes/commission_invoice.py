@@ -143,6 +143,20 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     bl_date = trade.get("blDate") or "-"
     contract_date = trade.get("contractDate") or "-"
 
+    def fmt_date(d):
+        """Convert date to DD-MM-YYYY format."""
+        if not d or d == "-":
+            return "-"
+        d = d.replace(".", "-").replace("/", "-")
+        parts = d.split("-")
+        if len(parts) == 3 and len(parts[0]) == 4:
+            return f"{parts[2]}-{parts[1]}-{parts[0]}"
+        return d
+
+    bl_date = fmt_date(bl_date)
+    contract_date = fmt_date(contract_date)
+    invoice_date = fmt_date(invoice_date)
+
     detail_pairs = [
         ("Invoice No", invoice_number, "Invoice Date", invoice_date),
         ("Contract No", contract_num, "Contract Date", contract_date),

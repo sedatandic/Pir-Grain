@@ -531,6 +531,11 @@ export default function VesselExecutionPage() {
         toEmail: ciTo,
         ccEmails: [...ciCc, ...extraArr],
       });
+      await api.put(`/api/trades/${trade.id}`, {
+        commissionInvoiceSentBy: trade.executionHandledBy || 'Admin',
+        commissionInvoiceSentAt: new Date().toISOString(),
+      });
+      setTrade(prev => ({ ...prev, commissionInvoiceSentBy: prev.executionHandledBy || 'Admin', commissionInvoiceSentAt: new Date().toISOString() }));
       toast.success('Commission invoice sent');
       setCiDialog(false);
     } catch (err) { toast.error(err.response?.data?.detail || 'Failed to send'); }
@@ -1247,9 +1252,12 @@ export default function VesselExecutionPage() {
                     <Label className="text-xs text-muted-foreground">Invoice Date</Label>
                     <Input placeholder="e.g. 01/04/2026" value={trade.invoiceDate || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, invoiceDate: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { invoiceDate: e.target.value })} data-testid="commission-invoice-date-input" />
                   </div>
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex items-center gap-2 pt-2">
                     <Button variant="outline" size="sm" data-testid="view-commission-invoice-pdf" onClick={async () => { try { const res = await api.get(`/api/commission-invoice/${trade.id}`, { responseType: 'blob' }); window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank'); } catch { toast.error('Failed to generate PDF'); } }}><FileText className="h-4 w-4 mr-1.5" />View PDF</Button>
                     <Button variant="default" size="sm" className="bg-green-700 hover:bg-green-800" data-testid="send-commission-invoice-btn" onClick={openCiDialog}><Send className="h-4 w-4 mr-1.5" />Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
+                    {trade.commissionInvoiceSentAt && (
+                      <p className="text-xs text-muted-foreground">Sent by <strong>{(trade.commissionInvoiceSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {toIstanbulTime(trade.commissionInvoiceSentAt)}</p>
+                    )}
                   </div>
                 </div>
               </CardContent>

@@ -378,13 +378,13 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     # =====================================================
     # SIGNATURE with stamp image
     # =====================================================
-    STAMP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-stamp-signature.png")
+    STAMP_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-signature.jpg")
     sig_line = ParagraphStyle('SigLine', fontName=F, fontSize=8, alignment=TA_CENTER, textColor=GREY)
     sig_name = ParagraphStyle('SigName', fontName=FB, fontSize=7, alignment=TA_CENTER, textColor=DARK, leading=10)
 
     sig_rows = []
     if os.path.exists(STAMP_PATH):
-        sig_rows.append(["", Image(STAMP_PATH, width=28*mm, height=28*mm)])
+        sig_rows.append(["", Image(STAMP_PATH, width=40*mm, height=25*mm)])
     sig_rows.append(["", Paragraph("_______________________________", sig_line)])
     sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
 

@@ -253,9 +253,10 @@ export default function TradesPage() {
     const { tradeId, newStatus } = brokerCommDialog;
     setBrokerCommDialog({ open: false, tradeId: null, newStatus: null });
     try {
-      await api.put(`/api/trades/${tradeId}`, { generateBrokerCommission: generate });
+      const cancelDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Istanbul' });
+      await api.put(`/api/trades/${tradeId}`, { generateBrokerCommission: generate, cancelledDate: cancelDate });
       await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
-      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus, generateBrokerCommission: generate } : t));
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus, generateBrokerCommission: generate, cancelledDate: cancelDate } : t));
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to update status';
       toast.error(msg);

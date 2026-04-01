@@ -255,7 +255,7 @@ export default function CommissionsPage() {
           <TableBody>
             {filtered.map((t, idx) => {
               const invoiceStatus = t.invoicePaid ? 'PAID' : 'PENDING';
-              const invDate = t.invoiceDate || t.buyerPaymentDate || '-';
+              const invDate = t.invoiceDate || t.buyerPaymentDate || t.cancelledDate || '-';
               const invNo = t.invoiceNo || `COMM-${t.pirContractNumber || t.referenceNumber || ''}`;
               const commCur = getCommCurrency(t);
               return (

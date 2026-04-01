@@ -297,9 +297,19 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(total_row)
     elements.append(Spacer(1, 1*mm))
 
-    # Amount in words - right-aligned, full width for single line
+    # Amount in words - right-aligned to edge of green box
     words = amount_in_words(total_amount, currency)
-    elements.append(Paragraph(f"<i>In Words: {words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
+    words_tbl = Table(
+        [["", Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT))]],
+        colWidths=[W*0.20, W*0.80]
+    )
+    words_tbl.setStyle(TableStyle([
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(words_tbl)
     elements.append(Spacer(1, 4*mm))
 
     # =====================================================

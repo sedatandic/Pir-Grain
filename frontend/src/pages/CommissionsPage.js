@@ -70,7 +70,7 @@ export default function CommissionsPage() {
   }, []);
 
   const categorized = useMemo(() => {
-    const cancelledWashout = trades.filter(t => ['cancelled', 'washout'].includes(t.status));
+    const cancelledWashout = trades.filter(t => ['cancelled', 'washout'].includes(t.status) && t.generateBrokerCommission);
     const active = trades.filter(t => !['cancelled', 'washout'].includes(t.status) && t.buyerPaymentDate);
     return {
       pending: active.filter(t => !t.invoicePaid),

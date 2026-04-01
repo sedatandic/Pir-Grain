@@ -231,6 +231,16 @@ export default function TradesPage() {
 
   const handleStatusChange = async (tradeId, newStatus) => {
     try {
+      // For cancelled/washout, ask about broker commissions
+      if (['cancelled', 'washout'].includes(newStatus)) {
+        const trade = trades.find(t => t.id === tradeId);
+        const hasBroker = trade?.brokerName || (trade?.brokeragePerMT && trade.brokeragePerMT > 0);
+        if (hasBroker) {
+          const genComm = window.confirm('Should broker commissions be generated for this contract?');
+          await api.put(`/api/trades/${tradeId}`, { generateBrokerCommission: genComm });
+          setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, generateBrokerCommission: genComm } : t));
+        }
+      }
       await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
       setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus } : t));
     } catch (err) {

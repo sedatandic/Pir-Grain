@@ -171,6 +171,15 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('LEFTPADDING', (0, 0), (-1, -1), 0),
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
+    # Gray line above "To" box
+    to_sep = Table([[""]], colWidths=[W])
+    to_sep.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(to_sep)
+    elements.append(Spacer(1, 3*mm))
     elements.append(to_wrapper)
     elements.append(Spacer(1, 4*mm))
 

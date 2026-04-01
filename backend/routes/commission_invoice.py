@@ -585,15 +585,14 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
         attachments.append({"filename": "pir-logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
-        logo_cid = '<img src="cid:pirlogo" style="max-width:200px;height:auto;" />'
+        logo_cid = '<img src="cid:pirlogo" style="max-width:400px;height:auto;" />'
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="text-align: center; padding: 20px 0;">{logo_cid}</div>
+        <div style="text-align: center; padding: 10px 0;">{logo_cid}</div>
         <p>Dear {recipient_name},</p>
         <p>Please find attached the Commission Invoice for contract <b>{contract_num}</b>, vessel <b>{vessel_name}</b>.</p>
-        <br/>
-        <p>Best regards,</p>
+        <p style="margin-top:8px;">Best Regards,</p>
         <p><b>PIR Grain and Pulses Ltd</b></p>
     </div>
     """

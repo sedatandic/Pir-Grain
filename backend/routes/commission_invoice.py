@@ -87,18 +87,13 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     # HEADER: Logo centered
     # =====================================================
     if os.path.exists(LOGO_PATH):
-        logo_img = Image(LOGO_PATH, width=50*mm, height=25*mm)
+        logo_img = Image(LOGO_PATH, width=100*mm, height=50*mm)
         logo_tbl = Table([[logo_img]], colWidths=[W])
         logo_tbl.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER')]))
         elements.append(logo_tbl)
     elements.append(Spacer(1, 10*mm))
     elements.append(Paragraph("Commission Invoice", ParagraphStyle('InvTitle', fontName=FB, fontSize=16, textColor=GREEN, alignment=TA_CENTER, leading=20)))
-    elements.append(Spacer(1, 1.5*mm))
-
-    lbl_w = 22*mm
-    val_w_half = (W - 2*lbl_w) / 2
-    line_width = 2*lbl_w + 2*val_w_half
-    elements.append(HRFlowable(width=line_width, thickness=1.5, color=GREEN, spaceAfter=3*mm))
+    elements.append(Spacer(1, 3*mm))
 
     # =====================================================
     # TRADE DETAILS: Compact 2-column key-value grid
@@ -150,7 +145,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
         ("Origin", origin, "Discharge Port", discharge_full),
-        ("Vessel", vessel_name, "Shipment", shipment_period),
+        ("Vessel", vessel_name, "Bill of Lading (B/L) No", trade.get("blNumber") or "-"),
         ("Load Port", loading_full, "Delivery Term", delivery_term_full),
     ]
 
@@ -208,8 +203,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_th = ParagraphStyle('TH', fontName=FB, fontSize=7.5, textColor=colors.white, alignment=TA_CENTER, leading=10)
     s_th_l = ParagraphStyle('THL', fontName=FB, fontSize=7.5, textColor=colors.white, alignment=TA_LEFT, leading=10)
     s_td_l = ParagraphStyle('TDL', fontName=F, fontSize=8, textColor=DARK, leading=11)
-    s_td_r = ParagraphStyle('TDR', fontName=F, fontSize=8, textColor=DARK, alignment=TA_RIGHT, leading=11)
-    s_td_rb = ParagraphStyle('TDRB', fontName=FB, fontSize=8.5, textColor=DARK, alignment=TA_RIGHT, leading=11)
+    s_td_c = ParagraphStyle('TDC', fontName=F, fontSize=8, textColor=DARK, alignment=TA_CENTER, leading=11)
+    s_td_cb = ParagraphStyle('TDCB', fontName=FB, fontSize=8.5, textColor=DARK, alignment=TA_CENTER, leading=11)
 
     calc_header = [
         Paragraph("DESCRIPTION", s_th_l),
@@ -220,9 +215,9 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     desc_text = f"Brokerage Commission for {vessel_name}"
     calc_row = [
         Paragraph(desc_text, s_td_l),
-        Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_r),
-        Paragraph(f"{brokerage_per_mt:,.2f}", s_td_r),
-        Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_td_rb),
+        Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_c),
+        Paragraph(f"{brokerage_per_mt:,.2f}", s_td_c),
+        Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_td_cb),
     ]
 
     calc_cw = [W*0.42, W*0.18, W*0.18, W*0.22]
@@ -273,8 +268,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     # =====================================================
     # BANK DETAILS: Card style
     # =====================================================
-    elements.append(HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=2*mm))
-    elements.append(Paragraph("BANK DETAILS", ParagraphStyle('BankSec', fontName=FB, fontSize=9, textColor=GREEN, spaceAfter=2*mm)))
+    elements.append(HRFlowable(width=W, thickness=0.5, color=BORDER, spaceAfter=2*mm))
+    elements.append(Paragraph("BANK DETAILS", ParagraphStyle('BankSec', fontName=FB, fontSize=9, textColor=GREEN, alignment=TA_LEFT, spaceAfter=2*mm)))
 
     accounts_to_show = bank_accounts if bank_accounts else [PIR_BANK]
     s_bk_lbl = ParagraphStyle('BkL', fontName=FB, fontSize=7, textColor=GREY, leading=9)
@@ -298,7 +293,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
             [Paragraph("Beneficiary", s_bk_lbl), Paragraph(beneficiary, s_bk_val_b)],
             [Paragraph("Bank", s_bk_lbl), Paragraph(bank_name, s_bk_val)],
             [Paragraph("Address", s_bk_lbl), Paragraph(address, s_bk_val)],
-            [Paragraph("IBAN", s_bk_lbl), Paragraph(f"<b>{iban}</b>", s_bk_val_b)],
+            [Paragraph("IBAN", s_bk_lbl), Paragraph(iban, s_bk_val)],
             [Paragraph("BIC/SWIFT", s_bk_lbl), Paragraph(bic, s_bk_val)],
         ]
 

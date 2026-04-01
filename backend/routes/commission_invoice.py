@@ -138,14 +138,9 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8, textColor=DARK, leading=11)
 
-    # "To:" row with company details
-    to_text = issued_to_name or "-"
-    if issued_to_address:
-        to_text += f", {issued_to_address}"
-
+    # "To:" row spans full width
     to_row = [[
         Paragraph("To", s_lbl), Paragraph(str(to_text), s_dval),
-        Paragraph("", s_lbl), Paragraph("", s_dval),
     ]]
 
     detail_pairs = [
@@ -156,15 +151,29 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 
-    detail_rows = to_row[:]
+    # Build "To" table (full-width, 2 columns)
+    lbl_w = 22*mm
+    val_w = (W - 2*lbl_w) / 2
+    to_tbl = Table(to_row, colWidths=[lbl_w, W - lbl_w])
+    to_tbl.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+        ('BOX', (0, 0), (-1, -1), 0.4, BORDER),
+        ('LINEAFTER', (0, 0), (0, -1), 0.4, BORDER),
+    ]))
+    elements.append(to_tbl)
+
+    # Build detail rows (4 columns)
+    detail_rows = []
     for lbl1, val1, lbl2, val2 in detail_pairs:
         detail_rows.append([
             Paragraph(lbl1, s_lbl), Paragraph(str(val1), s_dval),
             Paragraph(lbl2, s_lbl), Paragraph(str(val2), s_dval),
         ])
 
-    lbl_w = 22*mm
-    val_w = (W - 2*lbl_w) / 2
     d_tbl = Table(detail_rows, colWidths=[lbl_w, val_w, lbl_w, val_w])
     d_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -172,9 +181,8 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
         ('LEFTPADDING', (0, 0), (-1, -1), 4),
         ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-        ('LINEBELOW', (0, 0), (-1, -1), 0.4, BORDER),
-        ('BACKGROUND', (0, 0), (0, -1), BG_LIGHT),
-        ('BACKGROUND', (2, 0), (2, -1), BG_LIGHT),
+        ('BOX', (0, 0), (-1, -1), 0.4, BORDER),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
     ]))
     elements.append(d_tbl)
     elements.append(Spacer(1, 3*mm))

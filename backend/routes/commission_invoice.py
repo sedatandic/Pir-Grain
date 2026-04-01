@@ -106,37 +106,6 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=3*mm))
 
     # =====================================================
-    # INVOICE TO: Clean card
-    # =====================================================
-    to_lines = f"<b>{issued_to_name}</b>"
-    if issued_to_address:
-        to_lines += f"<br/>{issued_to_address}"
-    if issued_to_tax_id:
-        to_lines += f"<br/>Tax ID: {issued_to_tax_id}"
-
-    s_card_label = ParagraphStyle('CardLbl', fontName=FB, fontSize=7, textColor=GREEN, leading=9)
-    s_card_val = ParagraphStyle('CardVal', fontName=F, fontSize=8, textColor=DARK, leading=11)
-
-    inv_to_card = Table(
-        [[Paragraph("INVOICE TO:", s_card_label)], [Paragraph(to_lines, s_card_val)]],
-        colWidths=[W * 0.55]
-    )
-    inv_to_card.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), BG_LIGHT),
-        ('TOPPADDING', (0, 0), (-1, 0), 4),
-        ('TOPPADDING', (0, 1), (-1, 1), 1),
-        ('BOTTOMPADDING', (0, -1), (-1, -1), 5),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('ROUNDEDCORNERS', [3, 3, 3, 3]),
-        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BG_MED),
-    ]))
-    wrap = Table([[inv_to_card, ""]], colWidths=[W*0.55, W*0.45])
-    wrap.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
-    elements.append(wrap)
-    elements.append(Spacer(1, 3*mm))
-
-    # =====================================================
     # TRADE DETAILS: Compact 2-column key-value grid
     # =====================================================
     contract_num = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("referenceNumber") or "-"
@@ -164,8 +133,6 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     shipment_from = trade.get("shipmentWindowStart") or trade.get("shipmentFrom") or ""
     shipment_to = trade.get("shipmentWindowEnd") or trade.get("shipmentTo") or ""
     shipment_period = f"{shipment_from} - {shipment_to}" if shipment_from and shipment_to else "-"
-
-    elements.append(Paragraph("TRADE DETAILS", ParagraphStyle('SecTitle', fontName=FB, fontSize=9, textColor=GREEN, spaceBefore=0, spaceAfter=1.5*mm)))
 
     s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8, textColor=DARK, leading=11)

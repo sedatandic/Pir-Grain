@@ -1207,6 +1207,10 @@ export default function VesselExecutionPage() {
                     <Label className="text-xs text-muted-foreground">Invoice Date</Label>
                     <Input placeholder="e.g. 01/04/2026" value={trade.invoiceDate || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, invoiceDate: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { invoiceDate: e.target.value })} data-testid="commission-invoice-date-input" />
                   </div>
+                  <div className="flex gap-2 pt-2">
+                    <Button variant="outline" size="sm" data-testid="view-commission-invoice-pdf" onClick={async () => { try { const res = await api.get(`/api/commission-invoice/${trade.id}`, { responseType: 'blob' }); window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank'); } catch { toast.error('Failed to generate PDF'); } }}><FileText className="h-4 w-4 mr-1.5" />View PDF</Button>
+                    <Button variant="default" size="sm" className="bg-green-700 hover:bg-green-800" data-testid="send-commission-invoice-btn" onClick={async () => { try { setEmailSending(true); const res = await api.post('/api/commission-invoice/send-email', { tradeId: trade.id }); toast.success(res.data.message || 'Commission invoice sent'); } catch(e) { toast.error(e?.response?.data?.detail || 'Failed to send'); } finally { setEmailSending(false); } }} disabled={emailSending}>{emailSending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

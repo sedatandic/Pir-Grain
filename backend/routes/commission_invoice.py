@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from bson import ObjectId
 from io import BytesIO
 from datetime import datetime
@@ -13,6 +14,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from num2words import num2words
 import os
+import resend
+import base64
+import asyncio
 
 from database import trades_col, partners_col, bank_accounts_col
 
@@ -528,3 +532,108 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", bankIds: 
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+class SendCommissionInvoiceRequest(BaseModel):
+    tradeId: str
+
+
+@router.post("/send-email")
+async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=Depends(get_current_user)):
+    resend.api_key = os.environ.get("RESEND_API_KEY", "")
+    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain and Pulses Ltd <noreply@pirgrain.com>")
+
+    trade = trades_col.find_one({"_id": ObjectId(req.tradeId)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+
+    # Generate PDF
+    pdf_buffer = generate_ci_pdf(trade)
+    pdf_bytes = pdf_buffer.read()
+
+    contract_num = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("referenceNumber") or req.tradeId
+    brokerage_account = trade.get("brokerageAccount") or "seller"
+
+    # Get recipient partner
+    partner_id = trade.get("buyerId") if brokerage_account == "buyer" else trade.get("sellerId")
+    recipient_name = ""
+    recipient_email = ""
+
+    if partner_id:
+        try:
+            partner = partners_col.find_one({"_id": ObjectId(partner_id)})
+            if partner:
+                recipient_name = partner.get("companyName", "")
+                # Get email from execution or trade contacts
+                contacts = partner.get("contacts", [])
+                for c in contacts:
+                    if c.get("email"):
+                        recipient_email = c["email"]
+                        break
+                if not recipient_email:
+                    recipient_email = partner.get("email", "")
+        except Exception:
+            pass
+
+    if not recipient_name:
+        recipient_name = trade.get("buyerName" if brokerage_account == "buyer" else "sellerName", "")
+
+    # Get PIR execution contact email for the trade
+    pir_email = ""
+    broker_exec_field = "brokerExecutionContact" if brokerage_account == "seller" else "buyerExecutionContact"
+    exec_contact = trade.get(broker_exec_field, {})
+    if isinstance(exec_contact, dict):
+        pir_email = exec_contact.get("email", "")
+
+    # Build recipient list
+    to_emails = []
+    if recipient_email:
+        to_emails.append(recipient_email)
+
+    if not to_emails:
+        raise HTTPException(status_code=400, detail=f"No email found for {recipient_name or 'recipient'}")
+
+    vessel_name = trade.get("vesselName") or "-"
+    subject = f"Commission Invoice - {contract_num} - {vessel_name}"
+
+    # Load logo for CID
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
+    logo_cid = ""
+    attachments = []
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
+        attachments.append({"filename": "pir-logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
+        logo_cid = '<img src="cid:pirlogo" style="max-width:200px;height:auto;" />'
+
+    html_body = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="text-align: center; padding: 20px 0;">{logo_cid}</div>
+        <p>Dear {recipient_name},</p>
+        <p>Please find attached the Commission Invoice for contract <b>{contract_num}</b>, vessel <b>{vessel_name}</b>.</p>
+        <br/>
+        <p>Best regards,</p>
+        <p><b>PIR Grain and Pulses Ltd</b></p>
+    </div>
+    """
+
+    # Add PDF attachment
+    attachments.append({
+        "filename": f"Commission_Invoice_{contract_num}.pdf",
+        "content": base64.b64encode(pdf_bytes).decode(),
+        "content_type": "application/pdf",
+    })
+
+    params = {
+        "from": SENDER_EMAIL,
+        "to": to_emails,
+        "subject": subject,
+        "html": html_body,
+        "attachments": attachments,
+    }
+
+    try:
+        await asyncio.to_thread(resend.Emails.send, params)
+        return {"message": f"Commission invoice sent to {recipient_name}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")

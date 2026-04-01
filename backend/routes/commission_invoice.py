@@ -299,7 +299,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
     # Amount in words - right-aligned, full width for single line
     words = amount_in_words(total_amount, currency)
-    elements.append(Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
+    elements.append(Paragraph(f"<i>In Words: {words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
     elements.append(Spacer(1, 4*mm))
 
     # =====================================================

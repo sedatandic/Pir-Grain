@@ -266,7 +266,7 @@ export default function IndicationsTab() {
                           <p className="text-sm">{note.content}</p>
                           <div className="flex items-center justify-between mt-0.5">
                             <span className="text-[11px] text-muted-foreground italic">
-                              {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} {new Date(note.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                              {note.createdByName || note.createdBy} &bull; {new Date(note.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Europe/Istanbul' })} - {new Date(note.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Istanbul' })} {new Date(note.createdAt).getHours() >= 12 ? 'PM' : 'AM'}
                             </span>
                             <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button variant="ghost" size="sm" className="h-5 w-5 p-0 shrink-0" onClick={() => { setEditingNote(note.id); setEditContent(note.content); }}>

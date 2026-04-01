@@ -140,12 +140,16 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         Paragraph("To", s_lbl), Paragraph(to_lines, s_dval),
     ]]
 
+    bl_date = trade.get("blDate") or "-"
+    contract_date = trade.get("contractDate") or "-"
+
     detail_pairs = [
         ("Invoice No", invoice_number, "Invoice Date", invoice_date),
-        ("Contract No", contract_num, "Commodity", commodity_display),
+        ("Contract No", contract_num, "Contract Date", contract_date),
+        ("Commodity", commodity_display, "Origin", origin),
         ("Seller", seller_name, "Buyer", buyer_name),
-        ("Origin", origin, "Delivery Term", delivery_term_full),
-        ("Vessel", vessel_name, "Bill of Lading (B/L) No", trade.get("blNumber") or "-"),
+        ("Delivery Term", delivery_term_full, "Vessel", vessel_name),
+        ("Bill of Lading (B/L) No", trade.get("blNumber") or "-", "Bill of Lading (B/L) Date", bl_date),
         ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 

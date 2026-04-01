@@ -57,8 +57,8 @@ def amount_in_words(amount, currency="USD"):
         curr_word = "US Dollars" if currency == "USD" else currency
         if decimal_part > 0:
             cents_words = num2words(decimal_part, lang='en').title()
-            return f"{words} and {cents_words}/100 {curr_word}"
-        return f"{words} {curr_word} Only"
+            return f"{words} and {cents_words}/100 {curr_word}."
+        return f"{words} {curr_word} Only."
     except Exception:
         return str(amount)
 

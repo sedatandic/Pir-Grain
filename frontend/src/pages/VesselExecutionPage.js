@@ -1195,9 +1195,24 @@ export default function VesselExecutionPage() {
             </Card>
             </div>
             <Card className="mt-4">
+              <CardHeader><CardTitle className="text-base">Commission Invoice</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Invoice Number</Label>
+                    <Input placeholder="e.g. COMM-BEK446" value={trade.invoiceNo || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, invoiceNo: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { invoiceNo: e.target.value })} data-testid="commission-invoice-no-input" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Invoice Date</Label>
+                    <Input placeholder="e.g. 01/04/2026" value={trade.invoiceDate || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, invoiceDate: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { invoiceDate: e.target.value })} data-testid="commission-invoice-date-input" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="mt-4">
               <CardHeader><CardTitle className="text-base">Courier for Original Documents</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Courier Name</Label>
                     <Input placeholder="e.g. DHL, FedEx, UPS..." value={trade.courierName || ''} onChange={(e) => { const val = e.target.value; setTrade(prev => ({...prev, courierName: val})); }} onBlur={(e) => api.put(`/api/trades/${trade.id}`, { courierName: e.target.value })} data-testid="courier-name-input" />

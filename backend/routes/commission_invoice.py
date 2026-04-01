@@ -580,14 +580,15 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
     qty_str = f"{bl_qty:,.3f}" if bl_qty else ""
     subject = f"Commission Invoice - {contract_num} - {qty_str} Mts {commodity_display} - {vessel_name}"
 
-    # Load logo as base64 data URI (not CID - avoids Gmail showing it as attachment)
+    # Load logo as CID inline attachment (base64 data URI blocked by most email clients)
     logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
     attachments = []
     logo_html = ""
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-width:300px;height:auto;display:block;margin:0 auto;" />'
+        attachments.append({"filename": "logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
+        logo_html = '<img src="cid:pirlogo" style="max-width:300px;height:auto;display:block;margin:0 auto;" />'
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

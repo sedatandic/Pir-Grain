@@ -138,6 +138,10 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8, textColor=DARK, leading=11)
 
+    to_text = issued_to_name or "-"
+    if issued_to_address:
+        to_text += f", {issued_to_address}"
+
     # "To:" row spans full width
     to_row = [[
         Paragraph("To", s_lbl), Paragraph(str(to_text), s_dval),

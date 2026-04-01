@@ -149,9 +149,9 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Invoice No", invoice_number, "Invoice Date", invoice_date),
         ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
-        ("Origin", origin, "Delivery Term", delivery_term_full),
+        ("Origin", origin, "Discharge Port", discharge_full),
         ("Vessel", vessel_name, "Shipment", shipment_period),
-        ("Load Port", loading_full, "Discharge Port", discharge_full),
+        ("Load Port", loading_full, "Delivery Term", delivery_term_full),
     ]
 
     # Build "To" table (left half width with box frame)
@@ -177,7 +177,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('RIGHTPADDING', (0, 0), (-1, -1), 0),
     ]))
     elements.append(to_wrapper)
-    elements.append(Spacer(1, 1*mm))
+    elements.append(Spacer(1, 4*mm))
 
     # Build detail rows (4 columns)
     detail_rows = []

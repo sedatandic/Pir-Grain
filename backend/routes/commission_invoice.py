@@ -575,7 +575,10 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
         raise HTTPException(status_code=400, detail=f"No email provided for {recipient_name or 'recipient'}")
 
     vessel_name = trade.get("vesselName") or "-"
-    subject = f"Commission Invoice - {contract_num} - {vessel_name}"
+    bl_qty = trade.get("blQuantity") or trade.get("quantity") or 0
+    commodity_display = trade.get("commodityDisplayName") or trade.get("commodityName") or ""
+    qty_str = f"{bl_qty:,.3f}" if bl_qty else ""
+    subject = f"Commission Invoice - {contract_num} - {qty_str} Mts {commodity_display} - {vessel_name}"
 
     # Load logo for CID
     logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")

@@ -93,7 +93,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         elements.append(logo_tbl)
     elements.append(Spacer(1, 2.5*mm))
     elements.append(Paragraph("Commission Invoice", ParagraphStyle('InvTitle', fontName=FB, fontSize=15, textColor=GREEN, alignment=TA_CENTER, leading=19)))
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 1*mm))
 
     # =====================================================
     # TRADE DETAILS: Compact 2-column key-value grid

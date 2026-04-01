@@ -110,7 +110,10 @@ export default function CommissionsPage() {
 
   const stats = useMemo(() => {
     const calcComm = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
-    const filteredAll = applyFilters(trades).filter(t => !['cancelled', 'washout'].includes(t.status) && t.buyerPaymentDate);
+    const filteredAll = applyFilters(trades).filter(t =>
+      (t.buyerPaymentDate && !['cancelled', 'washout'].includes(t.status)) ||
+      (['cancelled', 'washout'].includes(t.status) && t.generateBrokerCommission)
+    );
     const filteredPending = filteredAll.filter(t => !t.invoicePaid);
     const filteredPaid = filteredAll.filter(t => t.invoicePaid);
     return {

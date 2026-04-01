@@ -146,7 +146,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Seller", seller_name, "Buyer", buyer_name),
         ("Origin", origin, "Delivery Term", delivery_term_full),
         ("Vessel", vessel_name, "Bill of Lading (B/L) No", trade.get("blNumber") or "-"),
-        ("Discharge Port", discharge_full, "Load Port", loading_full),
+        ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 
     # Build "To" table (left half width with box frame)
@@ -245,6 +245,15 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('LINEBELOW', (0, 0), (-1, 0), 1, GREEN),
     ]))
     elements.append(calc_tbl)
+    # Gray line below commission table
+    calc_sep = Table([[""]], colWidths=[W])
+    calc_sep.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(Spacer(1, 2*mm))
+    elements.append(calc_sep)
     elements.append(Spacer(1, 2*mm))
 
     # =====================================================
@@ -273,16 +282,6 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     words = amount_in_words(total_amount, currency)
     elements.append(Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
     elements.append(Spacer(1, 4*mm))
-
-    # Gray separator line above bank details
-    sep_tbl = Table([[""]], colWidths=[W])
-    sep_tbl.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-    ]))
-    elements.append(sep_tbl)
-    elements.append(Spacer(1, 2*mm))
 
     # =====================================================
     # BANK DETAILS: Card style

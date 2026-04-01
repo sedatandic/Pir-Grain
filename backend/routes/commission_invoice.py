@@ -239,9 +239,10 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         Paragraph(f"RATE ({currency}/MT)", s_th),
         Paragraph(f"AMOUNT ({currency})", s_th),
     ]
-    desc_text = f"Brokerage Commission for {vessel_name}"
+    desc_text = f"Brokerage Commission for <b>{vessel_name}</b>"
+    s_td_c_desc = ParagraphStyle('TDCDesc', fontName=F, fontSize=8, textColor=DARK, alignment=TA_CENTER, leading=11)
     calc_row = [
-        Paragraph(desc_text, s_td_l),
+        Paragraph(desc_text, s_td_c_desc),
         Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_c),
         Paragraph(f"{brokerage_per_mt:,.2f}", s_td_c),
         Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_td_cb),

@@ -142,11 +142,11 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
     detail_pairs = [
         ("Invoice No", invoice_number, "Invoice Date", invoice_date),
-        ("Contract No", contract_num, "Commodity", commodity_display),
+        ("Contract No", contract_num, "Load Port", loading_full),
         ("Seller", seller_name, "Buyer", buyer_name),
-        ("Origin", origin, "Discharge Port", discharge_full),
+        ("Origin", origin, "Commodity", commodity_display),
         ("Vessel", vessel_name, "Bill of Lading (B/L) No", trade.get("blNumber") or "-"),
-        ("Load Port", loading_full, "Delivery Term", delivery_term_full),
+        ("Delivery Term", delivery_term_full, "", ""),
     ]
 
     # Build "To" table (left half width with box frame)
@@ -184,7 +184,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
     d_tbl = Table(detail_rows, colWidths=[lbl_w, val_w, lbl_w, val_w])
     d_tbl.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), 2.5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
         ('LEFTPADDING', (0, 0), (-1, -1), 4),
@@ -207,7 +207,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_td_cb = ParagraphStyle('TDCB', fontName=FB, fontSize=8.5, textColor=DARK, alignment=TA_CENTER, leading=11)
 
     calc_header = [
-        Paragraph("DESCRIPTION", s_th_l),
+        Paragraph("DESCRIPTION", s_th),
         Paragraph("B/L QTY (Mts)", s_th),
         Paragraph(f"RATE ({currency}/MT)", s_th),
         Paragraph(f"AMOUNT ({currency})", s_th),

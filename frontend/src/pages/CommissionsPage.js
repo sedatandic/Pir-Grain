@@ -71,7 +71,7 @@ export default function CommissionsPage() {
 
   const categorized = useMemo(() => {
     const cancelledWashout = trades.filter(t => ['cancelled', 'washout'].includes(t.status));
-    const active = trades.filter(t => !['cancelled', 'washout'].includes(t.status));
+    const active = trades.filter(t => !['cancelled', 'washout'].includes(t.status) && t.buyerPaymentDate);
     return {
       pending: active.filter(t => !t.invoicePaid),
       paid: active.filter(t => t.invoicePaid),
@@ -109,7 +109,7 @@ export default function CommissionsPage() {
 
   const stats = useMemo(() => {
     const calcComm = (t) => (t.blQuantity || t.quantity || 0) * (t.brokeragePerMT || 0);
-    const filteredAll = applyFilters(trades).filter(t => !['cancelled', 'washout'].includes(t.status));
+    const filteredAll = applyFilters(trades).filter(t => !['cancelled', 'washout'].includes(t.status) && t.buyerPaymentDate);
     const filteredPending = filteredAll.filter(t => !t.invoicePaid);
     const filteredPaid = filteredAll.filter(t => t.invoicePaid);
     return {

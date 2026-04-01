@@ -142,11 +142,11 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
 
     detail_pairs = [
         ("Invoice No", invoice_number, "Invoice Date", invoice_date),
-        ("Contract No", contract_num, "Load Port", loading_full),
+        ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
-        ("Origin", origin, "Commodity", commodity_display),
+        ("Origin", origin, "Delivery Term", delivery_term_full),
         ("Vessel", vessel_name, "Bill of Lading (B/L) No", trade.get("blNumber") or "-"),
-        ("Delivery Term", delivery_term_full, "", ""),
+        ("Discharge Port", discharge_full, "Load Port", loading_full),
     ]
 
     # Build "To" table (left half width with box frame)

@@ -591,8 +591,8 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="text-align: center; margin-bottom: 0;">{logo_html}</div>
-        <p style="margin-top: 4px;">Dear {recipient_name},</p>
+        <div style="text-align: center; margin: 0; padding: 0;">{logo_html}</div>
+        <p style="margin-top: 0;">Dear {recipient_name},</p>
         <p>Please find attached the Commission Invoice for contract <b>{contract_num}</b>, vessel <b>{vessel_name}</b>.</p>
         <p>We also take this opportunity to thank you for your continued business and cooperation.</p>
         <p style="margin-top:8px;">Best Regards,</p>

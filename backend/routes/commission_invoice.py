@@ -92,12 +92,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     else:
         logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FallbackLogo', fontName=FB, fontSize=14, textColor=GREEN)))
 
-    meta_block = [
-        Paragraph(f"<b>No:</b> {invoice_number}", ParagraphStyle('InvNo', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
-        Paragraph(f"<b>Date:</b> {invoice_date}", ParagraphStyle('InvDt', fontName=F, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=13)),
-    ]
-
-    header_tbl = Table([[logo_cell, meta_block]], colWidths=[W*0.50, W*0.50])
+    header_tbl = Table([[logo_cell, ""]], colWidths=[W*0.50, W*0.50])
     header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
     elements.append(header_tbl)
     elements.append(Spacer(1, 6*mm))
@@ -151,6 +146,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     ]]
 
     detail_pairs = [
+        ("Invoice No", invoice_number, "Invoice Date", invoice_date),
         ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
         ("Origin", origin, "Delivery Term", delivery_term_full),

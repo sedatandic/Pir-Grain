@@ -273,7 +273,7 @@ export default function CommissionsPage() {
                   <div>{t.buyerCode||t.buyerName||'-'}</div>
                 </TableCell>
                 <TableCell className="text-sm">
-                  <div>{t.vesselName||'-'}</div>
+                  <div className="font-bold">{t.vesselName||'-'}</div>
                   <hr className="my-0.5 border-muted-foreground/20"/>
                   <div>{t.blQuantity ? `${Number(t.blQuantity).toLocaleString()} Mts` : fmtQty(t.quantity)}</div>
                 </TableCell>

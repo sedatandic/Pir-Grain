@@ -536,6 +536,8 @@ def get_commission_invoice_pdf(trade_id: str, account: str = "seller", bankIds: 
 
 class SendCommissionInvoiceRequest(BaseModel):
     tradeId: str
+    toEmail: str = ""
+    ccEmails: list = []
 
 
 @router.post("/send-email")
@@ -554,52 +556,31 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
     contract_num = trade.get("sellerContractNumber") or trade.get("pirContractNumber") or trade.get("referenceNumber") or req.tradeId
     brokerage_account = trade.get("brokerageAccount") or "seller"
 
-    # Get recipient partner
-    partner_id = trade.get("buyerId") if brokerage_account == "buyer" else trade.get("sellerId")
+    # Get recipient name
     recipient_name = ""
-    recipient_email = ""
-
+    partner_id = trade.get("buyerId") if brokerage_account == "buyer" else trade.get("sellerId")
     if partner_id:
         try:
             partner = partners_col.find_one({"_id": ObjectId(partner_id)})
             if partner:
                 recipient_name = partner.get("companyName", "")
-                # Get email from execution or trade contacts
-                contacts = partner.get("contacts", [])
-                for c in contacts:
-                    if c.get("email"):
-                        recipient_email = c["email"]
-                        break
-                if not recipient_email:
-                    recipient_email = partner.get("email", "")
         except Exception:
             pass
-
     if not recipient_name:
         recipient_name = trade.get("buyerName" if brokerage_account == "buyer" else "sellerName", "")
 
-    # Get PIR execution contact email for the trade
-    pir_email = ""
-    broker_exec_field = "brokerExecutionContact" if brokerage_account == "seller" else "buyerExecutionContact"
-    exec_contact = trade.get(broker_exec_field, {})
-    if isinstance(exec_contact, dict):
-        pir_email = exec_contact.get("email", "")
-
-    # Build recipient list
-    to_emails = []
-    if recipient_email:
-        to_emails.append(recipient_email)
-
-    if not to_emails:
-        raise HTTPException(status_code=400, detail=f"No email found for {recipient_name or 'recipient'}")
+    # Use email from dialog or fail
+    to_email = req.toEmail
+    if not to_email:
+        raise HTTPException(status_code=400, detail=f"No email provided for {recipient_name or 'recipient'}")
 
     vessel_name = trade.get("vesselName") or "-"
     subject = f"Commission Invoice - {contract_num} - {vessel_name}"
 
     # Load logo for CID
     logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
-    logo_cid = ""
     attachments = []
+    logo_cid = ""
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
@@ -626,11 +607,13 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
 
     params = {
         "from": SENDER_EMAIL,
-        "to": to_emails,
+        "to": [to_email],
         "subject": subject,
         "html": html_body,
         "attachments": attachments,
     }
+    if req.ccEmails:
+        params["cc"] = req.ccEmails
 
     try:
         await asyncio.to_thread(resend.Emails.send, params)

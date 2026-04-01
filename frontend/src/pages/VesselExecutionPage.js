@@ -92,6 +92,10 @@ export default function VesselExecutionPage() {
   const [emailExtraSeller, setEmailExtraSeller] = useState('');
   const [emailExtraBuyer, setEmailExtraBuyer] = useState('');
   const [emailSending, setEmailSending] = useState(false);
+  const [ciDialog, setCiDialog] = useState(false);
+  const [ciTo, setCiTo] = useState('');
+  const [ciCc, setCiCc] = useState([]);
+  const [ciExtraCc, setCiExtraCc] = useState('');
   const [buyerPaymentSaving, setBuyerPaymentSaving] = useState(false);
   const [swiftUploading, setSwiftUploading] = useState(false);
 
@@ -493,6 +497,42 @@ export default function VesselExecutionPage() {
       toast.success(`${emailDialog.docLabel} sent`);
       setEmailDialog({ open: false, docType: '', docLabel: '' });
       fetchTrade(selectedTradeId);
+    } catch (err) { toast.error(err.response?.data?.detail || 'Failed to send'); }
+    finally { setEmailSending(false); }
+  };
+
+  const openCiDialog = async () => {
+    setCiDialog(true);
+    setCiExtraCc('');
+    try {
+      const res = await api.get(`/api/email-prefill/${selectedTradeId}`);
+      const d = res.data;
+      const brokAcct = trade?.brokerageAccount || 'seller';
+      if (brokAcct === 'buyer') {
+        setCiTo(d.buyerEmails?.[0] || '');
+        setCiCc([...(d.buyerEmails || []).slice(1), ...(d.pirEmails || [])]);
+      } else {
+        setCiTo(d.sellerEmails?.[0] || '');
+        setCiCc([...(d.sellerEmails || []).slice(1), ...(d.pirEmails || [])]);
+      }
+    } catch {
+      setCiTo('');
+      setCiCc([]);
+    }
+  };
+
+  const sendCommissionInvoice = async () => {
+    if (!ciTo) { toast.error('Enter a recipient email'); return; }
+    const extraArr = ciExtraCc.split(',').map(e => e.trim()).filter(Boolean);
+    setEmailSending(true);
+    try {
+      await api.post('/api/commission-invoice/send-email', {
+        tradeId: trade.id,
+        toEmail: ciTo,
+        ccEmails: [...ciCc, ...extraArr],
+      });
+      toast.success('Commission invoice sent');
+      setCiDialog(false);
     } catch (err) { toast.error(err.response?.data?.detail || 'Failed to send'); }
     finally { setEmailSending(false); }
   };
@@ -1209,7 +1249,7 @@ export default function VesselExecutionPage() {
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Button variant="outline" size="sm" data-testid="view-commission-invoice-pdf" onClick={async () => { try { const res = await api.get(`/api/commission-invoice/${trade.id}`, { responseType: 'blob' }); window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank'); } catch { toast.error('Failed to generate PDF'); } }}><FileText className="h-4 w-4 mr-1.5" />View PDF</Button>
-                    <Button variant="default" size="sm" className="bg-green-700 hover:bg-green-800" data-testid="send-commission-invoice-btn" onClick={async () => { try { setEmailSending(true); const res = await api.post('/api/commission-invoice/send-email', { tradeId: trade.id }); toast.success(res.data.message || 'Commission invoice sent'); } catch(e) { toast.error(e?.response?.data?.detail || 'Failed to send'); } finally { setEmailSending(false); } }} disabled={emailSending}>{emailSending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
+                    <Button variant="default" size="sm" className="bg-green-700 hover:bg-green-800" data-testid="send-commission-invoice-btn" onClick={openCiDialog}><Send className="h-4 w-4 mr-1.5" />Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
                   </div>
                 </div>
               </CardContent>
@@ -1379,6 +1419,40 @@ export default function VesselExecutionPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmailDialog({ open: false, docType: '', docLabel: '' })}>Cancel</Button>
             <Button onClick={sendDocumentEmail} disabled={emailSending}>{emailSending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Commission Invoice Email Dialog */}
+      <Dialog open={ciDialog} onOpenChange={(open) => !open && setCiDialog(false)}>
+        <DialogContent className="sm:max-w-lg mx-auto">
+          <DialogHeader><DialogTitle className="text-center">Send Commission Invoice</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2 border rounded-lg p-3">
+              <Label className="text-sm font-semibold">To {trade?.brokerageAccount === 'buyer' ? (trade?.buyerCode || trade?.buyerName || 'Buyer') : (trade?.sellerCode || trade?.sellerName || 'Seller')}</Label>
+              <Input value={ciTo} onChange={(e) => setCiTo(e.target.value)} placeholder="recipient@example.com" data-testid="ci-email-to" />
+              {ciCc.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">CC</Label>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {ciCc.map(e => (
+                      <label key={`ci-${e}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                        <input type="checkbox" checked={true} onChange={() => setCiCc(prev => prev.filter(x => x !== e))} className="rounded" />
+                        {e}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Additional CC</Label>
+                <Input value={ciExtraCc} onChange={e => setCiExtraCc(e.target.value)} placeholder="email1@example.com, email2@example.com" className="text-xs h-8" data-testid="ci-extra-cc" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCiDialog(false)}>Cancel</Button>
+            <Button onClick={sendCommissionInvoice} disabled={emailSending}>{emailSending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

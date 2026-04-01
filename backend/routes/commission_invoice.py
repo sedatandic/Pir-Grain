@@ -138,13 +138,16 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8, textColor=DARK, leading=11)
 
-    to_text = issued_to_name or "-"
+    # Format To address with line breaks
+    to_lines = f"<b>{issued_to_name}</b>" if issued_to_name else "-"
     if issued_to_address:
-        to_text += f", {issued_to_address}"
+        # Split address into lines for cleaner display
+        addr = issued_to_address
+        to_lines += f"<br/>{addr}"
 
-    # "To:" row spans full width
+    # "To:" row spans left half, right half empty
     to_row = [[
-        Paragraph("To", s_lbl), Paragraph(str(to_text), s_dval),
+        Paragraph("To", s_lbl), Paragraph(to_lines, s_dval),
     ]]
 
     detail_pairs = [
@@ -155,20 +158,30 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 
-    # Build "To" table (full-width, 2 columns)
+    # Build "To" table (left half width with box frame)
     lbl_w = 22*mm
     val_w = (W - 2*lbl_w) / 2
-    to_tbl = Table(to_row, colWidths=[lbl_w, W - lbl_w])
+    to_tbl = Table(to_row, colWidths=[lbl_w, val_w])
     to_tbl.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 2.5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ('LEFTPADDING', (0, 0), (-1, -1), 4),
         ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ('BOX', (0, 0), (-1, -1), 0.4, BORDER),
         ('LINEAFTER', (0, 0), (0, -1), 0.4, BORDER),
     ]))
-    elements.append(to_tbl)
+    # Wrap: To table on left, empty on right
+    to_wrapper = Table([[to_tbl, ""]], colWidths=[lbl_w + val_w, lbl_w + val_w])
+    to_wrapper.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(to_wrapper)
+    elements.append(Spacer(1, 1*mm))
 
     # Build detail rows (4 columns)
     detail_rows = []

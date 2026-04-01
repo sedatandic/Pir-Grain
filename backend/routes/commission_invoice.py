@@ -242,7 +242,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     # TOTAL AMOUNT: Highlighted green box, right-aligned
     # =====================================================
     s_total_lbl = ParagraphStyle('TotLbl', fontName=FB, fontSize=9, textColor=DARK, alignment=TA_RIGHT, leading=12)
-    s_total_val = ParagraphStyle('TotVal', fontName=FB, fontSize=12, textColor=GREEN, alignment=TA_RIGHT, leading=16)
+    s_total_val = ParagraphStyle('TotVal', fontName=FB, fontSize=12, textColor=GREEN, alignment=TA_CENTER, leading=16)
 
     total_row = Table(
         [[Paragraph("TOTAL AMOUNT:", s_total_lbl), Paragraph(f"{curr_symbol}{total_amount:,.2f}", s_total_val)]],
@@ -253,7 +253,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ('BACKGROUND', (1, 0), (1, 0), BG_LIGHT),
         ('TOPPADDING', (0, 0), (-1, -1), 5),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (1, 0), (1, 0), 8),
+        ('ALIGN', (1, 0), (1, 0), 'CENTER'),
         ('ROUNDEDCORNERS', [0, 4, 4, 0]),
         ('BOX', (1, 0), (1, 0), 0.5, BG_MED),
     ]))
@@ -264,6 +264,16 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     words = amount_in_words(total_amount, currency)
     elements.append(Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
     elements.append(Spacer(1, 4*mm))
+
+    # Gray separator line above bank details
+    sep_tbl = Table([[""]], colWidths=[W])
+    sep_tbl.setStyle(TableStyle([
+        ('LINEBELOW', (0, 0), (-1, 0), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(sep_tbl)
+    elements.append(Spacer(1, 2*mm))
 
     # =====================================================
     # BANK DETAILS: Card style

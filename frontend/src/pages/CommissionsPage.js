@@ -70,12 +70,13 @@ export default function CommissionsPage() {
   }, []);
 
   const categorized = useMemo(() => {
-    const cancelledWashout = trades.filter(t => ['cancelled', 'washout'].includes(t.status) && t.generateBrokerCommission);
-    const active = trades.filter(t => !['cancelled', 'washout'].includes(t.status) && t.buyerPaymentDate);
+    const withCommission = trades.filter(t => 
+      (t.buyerPaymentDate && !['cancelled', 'washout'].includes(t.status)) ||
+      (['cancelled', 'washout'].includes(t.status) && t.generateBrokerCommission)
+    );
     return {
-      pending: active.filter(t => !t.invoicePaid),
-      paid: active.filter(t => t.invoicePaid),
-      cancelledWashout,
+      pending: withCommission.filter(t => !t.invoicePaid),
+      paid: withCommission.filter(t => t.invoicePaid),
     };
   }, [trades]);
 
@@ -419,9 +420,6 @@ export default function CommissionsPage() {
         <Card className="border-l-4 border-l-green-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-green-800">Paid USD ({applyFilters(categorized.paid.filter(t => (t.invoiceCurrency || 'USD') === 'USD')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid.filter(t => (t.invoiceCurrency || 'USD') === 'USD'), 'No paid USD invoices', true)}</CardContent></Card>
         {applyFilters(categorized.paid.filter(t => t.invoiceCurrency === 'EUR')).length > 0 && (
           <Card className="border-l-4 border-l-blue-500"><CardHeader className="pb-3"><CardTitle className="text-lg text-blue-800">Paid EUR ({applyFilters(categorized.paid.filter(t => t.invoiceCurrency === 'EUR')).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.paid.filter(t => t.invoiceCurrency === 'EUR'), 'No paid EUR invoices', true)}</CardContent></Card>
-        )}
-        {applyFilters(categorized.cancelledWashout).length > 0 && (
-          <Card className="border-l-4 border-l-red-400"><CardHeader className="pb-3"><CardTitle className="text-lg text-red-800">Cancelled / Washout ({applyFilters(categorized.cancelledWashout).length})</CardTitle></CardHeader><CardContent>{renderTable(categorized.cancelledWashout, 'No cancelled/washout invoices', true)}</CardContent></Card>
         )}
       </div>
 

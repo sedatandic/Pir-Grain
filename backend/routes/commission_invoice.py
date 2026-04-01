@@ -268,8 +268,18 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     # =====================================================
     # BANK DETAILS: Card style
     # =====================================================
-    elements.append(HRFlowable(width=W, thickness=0.5, color=BORDER, spaceAfter=2*mm))
-    elements.append(Paragraph("BANK DETAILS", ParagraphStyle('BankSec', fontName=FB, fontSize=9, textColor=GREEN, alignment=TA_LEFT, spaceAfter=2*mm)))
+    bank_header_tbl = Table(
+        [[Paragraph("BANK DETAILS", ParagraphStyle('BankSec', fontName=FB, fontSize=9, textColor=GREEN, alignment=TA_LEFT))]],
+        colWidths=[W]
+    )
+    bank_header_tbl.setStyle(TableStyle([
+        ('LINEABOVE', (0, 0), (-1, 0), 0.5, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 3*mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2*mm),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(bank_header_tbl)
 
     accounts_to_show = bank_accounts if bank_accounts else [PIR_BANK]
     s_bk_lbl = ParagraphStyle('BkL', fontName=FB, fontSize=7, textColor=GREY, leading=9)

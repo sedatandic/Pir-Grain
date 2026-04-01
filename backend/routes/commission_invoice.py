@@ -297,13 +297,14 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         currency_label = acct.get("currency", "")
 
         bank_rows = []
-        if currency_label:
-            bank_rows.append([Paragraph("Currency", s_bk_lbl), Paragraph(f"<b>{currency_label}</b>", s_bk_val_b)])
+        iban_label = f"{currency_label} IBAN" if currency_label else "IBAN"
+        # Format IBAN with spaces every 4 characters
+        iban_formatted = " ".join([iban[i:i+4] for i in range(0, len(iban), 4)]) if iban else ""
         bank_rows += [
             [Paragraph("Beneficiary", s_bk_lbl), Paragraph(beneficiary, s_bk_val_b)],
             [Paragraph("Bank", s_bk_lbl), Paragraph(bank_name, s_bk_val)],
             [Paragraph("Address", s_bk_lbl), Paragraph(address, s_bk_val)],
-            [Paragraph("IBAN", s_bk_lbl), Paragraph(iban, s_bk_val)],
+            [Paragraph(iban_label, s_bk_lbl), Paragraph(iban_formatted, s_bk_val)],
             [Paragraph("BIC/SWIFT", s_bk_lbl), Paragraph(bic, s_bk_val)],
         ]
 

@@ -138,6 +138,16 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     s_lbl = ParagraphStyle('DLbl', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_dval = ParagraphStyle('DVal', fontName=F, fontSize=8, textColor=DARK, leading=11)
 
+    # "To:" row with company details
+    to_text = issued_to_name or "-"
+    if issued_to_address:
+        to_text += f", {issued_to_address}"
+
+    to_row = [[
+        Paragraph("To", s_lbl), Paragraph(str(to_text), s_dval),
+        Paragraph("", s_lbl), Paragraph("", s_dval),
+    ]]
+
     detail_pairs = [
         ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
@@ -146,7 +156,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]
 
-    detail_rows = []
+    detail_rows = to_row[:]
     for lbl1, val1, lbl2, val2 in detail_pairs:
         detail_rows.append([
             Paragraph(lbl1, s_lbl), Paragraph(str(val1), s_dval),

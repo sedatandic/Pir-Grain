@@ -53,12 +53,12 @@ def amount_in_words(amount, currency="USD"):
     try:
         integer_part = int(amount)
         decimal_part = round((amount - integer_part) * 100)
-        words = num2words(integer_part, lang='en').upper()
-        curr_word = "US DOLLARS" if currency == "USD" else currency
+        words = num2words(integer_part, lang='en').title()
+        curr_word = "US Dollars" if currency == "USD" else currency
         if decimal_part > 0:
-            cents_words = num2words(decimal_part, lang='en').upper()
-            return f"{words} AND {cents_words}/100 {curr_word}"
-        return f"{words} {curr_word} ONLY"
+            cents_words = num2words(decimal_part, lang='en').title()
+            return f"{words} and {cents_words}/100 {curr_word}"
+        return f"{words} {curr_word} Only"
     except Exception:
         return str(amount)
 
@@ -297,9 +297,19 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     elements.append(total_row)
     elements.append(Spacer(1, 1*mm))
 
-    # Amount in words
+    # Amount in words - right-aligned to edge of green box
     words = amount_in_words(total_amount, currency)
-    elements.append(Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT)))
+    words_tbl = Table(
+        [["", Paragraph(f"<i>{words}</i>", ParagraphStyle('AW', fontName=FI, fontSize=7, textColor=GREY, alignment=TA_RIGHT))]],
+        colWidths=[W*0.60, W*0.40]
+    )
+    words_tbl.setStyle(TableStyle([
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+    ]))
+    elements.append(words_tbl)
     elements.append(Spacer(1, 4*mm))
 
     # =====================================================

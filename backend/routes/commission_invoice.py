@@ -32,7 +32,7 @@ PIR_GREEN_MED = colors.HexColor("#D4EADB")
 DARK_TEXT = colors.HexColor("#1A1A1A")
 GREY_TEXT = colors.HexColor("#666666")
 LIGHT_BORDER = colors.HexColor("#D0D0D0")
-LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo.jpeg")
+LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent-sm.png")
 
 PIR_COMPANY = {
     "name": "PIR GRAIN AND PULSES LTD",
@@ -84,21 +84,21 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     BORDER = colors.HexColor("#E0E0E0")
 
     # =====================================================
-    # HEADER: Logo left + Invoice No/Date right
+    # HEADER: Logo centered
     # =====================================================
-    logo_cell = []
     if os.path.exists(LOGO_PATH):
-        logo_cell.append(Image(LOGO_PATH, width=38*mm, height=17*mm))
-    else:
-        logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FallbackLogo', fontName=FB, fontSize=14, textColor=GREEN)))
-
-    header_tbl = Table([[logo_cell, ""]], colWidths=[W*0.50, W*0.50])
-    header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
-    elements.append(header_tbl)
-    elements.append(Spacer(1, 6*mm))
+        logo_img = Image(LOGO_PATH, width=50*mm, height=25*mm)
+        logo_tbl = Table([[logo_img]], colWidths=[W])
+        logo_tbl.setStyle(TableStyle([('ALIGN', (0, 0), (-1, -1), 'CENTER')]))
+        elements.append(logo_tbl)
+    elements.append(Spacer(1, 10*mm))
     elements.append(Paragraph("Commission Invoice", ParagraphStyle('InvTitle', fontName=FB, fontSize=16, textColor=GREEN, alignment=TA_CENTER, leading=20)))
     elements.append(Spacer(1, 1.5*mm))
-    elements.append(HRFlowable(width="100%", thickness=1.5, color=GREEN, spaceAfter=3*mm))
+
+    lbl_w = 22*mm
+    val_w_half = (W - 2*lbl_w) / 2
+    line_width = 2*lbl_w + 2*val_w_half
+    elements.append(HRFlowable(width=line_width, thickness=1.5, color=GREEN, spaceAfter=3*mm))
 
     # =====================================================
     # TRADE DETAILS: Compact 2-column key-value grid
@@ -217,7 +217,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         Paragraph(f"RATE ({currency}/MT)", s_th),
         Paragraph(f"AMOUNT ({currency})", s_th),
     ]
-    desc_text = f"Brokerage commission for mv {vessel_name}<br/><font size=7 color='#666666'>{commodity_name} ({seller_name} / {buyer_name})</font>"
+    desc_text = f"Brokerage Commission for {vessel_name}"
     calc_row = [
         Paragraph(desc_text, s_td_l),
         Paragraph(f"{bl_qty:,.3f}" if bl_qty else "-", s_td_r),

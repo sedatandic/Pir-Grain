@@ -41,6 +41,7 @@ export default function TradesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [entityFilter, setEntityFilter] = useState(null); // { type: 'seller'|'buyer'|'broker', name: '...', code: '...' }
   const [generatingBC, setGeneratingBC] = useState(null); // trade id being generated
+  const [brokerCommDialog, setBrokerCommDialog] = useState({ open: false, tradeId: null, newStatus: null });
 
   const fetchAll = useCallback(async () => {
     try {
@@ -231,18 +232,30 @@ export default function TradesPage() {
 
   const handleStatusChange = async (tradeId, newStatus) => {
     try {
-      // For cancelled/washout, ask about broker commissions
+      // For cancelled/washout, ask about broker commissions via dialog
       if (['cancelled', 'washout'].includes(newStatus)) {
         const trade = trades.find(t => t.id === tradeId);
         const hasBroker = trade?.brokerName || (trade?.brokeragePerMT && trade.brokeragePerMT > 0);
         if (hasBroker) {
-          const genComm = window.confirm('Should broker commissions be generated for this contract?');
-          await api.put(`/api/trades/${tradeId}`, { generateBrokerCommission: genComm });
-          setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, generateBrokerCommission: genComm } : t));
+          setBrokerCommDialog({ open: true, tradeId, newStatus });
+          return;
         }
       }
       await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
       setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus } : t));
+    } catch (err) {
+      const msg = err.response?.data?.detail || 'Failed to update status';
+      toast.error(msg);
+    }
+  };
+
+  const handleBrokerCommDecision = async (generate) => {
+    const { tradeId, newStatus } = brokerCommDialog;
+    setBrokerCommDialog({ open: false, tradeId: null, newStatus: null });
+    try {
+      await api.put(`/api/trades/${tradeId}`, { generateBrokerCommission: generate });
+      await api.patch(`/api/trades/${tradeId}/status`, { status: newStatus });
+      setTrades(prev => prev.map(t => t.id === tradeId ? { ...t, status: newStatus, generateBrokerCommission: generate } : t));
     } catch (err) {
       const msg = err.response?.data?.detail || 'Failed to update status';
       toast.error(msg);
@@ -852,6 +865,22 @@ export default function TradesPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Broker Commission Dialog */}
+      <Dialog open={brokerCommDialog.open} onOpenChange={(open) => !open && setBrokerCommDialog({ open: false, tradeId: null, newStatus: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center text-lg">Broker Commission</DialogTitle>
+          </DialogHeader>
+          <p className="text-center text-muted-foreground py-4">
+            Should broker commissions be generated for this contract?
+          </p>
+          <div className="flex justify-center gap-4 pb-2">
+            <Button variant="outline" className="min-w-[100px]" onClick={() => handleBrokerCommDecision(false)}>No</Button>
+            <Button className="min-w-[100px]" onClick={() => handleBrokerCommDecision(true)}>Yes</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

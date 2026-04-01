@@ -1194,7 +1194,8 @@ export default function VesselExecutionPage() {
               </CardContent>
             </Card>
             </div>
-            <Card className="mt-4">
+            <div className="grid grid-cols-2 gap-4 mt-4">
+            <Card>
               <CardHeader><CardTitle className="text-base">Commission Invoice</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1209,7 +1210,7 @@ export default function VesselExecutionPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="mt-4">
+            <Card>
               <CardHeader><CardTitle className="text-base">Courier for Original Documents</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1224,6 +1225,7 @@ export default function VesselExecutionPage() {
                 </div>
               </CardContent>
             </Card>
+            </div>
             {trade.buyerPaymentDate && (
               <div className="flex items-center gap-3 p-4 mt-4 rounded-lg border bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
                 <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />

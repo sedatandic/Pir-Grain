@@ -130,6 +130,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     buyer_name = trade.get("buyerName") or "-"
     origin = trade.get("originName") or "-"
     delivery_term = trade.get("deliveryTerm") or "-"
+    delivery_term_full = f"{delivery_term} {discharge_full}" if delivery_term != "-" else "-"
     shipment_from = trade.get("shipmentWindowStart") or trade.get("shipmentFrom") or ""
     shipment_to = trade.get("shipmentWindowEnd") or trade.get("shipmentTo") or ""
     shipment_period = f"{shipment_from} - {shipment_to}" if shipment_from and shipment_to else "-"
@@ -140,7 +141,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     detail_pairs = [
         ("Contract No", contract_num, "Commodity", commodity_display),
         ("Seller", seller_name, "Buyer", buyer_name),
-        ("Origin", origin, "Delivery Term", delivery_term),
+        ("Origin", origin, "Delivery Term", delivery_term_full),
         ("Vessel", vessel_name, "Shipment", shipment_period),
         ("Load Port", loading_full, "Discharge Port", discharge_full),
     ]

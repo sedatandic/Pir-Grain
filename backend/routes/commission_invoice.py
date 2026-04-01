@@ -373,7 +373,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         ]))
         elements.append(b_tbl)
 
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 1*mm))
 
     # =====================================================
     # SIGNATURE with stamp image
@@ -399,7 +399,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
         style_cmds.append(('BOTTOMPADDING', (1, 0), (1, 0), -4))
     sig_tbl.setStyle(TableStyle(style_cmds))
     elements.append(sig_tbl)
-    elements.append(Spacer(1, 3*mm))
+    elements.append(Spacer(1, 1*mm))
 
     # =====================================================
     # FOOTER

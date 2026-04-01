@@ -587,12 +587,12 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
     if os.path.exists(logo_path):
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-width:300px;height:auto;" />'
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="max-width:300px;height:auto;display:block;margin:0 auto;" />'
 
     html_body = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="text-align: center; margin: 0; padding: 0;">{logo_html}</div>
-        <p style="margin-top: 0;">Dear {recipient_name},</p>
+        <div style="text-align: center; margin: 0; padding: 0; line-height: 0;">{logo_html}</div>
+        <p style="margin-top: 2px;">Dear {recipient_name},</p>
         <p>Please find attached the Commission Invoice for contract <b>{contract_num}</b>, vessel <b>{vessel_name}</b>.</p>
         <p>We also take this opportunity to thank you for your continued business and cooperation.</p>
         <p style="margin-top:8px;">Best Regards,</p>

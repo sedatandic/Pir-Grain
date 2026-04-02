@@ -465,7 +465,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     if (vessel) titleParts.push(`- ${vessel}`);
                     return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d' }}>{titleParts.join(' ')}</h2>;
                   })()}
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Consignee & Notify Party</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipper & Consignee & Notify Party</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       <tr>
@@ -582,7 +582,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Consignee & Notify */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Consignee & Notify Party</h3>
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Shipper & Consignee & Notify Party</h3>
 
               {/* Shipper */}
               <div className="space-y-2">

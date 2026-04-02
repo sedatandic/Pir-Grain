@@ -587,7 +587,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               {/* Shipper */}
               <div className="space-y-2">
                 <Label>Shipper</Label>
-                <Textarea value={form.shipperText || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()} onChange={e => set('shipperText', e.target.value)} rows={2} placeholder="Shipper name and details" data-testid="di-shipper-input" />
+                <Textarea value={form.shipperText || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()} onChange={e => set('shipperText', e.target.value)} rows={1} placeholder="Shipper name and details" data-testid="di-shipper-input" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -630,7 +630,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             {/* Description of Goods */}
             <div className="space-y-2">
               <Label>Description of Goods</Label>
-              <Textarea value={form.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()} onChange={e => set('descriptionOfGoods', e.target.value)} rows={2} placeholder="e.g. UKRAINIAN YELLOW CORN IN BULK, CROP 2025" data-testid="di-description-input" />
+              <Textarea value={form.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()} onChange={e => set('descriptionOfGoods', e.target.value)} rows={1} placeholder="e.g. UKRAINIAN YELLOW CORN IN BULK, CROP 2025" data-testid="di-description-input" />
             </div>
 
             {/* Shipment & Port */}

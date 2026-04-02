@@ -628,7 +628,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             </div>
 
             {/* Description of Goods */}
-            <div className="space-y-1">
+            <div className="space-y-0">
               <Label>Description of Goods</Label>
               <Input value={form.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()} onChange={e => set('descriptionOfGoods', e.target.value)} placeholder="e.g. UKRAINIAN YELLOW CORN IN BULK, CROP 2025" data-testid="di-description-input" />
             </div>

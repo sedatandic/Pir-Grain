@@ -48,6 +48,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   const [sending, setSending] = useState(null);
   const [previewDi, setPreviewDi] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const previewRef = useRef(null);
 
   useEffect(() => {
@@ -169,6 +170,63 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       toast.error(err.response?.data?.detail || 'Failed to send email');
     } finally {
       setSending(null);
+    }
+  };
+
+  const handleExtractFromPdf = async () => {
+    if (!filterTradeId) return;
+    setExtracting(true);
+    try {
+      const res = await api.post(`/api/doc-instructions/extract-from-pdf/${filterTradeId}`);
+      const d = res.data;
+      const trade = trades.find(t => t.id === filterTradeId);
+
+      // Determine consignee option
+      let consigneeOption = 'custom';
+      let consigneeCustom = d.consigneeText || '';
+      if (consigneeCustom.toLowerCase().includes('to order') && !consigneeCustom.toLowerCase().includes('to order of')) {
+        consigneeOption = 'to_order';
+        consigneeCustom = '';
+      }
+
+      // Determine notify option
+      let notifyOption = 'custom';
+      let notifyCustom = d.notifyPartyText || '';
+
+      // Map required documents
+      let requiredDocuments = DEFAULT_REQUIRED_DOCS.map(dd => ({ ...dd }));
+      if (d.requiredDocuments?.length) {
+        requiredDocuments = d.requiredDocuments.map(rd => ({
+          name: rd.name || '',
+          originals: rd.originals || 0,
+          copies: rd.copies || 0,
+        }));
+      }
+
+      setForm({
+        tradeId: filterTradeId,
+        dischargePort: d.dischargePort || '',
+        agentId: '', agentName: d.agentName || '',
+        agentPhone: d.agentPhone || '', agentFax: d.agentFax || '',
+        agentMobile: d.agentMobile || '', agentEmail: d.agentEmail || '',
+        agentWeb: d.agentWeb || '', agentAddress: d.agentAddress || '',
+        surveyor: d.surveyor || '',
+        sellerSurveyor: d.sellerSurveyor || trade?.sellerSurveyor || '',
+        originalDocsAddress: d.originalDocsAddress || '',
+        consigneeOption, consigneeCustom,
+        consigneeBuyerId: trade?.buyerId || '',
+        notifyOption, notifyCustom,
+        notifyBuyerId: trade?.buyerId || '',
+        shipperText: d.shipperText || '',
+        requiredDocuments,
+      });
+      setEditingId(null);
+      setDialogOpen(true);
+      toast.success('Data extracted from document');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to extract data from PDF');
+    } finally {
+      setExtracting(false);
     }
   };
 
@@ -322,9 +380,17 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       {embedded && (
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
-          <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '', requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })) }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
-            <Plus className="h-4 w-4 mr-2" />New DI
-          </Button>
+          <div className="flex gap-2">
+            {(() => { const t = trades.find(tr => tr.id === filterTradeId); return t?.diDocumentPath ? (
+              <Button size="sm" variant="outline" className="border-green-600 text-green-700 hover:bg-green-50" onClick={handleExtractFromPdf} disabled={extracting} data-testid="extract-di-from-pdf-btn">
+                {extracting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+                {extracting ? 'Extracting...' : 'Create DI from Document'}
+              </Button>
+            ) : null; })()}
+            <Button size="sm" variant="outline" onClick={() => { const trade = trades.find(t => t.id === filterTradeId); setForm({ ...DEFAULT_FORM, tradeId: filterTradeId || '', sellerSurveyor: trade?.sellerSurveyor || '', notifyBuyerId: trade?.buyerId || '', consigneeBuyerId: trade?.buyerId || '', requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })) }); setEditingId(null); setDialogOpen(true); }} data-testid="new-di-btn">
+              <Plus className="h-4 w-4 mr-2" />New DI
+            </Button>
+          </div>
         </div>
       )}
 

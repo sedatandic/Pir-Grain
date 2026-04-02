@@ -1,8 +1,11 @@
 """Documentary Instructions CRUD and email endpoints"""
 import os
 import asyncio
+import json
 from datetime import datetime, timezone
 from typing import Optional
+from dotenv import load_dotenv
+load_dotenv()
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from bson import ObjectId
@@ -17,6 +20,7 @@ except ImportError:
     resend = None
     SENDER_EMAIL = ""
 
+UPLOAD_DIR = "/app/backend/uploads"
 router = APIRouter(prefix="/api/doc-instructions", tags=["doc-instructions"])
 
 
@@ -281,3 +285,92 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
         return {"message": f"Email sent to {seller_email}", "sentTo": seller_email}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+@router.post("/extract-from-pdf/{trade_id}")
+async def extract_di_from_pdf(trade_id: str, user=Depends(get_current_user)):
+    """Extract Documentary Instruction fields from uploaded DI PDF using AI"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade:
+        raise HTTPException(status_code=404, detail="Trade not found")
+
+    di_path = trade.get("diDocumentPath")
+    if not di_path:
+        raise HTTPException(status_code=404, detail="No DI document uploaded for this trade")
+
+    filepath = os.path.join(UPLOAD_DIR, di_path)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="DI file not found on disk")
+
+    api_key = os.environ.get("EMERGENT_LLM_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="LLM API key not configured")
+
+    # Get existing trade data for context
+    seller_name = trade.get("sellerName", "")
+    buyer_name = trade.get("buyerName", "")
+    vessel_name = trade.get("vesselName", "")
+    commodity = trade.get("commodityDisplayName") or trade.get("commodityName", "")
+
+    prompt = f"""Extract the following fields from this Documentary Instruction PDF document. 
+Return ONLY valid JSON with these keys (use empty string if not found):
+
+{{
+  "dischargePort": "the discharge/destination port name",
+  "agentName": "the discharge port agent company name",
+  "agentPhone": "agent phone number",
+  "agentFax": "agent fax number",
+  "agentMobile": "agent mobile number",
+  "agentEmail": "agent email address",
+  "agentWeb": "agent website",
+  "agentAddress": "agent full address",
+  "surveyor": "discharge surveyor name/company",
+  "sellerSurveyor": "load port surveyor name/company",
+  "originalDocsAddress": "address where original documents should be sent",
+  "consigneeText": "the consignee field text (e.g. 'To Order', 'To Order of Bank X', or company name)",
+  "notifyPartyText": "the notify party field text with full address",
+  "shipperText": "the shipper name and address",
+  "requiredDocuments": [
+    {{"name": "document name", "originals": number_of_originals, "copies": number_of_copies}}
+  ]
+}}
+
+Context: Seller={seller_name}, Buyer={buyer_name}, Vessel={vessel_name}, Commodity={commodity}
+Extract ALL document requirements listed. Return ONLY the JSON, no markdown, no explanation."""
+
+    try:
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"di-extract-{trade_id}",
+            system_message="You are a document data extraction specialist. Extract structured data from documentary instruction PDFs. Return only valid JSON."
+        ).with_model("gemini", "gemini-2.5-flash")
+
+        pdf_file = FileContentWithMimeType(
+            file_path=filepath,
+            mime_type="application/pdf"
+        )
+
+        response = await chat.send_message(UserMessage(
+            text=prompt,
+            file_contents=[pdf_file]
+        ))
+
+        # Parse response - strip markdown if present
+        text = response.strip()
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = text.strip()
+        if text.startswith("json"):
+            text = text[4:].strip()
+
+        extracted = json.loads(text)
+        return extracted
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="AI returned invalid JSON. Please try again.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {str(e)}")

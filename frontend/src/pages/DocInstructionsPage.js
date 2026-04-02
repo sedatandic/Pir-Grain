@@ -32,6 +32,7 @@ const DEFAULT_FORM = {
   agentMobile: '', agentEmail: '', agentWeb: '', agentAddress: '', surveyor: '',
   sellerSurveyor: '', originalDocsAddress: '', consigneeOption: 'to_order', consigneeCustom: '',
   consigneeBuyerId: '', notifyOption: 'buyer_details', notifyCustom: '', notifyBuyerId: '',
+  shipperText: '', descriptionOfGoods: '',
   requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
 };
 
@@ -144,6 +145,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       consigneeOption: di.consigneeOption || 'to_order', consigneeCustom: di.consigneeCustom || '',
       consigneeBuyerId: di.consigneeBuyerId || '', notifyOption: di.notifyOption || 'buyer_details',
       notifyCustom: di.notifyCustom || '', notifyBuyerId: di.notifyBuyerId || '',
+      shipperText: di.shipperText || '', descriptionOfGoods: di.descriptionOfGoods || '',
       requiredDocuments: di.requiredDocuments?.length ? di.requiredDocuments.map(d => ({ ...d })) : DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
     });
     setDialogOpen(true);
@@ -468,7 +470,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     <tbody>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Shipper</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{(() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{previewDi.shipperText || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()}</td>
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Consignee</th>
@@ -480,7 +482,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'top' }}>Description of Goods</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{(() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{previewDi.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -581,6 +583,13 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             {/* Consignee & Notify */}
             <div className="space-y-3">
               <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Consignee & Notify Party</h3>
+
+              {/* Shipper */}
+              <div className="space-y-2">
+                <Label>Shipper</Label>
+                <Textarea value={form.shipperText || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()} onChange={e => set('shipperText', e.target.value)} rows={2} placeholder="Shipper name and details" data-testid="di-shipper-input" />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Consignee</Label>
@@ -616,6 +625,12 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   )}
                 </div>
               </div>
+            </div>
+
+            {/* Description of Goods */}
+            <div className="space-y-2">
+              <Label>Description of Goods</Label>
+              <Textarea value={form.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()} onChange={e => set('descriptionOfGoods', e.target.value)} rows={2} placeholder="e.g. UKRAINIAN YELLOW CORN IN BULK, CROP 2025" data-testid="di-description-input" />
             </div>
 
             {/* Shipment & Port */}

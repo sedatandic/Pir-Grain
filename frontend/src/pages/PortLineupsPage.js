@@ -463,7 +463,10 @@ function MonthlyLineUp({ onLastUpdate }) {
         (v.seller || '').toLowerCase().includes(q)
       );
     }
-    return result;
+    return [...result].sort((a, b) => {
+      const parseD = (s) => { if (!s) return 0; const p = s.split(/[./\-]/); return p.length === 3 ? (p[2].length === 4 ? new Date(p[2], p[1]-1, p[0]) : new Date(p[0], p[1]-1, p[2])) : 0; };
+      return parseD(b.reportDate) - parseD(a.reportDate);
+    });
   }, [allVessels, selectedPort, searchTerm]);
 
   const vesselSummary = useMemo(() => {

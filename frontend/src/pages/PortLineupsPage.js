@@ -603,13 +603,13 @@ export default function PortLineupsPage() {
     <div className="space-y-4" data-testid="port-lineups-page">
       <Tabs defaultValue="daily" className="w-full">
         <TabsList>
-          <TabsTrigger value="daily" className="flex-col items-center gap-0 py-2">
+          <TabsTrigger value="daily" className="flex-col items-center gap-0 py-2 data-[state=active]:bg-green-700 data-[state=active]:text-white">
             <span className="flex items-center"><Ship className="w-3.5 h-3.5 mr-1.5" />Daily Line-Up</span>
-            {dailyLastUpdate && <span className="text-[10px] text-muted-foreground font-normal">Last Update: {dailyLastUpdate}</span>}
+            {dailyLastUpdate && <span className="text-[10px] font-normal data-[state=active]:text-green-100" style={{color: 'inherit', opacity: 0.8}}>Last Update: {dailyLastUpdate}</span>}
           </TabsTrigger>
-          <TabsTrigger value="monthly" className="flex-col items-center gap-0 py-2">
+          <TabsTrigger value="monthly" className="flex-col items-center gap-0 py-2 data-[state=active]:bg-green-700 data-[state=active]:text-white">
             <span className="flex items-center"><Calendar className="w-3.5 h-3.5 mr-1.5" />Monthly Line-Up</span>
-            {monthlyLastUpdate && <span className="text-[10px] text-muted-foreground font-normal">Last Update: {monthlyLastUpdate}</span>}
+            {monthlyLastUpdate && <span className="text-[10px] font-normal" style={{color: 'inherit', opacity: 0.8}}>Last Update: {monthlyLastUpdate}</span>}
           </TabsTrigger>
         </TabsList>
         <TabsContent value="daily"><DailyLineUp onLastUpdate={setDailyLastUpdate} /></TabsContent>

@@ -582,7 +582,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Consignee & Notify */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Shipper & Consignee & Notify Party</h3>
+              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center mt-4">Shipper & Consignee & Notify Party</h3>
 
               {/* Shipper */}
               <div className="space-y-2">

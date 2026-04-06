@@ -259,7 +259,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left; vertical-align: top;">Shipper</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{shipper_text}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Consignee</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{consignee_text}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Notify Party</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{notify_text}</td></tr>
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Description of Goods</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{description_of_goods}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Description of Goods</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap; text-transform: uppercase;">{description_of_goods}</td></tr>
     </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">1. Shipment & Port Details</h3>

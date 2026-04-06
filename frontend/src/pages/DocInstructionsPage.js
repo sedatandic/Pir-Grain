@@ -32,7 +32,7 @@ const DEFAULT_FORM = {
   agentMobile: '', agentEmail: '', agentWeb: '', agentAddress: '', surveyor: '',
   sellerSurveyor: '', originalDocsAddress: '', consigneeOption: 'to_order', consigneeCustom: '',
   consigneeBuyerId: '', notifyOption: 'buyer_details', notifyCustom: '', notifyBuyerId: '',
-  shipperText: '', descriptionOfGoods: '', paymentTerm: '24 hours after presentation of documents',
+  shipperText: '', descriptionOfGoods: '', paymentTerm: '',
   requiredDocuments: DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
 };
 
@@ -146,7 +146,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       consigneeBuyerId: di.consigneeBuyerId || '', notifyOption: di.notifyOption || 'buyer_details',
       notifyCustom: di.notifyCustom || '', notifyBuyerId: di.notifyBuyerId || '',
       shipperText: di.shipperText || '', descriptionOfGoods: di.descriptionOfGoods || '',
-      paymentTerm: di.paymentTerm || '24 hours after presentation of documents',
+      paymentTerm: di.paymentTerm || '',
       requiredDocuments: di.requiredDocuments?.length ? di.requiredDocuments.map(d => ({ ...d })) : DEFAULT_REQUIRED_DOCS.map(d => ({ ...d })),
     });
     setDialogOpen(true);
@@ -704,22 +704,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               </div>
               <div className="space-y-2">
                 <Label>Payment Term</Label>
-                <Select value={form.paymentTerm || '24 hours after presentation of documents'} onValueChange={v => set('paymentTerm', v)}>
-                  <SelectTrigger data-testid="di-payment-term"><SelectValue /></SelectTrigger>
-                  <SelectContent side="bottom">
-                    <SelectItem value="24 hours after presentation of documents">24 hours after presentation of documents</SelectItem>
-                    <SelectItem value="48 hours after presentation of documents">48 hours after presentation of documents</SelectItem>
-                    <SelectItem value="72 hours after presentation of documents">72 hours after presentation of documents</SelectItem>
-                    <SelectItem value="5 days after presentation of documents">5 days after presentation of documents</SelectItem>
-                    <SelectItem value="7 days after presentation of documents">7 days after presentation of documents</SelectItem>
-                    <SelectItem value="30 days after B/L date">30 days after B/L date</SelectItem>
-                    <SelectItem value="60 days after B/L date">60 days after B/L date</SelectItem>
-                    <SelectItem value="90 days after B/L date">90 days after B/L date</SelectItem>
-                    <SelectItem value="CAD - Cash Against Documents">CAD - Cash Against Documents</SelectItem>
-                    <SelectItem value="Prepayment">Prepayment</SelectItem>
-                    <SelectItem value="LC at sight">LC at sight</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input value={form.paymentTerm || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); return t?.paymentTerms || ''; })()} onChange={e => set('paymentTerm', e.target.value)} placeholder="Auto-filled from contract payment terms" data-testid="di-payment-term" />
               </div>
             </div>
 

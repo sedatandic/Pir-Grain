@@ -170,10 +170,16 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
 
     # Get seller email
     seller = partners_col.find_one({"_id": ObjectId(trade.get("sellerId", ""))})
-    if not seller or not seller.get("email"):
-        raise HTTPException(status_code=400, detail="Seller has no email address")
-
-    seller_email = seller["email"]
+    seller_email = ""
+    if seller:
+        seller_email = seller.get("email", "")
+        if not seller_email:
+            for c in seller.get("contacts", []):
+                if c.get("email"):
+                    seller_email = c["email"]
+                    break
+    if not seller_email:
+        raise HTTPException(status_code=400, detail="Seller has no email address. Please add an email to the seller's partner profile.")
     contract_num = trade.get("pirContractNumber", "N/A")
 
     # Build consignee/notify text

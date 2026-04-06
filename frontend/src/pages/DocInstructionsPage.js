@@ -453,7 +453,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
                   <div style={{ textAlign: 'center', marginBottom: '0' }}>
-                    <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" crossOrigin="anonymous" style={{ height: '120px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" crossOrigin="anonymous" style={{ height: '180px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                   {(() => {
                     const t = trades.find(tr => tr.id === previewDi.tradeId);

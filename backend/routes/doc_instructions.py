@@ -227,13 +227,13 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
         with open(logo_path, "rb") as f:
             logo_b64 = base64.b64encode(f.read()).decode()
         attachments.append({"filename": "logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
-        logo_html = '<img src="cid:pirlogo" style="max-width:240px;height:auto;display:block;margin:0 auto;" />'
+        logo_html = '<img src="cid:pirlogo" style="max-width:300px;height:auto;display:block;margin:0 auto;" />'
 
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
     <div style="text-align: center; margin-bottom: 10px;">{logo_html}</div>
-    <h2 style="text-align: center; color: #15803d;">{di_title}</h2>
+    <h3 style="text-align: center; color: #15803d; margin-top: 4px;">{di_title}</h3>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Consignee & Notify Party</h3>

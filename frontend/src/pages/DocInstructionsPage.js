@@ -517,10 +517,6 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Description of Goods</th>
                         <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{previewDi.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()}</td>
                       </tr>
-                      <tr>
-                        <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Payment Term</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', verticalAlign: 'middle' }}>{previewDi.paymentTerm || '24 hours after presentation of documents'}</td>
-                      </tr>
                     </tbody>
                   </table>
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipment & Port Details</h3>

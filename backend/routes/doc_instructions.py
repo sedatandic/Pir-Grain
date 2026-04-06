@@ -2,6 +2,7 @@
 import os
 import asyncio
 import json
+import base64
 from datetime import datetime, timezone
 from typing import Optional
 from dotenv import load_dotenv
@@ -218,9 +219,20 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
         except Exception:
             pass
 
+    # Load logo for CID inline attachment
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
+    attachments = []
+    logo_html = ""
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            logo_b64 = base64.b64encode(f.read()).decode()
+        attachments.append({"filename": "logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
+        logo_html = '<img src="cid:pirlogo" style="max-width:240px;height:auto;display:block;margin:0 auto;" />'
+
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 10px;">{logo_html}</div>
     <h2 style="text-align: center; color: #15803d;">{di_title}</h2>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
 
@@ -281,6 +293,8 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
             "subject": f"Documentary Instructions - Contract {contract_num} - {qty_str} Mts {trade.get('commodityName', '')} - {trade.get('vesselName', '')}",
             "html": html,
         }
+        if attachments:
+            params["attachments"] = attachments
         if cc_emails:
             params["cc"] = cc_emails
         await asyncio.to_thread(resend.Emails.send, params)

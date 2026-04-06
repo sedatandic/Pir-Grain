@@ -34,10 +34,11 @@
 - Added Istanbul timezone formatting for the "Sent by [User] on [Date] at [Time]" tracker
 - Excluded seller from receiving CIF/CFR nomination emails
 
-### Documentary Instructions (2026-03-31)
+### Documentary Instructions (2026-03-31, updated 2026-04-02)
 - Transliterated Turkish text to uppercase English for Notify Party and Shipper
 - Replaced browser print popup with direct "Generate PDF" download button
 - Added centered transparent logo to preview
+- Fixed DI email: Added inline CID logo attachment (same pattern as Commission Invoice email)
 
 ### Brokerage Payment Workflow (2026-03-31)
 - Split completed contracts: "Awaiting Brokerage Payment" vs "Completed"

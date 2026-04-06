@@ -16,8 +16,8 @@
 - melisa.karagoz (admin)
 
 ## App URL
-- Frontend: https://commodity-dashboard-4.preview.emergentagent.com
-- Backend API: https://commodity-dashboard-4.preview.emergentagent.com/api
+- Frontend: https://grain-logistics-hub-1.preview.emergentagent.com
+- Backend API: https://grain-logistics-hub-1.preview.emergentagent.com/api
 
 ## Database
 - DB Name: pir_grain_pulses (actual, despite .env saying test_database)

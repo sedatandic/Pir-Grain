@@ -7,7 +7,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://commodity-dashboard-4.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://grain-logistics-hub-1.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 ADMIN_USER = {"username": "salih.karagoz", "password": "salih123"}

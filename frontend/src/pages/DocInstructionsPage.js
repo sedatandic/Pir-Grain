@@ -702,10 +702,6 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Payment Term</Label>
-                <Input value={form.paymentTerm || (() => { const t = trades.find(tr => tr.id === (filterTradeId || form.tradeId)); return t?.paymentTerms || ''; })()} onChange={e => set('paymentTerm', e.target.value)} placeholder="Auto-filled from contract payment terms" data-testid="di-payment-term" />
-              </div>
             </div>
 
             {/* Required Documents */}

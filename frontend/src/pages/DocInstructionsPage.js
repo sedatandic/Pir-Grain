@@ -471,23 +471,23 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     <tbody>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Shipper</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{previewDi.shipperText || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{previewDi.shipperText || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const seller = t?.sellerName || ''; const trMap = { 'ı': 'I', 'İ': 'I', 'ğ': 'G', 'Ğ': 'G', 'ü': 'U', 'Ü': 'U', 'ş': 'S', 'Ş': 'S', 'ö': 'O', 'Ö': 'O', 'ç': 'C', 'Ç': 'C', 'â': 'A', 'Â': 'A' }; const sellerEn = seller.split('').map(c => trMap[c] || c).join('').toUpperCase(); return `……………….. on behalf of ${sellerEn}`; })()}</td>
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Consignee</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getConsigneeText(previewDi)}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{getConsigneeText(previewDi)}</td>
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Notify Party</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{getNotifyText(previewDi)}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{getNotifyText(previewDi)}</td>
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Description of Goods</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{previewDi.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{previewDi.descriptionOfGoods || (() => { const t = trades.find(tr => tr.id === previewDi.tradeId); const origin = t?.originAdjective || ''; const commodity = t?.commodityName || ''; const crop = t?.cropYear || ''; const parts = [origin, commodity, 'IN BULK'].filter(Boolean).join(' ').toUpperCase(); return crop ? `${parts}, CROP ${crop}` : parts; })()}</td>
                       </tr>
                       <tr>
                         <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>Payment Term</th>
-                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px' }}>{previewDi.paymentTerm || '24 hours after presentation of documents'}</td>
+                        <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', verticalAlign: 'middle' }}>{previewDi.paymentTerm || '24 hours after presentation of documents'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -510,7 +510,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ].map(([label, val], i) => (
                         <tr key={i}>
                           <th style={{ border: '1px solid #d1d5db', padding: '6px 10px', background: '#f3f4f6', fontWeight: 600, width: '180px', textAlign: 'left', verticalAlign: 'middle' }}>{label}</th>
-                          <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap' }}>{val}</td>
+                          <td style={{ border: '1px solid #d1d5db', padding: '6px 10px', whiteSpace: 'pre-wrap', verticalAlign: 'middle' }}>{val}</td>
                         </tr>
                       ))}
                     </tbody>

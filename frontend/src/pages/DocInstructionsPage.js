@@ -312,7 +312,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       margin: [15, 15, 15, 15],
       filename: `Documentary_Instructions_${contractLabel}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     }).from(previewRef.current).save();
   };
@@ -453,7 +453,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
                   <div style={{ textAlign: 'center', marginBottom: '8px' }}>
-                    <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" style={{ height: '240px', margin: '0 auto' }} />
+                    <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" crossOrigin="anonymous" style={{ height: '240px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                   {(() => {
                     const t = trades.find(tr => tr.id === previewDi.tradeId);

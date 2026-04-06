@@ -174,6 +174,16 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     if seller:
         seller_email = seller.get("email", "")
         if not seller_email:
+            for c in seller.get("tradeContacts", []):
+                if c.get("email"):
+                    seller_email = c["email"]
+                    break
+        if not seller_email:
+            for c in seller.get("executionContacts", []):
+                if c.get("email"):
+                    seller_email = c["email"]
+                    break
+        if not seller_email:
             for c in seller.get("contacts", []):
                 if c.get("email"):
                     seller_email = c["email"]

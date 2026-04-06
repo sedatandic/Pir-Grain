@@ -229,6 +229,23 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
         attachments.append({"filename": "logo.png", "content": logo_b64, "content_type": "image/png", "content_id": "pirlogo"})
         logo_html = '<img src="cid:pirlogo" style="max-width:300px;height:auto;display:block;margin:0 auto;" />'
 
+    # Build shipper text
+    shipper_text = doc.get("shipperText", "")
+    if not shipper_text:
+        seller_name_val = trade.get("sellerName", "")
+        shipper_text = f".................... on behalf of {seller_name_val}" if seller_name_val else "—"
+
+    # Build description of goods
+    description_of_goods = doc.get("descriptionOfGoods", "")
+    if not description_of_goods:
+        origin_adj = trade.get("originAdjective", "")
+        commodity = trade.get("commodityName", "")
+        crop_year = trade.get("cropYear", "")
+        parts = [p for p in [origin_adj, commodity, "IN BULK"] if p]
+        description_of_goods = " ".join(parts).upper()
+        if crop_year:
+            description_of_goods += f", CROP {crop_year}"
+
     # Build HTML email
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
@@ -236,19 +253,21 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
     <h3 style="text-align: center; color: #15803d; margin-top: 4px;">{di_title}</h3>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Consignee & Notify Party</h3>
+    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Shipper & Consignee & Notify Party</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left; vertical-align: top;">Consignee</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{consignee_text}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left; vertical-align: top;">Shipper</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{shipper_text}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Consignee</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{consignee_text}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Notify Party</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{notify_text}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Description of Goods</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{description_of_goods}</td></tr>
     </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">1. Shipment & Port Details</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left;">Loading Port</th><td style="border: 1px solid #ccc; padding: 8px;">{loading_port_display}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('dischargePort', '—')}</td></tr>
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Agent at Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('agentName', '—')}<br>Tel: {doc.get('agentPhone', '—')}{f" &bull; Fax: {doc.get('agentFax')}" if doc.get('agentFax') else ''}{f" &bull; Mob: {doc.get('agentMobile')}" if doc.get('agentMobile') else ''}<br>{doc.get('agentEmail', '')}{f" &bull; {doc.get('agentWeb')}" if doc.get('agentWeb') else ''}</td></tr>
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Buyer Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('surveyor', '—')}</td></tr>
-      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor at Load Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Discharge Port Agent</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('agentName', '—')}<br>Tel: {doc.get('agentPhone', '—')}{f" &bull; Fax: {doc.get('agentFax')}" if doc.get('agentFax') else ''}{f" &bull; Mob: {doc.get('agentMobile')}" if doc.get('agentMobile') else ''}<br>{doc.get('agentEmail', '')}{f" &bull; {doc.get('agentWeb')}" if doc.get('agentWeb') else ''}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Buyer Surveyor</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('surveyor', '—')}</td></tr>
+      <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>
     </table>
 
     <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">2. Required Documents</h3>

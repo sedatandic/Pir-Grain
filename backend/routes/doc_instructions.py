@@ -271,7 +271,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>
     </table>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">2. Required Documents</h3>
+    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">2. Required Document</h3>
     <table style="width: 100%; border-collapse: collapse;">
       <tr><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; width: 30px; text-align: center;">#</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: left;">Document</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Originals</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Copies</th></tr>
     """

@@ -50,6 +50,11 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
   const [previewDi, setPreviewDi] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [diEmailDialog, setDiEmailDialog] = useState(false);
+  const [diEmailDi, setDiEmailDi] = useState(null);
+  const [diEmailTo, setDiEmailTo] = useState('');
+  const [diEmailCc, setDiEmailCc] = useState([]);
+  const [diEmailExtraCc, setDiEmailExtraCc] = useState('');
   const previewRef = useRef(null);
 
   useEffect(() => {
@@ -163,11 +168,37 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
     }
   };
 
-  const handleSendEmail = async (di) => {
-    setSending(di.id);
+  const openSendDiDialog = async (di) => {
+    setDiEmailDi(di);
+    setDiEmailExtraCc('');
     try {
-      const res = await api.post(`/api/doc-instructions/${di.id}/send-email`);
+      const trade = trades.find(t => t.id === di.tradeId);
+      const res = await api.get(`/api/email-prefill/${di.tradeId}`);
+      const d = res.data;
+      // Seller emails as To
+      const sellerEmails = d.sellerEmails || [];
+      setDiEmailTo(sellerEmails[0] || '');
+      // CC: remaining seller emails + all PIR emails
+      const ccList = [...sellerEmails.slice(1), ...(d.pirEmails || [])];
+      setDiEmailCc(ccList);
+    } catch {
+      setDiEmailTo('');
+      setDiEmailCc([]);
+    }
+    setDiEmailDialog(true);
+  };
+
+  const handleSendEmail = async () => {
+    if (!diEmailTo || !diEmailDi) { toast.error('Enter a recipient email'); return; }
+    const extraArr = diEmailExtraCc.split(',').map(e => e.trim()).filter(Boolean);
+    setSending(diEmailDi.id);
+    try {
+      const res = await api.post(`/api/doc-instructions/${diEmailDi.id}/send-email`, {
+        toEmail: diEmailTo,
+        ccEmails: [...diEmailCc, ...extraArr],
+      });
       toast.success(res.data.message);
+      setDiEmailDialog(false);
       fetchAll();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to send email');
@@ -424,7 +455,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => handleDelete(di.id)} data-testid={`delete-di-${di.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="outline" size="sm" className="h-8" disabled={sending === di.id} onClick={() => handleSendEmail(di)} data-testid={`send-di-${di.id}`}>
+                      <Button variant="outline" size="sm" className="h-8" disabled={sending === di.id} onClick={() => openSendDiDialog(di)} data-testid={`send-di-${di.id}`}>
                         {sending === di.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Send className="h-3.5 w-3.5 mr-1" />}
                         Send DI
                       </Button>
@@ -758,6 +789,40 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} data-testid="save-di-btn">{editingId ? 'Update' : 'Create'} DI</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send DI Email Dialog */}
+      <Dialog open={diEmailDialog} onOpenChange={(open) => !open && setDiEmailDialog(false)}>
+        <DialogContent className="sm:max-w-lg mx-auto">
+          <DialogHeader><DialogTitle className="text-center">Send Documentary Instructions</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2 border rounded-lg p-3">
+              <Label className="text-sm font-semibold">To Seller</Label>
+              <Input value={diEmailTo} onChange={(e) => setDiEmailTo(e.target.value)} placeholder="seller@example.com" data-testid="di-email-to" />
+              {diEmailCc.length > 0 && (
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">CC</Label>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {diEmailCc.map(e => (
+                      <label key={`di-cc-${e}`} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                        <input type="checkbox" checked={true} onChange={() => setDiEmailCc(prev => prev.filter(x => x !== e))} className="rounded" />
+                        {e}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Additional CC</Label>
+                <Input value={diEmailExtraCc} onChange={e => setDiEmailExtraCc(e.target.value)} placeholder="email1@example.com, email2@example.com" className="text-xs h-8" data-testid="di-extra-cc" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDiEmailDialog(false)}>Cancel</Button>
+            <Button onClick={handleSendEmail} disabled={!!sending}>{sending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}Send</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

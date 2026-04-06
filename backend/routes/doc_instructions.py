@@ -157,8 +157,12 @@ async def delete_doc_instruction(di_id: str, user=Depends(get_current_user)):
     return {"message": "Deleted"}
 
 
+class DiSendEmailRequest(BaseModel):
+    toEmail: str = ""
+    ccEmails: list = []
+
 @router.post("/{di_id}/send-email")
-async def send_di_email(di_id: str, user=Depends(get_current_user)):
+async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest(), user=Depends(get_current_user)):
     """Send the DI to the seller via email"""
     doc = doc_instructions_col.find_one({"_id": ObjectId(di_id)})
     if not doc:
@@ -168,28 +172,26 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
     if not trade:
         raise HTTPException(status_code=404, detail="Contract not found")
 
-    # Get seller email
-    seller = partners_col.find_one({"_id": ObjectId(trade.get("sellerId", ""))})
-    seller_email = ""
-    if seller:
-        seller_email = seller.get("email", "")
-        if not seller_email:
-            for c in seller.get("tradeContacts", []):
-                if c.get("email"):
-                    seller_email = c["email"]
-                    break
-        if not seller_email:
-            for c in seller.get("executionContacts", []):
-                if c.get("email"):
-                    seller_email = c["email"]
-                    break
-        if not seller_email:
-            for c in seller.get("contacts", []):
-                if c.get("email"):
-                    seller_email = c["email"]
-                    break
+    # Use email from dialog or find from seller
+    seller_email = req.toEmail
     if not seller_email:
-        raise HTTPException(status_code=400, detail="Seller has no email address. Please add an email to the seller's partner profile.")
+        seller = partners_col.find_one({"_id": ObjectId(trade.get("sellerId", ""))})
+        if seller:
+            seller_email = seller.get("email", "")
+            if not seller_email:
+                for c in seller.get("tradeContacts", []):
+                    if c.get("email"):
+                        seller_email = c["email"]
+                        break
+            if not seller_email:
+                for c in seller.get("executionContacts", []):
+                    if c.get("email"):
+                        seller_email = c["email"]
+                        break
+    if not seller_email:
+        raise HTTPException(status_code=400, detail="No recipient email provided")
+
+    cc_emails = req.ccEmails if req.ccEmails else []
     contract_num = trade.get("pirContractNumber", "N/A")
 
     # Build consignee/notify text
@@ -291,6 +293,8 @@ async def send_di_email(di_id: str, user=Depends(get_current_user)):
             "subject": f"Documentary Instructions - Contract {contract_num} - {qty_str} Mts {trade.get('commodityName', '')} - {trade.get('vesselName', '')}",
             "html": html,
         }
+        if cc_emails:
+            params["cc"] = cc_emails
         await asyncio.to_thread(resend.Emails.send, params)
 
         # Mark as sent

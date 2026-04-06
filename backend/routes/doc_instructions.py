@@ -245,6 +245,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
         description_of_goods = " ".join(parts).upper()
         if crop_year:
             description_of_goods += f", CROP {crop_year}"
+    description_of_goods = description_of_goods.upper()
 
     # Build HTML email
     html = f"""

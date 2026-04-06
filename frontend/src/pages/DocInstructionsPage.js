@@ -452,7 +452,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               </CardHeader>
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
-                  <div style={{ textAlign: 'center', marginBottom: '0' }}>
+                  <div style={{ textAlign: 'center', marginTop: '-8px', marginBottom: '-12px' }}>
                     <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" crossOrigin="anonymous" style={{ height: '240px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                   {(() => {

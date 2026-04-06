@@ -464,7 +464,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     if (qty) titleParts.push(`${qty} MTS`);
                     if (commodity) titleParts.push(commodity);
                     if (vessel) titleParts.push(`- ${vessel}`);
-                    return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d' }}>{titleParts.join(' ')}</h2>;
+                    return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d', marginTop: '0', marginBottom: '8px' }}>{titleParts.join(' ')}</h2>;
                   })()}
                   <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipper & Consignee & Notify Party</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>

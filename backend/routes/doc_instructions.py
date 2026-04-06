@@ -159,6 +159,7 @@ async def delete_doc_instruction(di_id: str, user=Depends(get_current_user)):
 
 class DiSendEmailRequest(BaseModel):
     toEmail: str = ""
+    toEmails: list = []
     ccEmails: list = []
 
 @router.post("/{di_id}/send-email")
@@ -172,25 +173,12 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
     if not trade:
         raise HTTPException(status_code=404, detail="Contract not found")
 
-    # Use email from dialog or find from seller
-    seller_email = req.toEmail
-    if not seller_email:
-        seller = partners_col.find_one({"_id": ObjectId(trade.get("sellerId", ""))})
-        if seller:
-            seller_email = seller.get("email", "")
-            if not seller_email:
-                for c in seller.get("tradeContacts", []):
-                    if c.get("email"):
-                        seller_email = c["email"]
-                        break
-            if not seller_email:
-                for c in seller.get("executionContacts", []):
-                    if c.get("email"):
-                        seller_email = c["email"]
-                        break
-    if not seller_email:
+    # Use emails from dialog
+    to_emails = req.toEmails if req.toEmails else ([req.toEmail] if req.toEmail else [])
+    if not to_emails:
         raise HTTPException(status_code=400, detail="No recipient email provided")
 
+    seller_email = to_emails[0]
     cc_emails = req.ccEmails if req.ccEmails else []
     contract_num = trade.get("pirContractNumber", "N/A")
 
@@ -289,7 +277,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
     try:
         params = {
             "from": SENDER_EMAIL,
-            "to": [seller_email],
+            "to": to_emails,
             "subject": f"Documentary Instructions - Contract {contract_num} - {qty_str} Mts {trade.get('commodityName', '')} - {trade.get('vesselName', '')}",
             "html": html,
         }

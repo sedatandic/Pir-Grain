@@ -175,12 +175,11 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       const trade = trades.find(t => t.id === di.tradeId);
       const res = await api.get(`/api/email-prefill/${di.tradeId}`);
       const d = res.data;
-      // Seller emails as To
+      // All seller emails as To
       const sellerEmails = d.sellerEmails || [];
-      setDiEmailTo(sellerEmails[0] || '');
-      // CC: remaining seller emails + all PIR emails
-      const ccList = [...sellerEmails.slice(1), ...(d.pirEmails || [])];
-      setDiEmailCc(ccList);
+      setDiEmailTo(sellerEmails.join(', '));
+      // CC: only PIR emails
+      setDiEmailCc([...(d.pirEmails || [])]);
     } catch {
       setDiEmailTo('');
       setDiEmailCc([]);
@@ -190,11 +189,13 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
   const handleSendEmail = async () => {
     if (!diEmailTo || !diEmailDi) { toast.error('Enter a recipient email'); return; }
+    const toEmails = diEmailTo.split(',').map(e => e.trim()).filter(Boolean);
     const extraArr = diEmailExtraCc.split(',').map(e => e.trim()).filter(Boolean);
     setSending(diEmailDi.id);
     try {
       const res = await api.post(`/api/doc-instructions/${diEmailDi.id}/send-email`, {
-        toEmail: diEmailTo,
+        toEmail: toEmails[0],
+        toEmails: toEmails,
         ccEmails: [...diEmailCc, ...extraArr],
       });
       toast.success(res.data.message);

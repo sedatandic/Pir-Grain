@@ -151,9 +151,14 @@ export default function BusinessCardsPage() {
 
   return (
     <div className="space-y-4" data-testid="business-cards-page">
-      {/* Header */}
-      <div className="flex items-center justify-end flex-wrap gap-3">
-        <div className="flex gap-2">
+      {/* Search & Actions */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search by name, company, country, keywords..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="search-cards" />
+        </div>
+        <span className="text-xs text-muted-foreground" data-testid="cards-count">{filtered.length} contact{filtered.length !== 1 ? 's' : ''} across {groupedByCountry.length} {groupedByCountry.length === 1 ? 'country' : 'countries'}</span>
+        <div className="flex gap-2 ml-auto">
           <label
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
               scanning
@@ -170,15 +175,6 @@ export default function BusinessCardsPage() {
             <Plus className="h-4 w-4" />Add Manual
           </Button>
         </div>
-      </div>
-
-      {/* Search */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by name, company, country, keywords..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="search-cards" />
-        </div>
-        <span className="text-xs text-muted-foreground" data-testid="cards-count">{filtered.length} contact{filtered.length !== 1 ? 's' : ''} across {groupedByCountry.length} {groupedByCountry.length === 1 ? 'country' : 'countries'}</span>
       </div>
 
       {/* No data */}

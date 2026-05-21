@@ -177,18 +177,25 @@ export default function VesselsPage() {
           <div className="space-y-3 py-2">
             {certs.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">No certificates uploaded yet</p>
-            ) : certs.map(c => (
+            ) : certs.map(c => {
+              const ext = (c.fileName || '').split('.').pop().toLowerCase();
+              const isPdf = ext === 'pdf';
+              const isImg = ['jpg','jpeg','png','webp'].includes(ext);
+              return (
               <div key={c.id} className="flex items-center justify-between p-2.5 border rounded-lg">
                 <div className="flex items-center gap-2 min-w-0">
                   <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                   <span className="text-sm truncate">{c.fileName}</span>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCertDownload(c)} data-testid={`cert-download-${c.id}`}><Eye className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="sm" className="h-7 px-2 gap-1 text-xs font-medium" onClick={() => handleCertDownload(c)} data-testid={`cert-download-${c.id}`}>
+                    {isPdf ? <span className="text-red-600 font-bold">PDF</span> : isImg ? <span className="text-blue-600 font-bold">IMG</span> : <span className="text-gray-600 font-bold">{ext.toUpperCase()}</span>}
+                  </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleCertDelete(c.id)} data-testid={`cert-delete-${c.id}`}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
           <DialogFooter>
             <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors ${certUploading ? 'bg-muted text-muted-foreground' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>

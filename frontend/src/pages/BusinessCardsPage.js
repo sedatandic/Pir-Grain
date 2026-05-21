@@ -225,15 +225,15 @@ export default function BusinessCardsPage() {
                   </colgroup>
                   <thead>
                     <tr className="bg-muted/50 border-b border-t border-border">
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Name</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Company</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Position</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Email</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">WhatsApp</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Website</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
-                      <th className="text-left px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Keywords</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Name</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Company</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Position</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Email</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">WhatsApp</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Website</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
+                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Keywords</th>
                       <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                   </thead>
@@ -245,31 +245,31 @@ export default function BusinessCardsPage() {
                         onClick={() => setDetailCard(card)}
                         data-testid={`card-row-${card.id}`}
                       >
-                        <td className="px-3 py-2 font-medium text-foreground truncate" title={card.name}>{card.name || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.company}>{card.company || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.title}>{card.title || '-'}</td>
-                        <td className="px-3 py-2 truncate">
+                        <td className="px-3 py-2 font-medium text-foreground truncate text-center" title={card.name}>{card.name || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate text-center" title={card.company}>{card.company || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate text-center" title={card.title}>{card.title || '-'}</td>
+                        <td className="px-3 py-2 truncate text-center">
                           {card.email ? (
                             <a href={`mailto:${card.email}`} className="text-blue-600 hover:underline text-xs" title={card.email} onClick={e => e.stopPropagation()}>{card.email}</a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2 truncate">
+                        <td className="px-3 py-2 truncate text-center">
                           {card.mobile ? (
-                            <a href={`https://wa.me/${card.mobile.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-green-600 hover:underline text-xs" onClick={e => e.stopPropagation()}>
+                            <a href={`https://wa.me/${card.mobile.replace(/[^0-9+]/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1 text-green-600 hover:underline text-xs" onClick={e => e.stopPropagation()}>
                               <MessageCircle className="w-3 h-3 flex-shrink-0" /><span className="truncate">{card.mobile}</span>
                             </a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2 truncate">
+                        <td className="px-3 py-2 truncate text-center">
                           {card.website ? (
-                            <a href={card.website?.startsWith('http') ? card.website : `https://${card.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs truncate block" title={card.website} onClick={e => e.stopPropagation()}>{card.website}</a>
+                            <a href={card.website?.startsWith('http') ? card.website : `https://${card.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs truncate block text-center" title={card.website} onClick={e => e.stopPropagation()}>{card.website}</a>
                           ) : '-'}
                         </td>
-                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.city}>{card.city || '-'}</td>
-                        <td className="px-3 py-2 text-muted-foreground truncate" title={card.country}>{card.country || '-'}</td>
-                        <td className="px-3 py-2">
+                        <td className="px-3 py-2 text-muted-foreground truncate text-center" title={card.city}>{card.city || '-'}</td>
+                        <td className="px-3 py-2 text-muted-foreground truncate text-center" title={card.country}>{card.country || '-'}</td>
+                        <td className="px-3 py-2 text-center">
                           {card.keywords?.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
+                            <div className="flex flex-wrap gap-1 justify-center">
                               {card.keywords.slice(0, 2).map((k, ki) => (
                                 <Badge key={ki} variant="secondary" className="text-[10px] px-1.5 py-0 font-normal">{k}</Badge>
                               ))}

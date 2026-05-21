@@ -210,7 +210,7 @@ export default function BusinessCardsPage() {
 
             {/* Table */}
             {!isCollapsed && (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto [&_th]:border [&_th]:border-muted [&_td]:border [&_td]:border-muted">
                 <table className="w-full text-sm" style={{ tableLayout: 'fixed' }} data-testid={`cards-table-${country.toLowerCase().replace(/\s+/g, '-')}`}>
                   <colgroup>
                     <col style={{ width: '12%' }} />

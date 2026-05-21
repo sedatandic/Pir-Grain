@@ -435,6 +435,84 @@ def delete_swift_copy(trade_id: str, user=Depends(non_accountant)):
     return {"message": "SWIFT copy deleted"}
 
 
+# --- Shortage Document Upload/Download/Delete ---
+@router.post("/{trade_id}/upload-shortage-doc")
+async def upload_shortage_doc(trade_id: str, file: UploadFile = File(...), user=Depends(non_accountant)):
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"shortage_doc_{trade_id}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"shortageDocFileName": file.filename, "shortageDocFilePath": filename}})
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+
+@router.get("/{trade_id}/download-shortage-doc")
+def download_shortage_doc(trade_id: str, user=Depends(non_accountant)):
+    from fastapi.responses import FileResponse
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("shortageDocFilePath"):
+        raise HTTPException(status_code=404, detail="No shortage document found")
+    filepath = os.path.join(UPLOAD_DIR, trade["shortageDocFilePath"])
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(filepath, filename=trade.get("shortageDocFileName", "shortage_doc"), media_type="application/octet-stream")
+
+@router.delete("/{trade_id}/upload-shortage-doc")
+def delete_shortage_doc(trade_id: str, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("shortageDocFilePath"):
+        raise HTTPException(status_code=404, detail="No shortage document found")
+    filepath = os.path.join(UPLOAD_DIR, trade["shortageDocFilePath"])
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$unset": {"shortageDocFileName": "", "shortageDocFilePath": ""}})
+    return {"message": "Shortage document deleted"}
+
+
+# --- Shortage Invoice Upload/Download/Delete ---
+@router.post("/{trade_id}/upload-shortage-invoice")
+async def upload_shortage_invoice(trade_id: str, file: UploadFile = File(...), user=Depends(non_accountant)):
+    ext = os.path.splitext(file.filename)[1]
+    filename = f"shortage_inv_{trade_id}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"shortageInvFileName": file.filename, "shortageInvFilePath": filename}})
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+
+@router.get("/{trade_id}/download-shortage-invoice")
+def download_shortage_invoice(trade_id: str, user=Depends(non_accountant)):
+    from fastapi.responses import FileResponse
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("shortageInvFilePath"):
+        raise HTTPException(status_code=404, detail="No shortage invoice found")
+    filepath = os.path.join(UPLOAD_DIR, trade["shortageInvFilePath"])
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(filepath, filename=trade.get("shortageInvFileName", "shortage_invoice"), media_type="application/octet-stream")
+
+@router.delete("/{trade_id}/upload-shortage-invoice")
+def delete_shortage_invoice(trade_id: str, user=Depends(non_accountant)):
+    trade = trades_col.find_one({"_id": ObjectId(trade_id)})
+    if not trade or not trade.get("shortageInvFilePath"):
+        raise HTTPException(status_code=404, detail="No shortage invoice found")
+    filepath = os.path.join(UPLOAD_DIR, trade["shortageInvFilePath"])
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$unset": {"shortageInvFileName": "", "shortageInvFilePath": ""}})
+    return {"message": "Shortage invoice deleted"}
+
+
+# --- Shortage Payment Date ---
+@router.put("/{trade_id}/shortage-payment-date")
+async def update_shortage_payment_date(trade_id: str, body: dict, user=Depends(non_accountant)):
+    date_val = body.get("shortagePaymentDate", "")
+    trades_col.update_one({"_id": ObjectId(trade_id)}, {"$set": {"shortagePaymentDate": date_val}})
+    return serialize_doc(trades_col.find_one({"_id": ObjectId(trade_id)}))
+
+
 @router.get("/{trade_id}/draft-documents")
 def get_draft_documents(trade_id: str, user=Depends(non_accountant)):
     trade = trades_col.find_one({"_id": ObjectId(trade_id)})

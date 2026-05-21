@@ -98,6 +98,9 @@ export default function VesselExecutionPage() {
   const [ciExtraCc, setCiExtraCc] = useState('');
   const [buyerPaymentSaving, setBuyerPaymentSaving] = useState(false);
   const [swiftUploading, setSwiftUploading] = useState(false);
+  const [shortageDocUploading, setShortageDocUploading] = useState(false);
+  const [shortageInvUploading, setShortageInvUploading] = useState(false);
+  const [shortagePaySaving, setShortagePaySaving] = useState(false);
 
   // DI documents state
   const [diDocNames, setDiDocNames] = useState([]);
@@ -584,6 +587,64 @@ export default function VesselExecutionPage() {
       setTrade(res.data);
       toast.success('SWIFT copy removed');
     } catch { toast.error('Failed to remove SWIFT copy'); }
+  };
+
+  // --- Shortage Document/Invoice Functions ---
+  const uploadShortageDoc = async (file) => {
+    if (!file) return;
+    setShortageDocUploading(true);
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      const res = await api.post(`/api/trades/${selectedTradeId}/upload-shortage-doc`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setTrade(res.data); toast.success('Shortage document uploaded');
+    } catch { toast.error('Failed to upload shortage document'); }
+    finally { setShortageDocUploading(false); }
+  };
+  const viewShortageDoc = async () => {
+    try {
+      const res = await api.get(`/api/trades/${selectedTradeId}/download-shortage-doc`, { responseType: 'blob' });
+      window.open(window.URL.createObjectURL(new Blob([res.data])), '_blank');
+    } catch { toast.error('Failed to open shortage document'); }
+  };
+  const deleteShortageDoc = async () => {
+    try {
+      await api.delete(`/api/trades/${selectedTradeId}/upload-shortage-doc`);
+      const res = await api.get(`/api/trades/${selectedTradeId}`);
+      setTrade(res.data); toast.success('Shortage document removed');
+    } catch { toast.error('Failed to remove shortage document'); }
+  };
+
+  const uploadShortageInv = async (file) => {
+    if (!file) return;
+    setShortageInvUploading(true);
+    try {
+      const fd = new FormData(); fd.append('file', file);
+      const res = await api.post(`/api/trades/${selectedTradeId}/upload-shortage-invoice`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setTrade(res.data); toast.success('Shortage invoice uploaded');
+    } catch { toast.error('Failed to upload shortage invoice'); }
+    finally { setShortageInvUploading(false); }
+  };
+  const viewShortageInv = async () => {
+    try {
+      const res = await api.get(`/api/trades/${selectedTradeId}/download-shortage-invoice`, { responseType: 'blob' });
+      window.open(window.URL.createObjectURL(new Blob([res.data])), '_blank');
+    } catch { toast.error('Failed to open shortage invoice'); }
+  };
+  const deleteShortageInv = async () => {
+    try {
+      await api.delete(`/api/trades/${selectedTradeId}/upload-shortage-invoice`);
+      const res = await api.get(`/api/trades/${selectedTradeId}`);
+      setTrade(res.data); toast.success('Shortage invoice removed');
+    } catch { toast.error('Failed to remove shortage invoice'); }
+  };
+
+  const saveShortagePaymentDate = async (dateStr) => {
+    setShortagePaySaving(true);
+    try {
+      const res = await api.put(`/api/trades/${selectedTradeId}/shortage-payment-date`, { shortagePaymentDate: dateStr });
+      setTrade(res.data); toast.success('Shortage payment date saved');
+    } catch { toast.error('Failed to save shortage payment date'); }
+    finally { setShortagePaySaving(false); }
   };
 
   // --- Vessel Nomination Functions ---
@@ -1318,7 +1379,7 @@ export default function VesselExecutionPage() {
                     const actualShortage = blQty - dischargeQty;
                     const exceedsTolerance = actualShortage > allowedShortage && blQty > 0 && dischargeQty > 0;
                     const shortageToPayMT = exceedsTolerance ? actualShortage - allowedShortage : 0;
-                    const fmtQty = (v) => { if (!v) return '-'; const s = v.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 3}); return s + ' MT'; };
+                    const fmtQty = (v) => { if (!v) return '-'; return v.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 3}) + ' MT'; };
 
                     return (
                       <>
@@ -1349,6 +1410,66 @@ export default function VesselExecutionPage() {
                       </>
                     );
                   })()}
+
+                  {/* Shortage Document Upload */}
+                  <div className="pt-3 border-t space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">Shortage Document</span>
+                      {trade.shortageDocFileName ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground truncate max-w-[150px]">{trade.shortageDocFileName}</span>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={viewShortageDoc} data-testid="view-shortage-doc"><Eye className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={deleteShortageDoc} data-testid="delete-shortage-doc"><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer bg-muted hover:bg-muted/80 transition-colors">
+                          {shortageDocUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                          {shortageDocUploading ? 'Uploading...' : 'Upload'}
+                          <input type="file" className="hidden" onChange={(e) => uploadShortageDoc(e.target.files[0])} disabled={shortageDocUploading} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Shortage Invoice Upload */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">Shortage Invoice</span>
+                      {trade.shortageInvFileName ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground truncate max-w-[150px]">{trade.shortageInvFileName}</span>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={viewShortageInv} data-testid="view-shortage-inv"><Eye className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={deleteShortageInv} data-testid="delete-shortage-inv"><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium cursor-pointer bg-muted hover:bg-muted/80 transition-colors">
+                          {shortageInvUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                          {shortageInvUploading ? 'Uploading...' : 'Upload'}
+                          <input type="file" className="hidden" onChange={(e) => uploadShortageInv(e.target.files[0])} disabled={shortageInvUploading} />
+                        </label>
+                      )}
+                    </div>
+
+                    {/* Shortage Payment Date */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold">Payment Date</span>
+                      <div className="flex items-center gap-1.5">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                              <CalendarDays className="h-3.5 w-3.5" />
+                              {trade.shortagePaymentDate || 'Select date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar mode="single"
+                              selected={(() => { try { const [d,m,y] = (trade.shortagePaymentDate || '').split('/'); return new Date(y, m-1, d); } catch { return undefined; } })()}
+                              onSelect={(date) => { if (date) saveShortagePaymentDate(format(date, 'dd/MM/yyyy')); }}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {trade.shortagePaymentDate && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

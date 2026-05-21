@@ -265,9 +265,11 @@ export default function CommissionsPage() {
               return (
               <TableRow key={t.id} className={idx % 2 === 1 ? 'bg-muted/30' : ''}>
                 <TableCell>
-                  <Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge>
-                  {t.status === 'washout' && <Badge className="ml-1 bg-purple-100 text-purple-800 border-purple-200 text-[10px] px-1.5">WASHOUT</Badge>}
-                  {t.status === 'cancelled' && <Badge className="ml-1 bg-red-100 text-red-800 border-red-200 text-[10px] px-1.5">CANCELLED</Badge>}
+                  <div className="flex flex-col items-start gap-1">
+                    <Badge className={`cursor-pointer select-none ${invoiceStatus === 'PAID' ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200'}`} onClick={() => toggleInvoiceStatus(t.id, t.invoicePaid)} data-testid={`toggle-invoice-status-${t.id}`}>{invoiceStatus}</Badge>
+                    {t.status === 'washout' && <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-[10px] px-1.5">WASHOUT</Badge>}
+                    {t.status === 'cancelled' && <Badge className="bg-red-100 text-red-800 border-red-200 text-[10px] px-1.5">CANCELLED</Badge>}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{invDate}</TableCell>
                 <TableCell className="text-sm max-w-[120px]"><div className="break-all">{invNo}</div></TableCell>

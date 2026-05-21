@@ -238,10 +238,10 @@ export default function PartnersPage({ filterType }) {
                   <TableRow className="bg-muted/50">
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company</TableHead>
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company Code</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company Type</TableHead>
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Address</TableHead>
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Tax ID No</TableHead>
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D] whitespace-nowrap">Tax Office</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Type</TableHead>
                     <TableHead className="!text-center !font-bold !text-[#1B7A3D] w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -254,10 +254,10 @@ export default function PartnersPage({ filterType }) {
                         <div className="font-medium">{p.companyName}</div>
                       </TableCell>
                       <TableCell className="text-sm !text-center">{p.companyCode || '-'}</TableCell>
+                      <TableCell className="!text-center"><div className="flex flex-wrap gap-1 justify-center">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>
                       <TableCell className="text-sm !text-center"><div>{p.address || '-'}</div>{(p.city || p.country) && <div className="text-muted-foreground">{[p.city, p.country].filter(Boolean).join(', ')}</div>}</TableCell>
                       <TableCell className="text-sm !text-center">{p.taxIdNo || '-'}</TableCell>
                       <TableCell className="text-sm !text-center">{p.taxOffice || '-'}</TableCell>
-                      <TableCell className="!text-center"><div className="flex flex-wrap gap-1 justify-center">{(Array.isArray(p.type) ? p.type : [p.type]).map((t, i) => <Badge key={i} className={TYPE_CONFIG[t]?.color || 'bg-muted'}>{TYPE_CONFIG[t]?.label || t}</Badge>)}</div></TableCell>
                       <TableCell className="!text-center">
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setDetailPartner(p)} data-testid={`partner-view-${p.id}`}><Eye className="h-3.5 w-3.5" /></Button>

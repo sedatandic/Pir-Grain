@@ -155,7 +155,8 @@ export default function BusinessCardsPage() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by name, company, country, keywords..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" data-testid="search-cards" />
+          <Input placeholder="Search by name, company, country, keywords..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 pr-8" data-testid="search-cards" />
+          {search && <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" data-testid="clear-search"><X className="h-4 w-4" /></button>}
         </div>
         <span className="text-xs text-muted-foreground" data-testid="cards-count">{filtered.length} contact{filtered.length !== 1 ? 's' : ''} across {groupedByCountry.length} {groupedByCountry.length === 1 ? 'country' : 'countries'}</span>
         <div className="flex gap-2 ml-auto">

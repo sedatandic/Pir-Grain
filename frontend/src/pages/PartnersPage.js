@@ -232,7 +232,7 @@ export default function PartnersPage({ filterType }) {
           </div>
 
           {loading ? <div className="text-center py-8"><Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" /></div> : (
-            <div className="overflow-x-auto border rounded-lg">
+            <div className="overflow-x-auto border rounded-lg [&_th]:border [&_th]:border-muted [&_td]:border [&_td]:border-muted">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">

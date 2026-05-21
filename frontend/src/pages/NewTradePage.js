@@ -232,7 +232,7 @@ export default function NewTradePage() {
           });
           setLoadingTrade(false);
         } else {
-          // Auto-select Pir Grain as default Broker
+          // Auto-select BA Ticaret as default Broker
           const pirGrain = pa.data.find(p => {
             const t = Array.isArray(p.type) ? p.type : [p.type];
             return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
@@ -347,7 +347,7 @@ export default function NewTradePage() {
             <DatePicker value={form.contractDate} onChange={(v) => set('contractDate', v)} />
           </div>
           <div className="space-y-2">
-            <Label>Pir Grain Ref. No</Label>
+            <Label>BA Ticaret Ref. No</Label>
             <Input value={form.pirContractNumber} onChange={(e) => set('pirContractNumber', e.target.value)} placeholder="Auto-generated if empty" />
           </div>
           <div className="space-y-2">

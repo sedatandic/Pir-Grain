@@ -16,7 +16,7 @@ from auth import get_current_user
 try:
     import resend
     resend.api_key = os.environ.get("RESEND_API_KEY", "")
-    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain <noreply@pirgrain.com>")
+    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "BA Ticaret <noreply@baticaret.com>")
 except ImportError:
     resend = None
     SENDER_EMAIL = ""
@@ -220,7 +220,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
             pass
 
     # Load logo for CID inline attachment
-    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ba-ticaret-logo.png")
     attachments = []
     logo_html = ""
     if os.path.exists(logo_path):
@@ -251,10 +251,10 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
     html = f"""
     <html><body style="font-family: Arial, sans-serif; font-size: 13px; color: #111; padding: 20px;">
     <div style="text-align: center; margin-bottom: 10px;">{logo_html}</div>
-    <h3 style="text-align: center; color: #15803d; margin-top: 4px;">{di_title}</h3>
+    <h3 style="text-align: center; color: #1A5276; margin-top: 4px;">{di_title}</h3>
     <p style="text-align: center; color: #666;">Contract Reference: {contract_num}</p>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Shipper & Consignee & Notify Party:</h3>
+    <h3 style="color: #1A5276; border-bottom: 2px solid #1A5276; padding-bottom: 4px;">Shipper & Consignee & Notify Party:</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left; vertical-align: top;">Shipper</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{shipper_text}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Consignee</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap;">{consignee_text}</td></tr>
@@ -262,7 +262,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left; vertical-align: top;">Description of Goods</th><td style="border: 1px solid #ccc; padding: 8px; white-space: pre-wrap; text-transform: uppercase;">{description_of_goods}</td></tr>
     </table>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">1. Shipment & Port Details</h3>
+    <h3 style="color: #1A5276; border-bottom: 2px solid #1A5276; padding-bottom: 4px;">1. Shipment & Port Details</h3>
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; width: 200px; text-align: left;">Loading Port</th><td style="border: 1px solid #ccc; padding: 8px;">{loading_port_display}</td></tr>
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Discharge Port</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('dischargePort', '—')}</td></tr>
@@ -271,7 +271,7 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
       <tr><th style="border: 1px solid #ccc; padding: 8px; background: #f3f4f6; text-align: left;">Seller Surveyor</th><td style="border: 1px solid #ccc; padding: 8px;">{doc.get('sellerSurveyor', '') or trade.get('sellerSurveyor', '—')}</td></tr>
     </table>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Required Documents:</h3>
+    <h3 style="color: #1A5276; border-bottom: 2px solid #1A5276; padding-bottom: 4px;">Required Documents:</h3>
     <table style="width: 100%; border-collapse: collapse;">
       <tr><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; width: 30px; text-align: center;">#</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: left;">Document</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Originals</th><th style="border: 1px solid #ccc; padding: 6px; background: #f3f4f6; text-align: center;">Copies</th></tr>
     """
@@ -297,10 +297,10 @@ async def send_di_email(di_id: str, req: DiSendEmailRequest = DiSendEmailRequest
 
     html += f"""</table>
 
-    <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px;">Address for Original Documents:</h3>
+    <h3 style="color: #1A5276; border-bottom: 2px solid #1A5276; padding-bottom: 4px;">Address for Original Documents:</h3>
     <div style="border: 1px solid #ccc; padding: 10px; background: #f9fafb; white-space: pre-wrap; margin-bottom: 16px;">{doc.get('originalDocsAddress', '') or 'To be advised later.'}</div>
 
-    <br><p style="font-size: 11px; color: #999;">This email was sent from PIR Grain & Pulses Trading Platform.</p>
+    <br><p style="font-size: 11px; color: #999;">This email was sent from BA Ticaret Trading Platform.</p>
     </body></html>"""
 
     if not resend or not resend.api_key:

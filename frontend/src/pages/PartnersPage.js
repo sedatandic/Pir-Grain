@@ -236,13 +236,13 @@ export default function PartnersPage({ filterType }) {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company Code</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Company Type</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Address</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Tax ID No</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D] whitespace-nowrap">Tax Office</TableHead>
-                    <TableHead className="!text-center !font-bold !text-[#1B7A3D] w-[80px]">Actions</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276]">Company</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276]">Company Code</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276]">Company Type</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276]">Address</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276]">Tax ID No</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276] whitespace-nowrap">Tax Office</TableHead>
+                    <TableHead className="!text-center !font-bold !text-[#1A5276] w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -20,7 +20,7 @@ CERT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads", "
 router = APIRouter(prefix="/api", tags=["email"])
 
 resend.api_key = os.environ.get("RESEND_API_KEY", "")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain - Execution <noreply@pirgrain.com>")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "BA Ticaret - Execution <noreply@baticaret.com>")
 def get_cc_emails():
     """Load CC emails from admin users in the database."""
     from database import db
@@ -257,8 +257,8 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         logo_html = f'''
             <table style="width: 100%;" cellpadding="0" cellspacing="0"><tr>
                 <td style="text-align: center; padding: 10px 0;">
-                    <img src="cid:pirlogo" style="height: 50px; vertical-align: middle;" alt="PIR" />
-                    <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">PIR Grain &amp; Pulses Ltd</span>
+                    <img src="cid:pirlogo" style="height: 50px; vertical-align: middle;" alt="BA Ticaret" />
+                    <span style="color: #ffffff; font-size: 22px; font-weight: bold; vertical-align: middle; margin-left: 12px;">BA Ticaret Ltd</span>
                 </td>
             </tr></table>'''
 
@@ -266,7 +266,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         rows = "".join([
             row_html("DATE", formatted_date),
             row_html("CONTRACT NO", contract_label),
-            row_html("PIR GRAIN REF. NO", ref),
+            row_html("BA TICARET REF. NO", ref),
             row_html("SELLERS", seller),
             row_html("BUYERS", buyer),
             row_html("BROKER", broker_name),
@@ -320,7 +320,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
         <div style="padding: 0 28px; background-color: #fafaf8;">
             <div style="text-align: center;">
-                <img src="cid:pirlogo" style="height: 180px; display: block; margin: 0 auto;" alt="PIR Grain and Pulses" />
+                <img src="cid:pirlogo" style="height: 180px; display: block; margin: 0 auto;" alt="BA Ticaret" />
             </div>
             <h2 style="text-align:center;color:#1B7A3D;font-size:18px;margin:0 0 16px 0;border-bottom:2px solid #1B7A3D;padding-bottom:8px;">Shipment Appropriation</h2>
             
@@ -345,7 +345,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             </tr></table>
             
             <p style="font-size:14px;color:#555;">Please find attached the set of B/Ls. We will revert with the balance documents as soon as possible.</p>
-            <p style="font-size:14px;color:#333;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
+            <p style="font-size:14px;color:#333;">Best Regards,<br/><strong>BA Ticaret Ltd</strong></p>
         </div>
     </div>
     """
@@ -355,7 +355,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
         rows = "".join([
             row_html("INVOICE NO", f"COMM-{contract_label}"),
             row_html("CONTRACT NO", contract_label),
-            row_html("PIR GRAIN REF. NO", ref),
+            row_html("BA TICARET REF. NO", ref),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),
             row_html("COMMODITY", commodity_display),
@@ -403,7 +403,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
                 lpa_details = lpa_name
         rows = "".join([
             row_html("CONTRACT NO", contract_label),
-            row_html("PIR GRAIN REF. NO", ref),
+            row_html("BA TICARET REF. NO", ref),
             row_html("SELLER", seller),
             row_html("BUYER", buyer),
             row_html("COMMODITY", commodity_with_crop),
@@ -426,7 +426,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 680px; margin: 0 auto; border: 1px solid #e0e0e0;">
         <div style="padding: 0 28px; background-color: #fafaf8;">
             <div style="text-align: center;">
-                <img src="cid:pirlogo" style="height: 180px; display: block; margin: 0 auto;" alt="PIR Grain and Pulses" />
+                <img src="cid:pirlogo" style="height: 180px; display: block; margin: 0 auto;" alt="BA Ticaret" />
             </div>
             <p style="font-size: 15px; color: #333; margin-top: 0;">Dear {recipient_name},</p>
             {"<p style='font-size: 15px; color: #333;'>Please find below the vessel nomination details for the subject contract.</p>" if doc_name == "Vessel Nomination" else f"<p style='font-size: 15px; color: #333;'>Please find below the <strong>{doc_name}</strong> details:</p>"}
@@ -436,7 +436,7 @@ def build_email_body(trade, doc_name, recipient_name, recipient_role):
             </table>
 
             <p style="font-size: 14px; color: #555; margin-top: 24px;">{closing}</p>
-            <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>PIR Grain &amp; Pulses Ltd</strong></p>
+            <p style="font-size: 14px; color: #333; margin-top: 20px;">Best Regards,<br/><strong>BA Ticaret Ltd</strong></p>
         </div>
     </div>
     """

@@ -210,15 +210,15 @@ export default function PricesTab() {
                 <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={COMMODITY_COLORS[selectedCommodity] || '#1B7A3D'} stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor={COMMODITY_COLORS[selectedCommodity] || '#1B7A3D'} stopOpacity={0}/>
+                      <stop offset="5%" stopColor={COMMODITY_COLORS[selectedCommodity] || '#1A5276'} stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor={COMMODITY_COLORS[selectedCommodity] || '#1A5276'} stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} domain={['auto', 'auto']} />
                   <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} labelStyle={{ color: 'hsl(var(--foreground))' }} />
-                  <Area type="monotone" dataKey="price" stroke={COMMODITY_COLORS[selectedCommodity] || '#1B7A3D'} fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="price" stroke={COMMODITY_COLORS[selectedCommodity] || '#1A5276'} fillOpacity={1} fill="url(#colorPrice)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             )}

@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Loader2, BarChart3, TrendingUp, Users, Wheat, Globe, Anchor, DollarSign, Ship, CalendarDays, Filter, X } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
-const COLORS = ['#1B7A3D', '#C4A54D', '#2563EB', '#DC2626', '#7C3AED', '#059669', '#D97706', '#0891B2', '#BE185D', '#65A30D'];
-const GREEN = '#1B7A3D';
+const COLORS = ['#1A5276', '#C4A54D', '#2563EB', '#DC2626', '#7C3AED', '#059669', '#D97706', '#0891B2', '#BE185D', '#65A30D'];
+const GREEN = '#1A5276';
 const GOLD = '#C4A54D';
 
 function fmt(n) { return typeof n === 'number' ? n.toLocaleString(undefined, { maximumFractionDigits: 0 }) : '0'; }

@@ -30,22 +30,22 @@ from auth import get_current_user
 
 router = APIRouter(prefix="/api/commission-invoice", tags=["commission-invoice"])
 
-PIR_GREEN = colors.HexColor("#1B7A3D")
-PIR_GREEN_LIGHT = colors.HexColor("#F0F7F2")
-PIR_GREEN_MED = colors.HexColor("#D4EADB")
+BA_NAVY = colors.HexColor("#1A5276")
+BA_NAVY_LIGHT = colors.HexColor("#EBF2F7")
+BA_NAVY_MED = colors.HexColor("#C8DAE8")
 DARK_TEXT = colors.HexColor("#1A1A1A")
 GREY_TEXT = colors.HexColor("#666666")
 LIGHT_BORDER = colors.HexColor("#D0D0D0")
-LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent-sm.png")
+LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ba-ticaret-logo.png")
 
-PIR_COMPANY = {
-    "name": "PIR GRAIN AND PULSES LTD",
+BA_COMPANY = {
+    "name": "BA TICARET LTD",
     "address": "Blv. Tsarigradsko Shosse No:73, Plovdiv/BULGARIA",
     "id_no": "206597892",
 }
 
-PIR_BANK = {
-    "beneficiary": "PIR GRAIN AND PULSES LTD",
+BA_BANK = {
+    "beneficiary": "BA TICARET LTD",
     "bank": "UNICREDIT BULBANK",
     "address": "STR. IVAN VAZOV 31 Plovdiv/BULGARIA",
     "iban": "BG76UNCR70001525611113",
@@ -80,9 +80,9 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     FI = 'FreeSansOblique'
 
     # --- Colors ---
-    GREEN = PIR_GREEN
-    BG_LIGHT = PIR_GREEN_LIGHT
-    BG_MED = PIR_GREEN_MED
+    GREEN = BA_NAVY
+    BG_LIGHT = BA_NAVY_LIGHT
+    BG_MED = BA_NAVY_MED
     DARK = DARK_TEXT
     GREY = GREY_TEXT
     BORDER = colors.HexColor("#E0E0E0")
@@ -331,7 +331,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     ]))
     elements.append(bank_header_tbl)
 
-    accounts_to_show = bank_accounts if bank_accounts else [PIR_BANK]
+    accounts_to_show = bank_accounts if bank_accounts else [BA_BANK]
     s_bk_lbl = ParagraphStyle('BkL', fontName=FB, fontSize=7, textColor=GREY, leading=9)
     s_bk_val = ParagraphStyle('BkV', fontName=F, fontSize=8, textColor=DARK, leading=11)
     s_bk_val_b = ParagraphStyle('BkVB', fontName=FB, fontSize=8, textColor=DARK, leading=11)
@@ -386,7 +386,7 @@ def generate_invoice_pdf(trade, invoice_number, invoice_date, issued_to_name, is
     if os.path.exists(STAMP_PATH):
         sig_rows.append(["", Image(STAMP_PATH, width=40*mm, height=25*mm)])
     sig_rows.append(["", Paragraph("_______________________________", sig_line)])
-    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
+    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>BA Ticaret Ltd", sig_name)])
 
     sig_tbl = Table(sig_rows, colWidths=[W*0.55, W*0.45], rowHeights=None)
     style_cmds = [
@@ -543,7 +543,7 @@ class SendCommissionInvoiceRequest(BaseModel):
 @router.post("/send-email")
 async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=Depends(get_current_user)):
     resend.api_key = os.environ.get("RESEND_API_KEY", "")
-    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "PIR Grain and Pulses Ltd <noreply@pirgrain.com>")
+    SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "BA Ticaret Ltd <noreply@baticaret.com>")
 
     trade = trades_col.find_one({"_id": ObjectId(req.tradeId)})
     if not trade:
@@ -581,7 +581,7 @@ async def send_commission_invoice_email(req: SendCommissionInvoiceRequest, user=
     subject = f"Commission Invoice - {contract_num} - {qty_str} Mts {commodity_display} - {vessel_name}"
 
     # Load logo as CID inline attachment (base64 data URI blocked by most email clients)
-    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "pir-logo-transparent.png")
+    logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ba-ticaret-logo.png")
     attachments = []
     logo_html = ""
     if os.path.exists(logo_path):

@@ -7,8 +7,8 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Wheat } from 'lucide-react';
 
-const PIR_GREEN = '#1B7A3D';
-const PIR_PURPLE = '#5B3A7A';
+const BA_NAVY = '#1A5276';
+const BA_GRAY = '#4A4A4A';
 
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -30,12 +30,12 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
-            <img src="/pir-logo.jpg" alt="PIR Grain and Pulses" className="h-24 w-auto mx-auto object-contain" />
+            <img src="/ba-ticaret-logo.png" alt="BA Ticaret" className="h-24 w-auto mx-auto object-contain" />
           </div>
-          <CardTitle className="text-2xl" style={{ color: PIR_GREEN }} data-testid="login-title">
-            PIR GRAIN & PULSES
+          <CardTitle className="text-2xl" style={{ color: BA_NAVY }} data-testid="login-title">
+            BA TiCARET
           </CardTitle>
-          <CardDescription style={{ color: PIR_PURPLE }}>Agricultural Commodity Trading Dashboard</CardDescription>
+          <CardDescription style={{ color: BA_GRAY }}>Agricultural Commodity Trading Dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,7 +48,7 @@ export default function LoginPage() {
               <Input id="password" type="password" data-testid="login-password-input" placeholder="Enter password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
             </div>
             {error && <p className="text-sm text-destructive" data-testid="login-error">{error}</p>}
-            <Button type="submit" data-testid="login-submit-button" className="w-full" disabled={loading}>
+            <Button type="submit" data-testid="login-submit-button" className="w-full bg-[#1A5276] hover:bg-[#143D5C]" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>

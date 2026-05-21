@@ -7,7 +7,7 @@ import {
 import { useAuth } from '../../lib/auth';
 import { cn } from '../../lib/utils';
 
-const PIR_GREEN = '#1B7A3D';
+const BA_NAVY = '#1A5276';
 
 const mainNavItems = [
   { title: 'Market Data', href: '/market-data', icon: TrendingUp, roles: ['admin', 'user'] },
@@ -107,7 +107,7 @@ export default function Sidebar() {
           </button>
         ) : null}
         <div className={cn('flex-1 flex justify-center', collapsed && 'max-md:flex md:hidden')}>
-          <img src="/pir-logo-new.jpeg" alt="PIR Grain and Pulses" className="h-20 w-auto object-contain" />
+          <img src="/ba-ticaret-logo.png" alt="BA Ticaret" className="h-20 w-auto object-contain" />
         </div>
         {/* Desktop: collapse toggle */}
         {!collapsed && (

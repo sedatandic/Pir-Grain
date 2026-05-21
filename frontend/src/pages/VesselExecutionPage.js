@@ -718,8 +718,8 @@ export default function VesselExecutionPage() {
             <ArrowLeft className="h-4 w-4 mr-1" />Back
           </Button>
           <div className="flex-1 flex items-center justify-center gap-2 pr-16">
-            <Ship className="h-5 w-5 text-green-700 dark:text-green-400 flex-shrink-0" />
-            <h1 className="text-lg font-bold text-green-700 dark:text-green-400">
+            <Ship className="h-5 w-5 text-[#1A5276] dark:text-blue-300 flex-shrink-0" />
+            <h1 className="text-lg font-bold text-[#1A5276] dark:text-blue-300">
               {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({trade.sellerCode || trade.sellerName || '-'} → {trade.buyerCode || trade.buyerName || '-'})
             </h1>
             {(() => {
@@ -738,20 +738,20 @@ export default function VesselExecutionPage() {
       {/* Ongoing Contracts Table */}
       {filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length > 0 && (
       <div>
-        <h2 className="text-sm font-semibold text-green-700 dark:text-green-400 mb-1.5">Ongoing Contracts ({filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length})</h2>
-        <div className="border border-green-200 dark:border-green-900/50 rounded-lg overflow-hidden [&_th]:border [&_th]:border-muted [&_td]:border [&_td]:border-muted">
+        <h2 className="text-sm font-semibold text-[#1A5276] dark:text-blue-300 mb-1.5">Ongoing Contracts ({filteredTrades.filter(t => t.vesselName && !['completed','cancelled','washout','brokerage'].includes(t.status)).length})</h2>
+        <div className="border border-[#1A5276]/30 dark:border-blue-900/50 rounded-lg overflow-hidden [&_th]:border [&_th]:border-muted [&_td]:border [&_td]:border-muted">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-green-100 dark:bg-green-900/40 border-b border-green-200 dark:border-green-900/50">
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Contract No</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Commodity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Seller</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Origin</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Quantity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Loading Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Discharge Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Vessel</th>
+              <tr className="bg-[#1A5276]/10 dark:bg-blue-900/40 border-b border-[#1A5276]/30 dark:border-blue-900/50">
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Seller</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Origin</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Discharge Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Vessel</th>
               </tr>
             </thead>
             <tbody>
@@ -759,7 +759,7 @@ export default function VesselExecutionPage() {
                 <tr
                   key={t.id}
                   onClick={() => handleTradeSelect(t.id)}
-                  className={`border-b border-green-100 dark:border-green-900/30 cursor-pointer transition-colors hover:bg-green-50/50 dark:hover:bg-green-900/10 ${selectedTradeId === t.id ? 'bg-green-100 dark:bg-green-900/30 border-l-4 border-l-green-600' : ''}`}
+                  className={`border-b border-[#1A5276]/10 dark:border-blue-900/30 cursor-pointer transition-colors hover:bg-[#1A5276]/5 dark:hover:bg-blue-900/10 ${selectedTradeId === t.id ? 'bg-[#1A5276]/10 dark:bg-blue-900/30 border-l-4 border-l-[#1A5276]' : ''}`}
                   data-testid={`ve-contract-row-${t.id}`}
                 >
                   <td className="px-4 py-2.5 font-medium text-center">{t.pirContractNumber || t.contractNumber || t.referenceNumber || '-'}</td>
@@ -787,15 +787,15 @@ export default function VesselExecutionPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-amber-100 dark:bg-amber-900/40 border-b border-amber-200 dark:border-amber-900/50">
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Contract No</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Commodity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Seller</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Origin</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Quantity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Loading Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Discharge Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Status</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Seller</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Origin</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Discharge Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -832,15 +832,15 @@ export default function VesselExecutionPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-orange-100 dark:bg-orange-900/40 border-b border-orange-200 dark:border-orange-900/50">
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Contract No</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Commodity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Seller</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Buyer</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Origin</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Quantity</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Loading Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Discharge Port</th>
-                <th className="text-center px-4 py-2.5 font-bold text-[#1B7A3D]">Vessel</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Contract No</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Commodity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Seller</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Buyer</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Origin</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Quantity</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Loading Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Discharge Port</th>
+                <th className="text-center px-4 py-2.5 font-bold text-[#1A5276]">Vessel</th>
               </tr>
             </thead>
             <tbody>
@@ -927,7 +927,7 @@ export default function VesselExecutionPage() {
 
       {urlTradeId && trade && !tradeLoading && (
         <Tabs defaultValue="nomination" className="mt-2">
-          <TabsList className="w-full flex h-auto [&_button[data-state=active]]:bg-[#1B7A3D] [&_button[data-state=active]]:text-white [&_button[data-state=active]]:shadow-sm">
+          <TabsList className="w-full flex h-auto [&_button[data-state=active]]:bg-[#1A5276] [&_button[data-state=active]]:text-white [&_button[data-state=active]]:shadow-sm">
             <TabsTrigger value="nomination" className="py-3 text-xs sm:text-sm flex-1"><Anchor className="h-4 w-4 mr-1.5 hidden sm:inline" />Vessel Nomination</TabsTrigger>
             <TabsTrigger value="di" className="py-3 text-xs sm:text-sm flex-1"><ScrollText className="h-4 w-4 mr-1.5 hidden sm:inline" />Documentary Instruction</TabsTrigger>
             <TabsTrigger value="draft-docs" className="py-3 text-xs sm:text-sm flex-1"><Paperclip className="h-4 w-4 mr-1.5 hidden sm:inline" />Draft Documents</TabsTrigger>
@@ -1329,7 +1329,7 @@ export default function VesselExecutionPage() {
                   </div>
                   <div className="flex items-center gap-2 pt-2">
                     <Button variant="outline" size="sm" data-testid="view-commission-invoice-pdf" onClick={async () => { try { const res = await api.get(`/api/commission-invoice/${trade.id}`, { responseType: 'blob' }); window.open(window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' })), '_blank'); } catch { toast.error('Failed to generate PDF'); } }}><FileText className="h-4 w-4 mr-1.5" />View PDF</Button>
-                    <Button variant="default" size="sm" className="bg-green-700 hover:bg-green-800" data-testid="send-commission-invoice-btn" onClick={openCiDialog}><Send className="h-4 w-4 mr-1.5" />Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
+                    <Button variant="default" size="sm" className="bg-[#1A5276] hover:bg-[#143D5C]" data-testid="send-commission-invoice-btn" onClick={openCiDialog}><Send className="h-4 w-4 mr-1.5" />Send to {trade.brokerageAccount === 'buyer' ? (trade.buyerCode || trade.buyerName || 'Buyer') : (trade.sellerCode || trade.sellerName || 'Seller')}</Button>
                     {trade.commissionInvoiceSentAt && (
                       <p className="text-xs text-muted-foreground">Sent by <strong>{(trade.commissionInvoiceSentBy || '-').split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</strong> on {toIstanbulTime(trade.commissionInvoiceSentAt)}</p>
                     )}

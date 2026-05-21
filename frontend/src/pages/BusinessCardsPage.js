@@ -164,7 +164,7 @@ export default function BusinessCardsPage() {
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
               scanning
                 ? 'bg-muted text-muted-foreground cursor-wait'
-                : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'
+                : 'bg-[#1A5276] text-white hover:bg-[#143D5C]'
             }`}
             data-testid="scan-card-btn"
           >
@@ -195,15 +195,15 @@ export default function BusinessCardsPage() {
             {/* Country header */}
             <button
               onClick={() => toggleCountry(country)}
-              className="w-full flex items-center justify-between px-4 py-2.5 bg-[#1B7A3D]/10 hover:bg-[#1B7A3D]/15 transition-colors text-left"
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-[#1A5276]/10 hover:bg-[#1A5276]/15 transition-colors text-left"
               data-testid={`country-header-${country.toLowerCase().replace(/\s+/g, '-')}`}
             >
               <div className="flex items-center gap-2">
-                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[#1B7A3D]" /> : <ChevronDown className="w-4 h-4 text-[#1B7A3D]" />}
-                <MapPin className="w-4 h-4 text-[#1B7A3D]" />
+                {isCollapsed ? <ChevronRight className="w-4 h-4 text-[#1A5276]" /> : <ChevronDown className="w-4 h-4 text-[#1A5276]" />}
+                <MapPin className="w-4 h-4 text-[#1A5276]" />
                 <span className="font-semibold text-sm text-foreground">{country}</span>
               </div>
-              <Badge variant="secondary" className="bg-[#1B7A3D]/10 text-[#1B7A3D] border-[#1B7A3D]/20 text-xs">
+              <Badge variant="secondary" className="bg-[#1A5276]/10 text-[#1A5276] border-[#1A5276]/20 text-xs">
                 {countryCards.length} contact{countryCards.length !== 1 ? 's' : ''}
               </Badge>
             </button>
@@ -226,15 +226,15 @@ export default function BusinessCardsPage() {
                   </colgroup>
                   <thead>
                     <tr className="bg-muted/50 border-b border-t border-border">
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Name</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Company</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Position</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Email</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">WhatsApp</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Website</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">City</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Country</th>
-                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Keywords</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Name</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Company</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Position</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Email</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">WhatsApp</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Website</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">City</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Country</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1A5276] whitespace-nowrap">Keywords</th>
                       <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                   </thead>

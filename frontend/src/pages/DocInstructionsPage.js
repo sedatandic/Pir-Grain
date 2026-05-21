@@ -358,8 +358,8 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
       th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
       th { background: #f3f4f6; font-weight: 600; width: 200px; }
-      h2 { text-align: center; color: #15803d; }
-      h3 { color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px; }
+      h2 { text-align: center; color: #1A5276; }
+      h3 { color: #1A5276; border-bottom: 2px solid #1A5276; padding-bottom: 4px; }
     </style></head><body>${content}</body></html>`);
     win.document.close();
     win.print();
@@ -417,7 +417,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
           <h3 className="text-base font-semibold">Documentary Instructions to Seller</h3>
           <div className="flex gap-2">
             {(() => { const t = trades.find(tr => tr.id === filterTradeId); return t?.diDocumentPath ? (
-              <Button size="sm" variant="outline" className="border-green-600 text-green-700 hover:bg-green-50" onClick={handleExtractFromPdf} disabled={extracting} data-testid="extract-di-from-pdf-btn">
+              <Button size="sm" variant="outline" className="border-[#1A5276] text-[#1A5276] hover:bg-blue-50" onClick={handleExtractFromPdf} disabled={extracting} data-testid="extract-di-from-pdf-btn">
                 {extracting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
                 {extracting ? 'Extracting...' : 'Create DI from Document'}
               </Button>
@@ -432,12 +432,12 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* DI List */}
         <div className="space-y-3">
-          <h2 className="text-lg font-semibold text-green-700">Saved Instructions</h2>
+          <h2 className="text-lg font-semibold text-[#1A5276]">Saved Instructions</h2>
           {filteredDiList.length === 0 ? (
             <Card><CardContent className="py-8 text-center text-muted-foreground">{embedded ? 'No documentary instructions yet.' : 'No documentary instructions yet. Click "New DI" to create one.'}</CardContent></Card>
           ) : (
             filteredDiList.map(di => (
-              <Card key={di.id} className={`cursor-pointer transition-colors ${previewDi?.id === di.id ? 'border-green-500 border-2' : 'hover:border-green-300'}`}
+              <Card key={di.id} className={`cursor-pointer transition-colors ${previewDi?.id === di.id ? 'border-[#1A5276] border-2' : 'hover:border-[#1A5276]/50'}`}
                 onClick={() => setPreviewDi(di)} data-testid={`di-card-${di.id}`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -446,7 +446,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       <p className="text-sm text-muted-foreground">{di.dischargePort || 'No port'} &bull; {di.agentName || 'No agent'}</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Created: {new Date(di.createdAt).toLocaleDateString('en-GB')}
-                        {di.sentAt && <span className="text-green-600 ml-2">Sent: {new Date(di.sentAt).toLocaleDateString('en-GB')}</span>}
+                        {di.sentAt && <span className="text-[#1A5276] ml-2">Sent: {new Date(di.sentAt).toLocaleDateString('en-GB')}</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
@@ -474,7 +474,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-green-700">Preview - {getTradeLabel(previewDi.tradeId)}</CardTitle>
+                  <CardTitle className="text-[#1A5276]">Preview - {getTradeLabel(previewDi.tradeId)}</CardTitle>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={handleCopy}><Copy className="h-4 w-4 mr-1" />Copy</Button>
                     <Button variant="outline" size="sm" onClick={handleGeneratePdf}><FileText className="h-4 w-4 mr-1" />Generate PDF</Button>
@@ -485,7 +485,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
               <CardContent>
                 <div ref={previewRef} className="text-sm leading-relaxed space-y-4">
                   <div style={{ textAlign: 'center', marginTop: '-16px', marginBottom: '-12px' }}>
-                    <img src="/pir-logo-transparent.png" alt="PIR Grain & Pulses" crossOrigin="anonymous" style={{ height: '240px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    <img src="/ba-ticaret-logo.png" alt="BA Ticaret" crossOrigin="anonymous" style={{ height: '240px', margin: '0 auto' }} onError={(e) => { e.target.style.display = 'none'; }} />
                   </div>
                   {(() => {
                     const t = trades.find(tr => tr.id === previewDi.tradeId);
@@ -496,9 +496,9 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                     if (qty) titleParts.push(`${qty} MTS`);
                     if (commodity) titleParts.push(commodity);
                     if (vessel) titleParts.push(`- ${vessel}`);
-                    return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#15803d', marginTop: '0', marginBottom: '8px' }}>{titleParts.join(' ')}</h2>;
+                    return <h2 style={{ textAlign: 'center', fontWeight: 700, fontSize: '16px', color: '#1A5276', marginTop: '0', marginBottom: '8px' }}>{titleParts.join(' ')}</h2>;
                   })()}
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipper & Consignee & Notify Party</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#1A5276', borderBottom: '2px solid #1A5276', paddingBottom: '4px' }}>Shipper & Consignee & Notify Party</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       <tr>
@@ -519,7 +519,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       </tr>
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Shipment & Port Details</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#1A5276', borderBottom: '2px solid #1A5276', paddingBottom: '4px' }}>Shipment & Port Details</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '12px' }}>
                     <tbody>
                       {[
@@ -543,7 +543,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ))}
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px' }}>Required Documents</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#1A5276', borderBottom: '2px solid #1A5276', paddingBottom: '4px' }}>Required Documents</h3>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
@@ -564,7 +564,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
                       ))}
                     </tbody>
                   </table>
-                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#15803d', borderBottom: '2px solid #15803d', paddingBottom: '4px', marginTop: '16px' }}>Address for Original Documents</h3>
+                  <h3 style={{ fontWeight: 700, fontSize: '14px', color: '#1A5276', borderBottom: '2px solid #1A5276', paddingBottom: '4px', marginTop: '16px' }}>Address for Original Documents</h3>
                   <div style={{ border: '1px solid #d1d5db', padding: '10px', background: '#f9fafb', whiteSpace: 'pre-wrap', marginBottom: '12px' }}>{previewDi.originalDocsAddress || 'To be advised later.'}</div>
                 </div>
               </CardContent>
@@ -582,7 +582,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-green-700 text-center">{(() => {
+            <DialogTitle className="text-[#1A5276] text-center">{(() => {
               const trade = trades.find(t => t.id === form.tradeId);
               if (trade) {
                 const num = trade.pirContractNumber || trade.contractNumber || '';
@@ -615,7 +615,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Consignee & Notify */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center mt-4">Shipper & Consignee & Notify Party</h3>
+              <h3 className="font-semibold text-sm text-[#1A5276] border-b pb-1 text-center mt-4">Shipper & Consignee & Notify Party</h3>
 
               {/* Shipper */}
               <div className="space-y-2">
@@ -668,7 +668,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Shipment & Port */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Shipment & Port Details</h3>
+              <h3 className="font-semibold text-sm text-[#1A5276] border-b pb-1 text-center">Shipment & Port Details</h3>
               {form.tradeId && (() => {
                 const t = trades.find(tr => tr.id === form.tradeId);
                 const pId = t?.loadingPortId || t?.basePortId;
@@ -734,7 +734,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Required Documents */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1 text-center">Required Documents</h3>
+              <h3 className="font-semibold text-sm text-[#1A5276] border-b pb-1 text-center">Required Documents</h3>
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr>
@@ -779,7 +779,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
 
             {/* Original Docs Address */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-sm text-green-700 border-b pb-1">Original Documents Address</h3>
+              <h3 className="font-semibold text-sm text-[#1A5276] border-b pb-1">Original Documents Address</h3>
               <Textarea value={form.originalDocsAddress} onChange={e => set('originalDocsAddress', e.target.value)} rows={3} placeholder="To be advised later." />
             </div>
           </div>

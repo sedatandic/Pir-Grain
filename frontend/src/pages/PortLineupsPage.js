@@ -217,7 +217,7 @@ function DailyLineUp({ onLastUpdate }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Daily port report summary from Fey Shipping</p>
-        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-daily-button">
+        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1A5276] text-white hover:bg-[#15632F]'}`} data-testid="upload-daily-button">
           {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
           {uploading ? 'Uploading...' : 'Upload Report'}
           <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
@@ -249,7 +249,7 @@ function DailyLineUp({ onLastUpdate }) {
           <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[150px]" data-testid="date-selector">
+              <select value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1A5276]/30 min-w-[150px]" data-testid="date-selector">
                 <option value="ALL">All Dates</option>
                 {dates.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -257,7 +257,7 @@ function DailyLineUp({ onLastUpdate }) {
             </div>
             <div className="relative max-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input type="text" placeholder="Search vessels..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30" data-testid="vessel-search-input" />
+              <input type="text" placeholder="Search vessels..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A5276]/30" data-testid="vessel-search-input" />
             </div>
             <div className="relative">
               <select value={filterLoadPort} onChange={e => setFilterLoadPort(e.target.value)} className="pl-3 pr-7 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none min-w-[120px]">
@@ -297,7 +297,7 @@ function DailyLineUp({ onLastUpdate }) {
           {/* Port tabs */}
           {reportData && (
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin" data-testid="port-tabs">
-              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`} data-testid="port-tab-all">
+              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1A5276] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`} data-testid="port-tab-all">
                 ALL<span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{portVesselCounts['ALL'] || 0}</span>
               </button>
               {reportData.ports?.slice().sort((a, b) => {
@@ -305,7 +305,7 @@ function DailyLineUp({ onLastUpdate }) {
                 const countB = new Set(b.vessels.map(v => v.vesselName).filter(Boolean)).size;
                 return countB - countA;
               }).map(port => (
-                <button key={port.portName} onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === port.portName ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                <button key={port.portName} onClick={() => { setSelectedPort(port.portName); setSearchTerm(''); setFilterLoadPort('all'); setFilterCommodity('all'); setFilterBuyer('all'); setFilterSeller('all'); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === port.portName ? 'bg-[#1A5276] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                   {port.portName}<span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === port.portName ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{portVesselCounts[port.portName] || 0}</span>
                 </button>
               ))}
@@ -486,7 +486,7 @@ function MonthlyLineUp({ onLastUpdate }) {
               <button onClick={() => handleDelete(selectedFileId)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-destructive border border-border hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><Trash2 className="w-4 h-4" />Delete</button>
             </>
           )}
-          <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1B7A3D] text-white hover:bg-[#15632F]'}`} data-testid="upload-monthly-button">
+          <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${uploading ? 'bg-muted text-muted-foreground cursor-wait' : 'bg-[#1A5276] text-white hover:bg-[#15632F]'}`} data-testid="upload-monthly-button">
             {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
             {uploading ? 'Uploading...' : 'Upload Excel'}
             <input type="file" accept=".xlsx,.xls" onChange={handleUpload} className="hidden" disabled={uploading} />
@@ -512,14 +512,14 @@ function MonthlyLineUp({ onLastUpdate }) {
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <FileSpreadsheet className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30 min-w-[280px]" data-testid="monthly-file-selector">
+              <select value={selectedFileId} onChange={e => setSelectedFileId(e.target.value)} className="pl-9 pr-8 py-2 bg-card border border-border rounded-lg text-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1A5276]/30 min-w-[280px]" data-testid="monthly-file-selector">
                 {files.map(f => <option key={f.id} value={f.id}>{f.fileName}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
             <div className="relative max-w-[180px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1B7A3D]/30" />
+              <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-9 pr-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1A5276]/30" />
             </div>
             {searchTerm && (
               <button onClick={() => setSearchTerm('')} className="flex items-center gap-1 px-2.5 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors whitespace-nowrap">
@@ -531,11 +531,11 @@ function MonthlyLineUp({ onLastUpdate }) {
           {/* Port tabs */}
           {docData?.ports?.length > 0 && (
             <div className="flex gap-1.5 overflow-x-auto pb-1">
-              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+              <button onClick={() => { setSelectedPort('ALL'); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === 'ALL' ? 'bg-[#1A5276] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                 ALL <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === 'ALL' ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{allVessels.length}</span>
               </button>
               {docData.ports.map(p => (
-                <button key={p.portName} onClick={() => { setSelectedPort(p.portName); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === p.portName ? 'bg-[#1B7A3D] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
+                <button key={p.portName} onClick={() => { setSelectedPort(p.portName); setSearchTerm(''); }} className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${selectedPort === p.portName ? 'bg-[#1A5276] text-white' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
                   {p.portName} <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] ${selectedPort === p.portName ? 'bg-white/20 text-white' : 'bg-background text-muted-foreground'}`}>{p.vessels.length}</span>
                 </button>
               ))}

@@ -1318,29 +1318,30 @@ export default function VesselExecutionPage() {
                     const actualShortage = blQty - dischargeQty;
                     const exceedsTolerance = actualShortage > allowedShortage && blQty > 0 && dischargeQty > 0;
                     const shortageToPayMT = exceedsTolerance ? actualShortage - allowedShortage : 0;
+                    const fmtQty = (v) => { if (!v) return '-'; const s = v.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 3}); return s + ' MT'; };
 
                     return (
                       <>
                         <div className="flex justify-between items-center py-2 border-b">
                           <span className="text-sm text-muted-foreground">B/L Quantity</span>
-                          <span className="font-semibold">{blQty ? `${blQty.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                          <span className="font-semibold">{blQty ? fmtQty(blQty) : '-'}</span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b">
                           <span className="text-sm text-muted-foreground">Discharge Quantity</span>
-                          <span className="font-semibold">{dischargeQty ? `${dischargeQty.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                          <span className="font-semibold">{dischargeQty ? fmtQty(dischargeQty) : '-'}</span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b">
                           <span className="text-sm text-muted-foreground">Allowed Shortage ({allowedPct}%)</span>
-                          <span className="font-medium">{blQty ? `${allowedShortage.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                          <span className="font-medium">{blQty ? fmtQty(allowedShortage) : '-'}</span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b">
                           <span className="text-sm text-muted-foreground">Actual Shortage</span>
-                          <span className={`font-semibold ${actualShortage > 0 && blQty > 0 ? 'text-red-600' : ''}`}>{blQty && dischargeQty ? `${actualShortage.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                          <span className={`font-semibold ${actualShortage > 0 && blQty > 0 ? 'text-red-600' : ''}`}>{blQty && dischargeQty ? fmtQty(actualShortage) : '-'}</span>
                         </div>
                         <div className={`flex justify-between items-center py-3 px-3 rounded-lg ${exceedsTolerance ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
                           <span className="text-sm font-semibold">Shortage to be Paid</span>
                           {exceedsTolerance ? (
-                            <span className="font-bold text-red-600">- {shortageToPayMT.toLocaleString(undefined, {minimumFractionDigits: 3})} MT</span>
+                            <span className="font-bold text-red-600">- {fmtQty(shortageToPayMT)}</span>
                           ) : (
                             <span className="font-bold text-green-600">N/A</span>
                           )}

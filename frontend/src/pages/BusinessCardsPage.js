@@ -152,7 +152,7 @@ export default function BusinessCardsPage() {
   return (
     <div className="space-y-4" data-testid="business-cards-page">
       {/* Header */}
-      <div className="flex items-center justify-center flex-wrap gap-3">
+      <div className="flex items-center justify-end flex-wrap gap-3">
         <div className="flex gap-2">
           <label
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors ${

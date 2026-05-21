@@ -169,7 +169,7 @@ export default function VesselsPage() {
         </DialogContent>
       </Dialog>
       <Dialog open={certDialogOpen} onOpenChange={setCertDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Certificates — {certVessel?.name}</DialogTitle>
             <DialogDescription>Upload and manage vessel certificates.</DialogDescription>

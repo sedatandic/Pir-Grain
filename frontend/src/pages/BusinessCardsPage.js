@@ -226,15 +226,15 @@ export default function BusinessCardsPage() {
                   </colgroup>
                   <thead>
                     <tr className="bg-muted/50 border-b border-t border-border">
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Name</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Company</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Position</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Email</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">WhatsApp</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Website</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">City</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Country</th>
-                      <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap">Keywords</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Name</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Company</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Position</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Email</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">WhatsApp</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Website</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">City</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Country</th>
+                      <th className="text-center px-3 py-2 font-bold text-[#1B7A3D] whitespace-nowrap">Keywords</th>
                       <th className="text-center px-3 py-2 font-medium text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                   </thead>

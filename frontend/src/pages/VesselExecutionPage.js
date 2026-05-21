@@ -1019,6 +1019,7 @@ export default function VesselExecutionPage() {
                       <Select value={nominationForm.vesselName || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, vesselName: v }))}>
                         <SelectTrigger data-testid="nomination-vessel-select"><SelectValue placeholder="Select vessel" /></SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="N/A">N/A</SelectItem>
                           {vessels.map(v => <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -1034,7 +1035,10 @@ export default function VesselExecutionPage() {
                       <Label>Seller Surveyor</Label>
                       <Select value={nominationForm.sellerSurveyor || ''} onValueChange={(v) => setNominationForm(p => ({ ...p, sellerSurveyor: v }))}>
                         <SelectTrigger data-testid="nomination-surveyor-select"><SelectValue placeholder="Select surveyor" /></SelectTrigger>
-                        <SelectContent>{surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}</SelectContent>
+                        <SelectContent>
+                          <SelectItem value="N/A">N/A</SelectItem>
+                          {surveyors.map(s => <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>)}
+                        </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
@@ -1051,7 +1055,7 @@ export default function VesselExecutionPage() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center py-2">
                           <span className="text-sm text-muted-foreground">Vessel</span>
-                          <span className="font-semibold uppercase" data-testid="nomination-vessel-value">{trade.vesselName || '-'}</span>
+                          <span className="font-semibold uppercase" data-testid="nomination-vessel-value">{trade.vesselName && trade.vesselName !== 'N/A' ? trade.vesselName : '-'}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center py-2">
@@ -1062,7 +1066,7 @@ export default function VesselExecutionPage() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center py-2">
                           <span className="text-sm text-muted-foreground">Seller Surveyor</span>
-                          <span className="font-medium" data-testid="nomination-surveyor-value">{trade.sellerSurveyor || '-'}</span>
+                          <span className="font-medium" data-testid="nomination-surveyor-value">{trade.sellerSurveyor && trade.sellerSurveyor !== 'N/A' ? trade.sellerSurveyor : '-'}</span>
                         </div>
                         <Separator />
                         <div className="flex justify-between items-center py-2">

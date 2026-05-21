@@ -129,25 +129,25 @@ export default function VesselsPage() {
           <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader><TableRow className="bg-muted/50">
-                <TableHead>Vessel Name</TableHead><TableHead>IMO Number</TableHead><TableHead>Type</TableHead><TableHead>Flag</TableHead><TableHead>Built Year</TableHead><TableHead>Vessel Age</TableHead><TableHead className="text-center">Vessel Certificates</TableHead><TableHead className="w-[80px]">Actions</TableHead>
+                <TableHead className="!text-center !font-bold !text-[#1B7A3D]">Vessel Name</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">IMO Number</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">Type</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">Flag</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">Built Year</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">Vessel Age</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D]">Vessel Certificates</TableHead><TableHead className="!text-center !font-bold !text-[#1B7A3D] w-[80px]">Actions</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No vessels found</TableCell></TableRow> :
                 filtered.map(v => (
                   <TableRow key={v.id}>
-                    <TableCell className="font-medium">{v.name}</TableCell>
-                    <TableCell className="font-mono text-sm">{v.imoNumber || '-'}</TableCell>
-                    <TableCell><Badge variant="secondary">{v.vesselType || '-'}</Badge></TableCell>
-                    <TableCell>{v.flag || '-'}</TableCell>
-                    <TableCell>{v.builtYear || '-'}</TableCell>
-                    <TableCell>{v.builtYear ? new Date().getFullYear() - v.builtYear : '-'}</TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="font-medium !text-center">{v.name}</TableCell>
+                    <TableCell className="font-mono text-sm !text-center">{v.imoNumber || '-'}</TableCell>
+                    <TableCell className="!text-center"><Badge variant="secondary">{v.vesselType || '-'}</Badge></TableCell>
+                    <TableCell className="!text-center">{v.flag || '-'}</TableCell>
+                    <TableCell className="!text-center">{v.builtYear || '-'}</TableCell>
+                    <TableCell className="!text-center">{v.builtYear ? new Date().getFullYear() - v.builtYear : '-'}</TableCell>
+                    <TableCell className="!text-center">
                       <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => openCerts(v)} data-testid={`certs-btn-${v.id}`}>
                         <FileText className="h-3.5 w-3.5" />
                         <Badge variant={v.certificates?.length ? "default" : "secondary"} className="text-[10px] px-1.5">{v.certificates?.length || 0}</Badge>
                       </Button>
                     </TableCell>
-                    <TableCell><div className="flex gap-1"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
+                    <TableCell className="!text-center"><div className="flex gap-1 justify-center"><Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(v)}><Pencil className="h-3.5 w-3.5" /></Button><Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(v.id)}><Trash2 className="h-3.5 w-3.5" /></Button></div></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -15,6 +15,7 @@ export default function BusinessCardsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [scanning, setScanning] = useState(false);
+  const [rescanning, setRescanning] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ name: '', title: '', company: '', email: '', phone: '', mobile: '', website: '', address: '', city: '', country: '', keywords: '', notes: '' });
@@ -93,6 +94,24 @@ export default function BusinessCardsPage() {
       country: card.country || '', keywords: (card.keywords || []).join(', '), notes: card.notes || ''
     });
     setDialogOpen(true);
+  };
+
+  const handleRescan = async () => {
+    if (!editId) return;
+    setRescanning(true);
+    try {
+      const res = await api.post(`/api/business-cards/${editId}/rescan`);
+      const d = res.data;
+      if (d.error) { toast.error(d.error); return; }
+      setForm(prev => ({
+        name: d.name || prev.name, title: d.title || prev.title, company: d.company || prev.company,
+        email: d.email || prev.email, phone: d.phone || prev.phone, mobile: d.mobile || prev.mobile,
+        website: d.website || prev.website, address: d.address || prev.address, city: d.city || prev.city,
+        country: d.country || prev.country, keywords: prev.keywords, notes: prev.notes
+      }));
+      toast.success('Fields auto-filled from card image');
+    } catch { toast.error('AI scan failed'); }
+    finally { setRescanning(false); }
   };
 
   const handleSave = async () => {
@@ -339,7 +358,15 @@ export default function BusinessCardsPage() {
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editId ? 'Edit' : 'Add'} Business Card</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{editId ? 'Edit' : 'Add'} Business Card</DialogTitle>
+              {editId && <Button variant="outline" size="sm" className="gap-1.5" onClick={handleRescan} disabled={rescanning} data-testid="rescan-btn">
+                {rescanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                {rescanning ? 'Scanning...' : 'AI Scan'}
+              </Button>}
+            </div>
+          </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1"><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} /></div>
             <div className="space-y-1"><Label>Position</Label><Input value={form.title} onChange={(e) => setForm({...form, title: e.target.value})} placeholder="e.g. CEO, Manager" /></div>

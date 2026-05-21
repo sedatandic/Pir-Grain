@@ -133,6 +133,26 @@ def update_business_card(card_id: str, data: dict, user=Depends(non_accountant))
     return serialize_doc(business_cards_col.find_one({"_id": ObjectId(card_id)}))
 
 
+@router.post("/{card_id}/rescan")
+async def rescan_business_card(card_id: str, user=Depends(non_accountant)):
+    """Re-extract data from existing business card image using AI."""
+    card = business_cards_col.find_one({"_id": ObjectId(card_id)})
+    if not card:
+        return {"error": "Card not found"}
+    image_url = card.get("imageUrl", "")
+    if not image_url:
+        return {"error": "No image for this card"}
+    saved_name = image_url.replace("/api/uploads/", "")
+    file_path = os.path.join(UPLOAD_DIR, saved_name)
+    if not os.path.exists(file_path):
+        return {"error": "Image file not found"}
+    try:
+        extracted = await extract_card_info(file_path)
+        return extracted or {}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @router.delete("/{card_id}")
 def delete_business_card(card_id: str, user=Depends(non_accountant)):
     card = business_cards_col.find_one({"_id": ObjectId(card_id)})

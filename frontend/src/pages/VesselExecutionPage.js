@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
-import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft, Eye, Filter, Search } from 'lucide-react';
+import { Ship, FileText, Loader2, Save, CheckCircle2, Circle, Mail, Pencil, X, Paperclip, Trash2, Upload, GripVertical, Send, ClipboardCheck, Anchor, ScrollText, CalendarDays, DollarSign, ArrowLeft, Eye, Filter, Search, AlertTriangle, Scale } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import DocInstructionsPage from './DocInstructionsPage';
@@ -874,6 +874,7 @@ export default function VesselExecutionPage() {
             <TabsTrigger value="sa" className="py-3 text-xs sm:text-sm flex-1"><Send className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Appropriation</TabsTrigger>
             <TabsTrigger value="documents" className="py-3 text-xs sm:text-sm flex-1"><ClipboardCheck className="h-4 w-4 mr-1.5 hidden sm:inline" />Shipment Documents</TabsTrigger>
             <TabsTrigger value="payment" className="py-3 text-xs sm:text-sm flex-1"><DollarSign className="h-4 w-4 mr-1.5 hidden sm:inline" />Payment</TabsTrigger>
+            <TabsTrigger value="shortage-demurrage" className="py-3 text-xs sm:text-sm flex-1"><Scale className="h-4 w-4 mr-1.5 hidden sm:inline" />Shortage & Demurrage</TabsTrigger>
           </TabsList>
 
           {/* B/L Details Tab */}
@@ -1300,6 +1301,68 @@ export default function VesselExecutionPage() {
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          {/* Shortage & Demurrage Tab */}
+          <TabsContent value="shortage-demurrage">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Shortage Section */}
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" />Shortage</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {(() => {
+                    const blQty = parseFloat(trade.blQuantity) || 0;
+                    const dischargeQty = parseFloat(trade.dischargeQuantity) || 0;
+                    const allowedPct = 0.5;
+                    const allowedShortage = blQty * (allowedPct / 100);
+                    const actualShortage = blQty - dischargeQty;
+                    const exceedsTolerance = actualShortage > allowedShortage && blQty > 0 && dischargeQty > 0;
+                    const shortageToPayMT = exceedsTolerance ? actualShortage - allowedShortage : 0;
+
+                    return (
+                      <>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-sm text-muted-foreground">B/L Quantity</span>
+                          <span className="font-semibold">{blQty ? `${blQty.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-sm text-muted-foreground">Discharge Quantity</span>
+                          <span className="font-semibold">{dischargeQty ? `${dischargeQty.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-sm text-muted-foreground">Allowed Shortage ({allowedPct}%)</span>
+                          <span className="font-medium">{blQty ? `${allowedShortage.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b">
+                          <span className="text-sm text-muted-foreground">Actual Shortage</span>
+                          <span className={`font-semibold ${actualShortage > 0 && blQty > 0 ? 'text-red-600' : ''}`}>{blQty && dischargeQty ? `${actualShortage.toLocaleString(undefined, {minimumFractionDigits: 3})} MT` : '-'}</span>
+                        </div>
+                        <div className={`flex justify-between items-center py-3 px-3 rounded-lg ${exceedsTolerance ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+                          <span className="text-sm font-semibold">Shortage to be Paid</span>
+                          {exceedsTolerance ? (
+                            <span className="font-bold text-red-600">- {shortageToPayMT.toLocaleString(undefined, {minimumFractionDigits: 3})} MT</span>
+                          ) : (
+                            <span className="font-bold text-green-600">N/A</span>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Demurrage Section */}
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><DollarSign className="h-4 w-4" />Demurrage</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-sm text-muted-foreground">Demurrage Amount</span>
+                    <span className="font-semibold text-muted-foreground">N/A</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Demurrage details will be added when applicable.</p>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       )}

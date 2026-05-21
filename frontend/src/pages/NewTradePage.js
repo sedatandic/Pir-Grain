@@ -233,12 +233,12 @@ export default function NewTradePage() {
           setLoadingTrade(false);
         } else {
           // Auto-select BA Ticaret as default Broker
-          const pirGrain = pa.data.find(p => {
+          const baTicaret = pa.data.find(p => {
             const t = Array.isArray(p.type) ? p.type : [p.type];
-            return t.includes('broker') && p.companyName.toLowerCase().includes('pir');
+            return t.includes('broker') && p.companyName.toLowerCase().includes('ba');
           });
-          if (pirGrain) {
-            setForm(prev => ({ ...prev, brokerId: pirGrain.id }));
+          if (baTicaret) {
+            setForm(prev => ({ ...prev, brokerId: baTicaret.id }));
           }
           // Auto-select CIF Marmara Ports as default Base Port
           const marmaraPorts = po.data.find(p => p.name === 'CIF Marmara Ports');

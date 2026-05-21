@@ -11,7 +11,7 @@ const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('pir_token');
+  const token = localStorage.getItem('ba_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -24,10 +24,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
       // Only logout if token actually exists (avoid logout loop)
-      const token = localStorage.getItem('pir_token');
+      const token = localStorage.getItem('ba_token');
       if (token) {
-        localStorage.removeItem('pir_token');
-        localStorage.removeItem('pir_user');
+        localStorage.removeItem('ba_token');
+        localStorage.removeItem('ba_user');
         window.location.href = '/login';
       }
     }

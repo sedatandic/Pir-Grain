@@ -32,7 +32,7 @@ GREEN_MED = colors.HexColor("#D4E8DA")
 DARK = colors.HexColor("#1A1A1A")
 GREY = colors.HexColor("#666666")
 BORDER = colors.HexColor("#E0E0E0")
-LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-logo.jpeg")
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "..", "ba-ticaret-logo.png")
 STAMP_PATH = os.path.join(os.path.dirname(__file__), "..", "pir-stamp-signature.png")
 
 
@@ -134,7 +134,7 @@ def generate_sa_pdf(trade):
     if os.path.exists(LOGO_PATH):
         logo_cell.append(Image(LOGO_PATH, width=38 * mm, height=17 * mm))
     else:
-        logo_cell.append(Paragraph("PIR Grain &amp; Pulses", ParagraphStyle('FL', fontName=FB, fontSize=14, textColor=GREEN)))
+        logo_cell.append(Paragraph("BA Ticaret", ParagraphStyle('FL', fontName=FB, fontSize=14, textColor=GREEN)))
 
     header_tbl = Table([[logo_cell, ""]], colWidths=[W * 0.50, W * 0.50])
     header_tbl.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
@@ -257,7 +257,7 @@ def generate_sa_pdf(trade):
     if os.path.exists(STAMP_PATH):
         sig_rows.append(["", Image(STAMP_PATH, width=28 * mm, height=28 * mm)])
     sig_rows.append(["", Paragraph("_______________________________", sig_line)])
-    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>PIR Grain and Pulses Ltd", sig_name)])
+    sig_rows.append(["", Paragraph("<b>Authorized Signature</b><br/>SALIH KARAGOZ<br/>BA Ticaret Ltd", sig_name)])
 
     sig_tbl = Table(sig_rows, colWidths=[W * 0.55, W * 0.45])
     style_cmds = [
@@ -275,7 +275,7 @@ def generate_sa_pdf(trade):
     # ========== FOOTER ==========
     story.append(HRFlowable(width="100%", thickness=1, color=GREEN, spaceAfter=2 * mm))
     story.append(Paragraph(
-        "PIR Grain &amp; Pulses Ltd.",
+        "BA Ticaret Ltd.",
         ParagraphStyle('Foot', fontName=F, fontSize=7, textColor=GREY, alignment=TA_CENTER)
     ))
 

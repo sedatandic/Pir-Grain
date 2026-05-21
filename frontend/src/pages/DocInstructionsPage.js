@@ -178,7 +178,7 @@ export default function DocInstructionsPage({ filterTradeId, embedded } = {}) {
       // All seller emails as To
       const sellerEmails = d.sellerEmails || [];
       setDiEmailTo(sellerEmails.join(', '));
-      // CC: only PIR emails
+      // CC: only BA emails
       setDiEmailCc([...(d.pirEmails || [])]);
     } catch {
       setDiEmailTo('');

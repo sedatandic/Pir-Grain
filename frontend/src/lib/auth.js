@@ -5,10 +5,10 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('pir_user');
+    const saved = localStorage.getItem('ba_user');
     return saved ? JSON.parse(saved) : null;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('pir_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('ba_token'));
   const [loading, setLoading] = useState(false);
 
   const isAuthenticated = !!token && !!user;
@@ -18,8 +18,8 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post('/api/auth/login', { username, password });
       const { token: newToken, user: userData } = res.data;
-      localStorage.setItem('pir_token', newToken);
-      localStorage.setItem('pir_user', JSON.stringify(userData));
+      localStorage.setItem('ba_token', newToken);
+      localStorage.setItem('ba_user', JSON.stringify(userData));
       setToken(newToken);
       setUser(userData);
       return { success: true };
@@ -31,8 +31,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('pir_token');
-    localStorage.removeItem('pir_user');
+    localStorage.removeItem('ba_token');
+    localStorage.removeItem('ba_user');
     setToken(null);
     setUser(null);
   };

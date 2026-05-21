@@ -469,7 +469,7 @@ export default function VesselExecutionPage() {
       setEmailSellerTo(d.sellerEmails?.[0] || '');
       setEmailBuyerTo(d.buyerEmails?.[0] || '');
       setEmailPirEmails(d.pirEmails || []);
-      // CC = other seller/buyer emails + all PIR emails
+      // CC = other seller/buyer emails + all BA emails
       const sellerExtraEmails = (d.sellerEmails || []).slice(1);
       const buyerExtraEmails = (d.buyerEmails || []).slice(1);
       setEmailSellerCc([...sellerExtraEmails, ...(d.pirEmails || [])]);

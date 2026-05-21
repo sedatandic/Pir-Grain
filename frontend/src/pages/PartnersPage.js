@@ -281,7 +281,7 @@ export default function PartnersPage({ filterType }) {
           <div className="overflow-y-auto flex-1 pr-2" style={{ maxHeight: 'calc(90vh - 140px)' }}>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="col-span-2 space-y-2"><Label>Company Name *</Label><Input value={form.companyName} onChange={(e) => setForm({...form, companyName: e.target.value})} data-testid="partner-form-name" /></div>
-              <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. PIR" /></div>
+              <div className="space-y-2"><Label>Company Code</Label><Input value={form.companyCode} onChange={(e) => setForm({...form, companyCode: e.target.value})} placeholder="e.g. BA" /></div>
               <div className="space-y-2">
                 <Label>Type</Label>
                 <div className="flex flex-wrap gap-3 pt-1" data-testid="partner-form-type">

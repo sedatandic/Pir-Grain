@@ -650,7 +650,7 @@ export default function TradeDetailPage() {
               <p><strong>Document:</strong> {emailDialog.docLabel}</p>
               <p><strong>Trade:</strong> {trade?.referenceNumber} ({trade?.sellerContractNumber})</p>
               <p><strong>From:</strong> BA Ticaret (onboarding@resend.dev)</p>
-              <p className="text-xs text-amber-600">Note: Test mode — emails can only be sent to alenakaragoz@pirgrain.com until pirgrain.com domain is verified on Resend.</p>
+              <p className="text-xs text-amber-600">Note: Test mode — emails can only be sent to verified addresses until domain is verified on Resend.</p>
             </div>
           </div>
           <DialogFooter>

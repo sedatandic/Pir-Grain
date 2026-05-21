@@ -656,9 +656,18 @@ export default function VesselExecutionPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate('/documents')} data-testid="back-to-list" className="shrink-0">
             <ArrowLeft className="h-4 w-4 mr-1" />Back
           </Button>
-          <h1 className="flex-1 text-center text-lg font-bold text-green-700 dark:text-green-400 pr-16">
-            {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({trade.sellerCode || trade.sellerName || '-'} → {trade.buyerCode || trade.buyerName || '-'})
-          </h1>
+          <div className="flex-1 flex items-center justify-center gap-2 pr-16">
+            <Ship className="h-5 w-5 text-green-700 dark:text-green-400 flex-shrink-0" />
+            <h1 className="text-lg font-bold text-green-700 dark:text-green-400">
+              {trade.pirContractNumber || trade.contractNumber} - {trade.quantity ? `${Number(trade.quantity).toLocaleString()} Mts ` : ''}{trade.commodityName || ''} - {trade.vesselName || 'No Vessel'} ({trade.sellerCode || trade.sellerName || '-'} → {trade.buyerCode || trade.buyerName || '-'})
+            </h1>
+            {(() => {
+              const s = trade.status;
+              if (['completed','brokerage'].includes(s)) return <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">COMPLETED</span>;
+              if (['pending','draft','open'].includes(s) || !trade.vesselName) return <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">PENDING</span>;
+              return <span className="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">ONGOING</span>;
+            })()}
+          </div>
         </div>
       )}
 
